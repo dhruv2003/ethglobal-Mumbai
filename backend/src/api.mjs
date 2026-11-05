@@ -95,7 +95,8 @@ function reviewStatus(id) {
   if (isRunning(id)) return { status: "reviewing" };
   const p = pipelines.get(id);
   if (!p) return { status: "not_started" };
-  if (!p.finishedAt) return { status: "queued", position: null };
+  // Started but not finished and not in this server's line: running elsewhere (e.g. the CLI).
+  if (!p.finishedAt) return p.startedAt ? { status: "reviewing" } : { status: "queued", position: null };
   return { status: p.steps.some((x) => x.status === "failed") ? "stopped" : "reviewed" };
 }
 

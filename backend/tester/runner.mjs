@@ -407,7 +407,7 @@ export async function discoverSite({ target: url, token: t, maxPages = 6 }) {
           title: document.title,
           headings: txt("h1,h2,h3", 25),
           buttons: txt("button,[role=tab],[role=button]", 40),
-          links: [...document.querySelectorAll("a[href]")].filter(vis).map((a) => ({ text: a.innerText.trim().replace(/\s+/g, " ").slice(0, 60), href: a.href })).slice(0, 60),
+          links: [...document.querySelectorAll("a[href]")].filter(vis).map((a) => ({ text: a.innerText.trim().replace(/\s+/g, " ").slice(0, 60), href: a.href, attr: a.getAttribute("href") })).slice(0, 60),
           inputs: [...document.querySelectorAll("input,textarea,select")].filter(vis).map((i) => i.getAttribute("aria-label") || i.placeholder || i.name || i.id || i.type).slice(0, 20),
           text: document.body.innerText.replace(/\s+\n/g, "\n").slice(0, 2500),
         };

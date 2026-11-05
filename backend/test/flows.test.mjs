@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { isPrivateAddress, safeFetch } from "../src/reviewer/net.mjs";
 import { classifyDemo, sniffContainer } from "../src/reviewer/demo.mjs";
-import { corpusOf, toRunnerSteps } from "../src/reviewer/flows.mjs";
+import { corpusOf, hrefsOf, selectorMatches, toRunnerSteps } from "../src/reviewer/flows.mjs";
 
 const discovery = { pages: [{ path: "/", title: "Tap", headings: ["Payments at the pace of a tap"], buttons: ["Download APK"], links: [{ text: "Docs", href: "https://tap.example/docs" }], inputs: [], text: "Turn any Android phone into a terminal" }] };
 const corpus = corpusOf(discovery);
@@ -62,4 +62,19 @@ test("only real video containers reach ffmpeg (no playlists or concat lists)", (
   for (const bad of ["#EXTM3U\n#EXT-X-VERSION:3\nhttp://169.254.169.254/x.ts\n", "ffconcat version 1.0\nfile '/etc/passwd'\n", "<html>not a video</html>"]) {
     assert.equal(sniffContainer(Buffer.from(bad)), null, bad.slice(0, 20));
   }
+});
+
+test("link selectors must match a real link address (the Tap false alarm)", () => {
+  // href attributes as written in Tap's page (absolute GitHub links) plus a relative one
+  const hrefs = ["https://github.com/gitaugakwa/tap", "https://github.com/gitaugakwa/tap/releases/latest/download/tap-android.apk", "/docs"];
+  assert.equal(selectorMatches("a[href='/gitaugakwa/tap']", hrefs), false); // the selector that wrongly failed
+  assert.equal(selectorMatches("a[href*='gitaugakwa/tap']", hrefs), true);
+  assert.equal(selectorMatches("a[href^='/docs']", hrefs), true); // path form
+  assert.equal(selectorMatches("div.card", hrefs), null);
+  const steps = toRunnerSteps(
+    [S("Repo link", [A("goto", "/"), A("expectCountAtLeast", "", "a[href='/gitaugakwa/tap']", 1)]), S("APK", [A("goto", "/"), A("expectCountAtLeast", "", "a[href*='tap-android.apk']", 1)])],
+    { phase: "features", origin: "https://tap.example", corpus, hrefs },
+  );
+  assert.deepEqual(steps.map((s) => s.title), ["APK"]);
+  assert.deepEqual(hrefsOf({ pages: [{ links: [{ href: "https://x/y", attr: "/y" }, { href: "https://x/z" }] }] }), ["/y", "https://x/z"]);
 });
