@@ -35,15 +35,15 @@ export function Header({ wallet, route }) {
   return (
     <header className="top">
       <div className="top__left">
-        <Link to="/" className="brand">
+        <Link to="/projects" className="brand">
           Battle Arena
         </Link>
         <nav className="top__nav" aria-label="Main">
-          <Link to="/" aria-current={!onProjects ? "page" : undefined}>
-            Enter
-          </Link>
           <Link to="/projects" aria-current={onProjects ? "page" : undefined}>
             Projects
+          </Link>
+          <Link to="/submit" aria-current={!onProjects ? "page" : undefined}>
+            Submit
           </Link>
         </nav>
       </div>

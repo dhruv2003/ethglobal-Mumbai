@@ -23,10 +23,10 @@ export default defineConfig({
       registerType: "autoUpdate",
       includeAssets: ["icons/apple-touch-icon.png", "icons/favicon.svg"],
       manifest: {
-        name: "Battle Arena: enter your project",
+        name: "Battle Arena",
         short_name: "Arena",
         description: "Submit your hackathon project and turn it into an AI fighter.",
-        start_url: "/",
+        start_url: "/projects",
         scope: "/",
         display: "standalone",
         background_color: "#fffdf8",

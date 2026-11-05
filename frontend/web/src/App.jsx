@@ -8,16 +8,17 @@ import { emptyForm, getIn, mergeDraft, setIn } from "./lib/form.js";
 import { clearDraft, loadDraft, saveDraft, saveSubmission, toPayload } from "./lib/storage.js";
 import { validate } from "./lib/validate.js";
 import { useWallet } from "./lib/wallet.js";
-import { matchRoute, usePath } from "./lib/router.jsx";
+import { matchRoute, useCanonical, usePath } from "./lib/router.jsx";
 import { ProjectPage, ProjectsPage } from "./components/Projects.jsx";
 
 const hhmm = () => new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
-const TITLES = { form: "Enter your project", projects: "Projects", project: "Project" };
+const TITLES = { form: "Submit a project", projects: "Projects", project: "Project" };
 
 export default function App() {
   const wallet = useWallet();
   const route = matchRoute(usePath());
+  useCanonical(route);
   useEffect(() => {
     document.title = `${TITLES[route.name]} · Battle Arena`;
   }, [route.name]);

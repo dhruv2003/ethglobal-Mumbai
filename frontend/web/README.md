@@ -14,7 +14,15 @@ npm run build && npm run preview   # test the PWA (service worker only runs on t
 
 Needs Node 18+. MetaMask must be installed in the browser. On a phone without it, the button opens the page inside MetaMask's browser.
 
-## What it does
+## Pages
+
+| URL | What it is |
+| --- | --- |
+| `/projects` | Dashboard: summary tiles, search, track filters (kept in the URL), project tiles. `/` redirects here |
+| `/projects/:id` | One project: pitch, embedded demo video, description, tracks, repo + pinned commit |
+| `/submit` | The submission form |
+
+## What the form does
 
 - One card, seven fields: team name, project name, short pitch, what it does and how it's built, GitHub repo, demo video link, and 0 to 3 sponsor tracks (every project is also in the finalist competition, PRD SUB-06).
 - **Connect wallet** uses MetaMask directly (`window.ethereum`). The connected wallet owns the entry and receives the project's rewards.
@@ -30,6 +38,9 @@ Needs Node 18+. MetaMask must be installed in the browser. On a phone without it
 | `src/lib/storage.js` | Drafts, and `saveSubmission()`: **the one function to replace with the DB/API call** |
 | `src/lib/wallet.js` | MetaMask hook: connect, switch network, sign |
 | `src/components/SubmissionForm.jsx` | The form |
+| `src/components/Projects.jsx` | Dashboard and project page |
+| `src/lib/projects.js` | `listProjects()`: **replace with GET /projects**; merges submissions with sample fixtures |
+| `src/lib/router.jsx` | Tiny History-API router |
 
 ## Design system
 

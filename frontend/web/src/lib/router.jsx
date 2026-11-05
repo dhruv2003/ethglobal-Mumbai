@@ -18,12 +18,20 @@ export function usePath() {
   return path;
 }
 
+/** "/submit" is the form; "/projects" the dashboard; "/" and anything unknown go to the dashboard. */
 export function matchRoute(path) {
   const p = path.replace(/\/+$/, "") || "/";
-  if (p === "/projects") return { name: "projects" };
+  if (p === "/submit") return { name: "form" };
   const m = p.match(/^\/projects\/([^/]+)$/);
   if (m) return { name: "project", id: decodeURIComponent(m[1]) };
-  return { name: "form" };
+  return { name: "projects", canonical: p === "/projects" };
+}
+
+/** Rewrite "/" (or an unknown path) to "/projects" without adding history. */
+export function useCanonical(route) {
+  useEffect(() => {
+    if (route.name === "projects" && !route.canonical) history.replaceState({}, "", "/projects");
+  }, [route.name, route.canonical]);
 }
 
 /** <Link> that routes in-app but stays a real link (new tab, copy URL). */

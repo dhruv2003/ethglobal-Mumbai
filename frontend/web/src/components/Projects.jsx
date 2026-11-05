@@ -30,34 +30,140 @@ function Tracks({ ids }) {
   );
 }
 
+/** Filters live in the URL (?track=&q=) so a filtered view can be shared and survives reload. */
+function useFilters() {
+  const read = () => {
+    const q = new URLSearchParams(location.search);
+    return { track: q.get("track") ?? "", q: q.get("q") ?? "" };
+  };
+  const [f, setF] = useState(read);
+  const update = (next) => {
+    const merged = { ...f, ...next };
+    setF(merged);
+    const q = new URLSearchParams();
+    if (merged.track) q.set("track", merged.track);
+    if (merged.q) q.set("q", merged.q);
+    history.replaceState({}, "", `${location.pathname}${q.toString() ? `?${q}` : ""}`);
+  };
+  return [f, update];
+}
+
+function StatTile({ label, value, note }) {
+  return (
+    <div className="card stat">
+      <span className="t-label">{label}</span>
+      <span className="stat__value t-num">{value}</span>
+      <span className="t-caption">{note}</span>
+    </div>
+  );
+}
+
 export function ProjectsPage() {
   const [projects, setProjects] = useState(null);
+  const [filters, setFilters] = useFilters();
   useEffect(() => {
     listProjects().then(setProjects);
   }, []);
+
+  const all = projects ?? [];
+  const counts = Object.fromEntries(EVENT.tracks.map((t) => [t.id, all.filter((p) => p.tracks.includes(t.id)).length]));
+  const inPlay = EVENT.tracks.filter((t) => counts[t.id] > 0);
+  const most = Math.max(0, ...inPlay.map((t) => counts[t.id]));
+  const leaders = inPlay.filter((t) => counts[t.id] === most);
+  const plural = (n) => `${n} ${n === 1 ? "project" : "projects"}`;
+  const submitted = all.filter((p) => p.kind === "submitted").length;
+  const samples = all.length - submitted;
+
+  const needle = filters.q.trim().toLowerCase();
+  const shown = all.filter(
+    (p) =>
+      (!filters.track || p.tracks.includes(filters.track)) &&
+      (!needle || [p.name, p.teamName, p.pitch].some((x) => x.toLowerCase().includes(needle))),
+  );
+  const filtered = Boolean(filters.track || needle);
 
   return (
     <>
       <div className="intro intro--row">
         <div className="intro">
           <h1 className="t-display-lg m0">Projects</h1>
-          <p className="t-body m0 muted">
-            {projects ? `${projects.length} ${projects.length === 1 ? "project" : "projects"} entered so far.` : "Loading projects…"}
-          </p>
+          <p className="t-body m0 muted">{EVENT.name}. Every project competes for finalist; tracks are extra.</p>
         </div>
-        <Link to="/" className="btn btn--secondary">
-          Enter a project
+        <Link to="/submit" className="btn btn--primary">
+          Submit a project
         </Link>
       </div>
 
-      {projects && projects.length === 0 && (
-        <div className="card card--surface">
-          <p className="t-body m0">No projects yet. Enter yours and it shows up here.</p>
+      <section className="stats" aria-label="Summary">
+        <StatTile label="Projects" value={projects ? all.length : "–"} note="All entries in the arena" />
+        <StatTile
+          label="Submitted by teams"
+          value={projects ? submitted : "–"}
+          note={samples ? `Plus ${samples} sample ${samples === 1 ? "project" : "projects"}` : "No samples"}
+        />
+        <StatTile label="Tracks in play" value={projects ? `${inPlay.length} of ${EVENT.tracks.length}` : "–"} note="Sponsor tracks with at least one entry" />
+        <StatTile
+          label="Most entered track"
+          value={leaders.length === 0 ? "–" : leaders.length === 1 ? leaders[0].name : `${leaders.length}-way tie`}
+          note={
+            leaders.length === 0
+              ? "No tracks picked yet"
+              : leaders.length === 1
+                ? plural(most)
+                : `${leaders.map((t) => t.name).join(", ")}, ${most} each`
+          }
+        />
+      </section>
+
+      <section className="filters" aria-label="Filter projects">
+        <label className="visually-hidden" htmlFor="search">
+          Search projects
+        </label>
+        <input
+          id="search"
+          className="input filters__search"
+          type="search"
+          placeholder="Search by project, team or pitch"
+          value={filters.q}
+          onChange={(e) => setFilters({ q: e.target.value })}
+        />
+        <div className="chips" role="group" aria-label="Filter by track">
+          <button type="button" className="chip" aria-pressed={!filters.track} onClick={() => setFilters({ track: "" })}>
+            All tracks
+          </button>
+          {EVENT.tracks.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              className="chip"
+              aria-pressed={filters.track === t.id}
+              onClick={() => setFilters({ track: filters.track === t.id ? "" : t.id })}
+            >
+              {t.name} <span className="t-num chip__count">{counts[t.id] ?? 0}</span>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      {projects && (
+        <p className="t-caption m0" role="status" aria-live="polite">
+          {filtered ? `Showing ${shown.length} of ${all.length}` : `${all.length} ${all.length === 1 ? "project" : "projects"}`}
+        </p>
+      )}
+
+      {projects && shown.length === 0 && (
+        <div className="card card--surface empty">
+          <p className="t-body m0">{all.length ? "No projects match these filters." : "No projects yet. Submit yours and it shows up here."}</p>
+          {filtered && (
+            <button type="button" className="btn btn--ghost btn--sm" onClick={() => setFilters({ track: "", q: "" })}>
+              Clear filters
+            </button>
+          )}
         </div>
       )}
 
       <ul className="project-grid">
-        {projects?.map((p) => (
+        {shown.map((p) => (
           <li key={p.id}>
             <Link to={`/projects/${encodeURIComponent(p.id)}`} className="card project-card">
               <div className="project-card__head">
@@ -70,6 +176,10 @@ export function ProjectsPage() {
               </div>
               <p className="t-body m0 project-card__pitch">{p.pitch}</p>
               <Tracks ids={p.tracks} />
+              <div className="project-card__foot t-mono-caption">
+                <span>{p.repoUrl.replace(/^https:\/\/(www\.)?github\.com\//, "")}</span>
+                <span>{p.submittedAt ? new Date(p.submittedAt).toLocaleDateString() : p.event ?? ""}</span>
+              </div>
             </Link>
           </li>
         ))}
