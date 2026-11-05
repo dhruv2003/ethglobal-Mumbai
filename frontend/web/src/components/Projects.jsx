@@ -1,17 +1,12 @@
 import { useEffect, useState } from "react";
-import { Avatar, StatusPill } from "@ds/ui.jsx";
+import { StatusPill } from "@ds/ui.jsx";
+import { FighterTraits, PixelFighter } from "./PixelFighter.jsx";
 import { EVENT } from "../config/event.js";
 import { embedUrl, getProject, listProjects } from "../lib/projects.js";
 import { Link } from "../lib/router.jsx";
 import { shortAddress } from "../lib/wallet.js";
 
 const trackName = (id) => EVENT.tracks.find((t) => t.id === id)?.name ?? id;
-const initials = (name) =>
-  name
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((w) => w[0]?.toUpperCase() ?? "")
-    .join("") || "?";
 
 function KindPill({ kind }) {
   return kind === "sample" ? <StatusPill tone="neutral">Sample project</StatusPill> : <StatusPill tone="success">✓ Submitted</StatusPill>;
@@ -162,23 +157,25 @@ export function ProjectsPage() {
         </div>
       )}
 
-      <ul className="project-grid">
+      <ul className="fighter-grid">
         {shown.map((p) => (
           <li key={p.id}>
-            <Link to={`/projects/${encodeURIComponent(p.id)}`} className="card project-card">
-              <div className="project-card__head">
-                <Avatar initials={initials(p.name)} tint="crush-soft" size={48} />
-                <KindPill kind={p.kind} />
-              </div>
-              <div>
-                <h2 className="t-heading m0">{p.name}</h2>
-                <p className="t-caption m0">{p.teamName}</p>
-              </div>
-              <p className="t-body m0 project-card__pitch">{p.pitch}</p>
-              <Tracks ids={p.tracks} />
-              <div className="project-card__foot t-mono-caption">
-                <span>{p.repoUrl.replace(/^https:\/\/(www\.)?github\.com\//, "")}</span>
-                <span>{p.submittedAt ? new Date(p.submittedAt).toLocaleDateString() : p.event ?? ""}</span>
+            <Link to={`/projects/${encodeURIComponent(p.id)}`} className="fighter-tile">
+              <PixelFighter project={p} scale={6} className="fighter-tile__avatar" />
+              <div className="fighter-tile__main">
+                <div className="fighter-tile__title">
+                  <h2 className="t-heading m0">{p.name}</h2>
+                  <KindPill kind={p.kind} />
+                </div>
+                <div className="card fighter-tile__box">
+                  <p className="t-caption m0">{p.teamName}</p>
+                  <p className="t-body m0 project-card__pitch">{p.pitch}</p>
+                  <Tracks ids={p.tracks} />
+                  <div className="project-card__foot t-mono-caption">
+                    <span>{p.repoUrl.replace(/^https:\/\/(www\.)?github\.com\//, "")}</span>
+                    <span>{p.submittedAt ? new Date(p.submittedAt).toLocaleDateString() : p.event ?? ""}</span>
+                  </div>
+                </div>
               </div>
             </Link>
           </li>
@@ -218,6 +215,17 @@ export function ProjectPage({ id }) {
   return (
     <>
       {back}
+      <div className="project-layout">
+      <aside className="project-layout__side" aria-label="Fighter">
+        <div className="fighter-stage">
+          <PixelFighter project={p} scale={11} />
+        </div>
+        <div className="stack-xs">
+          <span className="t-label">Built from this project</span>
+          <FighterTraits project={p} trackName={trackName} />
+        </div>
+      </aside>
+      <div className="project-layout__main">
       <header className="intro">
         <KindPill kind={p.kind} />
         <h1 className="t-display-lg m0">{p.name}</h1>
@@ -294,6 +302,8 @@ export function ProjectPage({ id }) {
           )}
         </dl>
       </section>
+      </div>
+      </div>
     </>
   );
 }

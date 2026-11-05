@@ -160,3 +160,53 @@ a.brand { color: var(--ink); text-decoration: none; }
   .top__right { order: 2; flex-wrap: nowrap; }
   .top__nav { order: 3; flex-basis: 100%; }
 }
+
+/* ---------- Fighters ---------- */
+.fighter { display: block; image-rendering: pixelated; flex: none; overflow: visible; }
+.fighter__shadow { fill: var(--ink); opacity: 0.12; }
+.fighter__upper { animation: fighter-bob 0.9s steps(1, end) infinite; animation-delay: var(--fighter-delay, 0s); }
+.fighter__eyes-closed { opacity: 0; animation: fighter-blink-closed 4s steps(1, end) infinite; animation-delay: var(--blink-delay, 0s); }
+.fighter__eyes-open { animation: fighter-blink-open 4s steps(1, end) infinite; animation-delay: var(--blink-delay, 0s); }
+.fighter__glint { animation: fighter-glint 1.2s steps(1, end) infinite; animation-delay: var(--fighter-delay, 0s); }
+@keyframes fighter-bob { 0% { transform: translateY(0); } 50% { transform: translateY(1px); } }
+@keyframes fighter-blink-open { 0% { opacity: 1; } 93% { opacity: 0; } 97% { opacity: 1; } }
+@keyframes fighter-blink-closed { 0% { opacity: 0; } 93% { opacity: 1; } 97% { opacity: 0; } }
+@keyframes fighter-glint { 0% { opacity: 1; } 50% { opacity: 0; } }
+
+/* Tile: the fighter stands on the left, the title sits above the box */
+.fighter-grid {
+  list-style: none; margin: 0; padding: 0;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(440px, 1fr)); gap: var(--space-6) var(--space-5);
+}
+.fighter-tile { display: flex; align-items: flex-end; gap: var(--space-3); color: var(--ink); text-decoration: none; height: 100%; }
+.fighter-tile__main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--space-2); align-self: stretch; }
+.fighter-tile__title { display: flex; justify-content: space-between; align-items: center; gap: var(--space-2); padding: 0 var(--space-1); }
+.fighter-tile__box {
+  flex: 1; display: flex; flex-direction: column; gap: var(--space-3);
+  transition: box-shadow var(--dur-fast) var(--ease-standard), transform var(--dur-fast) var(--ease-spring);
+}
+.fighter-tile:hover .fighter-tile__box { box-shadow: var(--shadow-soft); transform: translateY(-2px); }
+.fighter-tile:hover .fighter__upper { animation-duration: 0.45s; }
+
+/* Project page: fighter at the side */
+.project-layout { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: var(--space-8); align-items: start; }
+.project-layout__side { position: sticky; top: 88px; display: flex; flex-direction: column; gap: var(--space-5); }
+.project-layout__main { display: flex; flex-direction: column; gap: var(--space-6); min-width: 0; }
+.fighter-stage {
+  display: grid; place-items: end center; padding: var(--space-5) var(--space-4) var(--space-3);
+  background: var(--surface); border-radius: var(--radius-lg);
+}
+.stack-xs { display: flex; flex-direction: column; gap: var(--space-2); }
+.traits { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }
+.traits li { display: flex; flex-direction: column; }
+
+@media (max-width: 860px) {
+  .fighter-grid { grid-template-columns: minmax(0, 1fr); }
+  .project-layout { grid-template-columns: minmax(0, 1fr); gap: var(--space-5); }
+  .project-layout__side { position: static; flex-direction: row; align-items: center; }
+  .fighter-stage { flex: none; }
+  .fighter-tile:hover .fighter-tile__box { transform: none; }
+}
+@media (max-width: 420px) {
+  .fighter-tile__avatar { width: 72px; height: 94.5px; }
+}
