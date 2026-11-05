@@ -17,8 +17,9 @@ export default defineConfig({
     dedupe: ["react", "react-dom"],
   },
   // The backend (backend/src/server.js) serves /api on port 3000.
-  server: { fs: { allow: [path.resolve(here, ".."), fixtures] }, proxy: { "/api": "http://localhost:3000" } },
-  preview: { proxy: { "/api": "http://localhost:3000" } },
+  // xfwd marks proxied requests, so the backend never mistakes a visitor for a local operator.
+  server: { fs: { allow: [path.resolve(here, ".."), fixtures] }, proxy: { "/api": { target: "http://localhost:3000", xfwd: true } } },
+  preview: { proxy: { "/api": { target: "http://localhost:3000", xfwd: true } } },
   plugins: [
     react(),
     VitePWA({

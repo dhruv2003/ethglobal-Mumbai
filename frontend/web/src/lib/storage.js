@@ -52,6 +52,25 @@ export function toPayload(data, { ownerWallet, chainId }) {
   };
 }
 
+/**
+ * SHA-256 of exactly the fields the backend checks (backend/src/security.mjs ->
+ * canonicalSubmission). Goes into the signed message, so nothing the team
+ * entered can be changed after signing. Key order matters: keep both in sync.
+ */
+export async function submissionDigest(p) {
+  const canonical = JSON.stringify({
+    team: { name: p.team?.name ?? "" },
+    project: { name: p.project?.name ?? "", pitch: p.project?.pitch ?? "", description: p.project?.description ?? "" },
+    repoUrl: p.repoUrl ?? "",
+    demoVideoUrl: p.demoVideoUrl ?? "",
+    tracks: p.tracks ?? [],
+    ownerWallet: String(p.ownerWallet ?? "").toLowerCase(),
+    fighterSeed: p.fighterSeed ?? null,
+  });
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(canonical));
+  return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
 export function listSubmissions() {
   try {
     const all = JSON.parse(localStorage.getItem(SUBMISSIONS_SLOT) || "[]");

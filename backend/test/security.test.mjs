@@ -2,18 +2,31 @@ import crypto from "node:crypto";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
-import { checkSubmissionSignature, requireOrganizer } from "../src/security.mjs";
+import { checkSubmissionSignature, requireOrganizer, submissionDigest } from "../src/security.mjs";
 
 // A fresh random wallet for every run; nothing is stored or funded.
 const account = privateKeyToAccount(generatePrivateKey());
 
 async function signed(overrides = {}) {
-  const project = { name: "Atlas" };
-  const repoUrl = "https://github.com/team/atlas";
+  const body = {
+    team: { name: "Night Owls" },
+    project: { name: "Atlas", pitch: "Reports in 2 minutes", description: "Next.js + Foundry." },
+    repoUrl: "https://github.com/team/atlas",
+    demoVideoUrl: "https://youtu.be/x",
+    tracks: ["base"],
+    ownerWallet: account.address,
+    fighterSeed: "abc123",
+  };
   const issuedAt = overrides.issuedAt ?? new Date().toISOString();
-  const message = [`Submit "${project.name}" to ETHGlobal Mumbai Battle Arena`, `Repository: ${repoUrl}`, `Owner: ${account.address}`, `Issued at: ${issuedAt}`].join("\n");
+  const message = [
+    `Submit "${body.project.name}" to ETHGlobal Mumbai Battle Arena`,
+    `Repository: ${body.repoUrl}`,
+    `Owner: ${account.address}`,
+    `Submission: ${submissionDigest(body)}`,
+    `Issued at: ${issuedAt}`,
+  ].join("\n");
   const signature = await account.signMessage({ message });
-  return { project, repoUrl, ownerWallet: account.address, auth: { message, signature, issuedAt }, ...overrides.body };
+  return { ...body, auth: { message, signature, issuedAt } };
 }
 
 test("a correctly signed submission passes", async () => {
@@ -37,23 +50,54 @@ test("old signatures are refused", async () => {
   assert.match(await checkSubmissionSignature(s), /too old/);
 });
 
+test("a fresh unsigned timestamp can't revive an old signature", async () => {
+  const s = await signed({ issuedAt: new Date(Date.now() - 60 * 60 * 1000).toISOString() });
+  s.auth.issuedAt = new Date().toISOString(); // attacker edits the unsigned field
+  assert.match(await checkSubmissionSignature(s), /too old/);
+});
+
+test("editing any field after signing fails (pitch, tracks...)", async () => {
+  const a = await signed();
+  a.project.pitch = "Something else";
+  assert.match(await checkSubmissionSignature(a), /doesn't match/);
+  const b = await signed();
+  b.tracks = ["ens"];
+  assert.match(await checkSubmissionSignature(b), /doesn't match/);
+});
+
+test("a signature works once", async () => {
+  const s = await signed();
+  assert.equal(await checkSubmissionSignature(s), null);
+  assert.match(await checkSubmissionSignature(s), /already used/);
+});
+
 test("missing signature is refused", async () => {
   assert.match(await checkSubmissionSignature({ project: { name: "x" }, repoUrl: "r", ownerWallet: account.address }), /Missing/);
 });
 
-function run(mw, { ip = "127.0.0.1", auth } = {}) {
+function run(mw, { ip = "127.0.0.1", auth, forwarded } = {}) {
   let status = 200;
   let nextCalled = false;
-  const req = { socket: { remoteAddress: ip }, get: (h) => (h === "authorization" ? auth : undefined) };
+  const req = { socket: { remoteAddress: ip }, get: (h) => (h === "authorization" ? auth : h === "x-forwarded-for" ? forwarded : undefined) };
   const res = { status: (s) => ((status = s), res), json: () => res };
   mw(req, res, () => (nextCalled = true));
   return nextCalled ? "next" : status;
 }
 
-test("organizer routes: no ADMIN_TOKEN means this machine only", () => {
+test("organizer routes: no ADMIN_TOKEN fails closed", () => {
   delete process.env.ADMIN_TOKEN;
-  assert.equal(run(requireOrganizer, { ip: "127.0.0.1" }), "next");
+  delete process.env.ALLOW_LOCAL_ORGANIZER;
+  assert.equal(run(requireOrganizer, { ip: "127.0.0.1" }), 403);
   assert.equal(run(requireOrganizer, { ip: "203.0.113.9" }), 403);
+});
+
+test("organizer routes: local opt-in only for direct, non-proxied localhost", () => {
+  delete process.env.ADMIN_TOKEN;
+  process.env.ALLOW_LOCAL_ORGANIZER = "1";
+  assert.equal(run(requireOrganizer, { ip: "127.0.0.1" }), "next");
+  assert.equal(run(requireOrganizer, { ip: "127.0.0.1", forwarded: "203.0.113.9" }), 403);
+  assert.equal(run(requireOrganizer, { ip: "203.0.113.9" }), 403);
+  delete process.env.ALLOW_LOCAL_ORGANIZER;
 });
 
 test("organizer routes: with ADMIN_TOKEN the right key is required, from anywhere", () => {

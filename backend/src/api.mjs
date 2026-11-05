@@ -80,12 +80,17 @@ router.delete("/judges/:id", requireOrganizer, (req, res) => {
   res.status(204).end();
 });
 
-router.get("/submissions", (req, res) => res.json(submissions.list()));
+/** Submissions as the public sees them: no signature material. */
+const publicSubmission = ({ auth, ...rest }) => ({ ...rest, signed: Boolean(auth?.signature) });
+
+router.get("/submissions", (req, res) => res.json(submissions.list().map(publicSubmission)));
 
 router.post("/submissions", rateLimit({ max: 5, windowMs: 60 * 60 * 1000 }), async (req, res) => {
   const body = req.body ?? {};
   if (!body.project?.name || !body.repoUrl || !body.ownerWallet) return res.status(400).json({ error: "Missing project name, repo or owner wallet." });
-  const sigError = await checkSubmissionSignature(body);
+  const sigError = await checkSubmissionSignature(body, {
+    seen: (sig) => submissions.list().some((s) => String(s.auth?.signature ?? "").toLowerCase() === sig),
+  });
   if (sigError) return res.status(401).json({ error: sigError });
   const record = { ...body, id: crypto.randomUUID(), submittedAt: new Date().toISOString() };
   submissions.add(record);
@@ -95,7 +100,7 @@ router.post("/submissions", rateLimit({ max: 5, windowMs: 60 * 60 * 1000 }), asy
     review = "started";
     reviewNow(record.id).catch((e) => console.error(`[judges] review of ${record.id} failed: ${e.message}`));
   }
-  res.status(201).json({ ...record, review });
+  res.status(201).json({ ...publicSubmission(record), review });
 });
 
 router.get("/projects/:id/reviews", (req, res) => {
