@@ -12,6 +12,11 @@ function KindPill({ kind }) {
   return kind === "sample" ? <StatusPill tone="neutral">Sample project</StatusPill> : <StatusPill tone="success">✓ Submitted</StatusPill>;
 }
 
+/** Where the project was built. Prominent: it frames everything else on the card. */
+function EventBadge({ project }) {
+  return <span className="event-badge">{project.event ?? EVENT.name}</span>;
+}
+
 function Tracks({ ids }) {
   return (
     <div className="chips">
@@ -160,22 +165,21 @@ export function ProjectsPage() {
       <ul className="fighter-grid">
         {shown.map((p) => (
           <li key={p.id}>
-            <Link to={`/projects/${encodeURIComponent(p.id)}`} className="fighter-tile">
-              <PixelFighter project={p} scale={6} className="fighter-tile__avatar" />
-              <div className="fighter-tile__main">
-                <div className="fighter-tile__title">
-                  <h2 className="t-heading m0">{p.name}</h2>
-                  <KindPill kind={p.kind} />
+            <Link to={`/projects/${encodeURIComponent(p.id)}`} className="card fighter-card">
+              <div className="fighter-card__stage">
+                <PixelFighter project={p} scale={7} />
+              </div>
+              <div className="fighter-card__body">
+                <div className="fighter-card__badges">
+                  <EventBadge project={p} />
+                  {p.kind === "sample" && <StatusPill tone="neutral">Sample</StatusPill>}
                 </div>
-                <div className="card fighter-tile__box">
-                  <p className="t-caption m0">{p.teamName}</p>
-                  <p className="t-body m0 project-card__pitch">{p.pitch}</p>
-                  <Tracks ids={p.tracks} />
-                  <div className="project-card__foot t-mono-caption">
-                    <span>{p.repoUrl.replace(/^https:\/\/(www\.)?github\.com\//, "")}</span>
-                    <span>{p.submittedAt ? new Date(p.submittedAt).toLocaleDateString() : p.event ?? ""}</span>
-                  </div>
+                <div>
+                  <h2 className="t-display-md m0 fighter-card__name">{p.name}</h2>
+                  <p className="t-caption m0">by {p.teamName}</p>
                 </div>
+                <p className="t-body m0 fighter-card__pitch">{p.pitch}</p>
+                <Tracks ids={p.tracks} />
               </div>
             </Link>
           </li>
@@ -227,7 +231,10 @@ export function ProjectPage({ id }) {
       </aside>
       <div className="project-layout__main">
       <header className="intro">
-        <KindPill kind={p.kind} />
+        <div className="fighter-card__badges">
+          <EventBadge project={p} />
+          <KindPill kind={p.kind} />
+        </div>
         <h1 className="t-display-lg m0">{p.name}</h1>
         <p className="t-prompt m0">{p.pitch}</p>
       </header>
