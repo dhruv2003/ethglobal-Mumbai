@@ -1,7 +1,2 @@
-# Large or third-party content: kept locally, described in source.json
-repo/
-media/*.mp4
-media/screenshots/
-media/keyframes/
-# Loom page holds short-lived signed URLs
+# Loom page holds short-lived signed URLs; not useful once expired
 raw/loom-share.html
