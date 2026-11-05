@@ -1,6 +1,6 @@
 # AI Hackathon Battle Arena Product Requirements
 
-**Version 1.0 · 5 November 2026 · Testnet release specification**
+**Version 1.1 · 6 November 2026 · Testnet release specification**
 
 This product turns submitted hackathon projects into autonomous AI fighters. Each fighter pitches and defends a real project using a frozen GitHub repository, supporting artifacts, and automated test evidence. Three AI judges evaluate the projects through structured rounds. Spectators watch animated 1v1 battles and back match or tournament winners with testnet tokens.
 
@@ -176,9 +176,9 @@ Submission readiness, battle progress, result finalization, and token settlement
 
 # 4 Tournament setup and registration
 
-**ORG-01 Event configuration.** Required fields are event title, description, track, capacity, registration deadline, scheduled start, tournament betting cutoff, match betting duration, judge configuration, scoring policy, organizer wallet, reviewer wallet, token and network, platform recipient, and event-resolution policy.
+**ORG-01 Event configuration.** Required fields are event title, description, track, capacity, registration deadline, scheduled start, tournament betting cutoff, tournament resolution deadline, match betting duration, judge configuration, scoring policy, organizer wallet, reviewer wallet, token and network, platform recipient, and event-resolution policy.
 
-**ORG-02 Configuration validation.** Enforce exactly three judges, scoring weights totaling 100%, supported bracket size, registration before betting, and betting cutoff before execution. The organizer and reviewer may be the same person.
+**ORG-02 Configuration validation.** Enforce exactly three judges, scoring weights totaling 100%, supported bracket size, registration before betting, betting cutoff before execution, and a tournament resolution deadline at least (number of knockout rounds + 1) × 24 hours after scheduled start. That default is 5 days for 16 projects, 4 days for 8, and 3 days for 4. The organizer and reviewer may be the same person.
 
 **ORG-03 Publish rules.** Before accepting any stake, expose the rubric, tie rule, payout formula, cancellation policy, human reviewer, network, and token. Record an immutable configuration version and hash.
 
@@ -318,15 +318,15 @@ A Node web app may also receive a startup and basic browser smoke check when it 
 
 **BAT-02 Intro.** Introduce fighters, project descriptions, judge panel, and rubric. Show the frozen commit and evidence status in the details panel.
 
-**BAT-03 Opening pitches.** Both advocates receive one opening pitch, capped at 120 words each. First speaker alternates by bracket seed parity.
+**BAT-03 Opening pitches.** Both advocates receive one opening pitch, capped at 60 words each. First speaker alternates by bracket seed parity.
 
 **BAT-04 Five scored rounds.** Run product, engineering, innovation, feasibility, and defense rounds in that order. Each round produces one sealed score per judge per fighter. The defense round reviews how accurately both agents handled the preceding exchanges.
 
 **BAT-05 Round structure.** One judge asks a common criterion-specific question; both agents answer. Each advocate then gets one evidence-backed challenge against the other and one response to the opponent's challenge. In the defense round, the common question and challenges focus on unresolved claims and tradeoffs from earlier rounds.
 
-Defaults: 100 words per answer, 80 per challenge, 100 per rebuttal. Questions are at most 60 words. The per-turn generation timeout is 30 seconds, with one identical-budget retry on a service error.
+Defaults: 50 words per answer, 40 per challenge, 50 per rebuttal. Questions are at most 30 words. The per-turn generation timeout is 30 seconds, with one identical-budget retry on a service error.
 
-**BAT-06 Closing statements.** Before the defense round is scored, allow one 80-word closing statement per advocate. Closing statements cannot introduce new artifacts or revise sealed earlier-round scores.
+**BAT-06 Closing statements.** Before the defense round is scored, allow one 40-word closing statement per advocate. Closing statements cannot introduce new artifacts or revise sealed earlier-round scores.
 
 **BAT-07 Rulings.** Classify each challenge as upheld, partially upheld, rejected, or inconclusive. A majority of three judge classifications determines the label. If no label has a majority, display “mixed ruling.” Scores are still computed under the fixed rubric.
 
@@ -334,23 +334,33 @@ Defaults: 100 words per answer, 80 per challenge, 100 per rebuttal. Questions ar
 
 **BAT-08 One source of truth.** Scoring determines combat. Random animations, cosmetic rarity, avatar size, voice style, spectator votes, and stake volume never change damage or the result.
 
-Both fighters begin at 100 health. Each completed criterion consumes a damage budget proportional to its weight. Let w be the criterion weight expressed as a fraction and r be that fighter's mean judge score for the criterion on a 0–100 scale:
+Both fighters begin at 100 health. Each sealed criterion consumes a damage budget proportional to its weight. Health is stored as integer thousandths and is always calculated from sealed judge scores, using the same rounding rule as the final score (section 9.2):
 
 ```text
-criterion_damage = 0.8 × w × (100 − r)
-final_health = 100 − sum(criterion_damage)
-             = 20 + 0.8 × final_score
+points_kept = 30000 − sum across the 3 judges and all sealed criteria of
+              (weight_percent × (100 − criterion_score))
+
+score_so_far_in_hundredths = floor((2 × points_kept + 3) / 6)
+health_in_thousandths = 20000 + 8 × score_so_far_in_hundredths
+
+round_damage = previous health_in_thousandths − new health_in_thousandths
 ```
 
-Higher final score therefore always means higher final health. Health measures judged performance, not literal security or reliability.
+Before any round is sealed, points_kept is 30000 and health is 100.000. After all five criteria, points_kept equals weighted_total, so:
+
+```text
+final_health = 20 + 0.8 × final_score
+```
+
+This single calculation is the only source of health. Equal final scores therefore always give exactly equal final health, and a higher final score always gives higher final health. Health measures judged performance, not literal security or reliability.
 
 **BAT-09 Attack animation.** Show an attack preparation while the challenge is presented, a response animation during rebuttal, and the ruling afterward. Apply authoritative health changes only when the round score is sealed. If several criticisms contributed, show a round damage breakdown; do not fabricate a precise causal attribution the judges did not supply.
 
 Rejected attacks show a block. Inconclusive attacks show a neutral exchange. Round score loss unrelated to a specific attack is shown as a judge penalty with its explanation.
 
-**BAT-10 No premature knockout.** The health floor is 20 because every entrant must receive every scheduled opportunity. At match end, the higher-health fighter receives the win animation. The product must not suggest that reaching zero health caused a result.
+**BAT-10 No premature knockout.** The health floor is 20 because every entrant must receive every scheduled opportunity. The win animation follows the recorded result, in this order: higher final score, then higher tie-break score, then organizer decision. Without a tie, the winner is also the higher-health fighter. After a tie, health stays equal, so the screen must show the tie-break score or organizer decision as the reason for the win. No win animation plays while human review is pending. The product must not suggest that reaching zero health caused a result.
 
-**BAT-11 Numerical consistency.** Compute score and health in fixed-point arithmetic from the same stored scorecard. Display two decimal places. If health rounding visually obscures a very small difference, show the deciding score explicitly.
+**BAT-11 Numerical consistency.** Compute score and health in fixed-point arithmetic from the same stored scorecard. Display two decimal places, rounding half up from stored thousandths. If health rounding visually obscures a very small difference, show the deciding score explicitly.
 
 ## 8.3 Example
 
@@ -364,7 +374,7 @@ An upheld engineering critique can cause a visible hit, but engineering has only
 
 **BAT-13 Reconnect.** Reconnecting clients retrieve a state snapshot and missing events. They do not start a new battle or duplicate damage.
 
-**BAT-14 Duration.** Target a typical match of 6–10 minutes, excluding tie review and service incidents. This is a performance target, not a reason to skip turns. Streaming text may appear before optional speech completes; narration may be skipped without changing the authoritative timeline.
+**BAT-14 Duration.** Target a typical match of 10–14 minutes, excluding tie-break rounds, human review, and service incidents. The word caps allow at most about 1,750 words per match, or roughly 12 minutes of speech at 150 words per minute. This is a performance target, not a reason to skip turns. Streaming text may appear before optional speech completes; narration may be skipped without changing the authoritative timeline.
 
 # 9 Scoring and ties
 
@@ -390,7 +400,7 @@ Each judge supplies integer criterion scores from 0 through 100. For each projec
 weighted_total =
     sum across the 3 judges and 5 criteria of (weight_percent × criterion_score)
 
-final_score_in_hundredths = floor(weighted_total / 3 + 0.5)
+final_score_in_hundredths = floor((2 × weighted_total + 3) / 6)
 display_score = final_score_in_hundredths / 100
 ```
 
@@ -419,6 +429,8 @@ Judges score the tie-break independently: product reasoning 60% and evidence/def
 **TIE-07 Deadline.** At 30 minutes, mark review overdue and alert the organizer in-app. At the fixed 24-hour resolution deadline, an unresolved match is voided, remaining event rounds are canceled, and unresolved pools are refundable. No arbitrary project advances. Previously finalized match pools remain settled.
 
 The deadline transition must be callable by a keeper or any authorized public settlement caller after the published timestamp; it must not depend on an absent organizer.
+
+**TIE-08 Absolute pool deadlines.** Every pool stores a fixed resolution deadline on chain when it is created. A match pool uses its scheduled start plus 24 hours. The tournament pool uses the published tournament resolution deadline, so it is protected even when no later match has been scheduled. If a pool is unresolved at its deadline, anyone may void it and its stakes become refundable. The contract rejects any result submitted at or after the deadline. Pausing does not extend a deadline. A void tournament pool also cancels any remaining competition; previously finalized match pools remain settled.
 
 # 10 Betting pools and payouts
 
@@ -470,9 +482,9 @@ The bettor claim is the total amount received, including any returned principal.
 
 - Empty pool: finalize with no transfers; the match still runs.
 
-- No stake on the eventual winner: void the pool and refund every accepted stake; project and platform get zero from that pool.
+- One-sided pool: if all accepted stakes at lock back one selection, void the pool at lock and refund every accepted stake, whichever project later wins. Project and platform get zero from that pool, and the match still runs. The bet preview must explain this possibility.
 
-- One-sided pool where that side wins: apply the ordinary 70:20:10 split; prominently explain the potential loss of principal.
+- No stake on the eventual winner: void the pool and refund every accepted stake; project and platform get zero from that pool. Because of the one-sided rule, this can only happen in a tournament pool.
 
 - Canceled or void match: refund full accepted stakes with no platform or project allocation.
 
@@ -510,7 +522,7 @@ A tie routes RUNNING → TIEBREAK_RUNNING → VALIDATING or HUMAN_REVIEW_REQUIRE
 
 CREATED → OPEN → LOCKED → RESOLVED.
 
-RESOLVED exposes claims. VOID exposes refunds. Both are terminal outcome states. “Claimed” belongs to individual entitlements, not to the whole pool. Settlement must be exactly-once even if a job, webhook, or transaction confirmation is delivered repeatedly.
+A locked pool moves to VOID instead of RESOLVED when it is one-sided at lock, when its match or event is canceled or voided, when no stake backs the winner, or when its resolution deadline passes. RESOLVED exposes claims. VOID exposes refunds. Both are terminal outcome states. “Claimed” belongs to individual entitlements, not to the whole pool. Settlement must be exactly-once even if a job, webhook, or transaction confirmation is delivered repeatedly.
 
 ## 11.5 Recovery rules
 
@@ -658,7 +670,7 @@ This section defines required responsibilities and records without prescribing a
 
 ## 13.3 On-chain and off-chain responsibilities
 
-On-chain: pool identity and configuration hash, token custody, selection IDs, stakes, cutoffs, lock state, result authority, winner or void state, allocations, claims, refunds, and relevant result/evidence commitments.
+On-chain: pool identity and configuration hash, token custody, selection IDs, stakes, cutoffs, resolution deadlines, lock state, result authority, winner or void state, allocations, claims, refunds, and relevant result/evidence commitments.
 
 Off-chain: repository contents, artifacts, test logs, agent prompts, transcripts, rendered animation, and full scorecards. Store content hashes or equivalent commitments with the result so tampering can be detected, while maintaining accessible off-chain copies.
 
@@ -718,7 +730,7 @@ The following are proposed release targets to verify against the supported workl
 
 - Reconnection restores authoritative match state within 5 seconds under normal network conditions.
 
-- A normal match targets 6–10 minutes; delays display their cause rather than inventing activity.
+- A normal match targets 10–14 minutes; delays display their cause rather than inventing activity.
 
 - Key public screens become usable within 3 seconds on a representative desktop connection using cached event data.
 
@@ -806,9 +818,9 @@ Include event/match/pool identifiers as appropriate. Do not collect raw wallet s
 
 **AC-10** Given a malformed judge response, the service attempts one repair and pauses if still invalid instead of manufacturing a score.
 
-**AC-11** Given identical scorecards, all clients compute the same final score, health, and winner under the specified rounding rule.
+**AC-11** Given identical scorecards, all clients compute the same final score, health, and winner under the specified rounding rule. Two fighters with equal final scores have exactly equal final health.
 
-**AC-12** Given a higher final score, that project has higher final health and receives the win animation. No random animation changes the outcome.
+**AC-12** Given a higher final score, that project has higher final health and receives the win animation. Given equal final scores, the win animation follows the tie-break result or organizer decision and health stays unchanged. No random animation changes the outcome.
 
 ## 17.3 Tie review
 
@@ -838,11 +850,15 @@ Include event/match/pool identifiers as appropriate. Do not collect raw wallet s
 
 **AC-24** Given all winning positions claimed, only floor-division dust is sweepable; unclaimed entitlements cannot be swept.
 
+**AC-25** Given all stakes on one selection at lock, the pool becomes void, every bettor can reclaim their full stake whichever project wins, and no project or platform allocation is created.
+
+**AC-26** Given a stopped result service and a passed resolution deadline, anyone can void the unresolved pool, stakes become refundable, and later result submissions are rejected. This also applies to a tournament pool when no later match has been scheduled.
+
 ## 17.5 End to end gate
 
 Run a complete 16-project fixture event with eight first-round matches across two arena pages. Demonstrate submission, frozen tests, betting, all knockout rounds, normal settlement, project allocation, and user claims.
 
-Separately exercise forced first tie, second tie, organizer resolution, review timeout, no-winning-stake pool, test-runner failure, model failure, reconnect, duplicate event delivery, and settlement transaction failure. Forced outcomes belong only in explicitly labeled test fixtures, not real events.
+Separately exercise forced first tie, second tie, organizer resolution, review timeout, tournament deadline expiry, one-sided pool, no-winning-stake pool, test-runner failure, model failure, reconnect, duplicate event delivery, and settlement transaction failure. Forced outcomes belong only in explicitly labeled test fixtures, not real events.
 
 Release requires passing contract accounting/invariant tests, sandbox containment checks, agent output validation tests, and representative browser/wallet journeys. No critical or high-severity known issue affecting funds, isolation, result integrity, or identity may remain open.
 
@@ -880,7 +896,7 @@ The product flow is specified. Engineering must select and document:
 
 - Final product name and visual assets.
 
-- Whether the proposed 15-minute preparation and 6–10-minute battle targets are achievable with the chosen providers.
+- Whether the proposed 15-minute preparation and 10–14-minute battle targets are achievable with the chosen providers.
 
 These choices cannot weaken confirmed behavior or be changed during an active event without cancellation/recreation under the published rules.
 
