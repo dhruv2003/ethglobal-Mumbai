@@ -1,0 +1,3 @@
+[submodule "backend/fixtures/go-health-me/repo"]
+	path = backend/fixtures/go-health-me/repo
+	url = https://github.com/aspiringsecurity/gohealthme-tokyo
