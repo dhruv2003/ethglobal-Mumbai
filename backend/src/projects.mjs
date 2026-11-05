@@ -6,7 +6,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { dossiers, submissions } from "./store.mjs";
+import { dossiers, liveDir, submissions } from "./store.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const FIXTURES = path.resolve(here, "../fixtures");
@@ -55,7 +55,7 @@ function fromSubmission(r) {
       tracks: r.tracks ?? [],
     },
     dossier: dossiers.get(r.id),
-    liveTest: null,
+    liveTest: readJson(path.join(liveDir(r.id), "smoke.json")),
   };
 }
 

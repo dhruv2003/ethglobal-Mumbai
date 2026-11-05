@@ -25,7 +25,7 @@ const STEP_STATE = {
   failed: { tone: "danger", word: "✕ Failed" },
   skipped: { tone: "neutral", word: "Skipped" },
 };
-const DEFAULT_STEPS = ["Fetch the repository", "Pin the commit", "Count the tests", "Build the evidence dossier", "Judges score it"].map((title, i) => ({ id: `s${i}`, title, status: "queued" }));
+const DEFAULT_STEPS = ["Fetch the repository", "Pin the commit", "Count the tests", "Read the demo video", "Build the evidence dossier", "Test the live app on cloud browsers", "Judges score it"].map((title, i) => ({ id: `s${i}`, title, status: "queued" }));
 
 export function DossierPending({ project, state, running, review, offline, onRerun, rerunError }) {
   const steps = state?.steps ?? DEFAULT_STEPS;
@@ -147,7 +147,7 @@ export function Dossier({ project }) {
     return (
       <>
         <DossierPending project={project} state={live.state} running={live.running} review={live.review} offline={live.offline} onRerun={project.kind === "submitted" ? rerun : undefined} rerunError={rerunError} />
-        <LiveTest liveTest={project.liveTest} />
+        <LiveTest project={project} pending={live.running || live.review?.status === "queued"} />
       </>
     );
   }
@@ -170,7 +170,7 @@ export function Dossier({ project }) {
         </div>
       </section>
 
-      <LiveTest liveTest={project.liveTest} />
+      <LiveTest project={project} />
 
       <div className="judge__pair">
         <Findings title="What holds up" tone="good" items={h.holdsUp} i={1} />

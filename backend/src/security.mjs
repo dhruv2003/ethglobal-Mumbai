@@ -52,6 +52,7 @@ export function canonicalSubmission(body) {
     project: { name: body.project?.name ?? "", pitch: body.project?.pitch ?? "", description: body.project?.description ?? "" },
     repoUrl: body.repoUrl ?? "",
     demoVideoUrl: body.demoVideoUrl ?? "",
+    liveUrl: body.liveUrl ?? null,
     tracks: body.tracks ?? [],
     ownerWallet: String(body.ownerWallet ?? "").toLowerCase(),
     fighterSeed: body.fighterSeed ?? null,

@@ -26,15 +26,19 @@ The web app (`frontend/web`) proxies `/api` here in dev and preview.
 
 From the command line: `npm run judge -- --project go-health-me`. This also writes `fixtures/<id>/reviews.json`, so the static site can show the review.
 
-**Reviewer pipeline** (`src/reviewer/`): what happens after every submission, in a queue (`REVIEW_CONCURRENCY`, default 1; unfinished reviews resume on restart), with live status at `GET /api/projects/:id/pipeline`:
+**Reviewer pipeline** (`src/reviewer/`): runs automatically for every submission, in a queue (`REVIEW_CONCURRENCY`, default 1; unfinished reviews resume on restart), with live status at `GET /api/projects/:id/pipeline`:
 
 1. **Fetch:** shallow clone of a public github.com repo. Hooks, submodules and LFS are off; blobs over 1 MB are skipped; 300 MB cap. Nothing from the repo is ever run.
 2. **Pin:** the exact commit reviewed, plus history split at `EVENT_START`.
 3. **Tests:** counted by reading files. **Not run**: that needs the sandbox (PRD TST-05), which isn't built yet.
-4. **Dossier:** the reviewer agent reads a bounded, line-numbered pack of the repo and writes the evidence dossier. Every `file:line` it cites is checked against the clone; a "supported" claim with no real line is downgraded to "unverified".
-5. **Judges:** the panel scores with the dossier.
+4. **Demo:** a timed transcript of the demo video. Loom uses its captions; direct video files (MP4, Mux, ETHGlobal storage) are downloaded through `safeFetch` (https only, public addresses only, 300 MB cap), turned into audio with `ffmpeg` and transcribed with OpenAI (`TRANSCRIBE_MODEL`, default `gpt-4o-transcribe`). YouTube is skipped with a reason.
+5. **Dossier:** the reviewer agent reads a bounded, line-numbered pack of the repo plus the transcript and writes the evidence dossier. Every `file:line` it cites is checked against the clone; a "supported" claim with no real line is downgraded to "unverified".
+6. **Live test:** the live URL is the team's optional field, else the GitHub repo's homepage. `discoverSite` explores up to 6 pages on a Mozark cloud browser. The reviewer agent then writes the demo replay and major flows (`flows.mjs`): major flows may only target text the explorer saw, and demo screens it never saw are flagged so a miss reads as "not found on the live site". The flows run on laptop and phone through `tester/runner.mjs`, recorded. Results go to `data/live/<id>/`. Needs `MOZARK_TOKEN`, or the KEY=VALUE file at `MOZARK_ENV_FILE` (default `~/.mozark.env`).
+7. **Judges:** the panel scores with the dossier and the live test.
 
-Re-run one by hand: `npm run review -- --project <id>`.
+Re-run one by hand: `npm run review -- --project <id>`. Delete a project with `DELETE /api/projects/:id` (organizer).
+
+Needs on the server: `git`, `ffmpeg`/`ffprobe`, and `npm install` in `backend/tester` (Playwright, no browsers).
 
 **Store** (`src/store.mjs`): JSON files in `data/` (gitignored), standing in for the database. Swap those functions for real queries later.
 

@@ -14,6 +14,8 @@
  *   GET    /api/projects/:id/pipeline  live status: fetch, pin, tests, dossier, judges
  *   POST   /api/projects/:id/pipeline  run the whole review again   (organizer)
  *   GET    /api/projects/:id/dossier   the reviewer's dossier for a submitted project
+ *   GET    /api/projects/:id/live      live test results (+ /live/files/<device>/<file> for media)
+ *   DELETE /api/projects/:id           delete a submitted project and its data   (organizer)
  */
 import crypto from "node:crypto";
 import express from "express";
@@ -22,8 +24,10 @@ import { MAX_JUDGES, validateForm } from "./judges/persona.mjs";
 import { hasCredentials, MODEL, PROVIDER, runPanel } from "./judges/review.mjs";
 import { EXAMPLE_FORMS } from "./judges/seed.mjs";
 import { loadProject } from "./projects.mjs";
-import { dossiers, judges, pipelines, reviews, submissions } from "./store.mjs";
-import { enqueue, isRunning, queueLength, queuePosition, resumeQueue } from "./reviewer/pipeline.mjs";
+import fs from "node:fs";
+import path from "node:path";
+import { deleteProject, dossiers, judges, liveDir, pipelines, reviews, submissions } from "./store.mjs";
+import { dequeue, enqueue, isRunning, queueLength, queuePosition, resumeQueue } from "./reviewer/pipeline.mjs";
 import { checkSubmissionSignature, rateLimit, requireOrganizer } from "./security.mjs";
 
 // Seed the example panel the first time only.
@@ -119,6 +123,33 @@ router.get("/projects/:id/pipeline", (req, res) => {
 });
 
 router.get("/projects/:id/dossier", (req, res) => res.json({ dossier: dossiers.get(req.params.id) }));
+
+/** Live test results for a submitted project; media under /live/files/... */
+router.get("/projects/:id/live", (req, res) => {
+  try {
+    res.json({ liveTest: JSON.parse(fs.readFileSync(path.join(liveDir(req.params.id), "smoke.json"), "utf8")) });
+  } catch {
+    res.json({ liveTest: null });
+  }
+});
+
+router.get("/projects/:id/live/files/:device/:file", (req, res) => {
+  const { device, file } = req.params;
+  if (!/^(laptop|phone)$/.test(device) || !/^(video\.mp4|smoke-(laptop|phone)-[a-z0-9]+\.jpg)$/.test(file)) return res.status(404).end();
+  const full = path.join(liveDir(req.params.id), device, file);
+  if (!fs.existsSync(full)) return res.status(404).end();
+  res.sendFile(full, { headers: { "cache-control": "private, max-age=3600" } });
+});
+
+/** Delete a submitted project and everything stored for it. */
+router.delete("/projects/:id", requireOrganizer, (req, res) => {
+  const id = req.params.id;
+  if (!submissions.get(id)) return res.status(404).json({ error: "No such submitted project." });
+  if (isRunning(id)) return res.status(409).json({ error: "Its review is running right now. Try again when it finishes." });
+  dequeue(id);
+  deleteProject(id);
+  res.status(204).end();
+});
 
 router.post("/projects/:id/pipeline", requireOrganizer, (req, res) => {
   if (!submissions.get(req.params.id)) return res.status(404).json({ error: "No such submitted project." });

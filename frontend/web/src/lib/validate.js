@@ -48,6 +48,9 @@ export function validate(d, { walletAddress = "" } = {}) {
   if (!video) errors["demo.videoUrl"] = "Add a link to your demo video.";
   else if (!isHttpsUrl(video)) errors["demo.videoUrl"] = "Use an https:// link.";
 
+  const live = (d.demo.liveUrl ?? "").trim();
+  if (live && !isHttpsUrl(live)) errors["demo.liveUrl"] = "Use an https:// link to the running app.";
+
   const known = new Set(EVENT.tracks.map((t) => t.id));
   if (d.tracks.selected.length > EVENT.maxTracks) errors["tracks.selected"] = `Pick at most ${EVENT.maxTracks} tracks.`;
   else if (d.tracks.selected.some((id) => !known.has(id))) errors["tracks.selected"] = "One of your tracks isn't on this event's list.";

@@ -7,7 +7,10 @@ import { Link } from "../lib/router.jsx";
 import { shortAddress } from "../lib/wallet.js";
 import { Ring } from "./Arena.jsx";
 import { Dossier } from "./Dossier.jsx";
-import { Spinner } from "./Feedback.jsx";
+import { Spinner, toast } from "./Feedback.jsx";
+import { api } from "../lib/api.js";
+import { navigate } from "../lib/router.jsx";
+import { removeLocalSubmission } from "../lib/storage.js";
 import { JudgesPanel } from "./JudgesPanel.jsx";
 import { fighterTraitItems, PixelFighter } from "./PixelFighter.jsx";
 
@@ -339,6 +342,40 @@ export function ProjectsPage() {
 
 /* --------------------------------------------------------- project page */
 
+/** Delete a submitted project (organizer). Local-only drafts just leave this browser. */
+function DeleteProject({ project }) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  async function remove() {
+    if (!window.confirm(`Delete ${project.name}? Its review, dossier, live test and judge scores go too. This can't be undone.`)) return;
+    setBusy(true);
+    setError("");
+    try {
+      if (!project.savedLocallyOnly) await api(`/projects/${encodeURIComponent(project.id)}`, { method: "DELETE" });
+      removeLocalSubmission(project.id);
+      toast(`${project.name} deleted.`);
+      navigate("/projects");
+    } catch (e) {
+      if (e.status === 404) {
+        removeLocalSubmission(project.id);
+        toast(`${project.name} deleted.`);
+        navigate("/projects");
+        return;
+      }
+      setError(e.status === 401 || e.status === 403 ? "Deleting needs the organizer key (set it on the Judges page)." : e.message);
+      setBusy(false);
+    }
+  }
+  return (
+    <div className="delete-row">
+      {error && <span className="field__error">✕ {error}</span>}
+      <button type="button" className="btn btn--danger btn--sm" onClick={remove} disabled={busy}>
+        {busy ? "Deleting…" : "Delete project"}
+      </button>
+    </div>
+  );
+}
+
 /** Which side of a project page is showing; kept in ?view= so it can be linked. */
 function useView() {
   const [view, setViewState] = useState(() => (new URLSearchParams(location.search).get("view") === "judge" ? "judge" : "team"));
@@ -431,6 +468,7 @@ export function ProjectPage({ id }) {
           <h1 className="t-display-xl m0 project-head__name">{p.name}</h1>
           <p className="t-prompt m0">{p.pitch}</p>
           <p className="t-caption m0">by {p.teamName}</p>
+          {p.kind === "submitted" && <DeleteProject project={p} />}
           <div className="gear-row" aria-label="Fighter gear">
             {fighterTraitItems(p, trackName).map((t) => (
               <span key={t.id} className="chip chip--tag" title={t.why}>

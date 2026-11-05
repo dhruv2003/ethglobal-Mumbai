@@ -49,6 +49,8 @@ function fromSubmission(r) {
     description: r.project?.description ?? "",
     repoUrl: r.repoUrl ?? "",
     videoUrl: r.demoVideoUrl ?? "",
+    liveUrl: r.liveUrl ?? null,
+    savedLocallyOnly: Boolean(r.savedLocallyOnly),
     tracks: r.tracks ?? [],
     pinnedCommit: null,
     event: null,

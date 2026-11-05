@@ -43,6 +43,7 @@ export function toPayload(data, { ownerWallet, chainId }) {
     },
     repoUrl: data.code.repoUrl.trim().replace(/\/$/, ""),
     demoVideoUrl: data.demo.videoUrl.trim(),
+    liveUrl: (data.demo.liveUrl ?? "").trim() || null,
     tracks: [...data.tracks.selected],
     fighterSeed: data.fighter?.seed ?? null,
     // One wallet for now: it owns the submission and receives the project's 20%.
@@ -63,12 +64,23 @@ export async function submissionDigest(p) {
     project: { name: p.project?.name ?? "", pitch: p.project?.pitch ?? "", description: p.project?.description ?? "" },
     repoUrl: p.repoUrl ?? "",
     demoVideoUrl: p.demoVideoUrl ?? "",
+    liveUrl: p.liveUrl ?? null,
     tracks: p.tracks ?? [],
     ownerWallet: String(p.ownerWallet ?? "").toLowerCase(),
     fighterSeed: p.fighterSeed ?? null,
   });
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(canonical));
   return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+/** Forget a submission saved in this browser (after it's deleted). */
+export function removeLocalSubmission(id) {
+  try {
+    const all = JSON.parse(localStorage.getItem(SUBMISSIONS_SLOT) || "[]");
+    localStorage.setItem(SUBMISSIONS_SLOT, JSON.stringify(all.filter((r) => r.id !== id)));
+  } catch {
+    /* storage unavailable */
+  }
 }
 
 export function listSubmissions() {

@@ -54,3 +54,21 @@ export const dossiers = {
   save: (projectId, value) => write(`dossiers/${safeId(projectId)}.json`, value),
 };
 export const repoDir = (projectId) => path.join(DATA_DIR, "repos", safeId(projectId));
+
+fs.mkdirSync(path.join(DATA_DIR, "transcripts"), { recursive: true });
+export const transcripts = {
+  get: (projectId) => read(`transcripts/${safeId(projectId)}.json`, null),
+  save: (projectId, value) => write(`transcripts/${safeId(projectId)}.json`, value),
+};
+/** Live test output (smoke.json, recordings, screenshots) for a submitted project. */
+export const liveDir = (projectId) => path.join(DATA_DIR, "live", safeId(projectId));
+/** Scratch space for downloads; always deleted after use. */
+export const workDir = (projectId) => path.join(DATA_DIR, "work", safeId(projectId));
+
+/** Remove everything stored for a submitted project. */
+export function deleteProject(projectId) {
+  const id = safeId(projectId);
+  write("submissions.json", read("submissions.json", []).filter((s) => s.id !== projectId));
+  for (const f of [`reviews/${id}.json`, `pipeline/${id}.json`, `dossiers/${id}.json`, `transcripts/${id}.json`]) fs.rmSync(path.join(DATA_DIR, f), { force: true });
+  for (const d of [repoDir(projectId), liveDir(projectId), workDir(projectId)]) fs.rmSync(d, { recursive: true, force: true });
+}

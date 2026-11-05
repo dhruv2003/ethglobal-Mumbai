@@ -674,3 +674,4 @@ fieldset.field { border: 0; margin: 0; padding: 0; min-width: 0; }
 .toast-card__x { border: 0; background: none; color: var(--canvas); opacity: 0.7; cursor: pointer; font: 700 18px/1 var(--font-sans); min-width: 32px; min-height: 32px; border-radius: 50%; }
 .toast-card__x:hover { opacity: 1; background: var(--action-hover); }
 @keyframes toast-in { from { opacity: 0; transform: translateY(16px) scale(0.96); } to { opacity: 1; transform: none; } }
+.delete-row { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
