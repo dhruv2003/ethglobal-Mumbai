@@ -1,0 +1,243 @@
+{
+  "project": "go-health-me",
+  "target": "https://www.gohealthme.app",
+  "ranAt": "2026-11-05T21:33:34.340Z",
+  "runner": {
+    "hub": "Mozark preprod (cdp-hub.preprod.mozark.ai)",
+    "tool": "Playwright connectOverCDP",
+    "script": "backend/tester/smoke.mjs"
+  },
+  "mode": "read-only smoke check: load, scroll, visit up to 3 same-site links; no clicks on buttons or forms",
+  "runs": [
+    {
+      "device": "laptop",
+      "label": "Laptop",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "startedAt": "2026-11-05T21:32:32.803Z",
+      "browserVersion": "154.0.8037.57",
+      "home": {
+        "url": "https://www.gohealthme.app/",
+        "status": 200,
+        "wallMs": 571,
+        "title": "GoHealthMe: stake on your health goal, get paid in USDC",
+        "h1": "Put money on yourself.",
+        "loadMs": 402,
+        "domContentLoadedMs": 200,
+        "horizontalScroll": false,
+        "viewportMeta": true,
+        "brokenImages": 0,
+        "imagesMissingAlt": 0,
+        "textLength": 1566
+      },
+      "pages": [
+        {
+          "path": "/pools",
+          "status": 200,
+          "ms": 1504,
+          "title": "Challenges - GoHealthMe",
+          "horizontalScroll": false
+        },
+        {
+          "path": "/character",
+          "status": 200,
+          "ms": 3033,
+          "title": "Your player - GoHealthMe",
+          "horizontalScroll": false
+        },
+        {
+          "path": "/challenge/new",
+          "status": 200,
+          "ms": 1759,
+          "title": "Start a challenge - GoHealthMe",
+          "horizontalScroll": false
+        }
+      ],
+      "video": {
+        "file": "laptop/video.mp4",
+        "seconds": 22.8,
+        "frames": 148
+      },
+      "durationMs": 28002,
+      "screenshots": [
+        {
+          "name": "home",
+          "file": "laptop/smoke-laptop-home.png"
+        },
+        {
+          "name": "bottom",
+          "file": "laptop/smoke-laptop-bottom.png"
+        },
+        {
+          "name": "page1",
+          "file": "laptop/smoke-laptop-page1.png"
+        },
+        {
+          "name": "page2",
+          "file": "laptop/smoke-laptop-page2.png"
+        },
+        {
+          "name": "page3",
+          "file": "laptop/smoke-laptop-page3.png"
+        }
+      ],
+      "consoleErrors": [],
+      "failedRequests": [],
+      "cancelledRequests": [
+        {
+          "url": "https://app.dynamicauth.com/api/v0/sdk/3d446c7a-9c4e-40ba-9c41-1f603c7cff26/sdkSettings",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "https://www.gohealthme.app/character?next=%2F&_rsc=tXyZJ52UQVBCVsD3",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "https://www.gohealthme.app/character?next=%2Fpools&_rsc=npSYWQ5VX_JQccqG",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "https://www.gohealthme.app/character?next=%2Fpools&_rsc=3H0u3_3iFXqFS0yw",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "https://www.gohealthme.app/agent?_rsc=5QbZD-MKPLdynIrN",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "https://www.gohealthme.app/character?next=%2F&_rsc=tXyZJ52UQVBCVsD3",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "https://www.gohealthme.app/character?_rsc=5CB68i4pnAekjehf",
+          "error": "net::ERR_ABORTED"
+        }
+      ],
+      "outcome": {
+        "status": "passed",
+        "reasons": []
+      }
+    },
+    {
+      "device": "phone",
+      "label": "Phone",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "startedAt": "2026-11-05T21:33:00.807Z",
+      "browserVersion": "154.0.8037.57",
+      "home": {
+        "url": "https://www.gohealthme.app/",
+        "status": 200,
+        "wallMs": 512,
+        "title": "GoHealthMe: stake on your health goal, get paid in USDC",
+        "h1": "Put money on yourself.",
+        "loadMs": 354,
+        "domContentLoadedMs": 157,
+        "horizontalScroll": false,
+        "viewportMeta": true,
+        "brokenImages": 0,
+        "imagesMissingAlt": 0,
+        "textLength": 1542
+      },
+      "pages": [
+        {
+          "path": "/pools",
+          "status": 200,
+          "ms": 1554,
+          "title": "Challenges - GoHealthMe",
+          "horizontalScroll": false
+        },
+        {
+          "path": "/character",
+          "status": 200,
+          "ms": 2080,
+          "title": "Your player - GoHealthMe",
+          "horizontalScroll": false
+        },
+        {
+          "path": "/challenge/new",
+          "status": 200,
+          "ms": 1664,
+          "title": "Start a challenge - GoHealthMe",
+          "horizontalScroll": false
+        }
+      ],
+      "video": {
+        "file": "phone/video.mp4",
+        "seconds": 29.2,
+        "frames": 261
+      },
+      "durationMs": 33533,
+      "screenshots": [
+        {
+          "name": "home",
+          "file": "phone/smoke-phone-home.png"
+        },
+        {
+          "name": "bottom",
+          "file": "phone/smoke-phone-bottom.png"
+        },
+        {
+          "name": "page1",
+          "file": "phone/smoke-phone-page1.png"
+        },
+        {
+          "name": "page2",
+          "file": "phone/smoke-phone-page2.png"
+        },
+        {
+          "name": "page3",
+          "file": "phone/smoke-phone-page3.png"
+        }
+      ],
+      "consoleErrors": [],
+      "failedRequests": [],
+      "cancelledRequests": [
+        {
+          "url": "https://app.dynamicauth.com/api/v0/sdk/3d446c7a-9c4e-40ba-9c41-1f603c7cff26/sdkSettings",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "https://www.gohealthme.app/character?next=%2F&_rsc=5CB68i4pnAekjehf",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "https://www.gohealthme.app/character?_rsc=5CB68i4pnAekjehf",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "https://www.gohealthme.app/character?next=%2F&_rsc=tXyZJ52UQVBCVsD3",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "https://www.gohealthme.app/agent?_rsc=tXyZJ52UQVBCVsD3",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "https://www.gohealthme.app/character?next=%2Fpools&_rsc=3H0u3_3iFXqFS0yw",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "https://www.gohealthme.app/character?_rsc=tXzyajCTfg_4nWNm",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "https://www.gohealthme.app/character?next=%2Fchallenge%2Fnew&_rsc=cl5yPHHsxfMLRv0H",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "https://www.gohealthme.app/character?next=%2F&_rsc=tXyZJ52UQVBCVsD3",
+          "error": "net::ERR_ABORTED"
+        }
+      ],
+      "outcome": {
+        "status": "passed",
+        "reasons": []
+      }
+    }
+  ]
+}

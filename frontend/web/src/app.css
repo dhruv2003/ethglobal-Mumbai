@@ -502,3 +502,19 @@ a.brand:hover .brand__mark { transform: rotate(-8deg) scale(1.08); }
 .findings--good .findings__list li::before { content: "✓"; background: var(--success-soft); color: var(--success); }
 .findings--watch .findings__list li::before { content: "!"; background: var(--stake-no-soft); color: var(--stake-no); }
 @media (max-width: 860px) { .judge__pair { grid-template-columns: 1fr; } }
+
+/* ---------- Live test ---------- */
+.live__body { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: var(--space-5); align-items: start; }
+.live__body--phone { grid-template-columns: 300px minmax(0, 1fr); }
+.live__screen { border-radius: var(--radius-md); overflow: hidden; background: var(--ink); border: 2px solid var(--ink); }
+.live__screen video { display: block; width: 100%; height: auto; }
+.live__screen--phone { border-radius: var(--radius-lg); border-width: 6px; max-width: 300px; justify-self: center; }
+.facts-grid { margin: 0; display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3) var(--space-4); }
+.fact dd { margin: 0; display: flex; align-items: center; gap: var(--space-2); }
+.fact__mark { display: grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; font: 700 11px/1 var(--font-sans); flex: none; }
+.fact__mark--good { background: var(--success-soft); color: var(--success); }
+.fact__mark--bad { background: var(--stake-no-soft); color: var(--stake-no); }
+@media (max-width: 860px) {
+  .live__body, .live__body--phone { grid-template-columns: minmax(0, 1fr); }
+}
+.live .stack > .pill { align-self: flex-start; }

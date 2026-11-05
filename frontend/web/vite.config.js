@@ -39,6 +39,8 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ["**/*.{js,css,html,svg,png,woff2}"],
+        // Smoke-test posters and videos are large and only needed on one page: stream, don't precache.
+        globIgnores: ["**/assets/smoke-*", "**/assets/video-*"],
         runtimeCaching: [
           {
             urlPattern: ({ url }) =>

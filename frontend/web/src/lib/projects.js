@@ -15,6 +15,8 @@ import { listSubmissions } from "./storage.js";
  *            strengths, risks, questions) plus `highlights`, the short version the
  *            dashboard shows. Only highlights are rendered today; the rest is kept
  *            for fight generation and judge prompts later.
+ *   liveTest: smoke-test results on real cloud browsers (laptop + phone) with
+ *            recordings, from backend/tester/smoke.mjs.
  */
 function fromFixture(id, { form }, source) {
   return {
@@ -53,6 +55,7 @@ function fromSubmission(r) {
     ownerWallet: r.ownerWallet ?? null,
     submittedAt: r.submittedAt ?? null,
     dossier: null,
+    liveTest: null,
   };
 }
 
@@ -65,7 +68,36 @@ const DOSSIERS = Object.fromEntries(
   ]),
 );
 
-const SAMPLES = [fromFixture("go-health-me", goHealthMe, goHealthMeSource)].map((p) => ({ ...p, dossier: DOSSIERS[p.id] ?? null }));
+/* Live smoke tests from backend/tester/smoke.mjs (Mozark cloud browsers).
+   Videos and the home screenshot (poster) are bundled as asset URLs. */
+const folderOf = (path) => path.split("/fixtures/")[1]?.split("/")[0];
+const SMOKES = Object.fromEntries(
+  Object.entries(import.meta.glob("@fixtures/*/smoke/smoke.json", { eager: true, import: "default" })).map(([path, s]) => [folderOf(path), s]),
+);
+const SMOKE_ASSETS = import.meta.glob(["@fixtures/*/smoke/*/video.mp4", "@fixtures/*/smoke/*/smoke-*-home.png"], {
+  eager: true,
+  query: "?url",
+  import: "default",
+});
+function liveTestFor(id) {
+  const s = SMOKES[id];
+  if (!s) return null;
+  const asset = (rel) => Object.entries(SMOKE_ASSETS).find(([path]) => path.endsWith(`/${id}/smoke/${rel}`))?.[1] ?? null;
+  return {
+    ...s,
+    runs: s.runs.map((r) => ({
+      ...r,
+      videoUrl: r.video ? asset(r.video.file) : null,
+      posterUrl: r.screenshots?.[0] ? asset(r.screenshots[0].file) : null,
+    })),
+  };
+}
+
+const SAMPLES = [fromFixture("go-health-me", goHealthMe, goHealthMeSource)].map((p) => ({
+  ...p,
+  dossier: DOSSIERS[p.id] ?? null,
+  liveTest: liveTestFor(p.id),
+}));
 
 export async function listProjects() {
   const submitted = listSubmissions()
