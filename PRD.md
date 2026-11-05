@@ -1,6 +1,6 @@
 # AI Hackathon Battle Arena Product Requirements
 
-**Version 1.1 · 6 November 2026 · Testnet release specification**
+**Version 1.2 · 6 November 2026 · Testnet release specification**
 
 This product turns submitted hackathon projects into autonomous AI fighters. Each fighter pitches and defends a real project using a frozen GitHub repository, supporting artifacts, and automated test evidence. Three AI judges evaluate the projects through structured rounds. Spectators watch animated 1v1 battles and back match or tournament winners with testnet tokens.
 
@@ -58,7 +58,7 @@ The product must deliver three connected outcomes:
 
 - Tournament capacities: 4, 8, or 16 projects; default 16.
 
-- One track per tournament, single elimination, three judges.
+- ETHGlobal-style prizes: every project competes for finalist standing, and may also enter up to three sponsor tracks (SUB-06). Each tournament covers one competition (finalists or one track), single elimination, three judges.
 
 - Four fights per page does not mean four projects per tournament.
 
@@ -84,7 +84,7 @@ The product must deliver three connected outcomes:
 
 Release scope includes onboarding, organizer setup, submissions, GitHub ingestion, artifact processing, isolated testing, fighter creation, judge configuration, bracket generation, betting, live combat, human review, claims, refunds, and replay.
 
-Excluded from version 1: mainnet or real-money use, private repositories, arbitrary language support, live code changes, agent-written repair patches, live betting after match generation begins, secondary trading, external hackathon result prediction, cross-track finals, sponsor prize pools, audience-controlled scoring, custom user-supplied executable judge code, NFTs, and hardware integration.
+Excluded from version 1: mainnet or real-money use, private repositories, arbitrary language support, live code changes, agent-written repair patches, live betting after match generation begins, secondary trading, external hackathon result prediction, sponsor-funded prize payouts, audience-controlled scoring, custom user-supplied executable judge code, NFTs, and hardware integration.
 
 No claim is made that passing automated tests certifies security or that AI scores establish objective project quality.
 
@@ -96,7 +96,7 @@ Can browse public tournaments, project profiles, published evidence, live fights
 
 ## 2.2 Builder
 
-Connects a wallet, verifies control of the submitted GitHub repository, submits artifacts, supplies test setup, previews the dossier, and customizes the fighter. A designated team owner controls the submission and reward wallet before freeze.
+Connects a wallet, verifies control of the submitted GitHub repository, submits artifacts, selects up to three tracks, previews the dossier, and previews the generated fighter. A designated team owner controls the submission and reward wallet before freeze.
 
 Builders can correct factual inputs and request a rerun before the deadline. They cannot delete independently verified findings, alter judge instructions, modify frozen submissions, or intervene in battles.
 
@@ -160,11 +160,11 @@ flowchart TD
 
 ## 3.1 Organizer journey
 
-Create event → choose track and capacity → configure judges and rubric → publish registration → review submissions → confirm full bracket → freeze event → open pools → monitor live arena → resolve any human review → inspect settlement status → close event.
+Create event → publish sponsor track list and capacity → configure judges and rubric → publish registration → review submissions → confirm full bracket → freeze event → open pools → monitor live arena → resolve any human review → inspect settlement status → close event.
 
 ## 3.2 Builder journey
 
-Connect wallet → verify repository control → create draft → add artifacts and setup instructions → run analysis → inspect test results and dossier → correct input if needed → preview fighter → submit → accept frozen version → watch autonomous matches → inspect evaluation → claim project allocation.
+Connect wallet → verify repository control → create draft → select up to three tracks → add artifacts → run analysis → inspect test results and dossier → correct input if needed → preview fighter → submit → accept frozen version → watch autonomous matches → inspect evaluation → claim project allocation.
 
 ## 3.3 Spectator journey
 
@@ -176,7 +176,7 @@ Submission readiness, battle progress, result finalization, and token settlement
 
 # 4 Tournament setup and registration
 
-**ORG-01 Event configuration.** Required fields are event title, description, track, capacity, registration deadline, scheduled start, tournament betting cutoff, tournament resolution deadline, match betting duration, judge configuration, scoring policy, organizer wallet, reviewer wallet, token and network, platform recipient, and event-resolution policy.
+**ORG-01 Event configuration.** Required fields are event title, description, sponsor track list, capacity, registration deadline, scheduled start, tournament betting cutoff, tournament resolution deadline, match betting duration, judge configuration, scoring policy, organizer wallet, reviewer wallet, token and network, platform recipient, and event-resolution policy.
 
 **ORG-02 Configuration validation.** Enforce exactly three judges, scoring weights totaling 100%, supported bracket size, registration before betting, betting cutoff before execution, and a tournament resolution deadline at least (number of knockout rounds + 1) × 24 hours after scheduled start. That default is 5 days for 16 projects, 4 days for 8, and 3 days for 4. The organizer and reviewer may be the same person.
 
@@ -196,7 +196,9 @@ Submission readiness, battle progress, result finalization, and token settlement
 
 ## 5.1 Submission fields
 
-**SUB-01 Required inputs.** Project name, short pitch, problem statement, intended users, track, public GitHub URL, default branch or selected commit, repository path for monorepos, build and test instructions, team-owner wallet, and reward wallet.
+**SUB-01 Required inputs.** Project name, short pitch, problem statement, intended users, track selection (SUB-06), public GitHub URL, default branch or selected commit, repository path for monorepos, team-owner wallet, and reward wallet.
+
+Teams do not supply build, test, or start commands. The platform detects the execution setup from the frozen repository during processing (TST-01).
 
 **SUB-02 Supporting artifacts.** Accept JPG, PNG, WebP, PDF, UTF-8 text, MP4, and HTTPS demo links. Defaults: 20 MB per image/PDF/text upload, 200 MB per video, 500 MB total per project. Show limits before upload. Reject unsupported files and identify which item failed.
 
@@ -205,6 +207,8 @@ Submission readiness, battle progress, result finalization, and token settlement
 **SUB-04 Autosave.** Preserve drafts and show last saved time. Wallet signatures authenticate submission ownership; reject replayed authentication challenges.
 
 **SUB-05 Canonical identity.** Deduplicate repository, monorepo path, and project within an event. Forks require organizer review and disclosure of original work. Canonicalization must not conflate distinct monorepo applications.
+
+**SUB-06 Track selection.** Follows the ETHGlobal prize model. Every accepted project automatically competes for **finalist** standing across the whole event. In addition, a team may select **up to three tracks** (sponsor/partner prize tracks) from the event's published track list. Zero tracks is allowed. Reject a fourth selection and any track not on the list. Track selections can change until freeze and are locked by it.
 
 ## 5.2 Repository snapshot
 
@@ -232,11 +236,11 @@ Automated testing is a release requirement, not a future placeholder. Version 1 
 
 ## 6.1 Supported execution profiles
 
-**TST-01 Initial profiles.** Support Node.js/TypeScript projects with a lockfile and declared build/test commands, and Solidity projects with Foundry or a supported Node-based test setup. Use pinned runtime images. Other stacks may be analyzed statically but are not eligible for this release's tournament until an execution profile is supported.
+**TST-01 Initial profiles.** Support Node.js/TypeScript projects with a lockfile and build/test commands detected by the platform from the repository (teams do not enter them; see SUB-01), and Solidity projects with Foundry or a supported Node-based test setup. Use pinned runtime images. Other stacks may be analyzed statically but are not eligible for this release's tournament until an execution profile is supported.
 
 **TST-02 Execution stages.** Validate manifest → provision clean sandbox → install locked dependencies → build → execute repository tests → execute limited platform-authored checks → collect artifacts → destroy sandbox.
 
-A Node web app may also receive a startup and basic browser smoke check when it declares a supported local start command. This checks launchability and a limited journey, not universal product correctness.
+A Node web app may also receive a startup and basic browser smoke check when the platform detects a supported local start command. This checks launchability and a limited journey, not universal product correctness.
 
 **TST-03 Test provenance.** Label repository-provided tests separately from platform-generated tests. Record test source, exact command, environment image, commit, exit status, timestamps, resource usage, and sanitized logs.
 
@@ -282,7 +286,7 @@ A Node web app may also receive a startup and basic browser smoke check when it 
 
 **AGT-01 Persona generation.** Create a fighter name, visual archetype, optional voice, speaking style, opening pitch, and project advocacy brief from the approved dossier.
 
-**AGT-02 Customization.** Teams may edit display name, avatar selection, voice selection, tone, and factual descriptions before freeze. Personality never changes scoring weights, evidence access, or tool permissions. Use licensed preset avatars for the initial release; generated avatars are optional.
+**AGT-02 Customization (deferred).** Version 1 takes no fighter customization input from teams. The platform generates the fighter's name, avatar (from licensed presets), voice, and tone from the approved dossier; teams can preview it but not edit it. Factual errors are fixed through EVD-06 corrections. Personality never changes scoring weights, evidence access, or tool permissions.
 
 **AGT-03 Grounded advocacy.** An advocate can explain strengths, challenge evidence, acknowledge limitations, and distinguish implemented features from future plans. It cannot invent adoption, benchmarks, deployments, tests, partnerships, or code references.
 
@@ -558,13 +562,13 @@ The bracket links to each match and indicates scheduled, live, human review, fin
 
 ## 12.3 Submission wizard
 
-**UI-03** Steps are project details, GitHub ownership and commit, artifacts, execution setup, analysis and testing, fighter customization, and confirmation.
+**UI-03** Steps are project details, track selection, GitHub ownership and commit, artifacts, analysis and testing, fighter preview, and confirmation. There are no execution-setup or fighter-customization steps.
 
 Preserve form input across recoverable failures. Show per-stage progress rather than an indefinite spinner. Provide actionable errors, relevant sanitized logs, and a correction action before freeze. Submission confirmation includes the exact commit and reward wallet.
 
 ## 12.4 Project profile
 
-**UI-04** Show project pitch, fighter, team attribution, track, source link, pinned commit, artifacts, verified/unverified claims, test summary, match history, and published scores. Evidence cards link to the exact snapshot rather than a mutable branch.
+**UI-04** Show project pitch, fighter, team attribution, selected tracks, source link, pinned commit, artifacts, verified/unverified claims, test summary, match history, and published scores. Evidence cards link to the exact snapshot rather than a mutable branch.
 
 Do not display speculative strengths as confirmed facts. Do not display private agent reasoning or raw secrets.
 
@@ -622,7 +626,7 @@ This section defines required responsibilities and records without prescribing a
 
 - **Tournament:** organizer, reviewer, track, capacity, schedule, rules version, rubric, judge configuration, token/network, and lifecycle.
 
-- **Project:** team ownership, reward wallet, canonical repository identity, accepted submission version, and fighter profile.
+- **Project:** team ownership, reward wallet, canonical repository identity, selected tracks (up to three), accepted submission version, and fighter profile.
 
 - **Submission snapshot:** commit SHA, artifact hashes, file manifest, runtime profile, freeze timestamp, and evidence version.
 
@@ -895,6 +899,8 @@ The product flow is specified. Engineering must select and document:
 - Settlement publisher key custody and operational reviewer coverage.
 
 - Final product name and visual assets.
+
+- How finalist and track tournaments are scheduled when one project is in several at once (up to four), so that it never fights two matches simultaneously.
 
 - Whether the proposed 15-minute preparation and 10–14-minute battle targets are achievable with the chosen providers.
 
