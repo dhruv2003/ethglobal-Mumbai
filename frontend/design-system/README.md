@@ -5,7 +5,7 @@ One page that documents the project's visual language: colour, type, spacing, sh
 ## Run it
 
 ```bash
-cd design-system
+cd frontend/design-system
 npm install
 npm run dev
 ```
