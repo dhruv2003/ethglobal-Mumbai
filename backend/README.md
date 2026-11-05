@@ -16,3 +16,10 @@ These services from `PRD.md` section 13.2 belong here:
 - Monitoring service: tracks reliability and resource use
 
 Smart contracts go in `contracts/` in this folder.
+
+## Modules
+
+| Folder | What it is |
+| --- | --- |
+| `scoring/` | Rubric, fixed-point scoring, tie-breaks and organizer review (`PRD.md` section 9). See its README. |
+| `matching/` | Similarity-based round-one pairing and bracket placement (`PRD.md` ORG-05). See its README. |

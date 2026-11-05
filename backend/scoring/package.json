@@ -1,0 +1,17 @@
+{
+  "name": "@arena/scoring",
+  "private": true,
+  "version": "0.1.0",
+  "description": "PRD section 9: rubric, fixed-point scoring, tie-breaks and organizer review",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node --test \"test/*.test.js\""
+  }
+}

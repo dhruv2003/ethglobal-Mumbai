@@ -1,6 +1,6 @@
 # AI Hackathon Battle Arena Product Requirements
 
-**Version 1.2 · 6 November 2026 · Testnet release specification**
+**Version 1.3 · 6 November 2026 · Testnet release specification**
 
 This product turns submitted hackathon projects into autonomous AI fighters. Each fighter pitches and defends a real project using a frozen GitHub repository, supporting artifacts, and automated test evidence. Three AI judges evaluate the projects through structured rounds. Spectators watch animated 1v1 battles and back match or tournament winners with testnet tokens.
 
@@ -184,7 +184,19 @@ Submission readiness, battle progress, result finalization, and token settlement
 
 **ORG-04 Capacity.** Admission is first-ready subject to organizer eligibility review. Waitlisted projects cannot receive bets. If the accepted count does not fill the selected bracket, the organizer may reduce capacity to a supported size or extend registration before freeze. Do not create version 1 byes or invented opponents. If fewer than four eligible projects remain, cancel before betting opens.
 
-**ORG-05 Seeding.** Randomize accepted projects once, persist the seed and resulting bracket, and publish both. An organizer-generated seed is auditable after publication but is not claimed to be trustless randomness. Reseeding is forbidden after betting opens.
+**ORG-05 Seeding.** Build the bracket once, after all dossiers are frozen (EVD-07) and before any pool opens. Round one pairs similar projects so each fight is a direct comparison; later rounds keep similar projects apart so they meet as late as possible.
+
+- **Similarity.** Each pair of projects gets a fixed-point score: 60% cosine similarity of embeddings of the platform-generated dossier (intended user, problem, core journey, features, architecture), 20% overlap of selected tracks, and 20% overlap of technology detected from the frozen repository. Subtract the mean embedding before comparing. Team-written text and spectator signals are never inputs, so a team cannot choose its opponent through wording.
+
+- **Round one.** Use the pairing with the highest total similarity across all fights, found exactly rather than greedily. Among equal totals, prefer the pairing whose least similar fight is most similar.
+
+- **Later rounds.** Group round-one pairs so the least similar groups meet, at every level of the bracket. A category with several entrants is spread across both halves instead of eliminating itself early.
+
+- **Exclusions.** Never pair in round one projects from the same team, a fork with its original, two forks of the same original (SUB-05), or any pair the organizer blocks with a published reason.
+
+- **Audit.** Compute embeddings once after freeze and store the vectors. Persist and publish the seed, embedding model and version, similarity weights, algorithm version, a hash of all inputs, the bracket, and a hash of the result. Remaining ties follow an order derived from the seed. Anyone with the published inputs can recompute the same bracket. An organizer-generated seed is auditable after publication but is not claimed to be trustless randomness.
+
+- **No rebuilding.** Reseeding, re-embedding, or changing weights is forbidden after betting opens. Show the similarity breakdown for each round-one fight on the tournament lobby and fight detail screens.
 
 **ORG-06 Round scheduling.** Round one can run up to eight matches concurrently. Later rounds open only after every result in the preceding round is finalized. Default next-round betting window is five minutes.
 
@@ -322,7 +334,7 @@ A Node web app may also receive a startup and basic browser smoke check when the
 
 **BAT-02 Intro.** Introduce fighters, project descriptions, judge panel, and rubric. Show the frozen commit and evidence status in the details panel.
 
-**BAT-03 Opening pitches.** Both advocates receive one opening pitch, capped at 60 words each. First speaker alternates by bracket seed parity.
+**BAT-03 Opening pitches.** Both advocates receive one opening pitch, capped at 60 words each. First speaker alternates by bracket slot parity.
 
 **BAT-04 Five scored rounds.** Run product, engineering, innovation, feasibility, and defense rounds in that order. Each round produces one sealed score per judge per fighter. The defense round reviews how accurately both agents handled the preceding exchanges.
 
