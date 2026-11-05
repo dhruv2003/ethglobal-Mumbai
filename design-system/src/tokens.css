@@ -1,0 +1,136 @@
+/* ==========================================================================
+   Design tokens — Playful Minimal
+   The single source of truth. Never hard-code a colour, space, radius,
+   shadow, duration or easing in a component: reference a var() from here.
+   ========================================================================== */
+
+:root {
+  /* ---------- Grounds ---------- */
+  --canvas: #fffdf8;          /* Milk. Default page ground. */
+  --surface: #f7f2ea;         /* Cream. Cards, fields, secondary panels. */
+  --surface-sunken: #efe8dc;  /* Wells, skeletons, disabled fills, progress tracks. */
+  --arena-canvas: #f1f3ff;    /* A second "room" ground, for protocol/arena screens. */
+
+  /* ---------- Ink ---------- */
+  --ink: #17141f;             /* Primary text + icons on every ground. */
+  --ink-secondary: #5f5869;   /* Captions, metadata, helper text. */
+  --line: #ece5d9;            /* Hairline dividers. Decorative only. */
+  --line-strong: #8f879a;     /* Field + control borders at rest (3.4:1). */
+
+  /* ---------- Action ---------- */
+  --action: var(--ink);       /* Primary button, selected filter, current tab. */
+  --action-hover: #2e2938;
+  --on-action: #fffdf8;
+
+  /* ---------- Three colours, three jobs ---------- */
+  --crush: #ff5c93;           /* PEOPLE. Fill only, always ink on it. */
+  --crush-soft: #ffe3ec;
+  --crush-ink: #c2185b;       /* The only crush allowed as text. */
+
+  --oracle: #2f4bf0;          /* PROTOCOL. Chain data, live markets, focus. Can be text. */
+  --oracle-hover: #2238c4;
+  --oracle-soft: #e8ecff;
+  --on-oracle: #fffdf8;
+
+  --sunny: #ffd43b;           /* TOKENS & REWARDS. Fill only, ink on it. */
+  --sunny-soft: #fff4c7;
+
+  /* ---------- Two sides of a pool ---------- */
+  --stake-yes: var(--oracle);
+  --stake-no: #b04e00;        /* As text. Tangerine, not red: a position, not an error. */
+  --stake-no-fill: #ff8a2b;   /* As a bar fill. */
+  --stake-no-soft: #ffebd9;
+
+  /* ---------- Status ---------- */
+  --success: #0e7c57;
+  --success-soft: #ddf5ea;
+  --danger: #c4291c;
+  --danger-soft: #fde7e4;
+
+  /* ---------- Utility ---------- */
+  --focus: var(--oracle);
+  --scrim: rgba(23, 20, 31, 0.5);
+
+  /* ---------- Type families ---------- */
+  --font-display: "Bricolage Grotesque", "Figtree", system-ui, sans-serif;
+  --font-sans: "Figtree", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  /* ---------- Spacing ---------- */
+  --space-1: 4px;   /* icon-to-label */
+  --space-2: 8px;   /* chip padding, pill gaps */
+  --space-3: 12px;  /* compact rows */
+  --space-4: 16px;  /* phone gutter, compact card padding */
+  --space-5: 20px;  /* standard card padding */
+  --space-6: 24px;  /* between sections in a screen */
+  --space-8: 32px;  /* between major blocks */
+  --space-12: 48px; /* hero / celebration rhythm */
+
+  /* ---------- Radius ---------- */
+  --radius-sm: 10px;
+  --radius-md: 16px;    /* fields, options, bubbles */
+  --radius-lg: 28px;    /* cards */
+  --radius-xl: 40px;    /* photos, sheets, hero moments */
+  --radius-pill: 999px; /* buttons, chips, bars */
+
+  /* ---------- Shadow ---------- */
+  --shadow-soft: 0 1px 2px rgba(23, 20, 31, 0.05), 0 12px 32px rgba(23, 20, 31, 0.08);
+  --shadow-pop: 0 4px 0 #17141f; /* The sticker. Rationed. */
+  --shadow-sheet: 0 -2px 8px rgba(23, 20, 31, 0.06), 0 -20px 48px rgba(23, 20, 31, 0.14);
+
+  /* ---------- Motion ---------- */
+  --dur-instant: 100ms;    /* press feedback */
+  --dur-fast: 180ms;       /* hover, focus, chip/tab change */
+  --dur-base: 260ms;       /* default */
+  --dur-slow: 480ms;       /* arrivals with distance, sheets */
+  --dur-celebrate: 1400ms; /* the one big celebration only */
+
+  --ease-standard: cubic-bezier(0.2, 0, 0.2, 1);   /* colour, opacity */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);       /* entering */
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);           /* leaving */
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);/* touch + arrivals */
+  --ease-pop: cubic-bezier(0.5, 1.9, 0.45, 0.85);  /* small things (<80px) popping in */
+}
+
+/* ---------- Base ---------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 24px;
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* ---------- Type styles (use these classes, don't restyle) ---------- */
+.t-display-xl { font: 800 60px/58px var(--font-display); letter-spacing: -0.035em; }
+.t-display-lg { font: 800 40px/42px var(--font-display); letter-spacing: -0.03em; }
+.t-display-md { font: 700 28px/32px var(--font-display); letter-spacing: -0.02em; }
+.t-prompt     { font: 600 24px/30px var(--font-display); letter-spacing: -0.015em; }
+.t-heading    { font: 700 20px/26px var(--font-sans); }
+.t-body       { font: 400 16px/24px var(--font-sans); }
+.t-body-strong{ font: 600 16px/24px var(--font-sans); }
+.t-caption    { font: 500 13px/18px var(--font-sans); color: var(--ink-secondary); }
+.t-label      { font: 700 13px/16px var(--font-sans); }
+.t-button     { font: 700 16px/20px var(--font-sans); }
+.t-mono       { font: 500 14px/20px var(--font-mono); }
+.t-mono-caption { font: 400 12px/16px var(--font-mono); color: var(--ink-secondary); }
+.t-num        { font-variant-numeric: tabular-nums; }
+
+@media (max-width: 600px) {
+  .t-display-xl { font-size: 44px; line-height: 44px; }
+  .t-display-lg { font-size: 32px; line-height: 34px; }
+}
