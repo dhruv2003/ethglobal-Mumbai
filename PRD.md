@@ -1,6 +1,6 @@
 # AI Hackathon Battle Arena Product Requirements
 
-**Version 1.2 · 6 November 2026 · Testnet release specification**
+**Version 1.3 · 6 November 2026 · Testnet release specification**
 
 This product turns submitted hackathon projects into autonomous AI fighters. Each fighter pitches and defends a real project using a frozen GitHub repository, supporting artifacts, and automated test evidence. Three AI judges evaluate the projects through structured rounds. Spectators watch animated 1v1 battles and back match or tournament winners with testnet tokens.
 
@@ -196,7 +196,9 @@ Submission readiness, battle progress, result finalization, and token settlement
 
 ## 5.1 Submission fields
 
-**SUB-01 Required inputs.** Project name, short pitch, problem statement, intended users, track selection (SUB-06), public GitHub URL, default branch or selected commit, repository path for monorepos, team-owner wallet, and reward wallet.
+**SUB-01 Required inputs.** Team name, at least one team member, project name, short pitch, problem statement, intended users, how it's made, whether it was built at this event (and a start date if not), track selection (SUB-06) with a "how we used it" note for each selected track, public GitHub URL, a demo video (link or MP4), team-owner wallet, and reward wallet.
+
+**SUB-01a Optional inputs.** Member GitHub username and role, tech stack tags, known limitations, logo, cover image, branch or commit (default branch if empty), repository path for monorepos, deployed contract addresses with their network, live demo URL, and supporting artifacts (SUB-02). Self-declared limitations let the fighter acknowledge them honestly (AGT-03). A start date before the event is disclosed to judges so they can weigh prior work.
 
 Teams do not supply build, test, or start commands. The platform detects the execution setup from the frozen repository during processing (TST-01).
 
