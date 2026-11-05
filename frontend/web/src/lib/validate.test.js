@@ -79,6 +79,15 @@ describe("form helpers", () => {
   });
 });
 
+describe("fixtures", () => {
+  it("the Go Health Me fixture is a valid submission", async () => {
+    const { readFile } = await import("node:fs/promises");
+    const url = new URL("../../../../backend/fixtures/go-health-me/submission.json", import.meta.url);
+    const { form } = JSON.parse(await readFile(url, "utf8"));
+    expect(errs(mergeDraft(form))).toEqual({});
+  });
+});
+
 describe("toPayload", () => {
   it("uses the connected wallet as owner and reward wallet", () => {
     const p = toPayload(setIn(validForm(), "code.repoUrl", "https://github.com/night-owls/atlas/"), { ownerWallet: WALLET, chainId: 84532 });

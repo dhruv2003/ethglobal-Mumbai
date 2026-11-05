@@ -1,0 +1,32 @@
+{
+  "_note": "Form input for the 7-field submission form (frontend/web). Values come verbatim from showcase.md except where _derived says otherwise.",
+  "_derived": {
+    "team.name": "No team listed on the showcase; using the GitHub org from the submitted repo link.",
+    "code.repoUrl": "Submitted link 404s; using the public mirror (see source.json).",
+    "tracks.selected": "Showcase names World, ENS and Base as integrations this weekend; mapped to our placeholder track list (max 3).",
+    "project.description": "Description paragraph 1 + How it's Made paragraph 1, verbatim, to fit 1500 chars."
+  },
+  "form": {
+    "team": {
+      "name": "Meowteam6"
+    },
+    "project": {
+      "name": "Go Health Me",
+      "pitch": "Put money on your own sleep or workouts. Your wearable proves it, SPOTTER pays the players who hit.",
+      "description": "GoHealthMe is a commitment game for your own health. You stake test USDC on a challenge, say seven hours of sleep on Saturday night or one workout on Sunday, your wearable proves whether you did it, and SPOTTER, the settlement agent, pays the players who hit when the challenge ends. Miss it, shown by your wearable, and your stake goes to the people who hit. Nobody hits, everyone gets their stake back. No wearable data for the challenge, stake back. Raw health data never touches the chain, only the verdict.\n\nNext.js 16 on Vercel, Dynamic embedded wallets (email or Base), HealthPoolsV3.sol (Foundry) on Base Sepolia holding test USDC, SPOTTER as a server-side agent loop settling from its Circle wallet, Upstash KV and Supabase with RLS. Wearables: WHOOP direct OAuth and Junction. 2,278 vitest and 73 forge tests."
+    },
+    "code": {
+      "repoUrl": "https://github.com/aspiringsecurity/gohealthme-tokyo"
+    },
+    "demo": {
+      "videoUrl": "https://www.loom.com/share/17b1dc5da755422ea3177d4842556813"
+    },
+    "tracks": {
+      "selected": [
+        "world",
+        "ens",
+        "base"
+      ]
+    }
+  }
+}
