@@ -15,4 +15,4 @@ These services from `PRD.md` section 13.2 belong here:
 - Chain indexer: tracks bets, locks, outcomes, claims and refunds
 - Monitoring service: tracks reliability and resource use
 
-Smart contracts go in `contracts/` in this folder.
+Smart contracts go in `contracts/` in this folder. Their specification is in `contracts/SPEC.md`.
