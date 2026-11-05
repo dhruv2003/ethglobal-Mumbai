@@ -3,10 +3,33 @@
  * preview: see vite.config.js). Every call fails soft: callers decide what to
  * show when the judge service is offline.
  */
+const KEY_SLOT = "arena.organizerKey";
+/** Organizer key for judge/review actions. Kept for this browser tab only. */
+export const organizerKey = {
+  get: () => {
+    try {
+      return sessionStorage.getItem(KEY_SLOT) ?? "";
+    } catch {
+      return "";
+    }
+  },
+  set: (v) => {
+    try {
+      v ? sessionStorage.setItem(KEY_SLOT, v) : sessionStorage.removeItem(KEY_SLOT);
+    } catch {
+      /* storage blocked: the key just won't persist */
+    }
+  },
+};
+
 export async function api(path, { method = "GET", body } = {}) {
+  const headers = {};
+  if (body) headers["content-type"] = "application/json";
+  const key = method !== "GET" ? organizerKey.get() : "";
+  if (key) headers.authorization = `Bearer ${key}`;
   const res = await fetch(`/api${path}`, {
     method,
-    headers: body ? { "content-type": "application/json" } : undefined,
+    headers,
     body: body ? JSON.stringify(body) : undefined,
   });
   let data = null;

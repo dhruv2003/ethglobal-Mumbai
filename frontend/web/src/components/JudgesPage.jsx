@@ -5,7 +5,7 @@
  */
 import { useEffect, useState } from "react";
 import { StatusPill } from "@ds/ui.jsx";
-import { api, health } from "../lib/api.js";
+import { api, health, organizerKey } from "../lib/api.js";
 import { Ring } from "./Arena.jsx";
 import { PixelFighter } from "./PixelFighter.jsx";
 
@@ -243,6 +243,7 @@ export function JudgesPage() {
   const [state, setState] = useState({ loading: true });
   const [editor, setEditor] = useState(null); // { editing?: judge }
   const [error, setError] = useState("");
+  const [key, setKey] = useState(organizerKey.get());
 
   async function load() {
     const h = await health();
@@ -295,7 +296,7 @@ export function JudgesPage() {
             {judges.length === h.maxJudges ? "✓ " : ""}
             {judges.length} of {h.maxJudges} seats filled
           </StatusPill>
-          <StatusPill tone={h.judgesReady ? "live" : "neutral"}>{h.judgesReady ? `Agents ready · ${h.model}` : "No API key on the server"}</StatusPill>
+          <StatusPill tone={h.judgesReady ? "live" : "neutral"}>{h.judgesReady ? `Agents ready · ${h.model}` : `No ${h.provider === "openai" ? "OpenAI" : "Anthropic"} key on the server`}</StatusPill>
         </div>
       </div>
       {error && (
@@ -303,6 +304,24 @@ export function JudgesPage() {
           ✕ {error}
         </p>
       )}
+      <details className="organizer" open={Boolean(key)}>
+        <summary className="t-caption">Organizer key</summary>
+        <div className="organizer__row">
+          <input
+            className="input t-mono"
+            type="password"
+            autoComplete="off"
+            placeholder="Only needed when the server sets ADMIN_TOKEN"
+            value={key}
+            onChange={(e) => {
+              setKey(e.target.value);
+              organizerKey.set(e.target.value.trim());
+            }}
+            aria-label="Organizer key"
+          />
+          <span className="t-caption">Kept in this tab only. Adding, editing and removing judges needs it on a deployed server.</span>
+        </div>
+      </details>
 
       {editor ? (
         <JudgeForm
@@ -329,7 +348,8 @@ export function JudgesPage() {
       )}
       {!h.judgesReady && (
         <p className="t-caption m0">
-          To let the judges score projects, add <code className="t-mono-caption">ANTHROPIC_API_KEY</code> to <code className="t-mono-caption">backend/.env</code> and restart the backend.
+          To let the judges score projects, add <code className="t-mono-caption">{h.provider === "openai" ? "OPENAI_API_KEY" : "ANTHROPIC_API_KEY"}</code> to{" "}
+          <code className="t-mono-caption">backend/.env</code> and restart the backend.
         </p>
       )}
     </>

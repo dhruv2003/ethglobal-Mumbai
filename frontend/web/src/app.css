@@ -635,3 +635,5 @@ fieldset.field { border: 0; margin: 0; padding: 0; min-width: 0; }
 .radio-card input:focus-visible + .radio-card__body { outline: 2px solid var(--focus); outline-offset: 2px; }
 .radios__row--3 { grid-template-columns: repeat(3, 1fr); }
 @media (max-width: 860px) { .radios__row, .radios__row--3 { grid-template-columns: 1fr; } }
+.organizer > summary { cursor: pointer; width: max-content; }
+.organizer__row { display: flex; flex-direction: column; gap: var(--space-1); max-width: 480px; margin-top: var(--space-2); }

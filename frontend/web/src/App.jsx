@@ -75,7 +75,7 @@ export default function App() {
       setRecord(saved);
       window.scrollTo({ top: 0 });
     } catch (e) {
-      setSubmitState({ phase: "idle", error: wallet.friendlyError(e) });
+      setSubmitState({ phase: "idle", error: e.fromServer ? e.message : wallet.friendlyError(e) });
     }
   }
 

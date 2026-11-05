@@ -67,11 +67,17 @@ export function listSubmissions() {
  */
 export async function saveSubmission(payload) {
   let record;
+  let res;
   try {
-    const res = await fetch("/api/submissions", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) });
-    if (res.ok) record = await res.json();
+    res = await fetch("/api/submissions", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) });
   } catch {
-    /* offline: fall through to local */
+    /* backend unreachable: fall through to local */
+  }
+  if (res?.ok) record = await res.json().catch(() => undefined);
+  else if (res && res.status >= 400 && res.status < 500 && res.headers.get("content-type")?.includes("json")) {
+    // The backend answered and said no (bad signature, rate limit...). Don't hide that behind a local save.
+    const data = await res.json().catch(() => ({}));
+    throw Object.assign(new Error(data.error ?? `The server refused the submission (HTTP ${res.status}).`), { fromServer: true });
   }
   record ??= {
     id: globalThis.crypto?.randomUUID?.() ?? String(Date.now()),

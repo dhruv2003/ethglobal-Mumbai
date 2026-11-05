@@ -1,7 +1,10 @@
 /*
- * One judge reviews one project with Claude.
+ * One judge reviews one project with an LLM: OpenAI by default, or Claude.
  *
- * - Structured output (zod) so every review has the same shape.
+ *   JUDGE_PROVIDER=openai     (default) needs OPENAI_API_KEY,    JUDGE_MODEL default gpt-5.4
+ *   JUDGE_PROVIDER=anthropic            needs ANTHROPIC_API_KEY, JUDGE_MODEL default claude-opus-5-5
+ *
+ * - Structured output (zod) so every review has the same shape, whichever provider.
  * - All 9 criteria must be scored exactly once, integers 0-100. Anything else
  *   gets one repair attempt; if that fails the review is marked invalid and no
  *   score is invented (PRD JDG-05).
@@ -9,13 +12,12 @@
  *   sum(weight% x score) is already in hundredths of a point (PRD 9.2 style).
  * - Judges run independently and in parallel; none sees another's output (JDG-03).
  */
-import Anthropic from "@anthropic-ai/sdk";
-import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { z } from "zod";
 import { CRITERIA, CRITERION_IDS } from "./criteria.mjs";
 import { liveTestSummary } from "../projects.mjs";
 
-export const MODEL = process.env.JUDGE_MODEL ?? "claude-opus-5-5";
+export const PROVIDER = (process.env.JUDGE_PROVIDER ?? "openai").toLowerCase() === "anthropic" ? "anthropic" : "openai";
+export const MODEL = process.env.JUDGE_MODEL ?? (PROVIDER === "openai" ? "gpt-5.4" : "claude-opus-5-5");
 const EFFORT = process.env.JUDGE_EFFORT ?? "high";
 
 const ReviewSchema = z.object({
@@ -36,11 +38,69 @@ const ReviewSchema = z.object({
   certainty: z.enum(["low", "medium", "high"]),
 });
 
-let client;
-const getClient = () => (client ??= new Anthropic());
+/** Is there a key for the configured provider? */
+export const hasCredentials = () =>
+  PROVIDER === "openai" ? Boolean(process.env.OPENAI_API_KEY) : Boolean(process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_AUTH_TOKEN);
 
-/** Is there any Anthropic credential the SDK can use? (env key or auth token) */
-export const hasCredentials = () => Boolean(process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_AUTH_TOKEN);
+/*
+ * Provider adapters. Each takes (system, user) and returns
+ * { parsed, refusal, usage: { input_tokens, output_tokens }, stop }.
+ * SDKs are imported lazily so only the configured one loads.
+ */
+let openaiCall;
+async function callOpenAI(system, user) {
+  openaiCall ??= await (async () => {
+    const { default: OpenAI } = await import("openai");
+    const { zodTextFormat } = await import("openai/helpers/zod");
+    const client = new OpenAI();
+    const format = zodTextFormat(ReviewSchema, "judge_review");
+    return (sys, usr) =>
+      client.responses.parse({
+        model: MODEL,
+        instructions: sys,
+        input: usr,
+        reasoning: { effort: EFFORT },
+        max_output_tokens: 16000,
+        text: { format },
+      });
+  })();
+  const res = await openaiCall(system, user);
+  const refusal = (res.output ?? []).flatMap((o) => (o.type === "message" ? o.content : [])).find((c) => c.type === "refusal")?.refusal ?? null;
+  return {
+    parsed: res.output_parsed ?? null,
+    refusal,
+    usage: { input_tokens: res.usage?.input_tokens ?? 0, output_tokens: res.usage?.output_tokens ?? 0 },
+    stop: res.incomplete_details?.reason ?? res.status,
+  };
+}
+
+let anthropicCall;
+async function callAnthropic(system, user) {
+  anthropicCall ??= await (async () => {
+    const { default: Anthropic } = await import("@anthropic-ai/sdk");
+    const { zodOutputFormat } = await import("@anthropic-ai/sdk/helpers/zod");
+    const client = new Anthropic();
+    const format = zodOutputFormat(ReviewSchema);
+    return (sys, usr) =>
+      client.messages.parse({
+        model: MODEL,
+        max_tokens: 16000,
+        thinking: { type: "adaptive" },
+        output_config: { effort: EFFORT, format },
+        system: sys,
+        messages: [{ role: "user", content: usr }],
+      });
+  })();
+  const res = await anthropicCall(system, user);
+  return {
+    parsed: res.parsed_output ?? null,
+    refusal: res.stop_reason === "refusal" ? res.stop_details?.explanation ?? "The model declined to review." : null,
+    usage: { input_tokens: res.usage?.input_tokens ?? 0, output_tokens: res.usage?.output_tokens ?? 0 },
+    stop: res.stop_reason,
+  };
+}
+
+const callModel = (system, user) => (PROVIDER === "openai" ? callOpenAI(system, user) : callAnthropic(system, user));
 
 function materials(project) {
   const d = project.dossier;
@@ -94,7 +154,7 @@ export const overallHundredths = (weights, review) => review.criteria.reduce((n,
 
 export async function reviewProject(judge, project) {
   const started = Date.now();
-  const messages = [{ role: "user", content: userPrompt(project) }];
+  let prompt = userPrompt(project);
   const usage = { input_tokens: 0, output_tokens: 0 };
   let attempts = 0;
   let parsed = null;
@@ -103,29 +163,18 @@ export async function reviewProject(judge, project) {
 
   while (attempts < 2) {
     attempts++;
-    const res = await getClient().messages.parse({
-      model: MODEL,
-      max_tokens: 16000,
-      thinking: { type: "adaptive" },
-      output_config: { effort: EFFORT, format: zodOutputFormat(ReviewSchema) },
-      system: judge.systemPrompt,
-      messages,
-    });
-    usage.input_tokens += res.usage?.input_tokens ?? 0;
-    usage.output_tokens += res.usage?.output_tokens ?? 0;
-    stop = res.stop_reason;
-    if (stop === "refusal") {
-      return { judgeId: judge.id, status: "declined", detail: res.stop_details?.explanation ?? "The model declined to review.", attempts, usage, ms: Date.now() - started };
+    const res = await callModel(judge.systemPrompt, prompt);
+    usage.input_tokens += res.usage.input_tokens;
+    usage.output_tokens += res.usage.output_tokens;
+    stop = res.stop;
+    if (res.refusal) {
+      return { judgeId: judge.id, status: "declined", detail: res.refusal, attempts, usage, ms: Date.now() - started };
     }
-    parsed = res.parsed_output ?? null;
+    parsed = res.parsed;
     issues = problems(parsed);
     if (!issues.length) break;
-    // One repair attempt (PRD JDG-05). A fresh request, not a replay of the
-    // previous turn: history with edited thinking blocks is rejected on this model.
-    messages.splice(0, messages.length, {
-      role: "user",
-      content: `${userPrompt(project)}\n\nA previous attempt at this review had these problems; avoid them:\n${issues.map((i) => `- ${i}`).join("\n")}`,
-    });
+    // One repair attempt (PRD JDG-05): a fresh request that names the problems.
+    prompt = `${userPrompt(project)}\n\nA previous attempt at this review had these problems; avoid them:\n${issues.map((i) => `- ${i}`).join("\n")}`;
   }
 
   if (issues.length) {
@@ -156,6 +205,7 @@ export async function runPanel(judgesList, project) {
   return {
     projectId: project.id,
     ranAt: new Date().toISOString(),
+    provider: PROVIDER,
     model: MODEL,
     effort: EFFORT,
     complete: scored.length === judgesList.length,

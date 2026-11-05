@@ -188,7 +188,7 @@ export function JudgesPanel({ project }) {
         {!h ? (
           <span className="t-caption">Judge service offline. Showing the last stored review{result ? "" : " (none yet)"}.</span>
         ) : !h.judgesReady ? (
-          <span className="t-caption">Add an Anthropic API key to the backend to let the judges score projects.</span>
+          <span className="t-caption">Add {h.provider === "openai" ? "an OpenAI" : "an Anthropic"} API key to the backend to let the judges score projects.</span>
         ) : (
           <button type="button" className="btn btn--oracle btn--sm" onClick={ask} disabled={busy}>
             {busy ? "Judging…" : result ? "Ask the judges again" : "Ask the judges"}
