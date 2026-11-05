@@ -1,0 +1,160 @@
+{
+  "fetchedAt": "2026-11-05T20:10:00Z",
+  "showcase": {
+    "url": "https://ethglobal.com/showcase/go-health-me-3xrns",
+    "event": "ETHGlobal Tokyo 2026",
+    "rawHtml": "raw/showcase.html",
+    "text": "showcase.md"
+  },
+  "repository": {
+    "submittedUrl": "https://github.com/Meowteam6/gohealthme-tokyo",
+    "submittedUrlStatus": "404 (private or deleted) as of fetch",
+    "clonedFrom": "https://github.com/aspiringsecurity/gohealthme-tokyo",
+    "whyThisMirror": "Public, not a fork, description 'GoHealthMe V4: ETHGlobal Tokyo 2026 continuity build', contains the showcase's boundary commit a86387d. Created 2026-09-27T10:13Z, after its last push, so it looks like a mirror push of the original.",
+    "localPath": "repo/",
+    "pinnedCommit": "5ba47c71a67a5326680170268d4e597f2863b0e3",
+    "pinnedCommitDate": "2026-09-27T10:06:13+09:00",
+    "defaultBranch": "main",
+    "totalCommits": 437,
+    "trackedFiles": 1763,
+    "continuity": {
+      "boundaryCommit": "a86387da9fd12ca56ce77108323d56276560bf14",
+      "boundaryClaim": "Showcase: 'Everything after commit a86387d is this weekend.'",
+      "boundaryCommitDate": "2026-09-14T17:45:34-04:00",
+      "commitsBeforeOrAtBoundary": 86,
+      "commitsAfterBoundary": 351,
+      "commitDatesAfterBoundary": {
+        "2026-09-25": 1,
+        "2026-09-26": 319,
+        "2026-09-27": 31
+      },
+      "firstCommitDate": "2026-08-22T19:40:44-04:00"
+    }
+  },
+  "videos": {
+    "demoVideo": {
+      "source": "ETHGlobal embedded player (Mux)",
+      "muxPlaybackId": "Ga7hTIeyqlfGBf83YbpiNtnw1TgQLKoqXNNnrtNEgp00",
+      "url": "https://stream.mux.com/Ga7hTIeyqlfGBf83YbpiNtnw1TgQLKoqXNNnrtNEgp00/high.mp4",
+      "file": "media/demo-video.mp4",
+      "durationSec": 142.05,
+      "resolution": "1920x1022",
+      "canonical": true
+    },
+    "liveDemo": {
+      "source": "Loom (labelled 'Live Demo' on the showcase)",
+      "url": "https://www.loom.com/share/17b1dc5da755422ea3177d4842556813",
+      "title": "How Spotter Pays Wearable Health Challenges",
+      "file": "media/loom-demo.mp4",
+      "durationSec": 142.04,
+      "captions": "media/loom-captions.vtt",
+      "transcriptJson": "media/loom-transcript.json",
+      "transcript": "media/demo-transcript.md",
+      "note": "Same recording as demoVideo (frames match visually), encoded separately."
+    }
+  },
+  "keyframes": "media/keyframes/ (one frame every 10 s from the Loom copy)",
+  "screenshots": "media/screenshots/ (6 images from the showcase gallery; screen-1 is a 63x63 icon)",
+  "files": {
+    "media/demo-transcript.md": {
+      "bytes": 2007,
+      "sha256": "e4199f2c08a2c722f2dcf201cec8297a11fc65c29e1a0701f042cc1d9696b584"
+    },
+    "media/demo-video.mp4": {
+      "bytes": 11357585,
+      "sha256": "0b242f8a2eb0ff9cadb4567a40168217282faac9373f6ebe180ffe6e335cfb07"
+    },
+    "media/loom-captions.vtt": {
+      "bytes": 2941,
+      "sha256": "061115d053d5af7fd9aa6b8a22488ba4cdf3079b0cc74cee4aa6ff4164f89067"
+    },
+    "media/loom-demo.mp4": {
+      "bytes": 17472965,
+      "sha256": "cac736d8862f16dfbfb6dcd8b7f7cdeae9bd5eff1b2e6723f3dbf49ea9eb347c"
+    },
+    "media/loom-transcript.json": {
+      "bytes": 104174,
+      "sha256": "f44f3a9b9e165b7974400e3320f9d619c65d2c3f9f0c41e21e8b735b836bd80f"
+    },
+    "media/screenshots/screen-1.png": {
+      "bytes": 8208,
+      "sha256": "7ab9301b45b37b4a297488d6dd906541aed025a9e03a6d00cc8a7ab9839b888f"
+    },
+    "media/screenshots/screen-2.png": {
+      "bytes": 384765,
+      "sha256": "1ff34239f0f7230657d74b615cfc6bfd109dc25d15daa58417c7e4fea8f773c5"
+    },
+    "media/screenshots/screen-3.png": {
+      "bytes": 3290953,
+      "sha256": "ba0d21998ddfad1535c321105561b2758c2455f6d96d9fef555d038fe32d0022"
+    },
+    "media/screenshots/screen-4.png": {
+      "bytes": 2151179,
+      "sha256": "fa2367b85b62beee28f92285a74c70df38ea4c9cb5660d4f99938e6fe408cdec"
+    },
+    "media/screenshots/screen-5.png": {
+      "bytes": 3997462,
+      "sha256": "1cfc4feb93ff40e1533774c740c24fd13fab7d3eda1d6d1993d38124bb096560"
+    },
+    "media/screenshots/screen-6.png": {
+      "bytes": 4011274,
+      "sha256": "805e23e37496aa220fc72a30848a89b59f7880a383b32862e1ae65b7b02e8071"
+    },
+    "media/keyframes/t001.jpg": {
+      "bytes": 73680,
+      "sha256": "ca5c834c8d4c0c4f4fa7d44da0874df215728007dc9a48a90bf85b6537a9cfc4"
+    },
+    "media/keyframes/t002.jpg": {
+      "bytes": 73245,
+      "sha256": "524652b207394b96fa8a41f26838de1ead7d7ac2ee6c15976770ce811c7c175e"
+    },
+    "media/keyframes/t003.jpg": {
+      "bytes": 73151,
+      "sha256": "0c59e3d3f54df0bc831bee9d69d3fe2d7bd1305d0e3af05a7f3bf5c4186384bf"
+    },
+    "media/keyframes/t004.jpg": {
+      "bytes": 54770,
+      "sha256": "9fff001ed9bc25728aec3de23548e2a452e7429609154587ad73569d0db3fbde"
+    },
+    "media/keyframes/t005.jpg": {
+      "bytes": 46889,
+      "sha256": "2465471403576cb7abf5c1672871f7eb13d0effe8165818558aa6ad64629bbbf"
+    },
+    "media/keyframes/t006.jpg": {
+      "bytes": 49501,
+      "sha256": "4b69033762f05ba72b6fe45f9e7ddc4eaba7fa6735bd41e88478745c6026e861"
+    },
+    "media/keyframes/t007.jpg": {
+      "bytes": 47633,
+      "sha256": "e1e0cacdd51b3cd1821fd8a314f7fbe292f78e895230b54ee85fb9b16d25d9ac"
+    },
+    "media/keyframes/t008.jpg": {
+      "bytes": 83578,
+      "sha256": "81e02f5ff933900aeae110d35b2cb4c79ef5ad74a79b9935f3a35b54a609c493"
+    },
+    "media/keyframes/t009.jpg": {
+      "bytes": 75922,
+      "sha256": "33de1e8054bf02a1122c7eaedaeea7c2cff5693d350da0b1ed1f7e9a48e0c812"
+    },
+    "media/keyframes/t010.jpg": {
+      "bytes": 77567,
+      "sha256": "d6d3bf97ee6e83e1c956d1707a22e68d39dbd1f04e87099cb389d4ffaf9b4623"
+    },
+    "media/keyframes/t011.jpg": {
+      "bytes": 72150,
+      "sha256": "99f0df8cd7517f3fbe6f959b9bd667710f088cf09dcb59a06f7fd405d5a0fc91"
+    },
+    "media/keyframes/t012.jpg": {
+      "bytes": 77759,
+      "sha256": "77f39d5fceb77e7f59cd4ede91123820e3a70680c43f2b36cdc7470981ea22d0"
+    },
+    "media/keyframes/t013.jpg": {
+      "bytes": 75924,
+      "sha256": "2952d831e521488eaca2558255ff6e21218df997e233cd4192c7b36b7b54e88f"
+    },
+    "media/keyframes/t014.jpg": {
+      "bytes": 52471,
+      "sha256": "3299a4f194b88ac88542b0e84375c1be5de7408589f3cf9da2d8b8fe6911391d"
+    }
+  }
+}

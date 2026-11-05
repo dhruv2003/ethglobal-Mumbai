@@ -1,0 +1,616 @@
+{
+  "generatedAt": "2026-11-06T00:00:00Z",
+  "reviewer": {
+    "name": "Reviewer agent",
+    "mode": "manual run",
+    "method": "Static read of pinned commit 5ba47c7 (files and git history via read-only git commands) plus the showcase text, demo transcript and submission form; no code was executed, built, installed or tested."
+  },
+  "commit": "5ba47c71a67a5326680170268d4e597f2863b0e3",
+  "summary": "Go Health Me is a Next.js app where players stake Base Sepolia test USDC into HealthPoolsV3 pools tied to a sleep or workout goal. A server-side agent (SPOTTER) reads the player's wearable data (WHOOP OAuth or Junction), decides pass or miss off-chain, writes recordResult(poolId, user, bool, multiplier) from a Circle developer-controlled wallet, and calls settle() so hitters split the forfeited stakes; unadjudicated players are refunded by the contract. During the event the team added World ID proof-of-human gating and a per-payout World ID for Agents confirmation, ENSv2 Sepolia subnames with a role-limited agent resolver key, Intercepta address screening before payout writes, a conservative miss rule, a treasury gas drip for email wallets and Dynamic JWT auth. The Solidity contract itself was not changed after the continuity boundary; event work is almost entirely in the TypeScript app, tests and scripts.",
+  "verdict": "Most technical claims in the showcase map to concrete, well-commented code at the cited locations, and the claimed test counts match a static count almost exactly. Several safety claims are conditional on deployment configuration (Intercepta screening and World gating are no-ops when their env vars are unset, and recordResult only runs from the Circle wallet after an owner role flip), which static reading cannot confirm for the live build. Live-run claims (first real hit, on-chain recording) are not checkable from code, and DEPLOYMENTS.md is internally inconsistent about whether the Tokyo contract was deployed.",
+  "intendedUsers": "People with a WHOOP or Junction-supported wearable who want a financial commitment device for sleep or workout goals; currently a closed beta on testnet USDC.",
+  "problem": "Self-commitment to health habits is weak without stakes; the project uses staked money plus wearable-verified outcomes, settled by an agent, so nobody has to self-report or manually check out.",
+  "coreJourney": [
+    "Sign in with Dynamic (email embedded wallet or Base account); email wallets get a small treasury ETH drip for gas",
+    "Prove one human with World IDKit (proof signal bound to wallet, nullifier bound to one wallet)",
+    "Pick an ENSv2 subname under gohealthme.eth and pair a wearable (WHOOP direct OAuth or Junction)",
+    "Join a pool on HealthPoolsV3 by staking test USDC (joinPool, browser-signed)",
+    "After the window, SPOTTER reads wearable data and decides pass/miss; a miss is only recorded under the strict miss rule after a grace period",
+    "For a pass, SPOTTER asks the player to confirm via World ID for Agents (signal goalId:attempt); expiry/decline writes nothing",
+    "SPOTTER screens the payee with Intercepta, writes recordResult from its Circle wallet, then settle() credits achievers via pull-payment; players withdraw()"
+  ],
+  "architecture": [
+    {
+      "component": "HealthPoolsV3.sol",
+      "detail": "Pool escrow in USDC: join, oracle-only recordResult, settler-only settle for 24h after periodEnd then public, pull-payment owed ledger, cancel/refund, optional verdict registry. Unchanged since the continuity boundary.",
+      "refs": [
+        "contracts/src/HealthPoolsV3.sol:85",
+        "contracts/src/HealthPoolsV3.sol:300",
+        "contracts/src/HealthPoolsV3.sol:318",
+        "contracts/src/HealthPoolsV3.sol:363"
+      ]
+    },
+    {
+      "component": "HealthVerdict.sol",
+      "detail": "Pre-event optional verdict registry (Chainlink CRE onReport / attester recordVerdict) storing verified flag, confidence, digest and facet bitmap; deployment notes say it is set to 0x0 (unused) for Tokyo.",
+      "refs": [
+        "contracts/src/HealthVerdict.sol:156",
+        "contracts/src/HealthVerdict.sol:193"
+      ]
+    },
+    {
+      "component": "SPOTTER executor (Circle wallet)",
+      "detail": "Sends settle/recordResult/recordVerdict through Circle createContractExecutionTransaction, with settle preflights, a pool-scoped lock and payout assertions read from receipts.",
+      "refs": [
+        "app/lib/server/agent/spotter.ts:1",
+        "app/lib/server/agent/spotter.ts:457",
+        "app/lib/server/agent/wallet.ts:59"
+      ]
+    },
+    {
+      "component": "Agent sweep cron",
+      "detail": "Vercel cron every 2 minutes, CRON_SECRET bearer auth, settles recorded-but-unsettled claims without a browser present.",
+      "refs": [
+        "app/vercel.json:5",
+        "app/app/api/agent/sweep/route.ts:1",
+        "app/app/api/agent/sweep/route.ts:176"
+      ]
+    },
+    {
+      "component": "Miss rule",
+      "detail": "One-sided rule for recording verdict=false: commitment-model wearable pools only, after MISS_GRACE_HOURS (clamped 1..18h to fit the 24h settler window), full local-window coverage, not met with a one-day timezone hedge, and the pass path must also say not met.",
+      "refs": [
+        "app/lib/server/agent/miss.ts:1",
+        "app/lib/server/agent/miss.ts:22",
+        "app/lib/miss-grace.ts:12"
+      ]
+    },
+    {
+      "component": "World ID (IDKit 4) proof-of-human",
+      "detail": "Server-signed rp_context on POST, signal = lowercased wallet checked against signal_hash, nullifier<->wallet binding in KV, requireHuman gate on agent run and evidence routes.",
+      "refs": [
+        "app/app/api/world/rp-context/route.ts:52",
+        "app/lib/server/world/verify.ts:99",
+        "app/lib/server/world/human.ts:1",
+        "app/lib/server/world/require-human.ts:25"
+      ]
+    },
+    {
+      "component": "World ID for Agents approval",
+      "detail": "Per-payout confirmation state machine (pending/approved/declined/expired/cancelled) with static action 'settle' and signal '<goalId>:<attempt>', replay key per attempt+nullifier.",
+      "refs": [
+        "app/lib/server/agent/approval.ts:36",
+        "app/lib/server/agent/approval.ts:126",
+        "app/lib/server/agent/approval-provider.ts:110"
+      ]
+    },
+    {
+      "component": "Intercepta payout screening",
+      "detail": "Quick-scan call to web3antivirus API before recordResult(true) and before settle; blocked/unavailable throw a hold; result and rule written to the claim ledger; unconfigured key is a no-op.",
+      "refs": [
+        "app/lib/server/screening/intercepta.ts:311",
+        "app/lib/server/screening/gate.ts:106",
+        "app/lib/server/agent/spotter.ts:392",
+        "app/lib/server/agent/spotter.ts:617"
+      ]
+    },
+    {
+      "component": "ENSv2 Sepolia integration",
+      "detail": "Talks to the 2026-09-15 ENSv2 Sepolia deployment via viem ABI snippets (not ensjs); own UserRegistry/PermissionedResolver under gohealthme.eth; agent granted ROLE_SET_TEXT on four receipt keys; eth_call permission-matrix proof script.",
+      "refs": [
+        "app/lib/server/ens/deployments.ts:1",
+        "app/lib/ens/names.ts:193",
+        "app/scripts/ens-bootstrap.ts:369",
+        "app/lib/server/ens/resolve.ts:447"
+      ]
+    },
+    {
+      "component": "Wearable providers",
+      "detail": "WHOOP direct OAuth (tokens stored, nights keyed to the local day the sleep ended), Junction unified API, and an Apple Health path (signed daily totals from an iPhone app) that is hidden unless APPLE_APP_AVAILABLE=1.",
+      "refs": [
+        "app/lib/server/wearable/whoop.ts:62",
+        "app/lib/server/wearable/whoop.ts:606",
+        "app/lib/server/junction.ts:1",
+        "app/lib/server/wearable/apple.ts:93"
+      ]
+    },
+    {
+      "component": "Storage: Upstash Redis + Supabase",
+      "detail": "Upstash Redis REST as the production KV/lock store and rate limiter (file fallback locally); Supabase tables wearable_days, challenges, profiles, feedback, each with RLS enabled.",
+      "refs": [
+        "app/lib/server/store.ts:4",
+        "app/lib/server/rate-limit.ts:328",
+        "supabase/migrations/20260908_wearable_days.sql:65",
+        "supabase/migrations/20260926095900_challenges.sql:115"
+      ]
+    },
+    {
+      "component": "Wallet auth and gas",
+      "detail": "Dynamic session JWT verified against JWKS (exp, scope, environment, verified_credentials) as an alternative to EIP-191 signatures; treasury gas drip with per-address, daily and floor caps.",
+      "refs": [
+        "app/lib/server/dynamic-jwt.ts:1",
+        "app/lib/server/gas-drip.ts:1",
+        "app/app/api/gas/drip/route.ts:58"
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "name": "next",
+      "version": "16.2.9",
+      "ref": "app/package.json"
+    },
+    {
+      "name": "react",
+      "version": "19.2.4",
+      "ref": "app/package.json"
+    },
+    {
+      "name": "@worldcoin/idkit",
+      "version": "^4.3.0",
+      "ref": "app/package.json"
+    },
+    {
+      "name": "@worldcoin/idkit-core",
+      "version": "^4.3.0",
+      "ref": "app/package.json"
+    },
+    {
+      "name": "@dynamic-labs/sdk-react-core",
+      "version": "^4.88.6",
+      "ref": "app/package.json"
+    },
+    {
+      "name": "@dynamic-labs/ethereum-aa",
+      "version": "4.88.6",
+      "ref": "app/package.json"
+    },
+    {
+      "name": "@circle-fin/developer-controlled-wallets",
+      "version": "^10.8.0",
+      "ref": "app/package.json"
+    },
+    {
+      "name": "@upstash/redis",
+      "version": "^1.38.0",
+      "ref": "app/package.json"
+    },
+    {
+      "name": "@upstash/ratelimit",
+      "version": "^2.0.8",
+      "ref": "app/package.json"
+    },
+    {
+      "name": "@supabase/supabase-js",
+      "version": "^2.112.3",
+      "ref": "app/package.json"
+    },
+    {
+      "name": "viem",
+      "version": "^2.52.0",
+      "ref": "app/package.json"
+    },
+    {
+      "name": "wagmi",
+      "version": "^2.19.5",
+      "ref": "app/package.json"
+    },
+    {
+      "name": "jose",
+      "version": "^6.2.3",
+      "ref": "app/package.json"
+    },
+    {
+      "name": "@coinbase/cdp-sdk",
+      "version": "^1.55.0",
+      "ref": "app/package.json"
+    },
+    {
+      "name": "@x402/evm",
+      "version": "^2.24.0",
+      "ref": "app/package.json"
+    },
+    {
+      "name": "vitest",
+      "version": "^4.1.8",
+      "ref": "app/package.json"
+    },
+    {
+      "name": "openzeppelin-contracts (vendored)",
+      "version": "5.7.0",
+      "ref": "contracts/lib/openzeppelin-contracts/package.json"
+    },
+    {
+      "name": "@chainlink/cre-sdk",
+      "version": "^1.11.0",
+      "ref": "cre/package.json"
+    },
+    {
+      "name": "expo",
+      "version": "~54.0.0",
+      "ref": "mobile/package.json"
+    },
+    {
+      "name": "@kingstinct/react-native-healthkit",
+      "version": "^14.1.0",
+      "ref": "mobile/package.json"
+    },
+    {
+      "name": "hono",
+      "version": "^4.7.0",
+      "ref": "services/confidential-shim/package.json"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "E1",
+      "claim": "Next.js 16 on Vercel",
+      "source": "showcase",
+      "status": "supported_by_code",
+      "refs": [
+        "app/package.json:49",
+        "app/vercel.json:2"
+      ],
+      "observation": "next 16.2.9 pinned; vercel.json declares framework nextjs and three crons.",
+      "limitations": "Cannot confirm the live deployment host or that it builds."
+    },
+    {
+      "id": "E2",
+      "claim": "Dynamic embedded wallets (email or Base); email sign-ins reuse the Dynamic session token",
+      "source": "showcase",
+      "status": "supported_by_code",
+      "refs": [
+        "app/app/providers.tsx:4",
+        "app/lib/server/dynamic-jwt.ts:1"
+      ],
+      "observation": "DynamicContextProvider with Ethereum connectors; server verifies Dynamic JWT signature via JWKS plus exp, scope user:basic, environment_id and verified_credentials containing the claimed address.",
+      "limitations": "Base Account connector path not traced end to end."
+    },
+    {
+      "id": "E3",
+      "claim": "Upstash KV and Supabase with RLS",
+      "source": "showcase",
+      "status": "supported_by_code",
+      "refs": [
+        "app/lib/server/store.ts:4",
+        "supabase/migrations/20260908_wearable_days.sql:65",
+        "supabase/migrations/20260926095900_challenges.sql:115",
+        "supabase/migrations/20260926100000_profiles.sql:39",
+        "supabase/migrations/20260926100100_feedback.sql:39"
+      ],
+      "observation": "All four tables enable RLS; wearable_days has no anon read policy; profiles has a public read policy (line 48); writes are service-role only. Upstash Redis REST is the production store.",
+      "limitations": "Whether migrations were applied to the live Supabase project is not checkable."
+    },
+    {
+      "id": "E4",
+      "claim": "HealthPoolsV3.sol (Foundry) on Base Sepolia holding test USDC",
+      "source": "showcase",
+      "status": "supported_by_code",
+      "refs": [
+        "contracts/script/Deploy.s.sol:25",
+        "contracts/src/HealthPoolsV3.sol:90"
+      ],
+      "observation": "Foundry project; deploy script defaults to Base Sepolia USDC 0x036C...CF7e; contract holds an immutable USDC token. Contract source is byte-identical to the pre-event version (git diff a86387d..5ba47c7 touches only tests).",
+      "limitations": "DEPLOYMENTS.md says the Tokyo instance is 'NOT YET DEPLOYED' yet its deploy log lists seed runs reusing 0x0B6E8D47...; on-chain state not checked."
+    },
+    {
+      "id": "E5",
+      "claim": "HealthPoolsV3 has no getParticipants, so the player list is read from storage slot 7",
+      "source": "showcase",
+      "status": "supported_by_code",
+      "refs": [
+        "contracts/src/HealthPoolsV3.sol:108",
+        "app/lib/contract.ts:679",
+        "app/lib/contract.ts:704"
+      ],
+      "observation": "No getParticipants function exists. OZ 5.7 ReentrancyGuard uses a namespaced slot, so owner..healthVerdict/fee/gate occupy slots 0-3, joinAllowed 4, poolCount 5, pools 6, participantList 7, matching PARTICIPANT_LIST_SLOT = 7n read via getStorageAt.",
+      "limitations": "Slot layout derived by hand, not by forge inspect."
+    },
+    {
+      "id": "E6",
+      "claim": "SPOTTER is a server-side agent loop settling from its Circle wallet",
+      "source": "showcase",
+      "status": "supported_by_code",
+      "refs": [
+        "app/lib/server/agent/spotter.ts:1",
+        "app/lib/server/agent/spotter.ts:457",
+        "app/app/api/agent/sweep/route.ts:1",
+        "scripts/set-agent-oracle.sh:3"
+      ],
+      "observation": "settle() is sent via Circle createContractExecutionTransaction; a 2-minute cron sweep drives settlement. recordResult only goes through Circle after the owner flips the oracle role to the Circle wallet (set-agent-oracle.sh); otherwise run.ts uses the legacy ORACLE_SIGNER_PRIVATE_KEY.",
+      "limitations": "DEPLOYMENTS.md lists the oracle as the env-key address 0xA56e..., so which key records results on the live contract is unverified."
+    },
+    {
+      "id": "E7",
+      "claim": "Wearables: WHOOP direct OAuth and Junction",
+      "source": "showcase",
+      "status": "supported_by_code",
+      "refs": [
+        "app/lib/server/wearable/whoop.ts:62",
+        "app/lib/server/junction.ts:1"
+      ],
+      "observation": "WHOOP OAuth authorize/token endpoints with login and callback routes; Junction client with x-vital-api-key. Both pre-date the boundary and were extended during the event.",
+      "limitations": "No live API calls made; WHOOP seat allowlist limits who can use direct OAuth."
+    },
+    {
+      "id": "E8",
+      "claim": "2,278 vitest and 73 forge tests",
+      "source": "showcase",
+      "status": "supported_by_code",
+      "refs": [
+        "app/vitest.config.ts:6"
+      ],
+      "observation": "Static count: 159 vitest files with 2,279 it()/test() declarations; 3 forge files with 73 'function test' declarations (38+30+5).",
+      "limitations": "Tests were NOT run; static counts do not show pass/fail, parameterised expansion (2 .each uses) or skips."
+    },
+    {
+      "id": "E9",
+      "claim": "@worldcoin/idkit 4.3.0 on the RP-signed request flow; server mints signed rp_context on tap",
+      "source": "showcase",
+      "status": "supported_by_code",
+      "refs": [
+        "app/package.json:43",
+        "app/app/api/world/rp-context/route.ts:52"
+      ],
+      "observation": "Dependency range ^4.3.0; POST calls signRequest from idkit-core/signing with a server-only key, GET never mints.",
+      "limitations": "Resolved version in lockfile not checked; ^ allows newer 4.x."
+    },
+    {
+      "id": "E10",
+      "claim": "Proof signal bound to wallet; nullifier binds one human to one wallet; money routes refuse an unproven wallet",
+      "source": "showcase",
+      "status": "unverified",
+      "refs": [
+        "app/lib/server/world/verify.ts:99",
+        "app/lib/server/world/human.ts:1",
+        "app/lib/server/world/require-human.ts:28"
+      ],
+      "observation": "signal_hash must equal hashSignal(lowercased wallet); missing signal fails closed; bidirectional nullifier<->wallet records with conflict types. requireHuman is applied to agent run and evidence submit routes, but returns ok when WORLD_VERIFY_MODE is unset, and joinPool itself is not gated on-chain by World. Status set to unverified on review: the code enforces this only when production config is set, and the live config can't be seen from the repo.",
+      "limitations": "Gate strength depends on live env (World mode off disables it); KV write ordering race-safety not tested."
+    },
+    {
+      "id": "E11",
+      "claim": "World ID for Agents with static settle action and signal goalId:attempt; declined/expired/cancelled write nothing",
+      "source": "showcase",
+      "status": "supported_by_code",
+      "refs": [
+        "app/lib/server/agent/approval.ts:36",
+        "app/lib/server/agent/approval.ts:126",
+        "app/lib/server/agent/approval.ts:180"
+      ],
+      "observation": "Static action defaults to 'settle'; signal '<goalId>:<attempt>'; replay key includes action, goalId, attempt and nullifier; expiry flips record to expired with 'nothing moved'.",
+      "limitations": "Approval mode can be 'off' (unset env), in which case no human confirmation gates payouts."
+    },
+    {
+      "id": "E12",
+      "claim": "The deployed build refuses mock modes",
+      "source": "showcase",
+      "status": "supported_by_code",
+      "refs": [
+        "app/lib/server/world/config.ts:118",
+        "app/lib/server/world/config.ts:156",
+        "app/lib/server/agent/approval-provider.ts:113",
+        "app/lib/server/env.ts:45"
+      ],
+      "observation": "WORLD_VERIFY_MODE=mock, staging World environment, WORLD_APPROVAL_MODE=mock and DEMO_MODE are refused when VERCEL_ENV=production.",
+      "limitations": "Refusal keys on VERCEL_ENV; 'off' modes and unconfigured Intercepta are not mocks and remain allowed in production."
+    },
+    {
+      "id": "E13",
+      "claim": "ENSv2 on Sepolia (Sep 15 deployment); own UserRegistry and PermissionedResolver under gohealthme.eth via VerifiableFactory; Universal Resolver with viem; ensjs not used",
+      "source": "showcase",
+      "status": "supported_by_code",
+      "refs": [
+        "app/lib/server/ens/deployments.ts:1",
+        "app/lib/server/ens/deployments.ts:48",
+        "app/lib/server/ens/client.ts:117"
+      ],
+      "observation": "Addresses and ABI snippets from namechain tag sepolia-deployment-2026-09-15; registry/resolver discovered from ETHRegistry; no ensjs dependency in app/package.json.",
+      "limitations": "On-chain existence of gohealthme.eth and its proxies not checked."
+    },
+    {
+      "id": "E14",
+      "claim": "Agent has ROLE_SET_TEXT on four receipt keys only; scripts/ens-boundary-proof.sh proves the boundary with eth_call",
+      "source": "showcase",
+      "status": "supported_by_code",
+      "refs": [
+        "app/lib/ens/names.ts:193",
+        "app/lib/ens/names.ts:315",
+        "app/scripts/ens-bootstrap.ts:369",
+        "scripts/ens-boundary-proof.sh:6",
+        "app/lib/server/ens/resolve.ts:447"
+      ],
+      "observation": "Four keys: gohealthme.settle.tx/at/by/achievers. The .sh is a thin wrapper running app/scripts/ens-boundary-proof.ts, which simulates calls: agent setText receipt key (expect allowed), agent setText non-receipt key, setAddress, linkToNode, registry.register, setResolver (expect denied), stranger setText (denied), owner setText (allowed).",
+      "limitations": "Script was not run; it tests one of the four receipt keys as allowed, and its result depends on live Sepolia state."
+    },
+    {
+      "id": "E15",
+      "claim": "Intercepta quick-scan before recordResult and before settle, fail closed, rule printed on every ledger row",
+      "source": "showcase",
+      "status": "unverified",
+      "refs": [
+        "app/lib/server/screening/intercepta.ts:311",
+        "app/lib/server/agent/spotter.ts:392",
+        "app/lib/server/agent/spotter.ts:617",
+        "app/lib/server/screening/gate.ts:143"
+      ],
+      "observation": "Both call sites exist; blocked and unavailable throw PayoutScreeningHold; rule string stored on each ledger row. Screening only runs for verdict=true records. With no INTERCEPTA_API_KEY the gate returns 'unconfigured' and does not block (gate.ts:22, :111). Status set to unverified on review: the code enforces this only when production config is set, and the live config can't be seen from the repo.",
+      "limitations": "'Fail closed' holds only when the key is configured; whether the live build had the key is unverified. Screens against mainnet risk data for testnet wallets."
+    },
+    {
+      "id": "E16",
+      "claim": "Miss recorded only when wearable covered every night, after a grace window, inside the 24h settler-only window",
+      "source": "showcase",
+      "status": "supported_by_code",
+      "refs": [
+        "app/lib/server/agent/miss.ts:14",
+        "app/lib/server/agent/miss.ts:22",
+        "app/lib/miss-grace.ts:12",
+        "contracts/src/HealthPoolsV3.sol:85"
+      ],
+      "observation": "Rule requires grace elapsed, pinned provider, full local-window coverage, not met with +/-1 day hedge, and pass path also not met. Grace clamped to 1..18h plus a 2h miss phase to fit SETTLE_GRACE = 24h.",
+      "limitations": "Correctness of coverage logic per provider not exercised; behaviour depends on MISS_RULE_FROM_POOL_ID env."
+    },
+    {
+      "id": "E17",
+      "claim": "Pass path and miss rule read the same local-calendar night",
+      "source": "showcase",
+      "status": "supported_by_code",
+      "refs": [
+        "app/lib/server/wearable/whoop.ts:606",
+        "app/lib/server/agent/miss.ts:32"
+      ],
+      "observation": "WHOOP nights keyed to local day the sleep ended using timezone_offset; Junction uses provider calendar_date; miss rule reuses runProgress from the pass path.",
+      "limitations": "Edge cases (DST, travel, offset changes) not verified."
+    },
+    {
+      "id": "E18",
+      "claim": "Treasury gas drip runs for zero-ETH email wallets before the first write",
+      "source": "showcase",
+      "status": "supported_by_code",
+      "refs": [
+        "app/lib/server/gas-drip.ts:1",
+        "app/app/api/gas/drip/route.ts:58",
+        "app/vercel.json:9"
+      ],
+      "observation": "Drip with per-address/day cap, global daily budget, treasury floor, serialized send lock and balance read-back; treasury refilled by a 5-minute CDP faucet cron.",
+      "limitations": "Client-side trigger ordering before first approve not traced."
+    },
+    {
+      "id": "E19",
+      "claim": "Raw health data never touches the chain, only the verdict",
+      "source": "showcase",
+      "status": "supported_by_code",
+      "refs": [
+        "contracts/src/HealthPoolsV3.sol:318",
+        "contracts/src/HealthVerdict.sol:156",
+        "app/lib/ens/names.ts:193"
+      ],
+      "observation": "On-chain writes carry only bool verdict, multiplier bps, and (HealthVerdict) confidence, digest and facet bitmap; ENS receipt keys hold tx hash, time, settler and achiever count. Off-chain, WHOOP OAuth tokens and Apple daily totals are stored server-side.",
+      "limitations": "Pool goalSpec text (e.g. 'Sleep at least 7 hours') and participation are public on-chain, so goal category per wallet is public."
+    },
+    {
+      "id": "E20",
+      "claim": "Apple Health is not supported yet",
+      "source": "showcase",
+      "status": "supported_by_code",
+      "refs": [
+        "app/lib/server/wearable/apple.ts:93",
+        "app/lib/server/wearable/index.ts:76",
+        "app/app/privacy/page.tsx:330"
+      ],
+      "observation": "Apple provider is only offered when APPLE_APP_AVAILABLE=1; privacy page says it is not offered. However an Apple sync route, Supabase table and Expo HealthKit app exist in the repo.",
+      "limitations": "The /api/wearable/apple/sync route itself is not gated by the flag."
+    },
+    {
+      "id": "E21",
+      "claim": "First real hit went end to end on the live build (WHOOP read, World ID confirm after an expired request, Intercepta screen, recorded on chain)",
+      "source": "demo",
+      "status": "submitted_claim",
+      "refs": [],
+      "observation": "Code paths for each step exist (E6, E10, E11, E15), but a live run cannot be confirmed statically.",
+      "limitations": "Requires on-chain tx and server log inspection."
+    },
+    {
+      "id": "E22",
+      "claim": "V1 won the Chainlink Confidential AI Attester prize at ETHGlobal New York",
+      "source": "showcase",
+      "status": "submitted_claim",
+      "refs": [
+        "contracts/src/HealthVerdict.sol:193"
+      ],
+      "observation": "Pre-boundary code includes a Chainlink CRE workflow and a HealthVerdict registry, consistent with that history.",
+      "limitations": "Prize history is external to the repo."
+    }
+  ],
+  "tests": {
+    "status": "not_run",
+    "claimed": "2,278 vitest and 73 forge tests",
+    "found": {
+      "vitestFiles": 159,
+      "vitestCases": 2279,
+      "forgeFiles": 3,
+      "forgeTests": 73
+    },
+    "method": "git ls-files for *.test.ts under app/ matching vitest.config include (lib, app, components; excluding e2e Playwright specs), then counted lines matching ^\\s*(it|test)(.each(...))?(.only|.skip|.concurrent|.todo)?\\s*\\(; forge counted 'function test' in contracts/test/*.t.sol (excluding vendored lib).",
+    "note": "Static counts closely match the claim (2,279 vs 2,278; 73 vs 73) but no test was executed, so pass rate is unknown; 7 further test files in services/confidential-shim and 1 in mobile are outside the app vitest config."
+  },
+  "strengths": [
+    "Claims map closely to code: nearly every concrete showcase detail (slot 7, static settle action, goalId:attempt signal, four receipt keys, miss grace clamp) is present at a specific location.",
+    "Conservative money logic: contract refunds unadjudicated players (B-2), pull-payment ledger, cancel-refund liability blocks sweeps, and the off-chain miss rule only forfeits under full coverage.",
+    "Production guards refuse mock World proofs, staging World environment, mock approvals and DEMO_MODE on VERCEL_ENV=production.",
+    "ENS agent permissions are scoped with Enhanced Access Control and accompanied by an eth_call permission-matrix proof script.",
+    "Large static test suite (about 2,279 vitest cases and 73 forge tests) with extensive in-code rationale comments.",
+    "Supabase tables all enable RLS; health aggregates have no anon read policy and accept only signed, non-future, per-day values."
+  ],
+  "limitations": [
+    "HealthPoolsV3.sol was not modified during the event; on-chain logic is pre-event work.",
+    "Verdicts are decided off-chain by a trusted server agent; the contract trusts a single oracle key and players must trust SPOTTER's wearable reading.",
+    "joinPool is not gated by World ID on-chain; one-human enforcement happens only at the server payout step.",
+    "Testnet only (Base Sepolia USDC, ENS Sepolia); Apple Health path is built but disabled.",
+    "WHOOP direct OAuth is limited by a seat allowlist; others route via Junction.",
+    "Live deployment state is ambiguous: DEPLOYMENTS.md header says the Tokyo contract is not yet deployed while the deploy log records seed runs on 0x0B6E8D47..."
+  ],
+  "risks": [
+    "Intercepta screening and World gating become no-ops when INTERCEPTA_API_KEY or WORLD_VERIFY_MODE / WORLD_APPROVAL_MODE are unset, so 'fail closed' and 'money routes refuse an unproven wallet' depend on env configuration rather than code.",
+    "recordResult runs from the Circle wallet only after an owner role flip; deployment notes list the oracle as an env private key, so a raw server key may still be recording verdicts.",
+    "Pool creator can cancelPool any time before settle (including after results are recorded) and later sweep the sponsor pot, which could deny hitters their reward.",
+    "Apple sync route accepts data signed by the player's own wallet, so the player self-attests their totals; if that provider were enabled for a pool, data integrity would rest on the player.",
+    "Heavy AI-assisted development: 289 of 437 commits carry Claude co-author trailers and 319 commits landed on a single day, which raises review-depth questions for money-handling code.",
+    "Provenance: submitted repo URL 404s and the reviewed code is a mirror under a different GitHub org (aspiringsecurity vs Meowteam6); a single git author (Andre Chuabio) appears on all commits."
+  ],
+  "unresolvedQuestions": [
+    "On the live build, were INTERCEPTA_API_KEY, WORLD_VERIFY_MODE=live and WORLD_APPROVAL_MODE=world all set?",
+    "Which address is oracle() on the Tokyo HealthPoolsV3 instance, the Circle wallet or the ORACLE_SIGNER key?",
+    "Was the Tokyo contract freshly deployed or is 0x0B6E8D47... a reused instance, and can you show the tx hashes for the 'first real hit'?",
+    "Why is creator cancellation allowed after verdicts are recorded, and is the creator always the treasury?",
+    "How is the miss rule's coverage judgement audited when a player disputes a forfeiture?",
+    "Who are the team members behind Meowteam6 and why does the submitted repo return 404?"
+  ],
+  "continuity": {
+    "boundaryCommit": "a86387d",
+    "commitsBefore": 86,
+    "commitsDuringEvent": 351,
+    "assessment": "At a86387d the repo already had HealthPoolsV3/HealthVerdict, SPOTTER's Circle executor, WHOOP and Junction integrations, the CRE workflow and 85 test files; the World ID, ENS, Intercepta screening, miss rule, approval flow, gas drip, Dynamic JWT auth, game UI and Supabase challenge/profile tables were all added after it (558 files changed, about 65k insertions), while the Solidity contracts only gained tests. 351 post-boundary commits fall on 2026-09-25 to 09-27 (319 on 09-26), consistent with the event-weekend claim."
+  },
+  "highlights": {
+    "headline": "The code backs almost every claim. The main safety checks depend on production settings we can't see.",
+    "holdsUp": [
+      {
+        "text": "Claims match the code: storage slot 7, the settle signal and the four ENS receipt keys are all where the team says.",
+        "evidence": [
+          "E5",
+          "E11",
+          "E14"
+        ]
+      },
+      {
+        "text": "Careful money logic: players who can't be judged are refunded, and payouts are pulled, not pushed.",
+        "evidence": []
+      },
+      {
+        "text": "The test suite matches the claim: 2,279 vitest cases and 73 forge tests found (not run yet).",
+        "evidence": [
+          "E8"
+        ]
+      }
+    ],
+    "watch": [
+      {
+        "text": "Sanctions screening and the World ID check switch off if their production keys are missing.",
+        "evidence": [
+          "E10",
+          "E15"
+        ]
+      },
+      {
+        "text": "A pool creator can cancel after results are recorded and sweep the sponsor pot.",
+        "evidence": []
+      },
+      {
+        "text": "The submitted repo link is dead; we reviewed a mirror under a different GitHub org.",
+        "evidence": []
+      }
+    ]
+  }
+}
