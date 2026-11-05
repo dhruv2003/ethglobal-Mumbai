@@ -46,3 +46,21 @@ export async function api(path, { method = "GET", body } = {}) {
 
 /** null when the backend is offline. */
 export const health = () => api("/health").catch(() => null);
+
+/** POST a file or recording as the raw request body (organizer key attached). */
+export async function upload(path, blob) {
+  const headers = { "content-type": blob.type || "application/octet-stream" };
+  const key = organizerKey.get();
+  if (key) headers.authorization = `Bearer ${key}`;
+  const res = await fetch(`/api${path}`, { method: "POST", headers, body: blob });
+  let data = null;
+  try {
+    data = await res.json();
+  } catch {
+    /* not JSON: the backend isn't there */
+  }
+  if (!res.ok || data === null) {
+    throw Object.assign(new Error(data?.error ?? `The judge service didn't answer (HTTP ${res.status}).`), { status: res.status, data });
+  }
+  return data;
+}

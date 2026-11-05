@@ -77,6 +77,16 @@
   --shadow-soft: 0 1px 2px rgba(23, 20, 31, 0.05), 0 12px 32px rgba(23, 20, 31, 0.08);
   --shadow-pop: 0 4px 0 #17141f; /* The sticker. Rationed. */
   --shadow-sheet: 0 -2px 8px rgba(23, 20, 31, 0.06), 0 -20px 48px rgba(23, 20, 31, 0.14);
+  --shadow-pop-sm: 0 2px 0 #17141f;  /* pressed sticker */
+  --shadow-pop-lg: 0 7px 0 #17141f;  /* lifted sticker (hover) */
+  --shadow-lift: 0 2px 4px rgba(23, 20, 31, 0.04), 0 22px 44px -12px rgba(23, 20, 31, 0.22);
+
+  /* ---------- Atmosphere (page backdrop, glass) ---------- */
+  --glass: rgba(255, 253, 248, 0.74);
+  --grid-dot: rgba(23, 20, 31, 0.075);
+  --glow-crush: rgba(255, 92, 147, 0.26);
+  --glow-oracle: rgba(47, 75, 240, 0.16);
+  --glow-sunny: rgba(255, 212, 59, 0.32);
 
   /* ---------- Motion ---------- */
   --dur-instant: 100ms;    /* press feedback */

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fighterLayers, fighterTraits } from "./fighter.js";
+import { fighterLayers, fighterTraits, poseRects } from "./fighter.js";
 
 const base = { id: "x", name: "Plain", pitch: "A to-do list", description: "React app", tracks: [] };
 
@@ -59,5 +59,23 @@ describe("fighterLayers", () => {
         expect(r.y).toBeLessThan(20);
       }
     }
+  });
+});
+
+describe("poseRects", () => {
+  const t = fighterTraits({ id: "p", name: "Pose", pitch: "AI payments", description: "usdc agents", tracks: ["base"] });
+  it.each(["idle", "bob", "talk", "wind", "punch", "hit", "block", "victory", "defeat"])("draws %s inside the 24×20 cell", (pose) => {
+    const rects = poseRects(t, pose);
+    expect(rects.length).toBeGreaterThan(20);
+    for (const r of rects) {
+      expect(r.x).toBeGreaterThanOrEqual(0);
+      expect(r.x + r.w).toBeLessThanOrEqual(24);
+      expect(r.y).toBeGreaterThanOrEqual(0);
+      expect(r.y).toBeLessThan(20);
+    }
+  });
+  it("extends the arm only when punching", () => {
+    const reach = (pose) => Math.max(...poseRects(t, pose).map((r) => r.x + r.w));
+    expect(reach("punch")).toBeGreaterThan(reach("idle") + 3);
   });
 });
