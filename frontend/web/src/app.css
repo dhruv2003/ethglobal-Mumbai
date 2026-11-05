@@ -518,3 +518,28 @@ a.brand:hover .brand__mark { transform: rotate(-8deg) scale(1.08); }
   .live__body, .live__body--phone { grid-template-columns: minmax(0, 1fr); }
 }
 .live .stack > .pill { align-self: flex-start; }
+
+/* Live test: phases and steps */
+.phase-line { display: flex; gap: var(--space-2); align-items: flex-start; }
+.phase-line .fact__mark { margin-top: 3px; }
+.phase-line code { white-space: nowrap; }
+.steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.step { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; gap: var(--space-3); align-items: center; padding: var(--space-2) 0; border-top: 1px solid var(--line); }
+.step:first-child { border-top: 0; }
+.step__text { display: flex; flex-direction: column; min-width: 0; }
+.step__mark { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; font: 700 12px/1 var(--font-sans); }
+.step__mark--good { background: var(--success-soft); color: var(--success); }
+.step__mark--bad { background: var(--danger-soft); color: var(--danger); }
+.step__mark--skip { background: var(--surface-sunken); color: var(--ink-secondary); }
+.step__seek {
+  border: 1.5px solid var(--line-strong); background: var(--canvas); border-radius: var(--radius-pill);
+  padding: var(--space-1) var(--space-2); cursor: pointer; color: var(--oracle); min-height: 32px;
+  transition: background-color var(--dur-fast) var(--ease-standard), transform var(--dur-instant) var(--ease-spring);
+}
+.step__seek:hover { background: var(--oracle-soft); }
+.step__seek:active { transform: scale(0.95); }
+.flows > summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: var(--space-2); padding: var(--space-2) 0; border-top: 1px solid var(--line); }
+.flows > summary::-webkit-details-marker { display: none; }
+.flows > summary::after { content: "+"; font: 700 20px/1 var(--font-sans); color: var(--ink-secondary); }
+.flows[open] > summary::after { content: "–"; }
+.flows[open] .steps { animation: rise var(--dur-base) var(--ease-out) both; }

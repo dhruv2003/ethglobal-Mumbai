@@ -1,6 +1,12 @@
-# Tester: live smoke check on cloud browsers
+# Tester: live check on cloud browsers
 
-Opens a project's live app on Mozark cloud Chrome as a **laptop** (1440×900) and a **phone** (390×844, touch, iPhone user agent), records both, and saves the results where the dashboard picks them up.
+Opens a project's live app on Mozark cloud Chrome as a **laptop** (1440×900) and a **phone** (390×844, touch, iPhone user agent), records each session, and runs three phases:
+
+1. **Demo replay:** the screens the team's demo video shows. Proves the demo wasn't faked: a screen the demo shows but the live app doesn't have fails here.
+2. **Major flows:** the app's main features, exercised without an account.
+3. **Health:** status, load time, console errors, failed requests, layout.
+
+The steps come from `backend/fixtures/<project>/flows.json`, written by the reviewer from the demo video and the code. Steps marked `requires` (sign-in, wallet) are reported as blocked, never faked.
 
 ## Run
 
@@ -13,19 +19,29 @@ umask 077 && printf 'MOZARK_TOKEN=%s\n' "$MOZARK_TOKEN" > ~/.mozark.env
 cd backend/tester
 npm install            # Playwright only; no browsers needed, Mozark provides them
 set -a; source ~/.mozark.env; set +a
-node smoke.mjs --project go-health-me --url https://www.gohealthme.app
+node smoke.mjs --project go-health-me            # target comes from flows.json
 ```
 
-Options: `--devices laptop` or `--devices phone` to run one. `MOZARK_PROJECT_ID` overrides the hub project.
+Options: `--url` overrides the target. `--devices laptop` or `--devices phone` runs one; its results replace only that device's results. `MOZARK_PROJECT_ID` overrides the hub project.
 
-## What it does (read-only)
+## flows.json
 
-1. Loads the URL, waits for the network to settle, reads status, load time, title, sideways scroll, broken images.
-2. Scrolls to the bottom and back.
-3. Visits up to 3 same-site links (skips sign-in, wallet, API and file links).
-4. Never clicks buttons or fills forms: no sign-ins, wallets or payments.
+```json
+{ "target": "https://app.example",
+  "phases": [
+    { "id": "demo", "title": "Demo replay", "steps": [
+      { "id": "d1", "title": "Landing", "demoAt": "0:00", "do": [{ "goto": "/" }, { "expectText": "Welcome" }] },
+      { "id": "d2", "title": "Signed-in dashboard", "requires": "sign-in" } ] },
+    { "id": "features", "title": "Major flows", "steps": [ ... ] } ] }
+```
 
-Recording comes from Chrome's screencast over CDP, stitched with `ffmpeg` at real timing. Mozark also keeps its own video and logs per session (portal → Automation → Sessions).
+Actions: `goto`, `click` (exact visible text), `clickMatch` (partial text), `clickSelector`, `openLink` (follow a rendered link's href), `fill` (type, never submit), `expectText`, `expectUrl`, `expectSelected`, `expectCountAtLeast`, `wait`.
+
+## Safety
+
+- **Clicks:** every click is checked against a deny-list (pay, stake, sign in, connect, wallet, submit, join, confirm, claim…) and refused if it matches. A refused click is reported as blocked.
+- **Typing:** allowed, but Enter is never pressed.
+- **Cloud browser failures:** if the remote browser dies, the run is reported as a cloud problem (`error`), not an app failure, and retried once in a fresh session (PRD TST-08).
 
 ## Output
 
@@ -33,11 +49,13 @@ Recording comes from Chrome's screencast over CDP, stitched with `ffmpeg` at rea
 
 - `smoke.json`: every run's facts and an outcome of `passed`, `issues` or `failed`, with reasons
 - `<device>/video.mp4`: the recording
-- `<device>/smoke-<device>-*.png`: home, bottom and each visited page
+- `<device>/smoke-<device>-<step>.jpg`: one screenshot per step
+
+Each step records `at`: its second in the recording. The dashboard uses it to jump the video to that step.
 
 Requests cancelled by our own navigation (`net::ERR_ABORTED`, e.g. Next.js prefetches) are listed under `cancelledRequests` and don't count as failures.
 
-The web app shows this in **Agent judge → Live test** (laptop/phone switch, video, key facts).
+The web app shows this in **Agent judge → Live test**: laptop/phone switch, recording, demo replay steps with ▶ timestamps, major flows, and health.
 
 ## Needs
 

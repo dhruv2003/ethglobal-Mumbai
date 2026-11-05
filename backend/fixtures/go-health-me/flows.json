@@ -1,0 +1,281 @@
+{
+  "_about": "Flows the tester runs against the live app. Written by the reviewer from the demo video (media/keyframes, media/demo-transcript.md) and the code (dossier.json). Run by backend/tester/smoke.mjs. Actions never pay, stake, sign in, connect a wallet or submit; the runner refuses clicks that look like those.",
+  "target": "https://www.gohealthme.app",
+  "phases": [
+    {
+      "id": "demo",
+      "title": "Demo replay",
+      "about": "Screens shown in the demo video, checked on the live app. A screen the demo shows but the app does not have is a red flag.",
+      "steps": [
+        {
+          "id": "d1",
+          "title": "Landing: \"Put money on yourself\"",
+          "demoAt": "0:00",
+          "do": [
+            {
+              "goto": "/"
+            },
+            {
+              "expectText": "Put money on yourself"
+            },
+            {
+              "expectText": "Everyone stakes the same"
+            }
+          ]
+        },
+        {
+          "id": "d2",
+          "title": "Payout explainer: You hit / You miss / Nobody hits",
+          "demoAt": "0:15",
+          "do": [
+            {
+              "goto": "/"
+            },
+            {
+              "click": "You miss"
+            },
+            {
+              "expectText": "Your stake goes to the players who hit"
+            },
+            {
+              "click": "Nobody hits"
+            },
+            {
+              "expectText": "Everyone gets their stake back"
+            },
+            {
+              "click": "You hit"
+            },
+            {
+              "expectText": "Your stake comes back, plus a share"
+            }
+          ]
+        },
+        {
+          "id": "d3",
+          "title": "Open challenges with the \"What do you wear?\" picker",
+          "demoAt": "0:25",
+          "do": [
+            {
+              "goto": "/"
+            },
+            {
+              "expectText": "What do you wear?"
+            },
+            {
+              "click": "Oura"
+            },
+            {
+              "expectText": "Oura works here"
+            }
+          ]
+        },
+        {
+          "id": "d4",
+          "title": "Make your player: sign-in options",
+          "demoAt": "0:35",
+          "do": [
+            {
+              "goto": "/character"
+            },
+            {
+              "expectText": "Your player"
+            },
+            {
+              "expectText": "Sign in with Base"
+            },
+            {
+              "expectText": "Email me a sign-in code"
+            }
+          ]
+        },
+        {
+          "id": "d5",
+          "title": "Prove one human (World ID), pick an ENS name, pair WHOOP",
+          "demoAt": "0:44",
+          "requires": "sign-in",
+          "why": "Needs a real account, a World ID credential and a wearable. Not faked."
+        },
+        {
+          "id": "d6",
+          "title": "SPOTTER's verdicts and payouts are public on chain",
+          "demoAt": "1:05",
+          "why": "The demo shows a verdict being recorded on chain. The public History page should list real verdict and payout transactions.",
+          "do": [
+            {
+              "goto": "/agent"
+            },
+            {
+              "expectText": "Everyone's claims"
+            },
+            {
+              "expectCountAtLeast": {
+                "selector": "a[href*='/tx/']",
+                "n": 1
+              }
+            }
+          ]
+        },
+        {
+          "id": "d7",
+          "title": "\"You hit 1 workout. Banked.\" verdict in the signed-in lobby",
+          "demoAt": "1:20",
+          "requires": "sign-in",
+          "why": "Only the player who ran the challenge can see their own verdict screen."
+        },
+        {
+          "id": "d8",
+          "title": "Open challenges list and \"Start a challenge\"",
+          "demoAt": "1:45",
+          "do": [
+            {
+              "goto": "/pools"
+            },
+            {
+              "expectText": "Challenges"
+            },
+            {
+              "expectCountAtLeast": {
+                "selector": "a[href^='/pools/']",
+                "n": 1
+              }
+            },
+            {
+              "goto": "/challenge/new"
+            },
+            {
+              "expectText": "Start a challenge"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "features",
+      "title": "Major flows",
+      "about": "The app's main features from the code, exercised without an account.",
+      "steps": [
+        {
+          "id": "f1",
+          "title": "Navigate from the header to Challenges",
+          "do": [
+            {
+              "goto": "/"
+            },
+            {
+              "click": "Challenges"
+            },
+            {
+              "expectUrl": "/pools"
+            }
+          ]
+        },
+        {
+          "id": "f2",
+          "title": "Open a listed challenge and read how it ended",
+          "do": [
+            {
+              "goto": "/pools"
+            },
+            {
+              "openLink": "a[href^='/pools/']"
+            },
+            {
+              "expectUrl": "/pools/"
+            },
+            {
+              "expectText": "How this challenge ended"
+            }
+          ]
+        },
+        {
+          "id": "f3",
+          "title": "Build a challenge: pick a goal and a stake",
+          "do": [
+            {
+              "goto": "/challenge/new"
+            },
+            {
+              "clickMatch": "Complete at least 1 workout"
+            },
+            {
+              "expectSelected": "Complete at least 1 workout"
+            },
+            {
+              "click": "10 USDC"
+            },
+            {
+              "expectSelected": "10 USDC"
+            }
+          ]
+        },
+        {
+          "id": "f4",
+          "title": "Creating a challenge needs sign-in (no anonymous money moves)",
+          "do": [
+            {
+              "goto": "/challenge/new"
+            },
+            {
+              "expectText": "Sign in to start"
+            }
+          ]
+        },
+        {
+          "id": "f5",
+          "title": "Friend challenges are private until you sign in",
+          "do": [
+            {
+              "goto": "/challenges"
+            },
+            {
+              "expectText": "Sign in to see the challenges"
+            }
+          ]
+        },
+        {
+          "id": "f6",
+          "title": "SPOTTER's settlement wallet is shown and linked to Basescan",
+          "do": [
+            {
+              "goto": "/agent"
+            },
+            {
+              "expectText": "The wallet SPOTTER settles from"
+            },
+            {
+              "expectText": "View on Basescan"
+            }
+          ]
+        },
+        {
+          "id": "f7",
+          "title": "Privacy policy and terms are published",
+          "do": [
+            {
+              "goto": "/privacy"
+            },
+            {
+              "expectText": "Privacy Policy"
+            },
+            {
+              "goto": "/terms"
+            },
+            {
+              "expectText": "Terms of Use"
+            },
+            {
+              "expectText": "One human, one entry"
+            }
+          ]
+        },
+        {
+          "id": "f8",
+          "title": "Join a challenge, stake, and get paid",
+          "requires": "sign-in",
+          "why": "Moves test USDC from a signed-in wallet. Never run by the tester."
+        }
+      ]
+    }
+  ]
+}

@@ -74,7 +74,7 @@ const folderOf = (path) => path.split("/fixtures/")[1]?.split("/")[0];
 const SMOKES = Object.fromEntries(
   Object.entries(import.meta.glob("@fixtures/*/smoke/smoke.json", { eager: true, import: "default" })).map(([path, s]) => [folderOf(path), s]),
 );
-const SMOKE_ASSETS = import.meta.glob(["@fixtures/*/smoke/*/video.mp4", "@fixtures/*/smoke/*/smoke-*-home.png"], {
+const SMOKE_ASSETS = import.meta.glob(["@fixtures/*/smoke/*/video.mp4", "@fixtures/*/smoke/*/smoke-*-d1.jpg"], {
   eager: true,
   query: "?url",
   import: "default",
@@ -88,7 +88,7 @@ function liveTestFor(id) {
     runs: s.runs.map((r) => ({
       ...r,
       videoUrl: r.video ? asset(r.video.file) : null,
-      posterUrl: r.screenshots?.[0] ? asset(r.screenshots[0].file) : null,
+      posterUrl: r.phases?.[0]?.steps?.[0]?.screenshot ? asset(r.phases[0].steps[0].screenshot) : null,
     })),
   };
 }
