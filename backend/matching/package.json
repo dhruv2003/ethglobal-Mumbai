@@ -1,0 +1,17 @@
+{
+  "name": "@arena/matching",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Similarity-based first-round pairing and bracket placement (PRD ORG-05)",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node --test \"test/*.test.js\""
+  }
+}
