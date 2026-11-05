@@ -5,6 +5,7 @@
  */
 import goHealthMe from "@fixtures/go-health-me/submission.json";
 import goHealthMeSource from "@fixtures/go-health-me/source.json";
+import { api } from "./api.js";
 import { listSubmissions } from "./storage.js";
 
 /*
@@ -56,6 +57,7 @@ function fromSubmission(r) {
     submittedAt: r.submittedAt ?? null,
     dossier: null,
     liveTest: null,
+    reviews: null,
   };
 }
 
@@ -93,14 +95,23 @@ function liveTestFor(id) {
   };
 }
 
+/* Judge panel reviews stored with sample projects (backend/src/judges/run.mjs writes them). */
+const REVIEWS = Object.fromEntries(
+  Object.entries(import.meta.glob("@fixtures/*/reviews.json", { eager: true, import: "default" })).map(([path, r]) => [folderOf(path), r]),
+);
+
 const SAMPLES = [fromFixture("go-health-me", goHealthMe, goHealthMeSource)].map((p) => ({
   ...p,
   dossier: DOSSIERS[p.id] ?? null,
   liveTest: liveTestFor(p.id),
+  reviews: REVIEWS[p.id] ?? null,
 }));
 
 export async function listProjects() {
-  const submitted = listSubmissions()
+  // Server submissions (when the backend is up) plus anything saved only in this browser.
+  const remote = await api("/submissions").catch(() => []);
+  const byId = new Map([...listSubmissions(), ...remote].map((r) => [r.id, r]));
+  const submitted = [...byId.values()]
     .map(fromSubmission)
     .sort((a, b) => String(b.submittedAt).localeCompare(String(a.submittedAt)));
   return [...submitted, ...SAMPLES];

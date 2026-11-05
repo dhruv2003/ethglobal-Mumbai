@@ -11,10 +11,11 @@ import { validate } from "./lib/validate.js";
 import { useWallet } from "./lib/wallet.js";
 import { matchRoute, useCanonical, usePath } from "./lib/router.jsx";
 import { LandingPage, ProjectPage, ProjectsPage } from "./components/Projects.jsx";
+import { JudgesPage } from "./components/JudgesPage.jsx";
 
 const hhmm = () => new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
-const TITLES = { home: "The arena", form: "Submit a project", projects: "Projects", project: "Project" };
+const TITLES = { home: "The arena", form: "Submit a project", projects: "Projects", project: "Project", judges: "Judges" };
 
 export default function App() {
   const wallet = useWallet();
@@ -105,6 +106,8 @@ export default function App() {
       <main id="main" key={route.name + (route.id ?? "")} className={`page ${route.name === "form" ? "solo solo--form" : "solo solo--wide"}`}>
         {route.name === "home" ? (
           <LandingPage />
+        ) : route.name === "judges" ? (
+          <JudgesPage />
         ) : route.name === "projects" ? (
           <ProjectsPage />
         ) : route.name === "project" ? (

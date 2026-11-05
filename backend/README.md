@@ -1,8 +1,40 @@
 # Backend
 
-Everything that runs off the user's browser. No code has been written yet.
+Everything that runs off the user's browser.
 
-These services from `PRD.md` section 13.2 belong here:
+## Run
+
+```bash
+cd backend
+npm install
+cp .env.example .env      # then put your Anthropic key in ANTHROPIC_API_KEY
+npm start                 # http://localhost:3000, API under /api
+npm test                  # judge persona and scoring tests
+```
+
+The web app (`frontend/web`) proxies `/api` here in dev and preview.
+
+## What's built
+
+**Judge agents** (`src/judges/`, PRD 7.2):
+
+- **Personas.** A judge fills the form on `/judge`: background, what they expect, how much each of 9 criteria matters (0–5), brownie points, deal-breakers and tone. `persona.mjs` compiles that into a versioned persona and prompt. Weights always total 100. The platform rules come last so persona text can't override them.
+- **Reviews.** `review.mjs` sends each judge the submission, the reviewer's dossier and the live test results, and asks Claude (`claude-opus-5-5`, adaptive thinking, effort `high`) for structured scores: all 9 criteria scored 0–100, each with a comment and cited evidence, plus a headline and overall comment. A malformed review gets one repair attempt; after that it's marked invalid and no score is invented. A refusal is recorded as "declined".
+- **Scoring.** Each judge's overall score is computed here, not by the model: the sum of weight% × score, in exact integer hundredths. The panel score is the mean of the three, rounded half up.
+- **Independence.** The three judges run in parallel and never see each other's output. Project materials are passed as untrusted data.
+- **On submit.** `POST /api/submissions` saves the project and starts the panel review in the background.
+
+From the command line: `npm run judge -- --project go-health-me`. This also writes `fixtures/<id>/reviews.json`, so the static site can show the review.
+
+**Store** (`src/store.mjs`): JSON files in `data/` (gitignored), standing in for the database. Swap those functions for real queries later.
+
+**Routes** (`src/api.mjs`): health, criteria, judges (CRUD, max 3), submissions, and project reviews (get, run).
+
+**Tester** (`tester/`): the live smoke test on Mozark cloud browsers. See its README.
+
+## Still to build
+
+Remaining services from `PRD.md` section 13.2:
 
 - Application service: sign-in and role checks
 - Submission service: fetches repositories and processes artifacts

@@ -61,12 +61,23 @@ export function listSubmissions() {
   }
 }
 
-/** TODO(backend): replace with POST /submissions. Must stay async. */
+/**
+ * Save to the backend (POST /api/submissions), which also starts the judges'
+ * review. If the backend is offline, keep it in this browser instead.
+ */
 export async function saveSubmission(payload) {
-  const record = {
+  let record;
+  try {
+    const res = await fetch("/api/submissions", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) });
+    if (res.ok) record = await res.json();
+  } catch {
+    /* offline: fall through to local */
+  }
+  record ??= {
     id: globalThis.crypto?.randomUUID?.() ?? String(Date.now()),
     submittedAt: new Date().toISOString(),
     ...payload,
+    savedLocallyOnly: true,
   };
   try {
     const all = JSON.parse(localStorage.getItem(SUBMISSIONS_SLOT) || "[]");

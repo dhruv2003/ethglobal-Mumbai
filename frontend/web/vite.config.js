@@ -16,7 +16,9 @@ export default defineConfig({
     // ui.jsx lives outside this app; make its react imports resolve to ours.
     dedupe: ["react", "react-dom"],
   },
-  server: { fs: { allow: [path.resolve(here, ".."), fixtures] } },
+  // The backend (backend/src/server.js) serves /api on port 3000.
+  server: { fs: { allow: [path.resolve(here, ".."), fixtures] }, proxy: { "/api": "http://localhost:3000" } },
+  preview: { proxy: { "/api": "http://localhost:3000" } },
   plugins: [
     react(),
     VitePWA({
@@ -41,6 +43,8 @@ export default defineConfig({
         globPatterns: ["**/*.{js,css,html,svg,png,woff2}"],
         // Smoke-test posters and videos are large and only needed on one page: stream, don't precache.
         globIgnores: ["**/assets/smoke-*", "**/assets/video-*"],
+        // Never answer /api from the offline app shell.
+        navigateFallbackDenylist: [/^\/api\//],
         runtimeCaching: [
           {
             urlPattern: ({ url }) =>

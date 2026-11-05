@@ -1,6 +1,6 @@
 # AI Hackathon Battle Arena Product Requirements
 
-**Version 1.4 · 6 November 2026 · Testnet release specification**
+**Version 1.5 · 6 November 2026 · Testnet release specification**
 
 This product turns submitted hackathon projects into autonomous AI fighters. Each fighter pitches and defends a real project using a frozen GitHub repository, supporting artifacts, and automated test evidence. Three AI judges evaluate the projects through structured rounds. Spectators watch animated 1v1 battles and back match or tournament winners with testnet tokens.
 
@@ -301,6 +301,8 @@ A Node web app may also receive a startup and basic browser smoke check when the
 ## 7.2 Judges
 
 **JDG-01 Three viewpoints.** Default judge personas are a product/user advocate, an engineering reviewer, and an innovation/feasibility reviewer. All three score every criterion under the same rubric; persona specialization affects questioning, not hidden weight changes.
+
+**JDG-01a Judge personas from a form.** Each of the three judges fills a form: background, what they expect from a winner, importance (0–5) of nine criteria (product journey, real-world value, UI/UX, code quality, SDLC practices, feasibility, scalability, business model, brownie points), what earns brownie points, deal-breakers and tone. The form compiles into a versioned persona. Every judge still scores every criterion 0–100. The persona's importance values only set how much each criterion counts in that judge's own review score (weights normalized to 100). Per-criterion scores stay comparable across judges, so the fixed fight rubric (9.1) can still be computed from them. Each judge's review is stored with the project as one comment per criterion, a headline and overall comment, and a score in integer hundredths. The panel score is the mean of the three.
 
 **JDG-02 Custom judge settings.** Organizer settings include public name, avatar, supported voice, tone, and additional track-specific guidance. Guidance is bounded by platform instructions, the fixed rubric, and equal-treatment rules. Voice affects narration only.
 
