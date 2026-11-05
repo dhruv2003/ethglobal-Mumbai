@@ -6,6 +6,7 @@
  * numbers. Every status carries a word, never colour alone.
  */
 import { Progress, StatusPill } from "@ds/ui.jsx";
+import { LiveTest } from "./LiveTest.jsx";
 
 const TALLY = [
   ["supported_by_code", "success", "supported by code"],
@@ -69,6 +70,8 @@ export function Dossier({ project }) {
           ))}
         </div>
       </section>
+
+      <LiveTest liveTest={project.liveTest} />
 
       <div className="judge__pair">
         <Findings title="What holds up" tone="good" items={h.holdsUp} i={1} />

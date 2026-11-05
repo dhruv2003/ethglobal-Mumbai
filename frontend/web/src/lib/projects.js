@@ -5,6 +5,7 @@
  */
 import goHealthMe from "@fixtures/go-health-me/submission.json";
 import goHealthMeSource from "@fixtures/go-health-me/source.json";
+import { api } from "./api.js";
 import { listSubmissions } from "./storage.js";
 
 /*
@@ -15,6 +16,8 @@ import { listSubmissions } from "./storage.js";
  *            strengths, risks, questions) plus `highlights`, the short version the
  *            dashboard shows. Only highlights are rendered today; the rest is kept
  *            for fight generation and judge prompts later.
+ *   liveTest: smoke-test results on real cloud browsers (laptop + phone) with
+ *            recordings, from backend/tester/smoke.mjs.
  */
 function fromFixture(id, { form }, source) {
   return {
@@ -53,6 +56,8 @@ function fromSubmission(r) {
     ownerWallet: r.ownerWallet ?? null,
     submittedAt: r.submittedAt ?? null,
     dossier: null,
+    liveTest: null,
+    reviews: null,
   };
 }
 
@@ -65,10 +70,48 @@ const DOSSIERS = Object.fromEntries(
   ]),
 );
 
-const SAMPLES = [fromFixture("go-health-me", goHealthMe, goHealthMeSource)].map((p) => ({ ...p, dossier: DOSSIERS[p.id] ?? null }));
+/* Live smoke tests from backend/tester/smoke.mjs (Mozark cloud browsers).
+   Videos and the home screenshot (poster) are bundled as asset URLs. */
+const folderOf = (path) => path.split("/fixtures/")[1]?.split("/")[0];
+const SMOKES = Object.fromEntries(
+  Object.entries(import.meta.glob("@fixtures/*/smoke/smoke.json", { eager: true, import: "default" })).map(([path, s]) => [folderOf(path), s]),
+);
+const SMOKE_ASSETS = import.meta.glob(["@fixtures/*/smoke/*/video.mp4", "@fixtures/*/smoke/*/smoke-*-d1.jpg"], {
+  eager: true,
+  query: "?url",
+  import: "default",
+});
+function liveTestFor(id) {
+  const s = SMOKES[id];
+  if (!s) return null;
+  const asset = (rel) => Object.entries(SMOKE_ASSETS).find(([path]) => path.endsWith(`/${id}/smoke/${rel}`))?.[1] ?? null;
+  return {
+    ...s,
+    runs: s.runs.map((r) => ({
+      ...r,
+      videoUrl: r.video ? asset(r.video.file) : null,
+      posterUrl: r.phases?.[0]?.steps?.[0]?.screenshot ? asset(r.phases[0].steps[0].screenshot) : null,
+    })),
+  };
+}
+
+/* Judge panel reviews stored with sample projects (backend/src/judges/run.mjs writes them). */
+const REVIEWS = Object.fromEntries(
+  Object.entries(import.meta.glob("@fixtures/*/reviews.json", { eager: true, import: "default" })).map(([path, r]) => [folderOf(path), r]),
+);
+
+const SAMPLES = [fromFixture("go-health-me", goHealthMe, goHealthMeSource)].map((p) => ({
+  ...p,
+  dossier: DOSSIERS[p.id] ?? null,
+  liveTest: liveTestFor(p.id),
+  reviews: REVIEWS[p.id] ?? null,
+}));
 
 export async function listProjects() {
-  const submitted = listSubmissions()
+  // Server submissions (when the backend is up) plus anything saved only in this browser.
+  const remote = await api("/submissions").catch(() => []);
+  const byId = new Map([...listSubmissions(), ...remote].map((r) => [r.id, r]));
+  const submitted = [...byId.values()]
     .map(fromSubmission)
     .sort((a, b) => String(b.submittedAt).localeCompare(String(a.submittedAt)));
   return [...submitted, ...SAMPLES];

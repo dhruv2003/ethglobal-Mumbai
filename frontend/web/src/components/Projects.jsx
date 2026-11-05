@@ -7,6 +7,7 @@ import { Link } from "../lib/router.jsx";
 import { shortAddress } from "../lib/wallet.js";
 import { Ring } from "./Arena.jsx";
 import { Dossier } from "./Dossier.jsx";
+import { JudgesPanel } from "./JudgesPanel.jsx";
 import { fighterTraitItems, PixelFighter } from "./PixelFighter.jsx";
 
 export const trackName = (id) => EVENT.tracks.find((t) => t.id === id)?.name ?? id;
@@ -493,6 +494,7 @@ export function ProjectPage({ id }) {
         </section>
       ) : (
         <section id="panel-judge" role="tabpanel" aria-labelledby="tab-judge" className="panel panel--judge" key="judge">
+          <JudgesPanel project={p} />
           <Dossier project={p} />
         </section>
       )}

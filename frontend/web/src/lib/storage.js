@@ -52,6 +52,25 @@ export function toPayload(data, { ownerWallet, chainId }) {
   };
 }
 
+/**
+ * SHA-256 of exactly the fields the backend checks (backend/src/security.mjs ->
+ * canonicalSubmission). Goes into the signed message, so nothing the team
+ * entered can be changed after signing. Key order matters: keep both in sync.
+ */
+export async function submissionDigest(p) {
+  const canonical = JSON.stringify({
+    team: { name: p.team?.name ?? "" },
+    project: { name: p.project?.name ?? "", pitch: p.project?.pitch ?? "", description: p.project?.description ?? "" },
+    repoUrl: p.repoUrl ?? "",
+    demoVideoUrl: p.demoVideoUrl ?? "",
+    tracks: p.tracks ?? [],
+    ownerWallet: String(p.ownerWallet ?? "").toLowerCase(),
+    fighterSeed: p.fighterSeed ?? null,
+  });
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(canonical));
+  return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
 export function listSubmissions() {
   try {
     const all = JSON.parse(localStorage.getItem(SUBMISSIONS_SLOT) || "[]");
@@ -61,12 +80,29 @@ export function listSubmissions() {
   }
 }
 
-/** TODO(backend): replace with POST /submissions. Must stay async. */
+/**
+ * Save to the backend (POST /api/submissions), which also starts the judges'
+ * review. If the backend is offline, keep it in this browser instead.
+ */
 export async function saveSubmission(payload) {
-  const record = {
+  let record;
+  let res;
+  try {
+    res = await fetch("/api/submissions", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) });
+  } catch {
+    /* backend unreachable: fall through to local */
+  }
+  if (res?.ok) record = await res.json().catch(() => undefined);
+  else if (res && res.status >= 400 && res.status < 500 && res.headers.get("content-type")?.includes("json")) {
+    // The backend answered and said no (bad signature, rate limit...). Don't hide that behind a local save.
+    const data = await res.json().catch(() => ({}));
+    throw Object.assign(new Error(data.error ?? `The server refused the submission (HTTP ${res.status}).`), { fromServer: true });
+  }
+  record ??= {
     id: globalThis.crypto?.randomUUID?.() ?? String(Date.now()),
     submittedAt: new Date().toISOString(),
     ...payload,
+    savedLocallyOnly: true,
   };
   try {
     const all = JSON.parse(localStorage.getItem(SUBMISSIONS_SLOT) || "[]");

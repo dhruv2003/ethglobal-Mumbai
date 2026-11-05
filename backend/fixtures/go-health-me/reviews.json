@@ -1,0 +1,507 @@
+{
+  "projectId": "go-health-me",
+  "ranAt": "2026-11-05T22:47:32.608Z",
+  "provider": "openai",
+  "model": "gpt-5.4",
+  "effort": "high",
+  "complete": true,
+  "panelHundredths": 6305,
+  "reviews": [
+    {
+      "judgeId": "judge_adcf8968",
+      "status": "scored",
+      "overallHundredths": 6736,
+      "review": {
+        "criteria": [
+          {
+            "id": "product_journey",
+            "score": 71,
+            "comment": "The core story is easy to follow: pick a health challenge, stake, verify with a wearable, and settle publicly. But I could not verify the full end-to-end loop live—the prove-human/pairing and join/get-paid moments were blocked—so I’m discounting the journey score.",
+            "evidence": [
+              "d1",
+              "d2",
+              "d3",
+              "d4",
+              "d5",
+              "d6",
+              "d7",
+              "d8",
+              "f2",
+              "f3",
+              "f4",
+              "f8",
+              "E2",
+              "E6",
+              "E7"
+            ]
+          },
+          {
+            "id": "real_world_value",
+            "score": 78,
+            "comment": "This tackles a real behavior-change problem for a clear user: people with wearables who want a commitment device for sleep or workouts. It feels meaningfully useful if it works, though the audience is narrower because it depends on compatible wearables and comfort with staking on yourself.",
+            "evidence": [
+              "d1",
+              "d3",
+              "f5",
+              "E7",
+              "E19"
+            ]
+          },
+          {
+            "id": "ui_ux",
+            "score": 69,
+            "comment": "The front door is clear and the product browses reasonably on both laptop and phone, which I appreciate. The hit is that some of the key moments in onboarding and the money loop were blocked in live testing, so the UX is not yet dependable where it matters most.",
+            "evidence": [
+              "d1",
+              "d2",
+              "d3",
+              "d4",
+              "d8",
+              "f1",
+              "f2",
+              "f3",
+              "f7",
+              "d5",
+              "f8"
+            ]
+          },
+          {
+            "id": "code_quality",
+            "score": 81,
+            "comment": "Static review suggests a thoughtful codebase: real architecture, scoped permissions, RLS, and a large test surface. I’m holding back a bit because the tests were counted, not run here, and some important protections depend on environment configuration rather than code alone.",
+            "evidence": [
+              "E3",
+              "E8",
+              "E10",
+              "E14",
+              "E15",
+              "E16",
+              "E17",
+              "E18",
+              "E19"
+            ]
+          },
+          {
+            "id": "sdlc",
+            "score": 66,
+            "comment": "You did more repo hygiene than most hackathon teams—docs, proof scripts, and production guards are all good signs. I’m less comfortable with the inconsistent deployment notes and the fact that test passing/CI wasn’t verified from the materials I have.",
+            "evidence": [
+              "E4",
+              "E8",
+              "E12",
+              "E14"
+            ]
+          },
+          {
+            "id": "feasibility",
+            "score": 74,
+            "comment": "This is more shippable than most hackathon health demos: the web app, auth, wearable ingestion, settlement agent, and storage choices are real. The hard part is trust and operations, since verdicts are off-chain and some safety controls only work if live env config is set correctly.",
+            "evidence": [
+              "E1",
+              "E2",
+              "E6",
+              "E7",
+              "E10",
+              "E15",
+              "E18",
+              "E20",
+              "f6"
+            ]
+          },
+          {
+            "id": "scalability",
+            "score": 58,
+            "comment": "For an early pilot, this stack is fine. At larger scale, the single settlement/oracle path and contract-storage participant lookup look like obvious bottlenecks, and each new wearable/provider will add operational complexity.",
+            "evidence": [
+              "E3",
+              "E5",
+              "E6",
+              "E7"
+            ]
+          },
+          {
+            "id": "business_model",
+            "score": 34,
+            "comment": "I understand the mechanic better than the business. The materials do not clearly show who consistently pays, what fee you take, or why this is sustainable once you move past test USDC.",
+            "evidence": []
+          },
+          {
+            "id": "brownie_points",
+            "score": 67,
+            "comment": "You get extra credit from me for having a phone-usable browse experience, live privacy/terms, and nice trust-building details like public settlement receipts. The bonus is capped because the most delightful mobile moments—prove human, pair wearable, join, get paid—weren’t verified live.",
+            "evidence": [
+              "d1",
+              "d2",
+              "d3",
+              "d4",
+              "d6",
+              "d8",
+              "f7",
+              "E14",
+              "E19"
+            ]
+          }
+        ],
+        "headline": "Compelling commitment-device concept with real implementation depth, but the live core loop is not yet proven end to end.",
+        "comment": "Team, this is one of the clearer product ideas here: I immediately get the user, the wager mechanic, and why wearable verification matters. You also built real product, not just slides—auth, challenge creation, settlement logic, and public receipts all count. Where I need more is the tomorrow-morning journey: I couldn’t verify prove-human, pair wearable, join, and get paid straight through. Tighten that one-minute flow, make the trust/config story visible, and clarify the business model.",
+        "strengths": [
+          "Clear user/problem fit: a commitment device for people already tracking sleep or workouts.",
+          "Real implementation depth: wearable integrations, settlement agent, conservative refund/miss logic, and substantial test coverage on paper.",
+          "Good trust-signaling details like public settlement visibility and published policies."
+        ],
+        "concerns": [
+          "The full core loop was not verified live; key onboarding and payout steps were blocked.",
+          "Important protections depend on environment configuration and a trusted off-chain agent.",
+          "Business model and deployment state are less clear than the product concept."
+        ],
+        "dealBreakerHit": false,
+        "dealBreakerNote": "I did not see evidence of fake screens, and there is an identifiable user: wearable users who want a commitment device for health goals.",
+        "certainty": "medium"
+      },
+      "attempts": 1,
+      "usage": {
+        "input_tokens": 8011,
+        "output_tokens": 4699
+      },
+      "ms": 99489,
+      "judge": {
+        "id": "judge_adcf8968",
+        "name": "Priya Raman",
+        "title": "Product lead who has shipped three consumer fintech apps",
+        "version": 1,
+        "promptVersion": "judge-v1",
+        "weights": {
+          "product_journey": 20,
+          "real_world_value": 20,
+          "ui_ux": 16,
+          "code_quality": 4,
+          "sdlc": 4,
+          "feasibility": 12,
+          "scalability": 4,
+          "business_model": 12,
+          "brownie_points": 8
+        },
+        "tone": "balanced"
+      }
+    },
+    {
+      "judgeId": "judge_f3569fec",
+      "status": "scored",
+      "overallHundredths": 6386,
+      "review": {
+        "criteria": [
+          {
+            "id": "product_journey",
+            "score": 55,
+            "comment": "The story is clear: browse a challenge, sign in, pair a wearable, stake, and settle. But in the live run I only verified the browse/explainer pieces; the World ID/WHOOP setup and the actual join/get-paid path were blocked, so the core journey is only partially proven.",
+            "evidence": [
+              "d1",
+              "d2",
+              "d3",
+              "d4",
+              "d5",
+              "d6",
+              "d8",
+              "f3",
+              "f4",
+              "f8"
+            ]
+          },
+          {
+            "id": "real_world_value",
+            "score": 70,
+            "comment": "The use case is real: users want commitment pressure around sleep and workouts, and only putting the verdict on-chain is the right privacy trade for this kind of app. The ceiling is lower while verdicts come from a trusted server and provider access is limited.",
+            "evidence": [
+              "E6",
+              "E7",
+              "E19"
+            ]
+          },
+          {
+            "id": "ui_ux",
+            "score": 60,
+            "comment": "The product reads cleanly on laptop and phone, with a good plain-English payout explainer. Reliability is not there yet: both runs had errors, and the important signed-in flows were blocked.",
+            "evidence": [
+              "d1",
+              "d2",
+              "d3",
+              "f1",
+              "f2",
+              "f3",
+              "f7",
+              "d5",
+              "f8"
+            ]
+          },
+          {
+            "id": "code_quality",
+            "score": 74,
+            "comment": "I can trace most technical claims back to real code, and the backend/security posture shows defensive thinking around auth, adjudication, and gas budgets. I am docking for safety switches that turn into no-ops when env vars are unset and for unresolved payout edge cases.",
+            "evidence": [
+              "E3",
+              "E6",
+              "E8",
+              "E10",
+              "E15",
+              "E16",
+              "E18"
+            ]
+          },
+          {
+            "id": "sdlc",
+            "score": 64,
+            "comment": "There is real scaffolding here: docs, scripts, and a large test surface that does exist in the repo. But I could not verify tests actually passing, and the deployment notes are inconsistent enough that I do not fully trust the release story.",
+            "evidence": [
+              "E8",
+              "E12",
+              "E14",
+              "E4",
+              "E6"
+            ]
+          },
+          {
+            "id": "feasibility",
+            "score": 61,
+            "comment": "This can run as a centralized service on today's stack; the live site, cron model, wallet auth, and Circle execution path are all concrete. What I could not verify is the full stake-to-payout path, and some safety guarantees only hold if production env is set correctly.",
+            "evidence": [
+              "E1",
+              "E2",
+              "E6",
+              "E7",
+              "E10",
+              "E15",
+              "d5",
+              "f8"
+            ]
+          },
+          {
+            "id": "scalability",
+            "score": 58,
+            "comment": "Vercel plus Upstash/Supabase will get you through early traffic, but the bottleneck is operational: one agent, one wallet path, and external wearable providers. The storage-slot participant read is clever, but it is brittle and not how I want to scale contract indexing.",
+            "evidence": [
+              "E1",
+              "E3",
+              "E5",
+              "E6",
+              "E7"
+            ]
+          },
+          {
+            "id": "business_model",
+            "score": 25,
+            "comment": "I do not see a concrete who-pays or sustainability story in the materials yet. Right now this looks like a good testnet experiment, not a business.",
+            "evidence": []
+          },
+          {
+            "id": "brownie_points",
+            "score": 53,
+            "comment": "Partial credit for scoped roles and key separation work, especially the limited ENS agent permissions and the Circle-based executor path. I did not see verified invariant/fuzz coverage or a threat model, and the live oracle setup is still not fully nailed down.",
+            "evidence": [
+              "E6",
+              "E14",
+              "E8"
+            ]
+          }
+        ],
+        "headline": "Strong engineering bones, but the live end-to-end money path and safety config were not proven.",
+        "comment": "Team, this is one of the more substantive builds here. I verified a lot of real engineering in the app and backend, and the privacy choice to keep raw health data off-chain is sensible. But for something that moves money based on oracle writes, I need the live safety posture to be provable, not assumed from env vars, and I need one reproducible end-to-end stake->verdict->settle trace. Fix the deployment ambiguity, show which oracle key is live, and close the creator-cancel-after-verdict edge.",
+        "strengths": [
+          "Detailed showcase claims map to concrete code rather than demo-only handwaving.",
+          "Defensive backend choices around auth, adjudication timing, and capped gas dripping.",
+          "Scoped permissions work is thoughtful, especially around ENS receipt writes and the settlement agent path."
+        ],
+        "concerns": [
+          "The core money flow was not verified live; join/stake/get-paid remained blocked.",
+          "World ID and Intercepta protections are no-ops when env vars are unset, so fail-closed depends on deployment config.",
+          "Oracle-role/deployment state is ambiguous, and creator cancellation after verdicts is a bad edge for winners."
+        ],
+        "dealBreakerHit": false,
+        "dealBreakerNote": "No deal-breaker was proven from the materials. The claimed tests do exist statically, I saw no evidence of secrets in the repo, and I did not find outright unchecked fund movement paths; the bigger issue is config-dependent safety and unverified live state.",
+        "certainty": "medium"
+      },
+      "attempts": 1,
+      "usage": {
+        "input_tokens": 8006,
+        "output_tokens": 6457
+      },
+      "ms": 120457,
+      "judge": {
+        "id": "judge_f3569fec",
+        "name": "Marcus Lee",
+        "title": "Staff engineer, smart contracts and payments infrastructure",
+        "version": 1,
+        "promptVersion": "judge-v1",
+        "weights": {
+          "product_journey": 5,
+          "real_world_value": 9,
+          "ui_ux": 4,
+          "code_quality": 23,
+          "sdlc": 18,
+          "feasibility": 18,
+          "scalability": 14,
+          "business_model": 0,
+          "brownie_points": 9
+        },
+        "tone": "strict"
+      }
+    },
+    {
+      "judgeId": "judge_4c074f4a",
+      "status": "scored",
+      "overallHundredths": 5794,
+      "review": {
+        "criteria": [
+          {
+            "id": "product_journey",
+            "score": 64,
+            "comment": "The core loop is easy to grasp: discover a challenge, join or create one, let the wearable verify, then settle. But the most important proof points in the journey were not shown working end to end in the live test, especially human proof / pairing and the actual join-to-payout path.",
+            "evidence": [
+              "d1",
+              "d2",
+              "d3",
+              "d4",
+              "d8",
+              "f2",
+              "f3",
+              "f4",
+              "d5",
+              "d7",
+              "f8"
+            ]
+          },
+          {
+            "id": "real_world_value",
+            "score": 77,
+            "comment": "This goes after a real behavior problem: people struggle to follow through on sleep and workout goals, and putting money at stake is a concrete mechanism. The privacy choice to keep raw health data off-chain helps, though actual user demand and outcomes are still unproven here.",
+            "evidence": [
+              "E7",
+              "E19",
+              "E16",
+              "d2"
+            ]
+          },
+          {
+            "id": "ui_ux",
+            "score": 63,
+            "comment": "The product reads clearly on both laptop and phone, and the challenge flows are understandable without much explanation. I’m marking it down because critical actions were blocked in testing, which matters more than visual polish for this kind of product.",
+            "evidence": [
+              "d1",
+              "d3",
+              "d4",
+              "d8",
+              "f1",
+              "f2",
+              "f3",
+              "d5",
+              "f8"
+            ]
+          },
+          {
+            "id": "code_quality",
+            "score": 85,
+            "comment": "This is a serious codebase for a hackathon: the architecture is thoughtfully split across app, contract, agent, storage, and integrations, with unusually deep test coverage and careful money-path logic. I’m discounting a bit because the tests were counted, not run, and some protections depend on deployment configuration.",
+            "evidence": [
+              "E6",
+              "E8",
+              "E14",
+              "E16",
+              "E18"
+            ]
+          },
+          {
+            "id": "sdlc",
+            "score": 69,
+            "comment": "You show real engineering discipline in the size of the test suite, production guardrails, and deployment scripting. The caveat is that execution quality is not fully proven from the materials: tests were not run in review, and the deployment notes are internally inconsistent.",
+            "evidence": [
+              "E8",
+              "E12",
+              "E4"
+            ]
+          },
+          {
+            "id": "feasibility",
+            "score": 67,
+            "comment": "This is more than a concept deck: the site exists, browse/create flows work, and the off-chain settlement agent is concretely implemented. Still, it is testnet-only in the materials, depends on several third parties, and the critical live payout path was blocked during testing.",
+            "evidence": [
+              "E6",
+              "E7",
+              "E15",
+              "f2",
+              "f3",
+              "f8"
+            ]
+          },
+          {
+            "id": "scalability",
+            "score": 64,
+            "comment": "Keeping only verdicts on-chain is the right cost and privacy tradeoff, and the off-chain stack should handle an early user base. The obvious ceiling is the single trusted SPOTTER/Circle bottleneck plus wearable-provider limits and centralized adjudication.",
+            "evidence": [
+              "E3",
+              "E6",
+              "E7",
+              "E19"
+            ]
+          },
+          {
+            "id": "business_model",
+            "score": 38,
+            "comment": "I can see why users might try this, but I do not yet see a clear answer to who pays you and what sustainable economics look like once this moves beyond test USDC. Right now the materials sell the mechanic better than the business.",
+            "evidence": [
+              "E4",
+              "d2"
+            ]
+          },
+          {
+            "id": "brownie_points",
+            "score": 29,
+            "comment": "The integrations are real and helpful, but I do not see verified pilots, early users, or a true distribution wedge in the materials. The claimed 'first real hit' could be meaningful, but it is still a claim rather than something I can score as proven.",
+            "evidence": [
+              "E7",
+              "E21"
+            ]
+          }
+        ],
+        "headline": "Distinct and technically ambitious, but still pre-company until the live flow and business model catch up.",
+        "comment": "Team, this is one of the more company-shaped entries here: the wager-on-yourself loop is fresh, the privacy posture is thoughtful, and the technical build is deeper than a weekend toy. Where I need more is business clarity and proof that the live product can reliably take a user from signup to wearable proof to payout. Right now the trust model is still \"believe SPOTTER and the config is right,\" which is acceptable for a prototype but not yet for a scalable business. Tighten reliability and explain monetization, and this gets much stronger.",
+        "strengths": [
+          "Fresh health commitment mechanic with wearable-verified outcomes and verdict-only on-chain privacy.",
+          "Serious technical execution, including a deep test surface and conservative settlement logic.",
+          "Clear product framing: users can quickly understand what happens if they hit, miss, or nobody hits."
+        ],
+        "concerns": [
+          "Business model is underspecified; it is not clear who pays you or what sustainable margins look like.",
+          "Critical trust and safety properties depend on configuration and a centralized off-chain agent.",
+          "Key live flows were blocked, and live deployment state is not fully verifiable from the materials."
+        ],
+        "dealBreakerHit": false,
+        "dealBreakerNote": "No. This is not a me-too idea; it has a real edge. Growth and monetization are still thin, but not enough from the materials to call that a deal-breaker.",
+        "certainty": "medium"
+      },
+      "attempts": 1,
+      "usage": {
+        "input_tokens": 8005,
+        "output_tokens": 4784
+      },
+      "ms": 91136,
+      "judge": {
+        "id": "judge_4c074f4a",
+        "name": "Ana Okafor",
+        "title": "Early-stage investor and former founder",
+        "version": 1,
+        "promptVersion": "judge-v1",
+        "weights": {
+          "product_journey": 8,
+          "real_world_value": 17,
+          "ui_ux": 4,
+          "code_quality": 4,
+          "sdlc": 4,
+          "feasibility": 13,
+          "scalability": 17,
+          "business_model": 21,
+          "brownie_points": 12
+        },
+        "tone": "generous"
+      }
+    }
+  ]
+}

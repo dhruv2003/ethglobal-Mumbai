@@ -51,6 +51,9 @@ export function Header({ wallet, route }) {
           <Link to="/submit" aria-current={route.name === "form" ? "page" : undefined}>
             Submit
           </Link>
+          <Link to="/judge" aria-current={route.name === "judges" ? "page" : undefined}>
+            Judges
+          </Link>
         </nav>
       </div>
       <div className="top__right">

@@ -18,10 +18,11 @@ export function usePath() {
   return path;
 }
 
-/** "/" landing, "/projects" dashboard, "/projects/:id" one project, "/submit" the form. Unknown paths land home. */
+/** "/" landing, "/projects" dashboard, "/projects/:id" one project, "/submit" the form, "/judge" the judges. Unknown paths land home. */
 export function matchRoute(path) {
   const p = path.replace(/\/+$/, "") || "/";
   if (p === "/submit") return { name: "form" };
+  if (p === "/judge" || p === "/judges") return { name: "judges" };
   if (p === "/projects") return { name: "projects" };
   const m = p.match(/^\/projects\/([^/]+)$/);
   if (m) return { name: "project", id: decodeURIComponent(m[1]) };

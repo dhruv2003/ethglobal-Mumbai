@@ -1,0 +1,631 @@
+{
+  "project": "go-health-me",
+  "target": "https://www.gohealthme.app",
+  "ranAt": "2026-11-05T22:09:05.055Z",
+  "runner": {
+    "hub": "Mozark preprod (cdp-hub.preprod.mozark.ai)",
+    "tool": "Playwright connectOverCDP",
+    "script": "backend/tester/smoke.mjs",
+    "flows": "fixtures/go-health-me/flows.json"
+  },
+  "mode": "Demo replay + major flows + health. Never pays, stakes, signs in, connects a wallet or submits.",
+  "runs": [
+    {
+      "device": "laptop",
+      "label": "Laptop",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "startedAt": "2026-11-05T22:02:29.634Z",
+      "phases": [
+        {
+          "id": "demo",
+          "title": "Demo replay",
+          "about": "Screens shown in the demo video, checked on the live app. A screen the demo shows but the app does not have is a red flag.",
+          "steps": [
+            {
+              "id": "d1",
+              "title": "Landing: \"Put money on yourself\"",
+              "demoAt": "0:00",
+              "why": null,
+              "at": 2.7,
+              "status": "passed",
+              "detail": "see \"Put money on yourself\" \u00b7 see \"Everyone stakes the same\"",
+              "ms": 8482,
+              "screenshot": "laptop/smoke-laptop-d1.jpg"
+            },
+            {
+              "id": "d2",
+              "title": "Payout explainer: You hit / You miss / Nobody hits",
+              "demoAt": "0:15",
+              "why": null,
+              "at": 12.7,
+              "status": "passed",
+              "detail": "click \"You miss\" \u00b7 see \"Your stake goes to the players who hit\" \u00b7 click \"Nobody hits\" \u00b7 see \"Everyone gets their stake back\" \u00b7 click \"You hit\" \u00b7 see \"Your stake comes back, plus a share\"",
+              "ms": 12763,
+              "screenshot": "laptop/smoke-laptop-d2.jpg"
+            },
+            {
+              "id": "d3",
+              "title": "Open challenges with the \"What do you wear?\" picker",
+              "demoAt": "0:25",
+              "why": null,
+              "at": 28.4,
+              "status": "passed",
+              "detail": "see \"What do you wear?\" \u00b7 click \"Oura\" \u00b7 see \"Oura works here\"",
+              "ms": 11303,
+              "screenshot": "laptop/smoke-laptop-d3.jpg"
+            },
+            {
+              "id": "d4",
+              "title": "Make your player: sign-in options",
+              "demoAt": "0:35",
+              "why": null,
+              "at": 40.7,
+              "status": "passed",
+              "detail": "see \"Your player\" \u00b7 see \"Sign in with Base\" \u00b7 see \"Email me a sign-in code\"",
+              "ms": 3770,
+              "screenshot": "laptop/smoke-laptop-d4.jpg"
+            },
+            {
+              "id": "d5",
+              "title": "Prove one human (World ID), pick an ENS name, pair WHOOP",
+              "demoAt": "0:44",
+              "why": "Needs a real account, a World ID credential and a wearable. Not faked.",
+              "at": 45.7,
+              "status": "blocked",
+              "detail": "Needs sign-in; not run."
+            },
+            {
+              "id": "d6",
+              "title": "SPOTTER's verdicts and payouts are public on chain",
+              "demoAt": "1:05",
+              "why": "The demo shows a verdict being recorded on chain. The public History page should list real verdict and payout transactions.",
+              "at": 45.7,
+              "status": "passed",
+              "detail": "see \"Everyone's claims\" \u00b7 at least 1 \u00d7 a[href*='/tx/']",
+              "ms": 3431,
+              "screenshot": "laptop/smoke-laptop-d6.jpg"
+            },
+            {
+              "id": "d7",
+              "title": "\"You hit 1 workout. Banked.\" verdict in the signed-in lobby",
+              "demoAt": "1:20",
+              "why": "Only the player who ran the challenge can see their own verdict screen.",
+              "at": 50.6,
+              "status": "blocked",
+              "detail": "Needs sign-in; not run."
+            },
+            {
+              "id": "d8",
+              "title": "Open challenges list and \"Start a challenge\"",
+              "demoAt": "1:45",
+              "why": null,
+              "at": 50.6,
+              "status": "passed",
+              "detail": "see \"Challenges\" \u00b7 at least 1 \u00d7 a[href^='/pools/'] \u00b7 see \"Start a challenge\"",
+              "ms": 14056,
+              "screenshot": "laptop/smoke-laptop-d8.jpg"
+            }
+          ]
+        },
+        {
+          "id": "features",
+          "title": "Major flows",
+          "about": "The app's main features from the code, exercised without an account.",
+          "steps": [
+            {
+              "id": "f1",
+              "title": "Navigate from the header to Challenges",
+              "demoAt": null,
+              "why": null,
+              "at": 66.9,
+              "status": "passed",
+              "detail": "click \"Challenges\" \u00b7 land on /pools",
+              "ms": 21215,
+              "screenshot": "laptop/smoke-laptop-f1.jpg"
+            },
+            {
+              "id": "f2",
+              "title": "Open a listed challenge and read how it ended",
+              "demoAt": null,
+              "why": null,
+              "at": 91.1,
+              "status": "passed",
+              "detail": "follow a[href^='/pools/'] \u00b7 land on /pools/ \u00b7 see \"How this challenge ended\"",
+              "ms": 10899,
+              "screenshot": "laptop/smoke-laptop-f2.jpg"
+            },
+            {
+              "id": "f3",
+              "title": "Build a challenge: pick a goal and a stake",
+              "demoAt": null,
+              "why": null,
+              "at": 104.5,
+              "status": "passed",
+              "detail": "click \"Complete at least 1 workout\u2026\" \u00b7 \"Complete at least 1 workout\" selected \u00b7 click \"10 USDC\" \u00b7 \"10 USDC\" selected",
+              "ms": 16733,
+              "screenshot": "laptop/smoke-laptop-f3.jpg"
+            },
+            {
+              "id": "f4",
+              "title": "Creating a challenge needs sign-in (no anonymous money moves)",
+              "demoAt": null,
+              "why": null,
+              "at": 125.1,
+              "status": "passed",
+              "detail": "see \"Sign in to start\"",
+              "ms": 9479,
+              "screenshot": "laptop/smoke-laptop-f4.jpg"
+            },
+            {
+              "id": "f5",
+              "title": "Friend challenges are private until you sign in",
+              "demoAt": null,
+              "why": null,
+              "at": 141.3,
+              "status": "passed",
+              "detail": "see \"Sign in to see the challenges\"",
+              "ms": 8007,
+              "screenshot": "laptop/smoke-laptop-f5.jpg"
+            },
+            {
+              "id": "f6",
+              "title": "SPOTTER's settlement wallet is shown and linked to Basescan",
+              "demoAt": null,
+              "why": null,
+              "at": 154.4,
+              "status": "passed",
+              "detail": "see \"The wallet SPOTTER settles from\" \u00b7 see \"View on Basescan\"",
+              "ms": 4298,
+              "screenshot": "laptop/smoke-laptop-f6.jpg"
+            },
+            {
+              "id": "f7",
+              "title": "Privacy policy and terms are published",
+              "demoAt": null,
+              "why": null,
+              "at": 162.3,
+              "status": "passed",
+              "detail": "see \"Privacy Policy\" \u00b7 see \"Terms of Use\" \u00b7 see \"One human, one entry\"",
+              "ms": 6514,
+              "screenshot": "laptop/smoke-laptop-f7.jpg"
+            },
+            {
+              "id": "f8",
+              "title": "Join a challenge, stake, and get paid",
+              "demoAt": null,
+              "why": "Moves test USDC from a signed-in wallet. Never run by the tester.",
+              "at": 171.3,
+              "status": "blocked",
+              "detail": "Needs sign-in; not run."
+            }
+          ]
+        }
+      ],
+      "browserVersion": "154.0.8037.57",
+      "home": {
+        "url": "https://www.gohealthme.app/",
+        "status": 200,
+        "wallMs": 2071,
+        "title": "GoHealthMe: stake on your health goal, get paid in USDC",
+        "h1": "Put money on yourself.",
+        "loadMs": 374,
+        "horizontalScroll": false,
+        "viewportMeta": true,
+        "brokenImages": 0
+      },
+      "video": {
+        "file": "laptop/video.mp4",
+        "seconds": 170.2,
+        "frames": 704
+      },
+      "durationMs": 178932,
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "Failed to load resource: the server responded with a status of 500 ()"
+      ],
+      "failedRequests": [
+        {
+          "url": "https://www.gohealthme.app/api/activity",
+          "status": 500
+        },
+        {
+          "url": "https://www.gohealthme.app/api/activity",
+          "status": 500
+        },
+        {
+          "url": "https://www.gohealthme.app/api/activity",
+          "status": 500
+        },
+        {
+          "url": "https://www.gohealthme.app/api/activity",
+          "status": 500
+        },
+        {
+          "url": "https://www.gohealthme.app/api/ens/resolve?address=0xD375986Ac2073BEA5bcd5893055B80eB57D3026e",
+          "status": 500
+        },
+        {
+          "url": "https://www.gohealthme.app/api/ens/resolve?address=0x8a39a5160Bad34713169ad7eEf9bd779b32c6141",
+          "status": 500
+        }
+      ],
+      "cancelledRequests": [
+        {
+          "url": "https://app.dynamicauth.com/api/v0/sdk/3d446c7a-9c4e-40ba-9c41-1f603c7cff26/sdkSettings",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "https://www.gohealthme.app/character?next=%2F&_rsc=5CB68i4pnAekjehf",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "https://www.gohealthme.app/character?next=%2F&_rsc=tXyZJ52UQVBCVsD3",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "https://www.gohealthme.app/character?next=%2F&_rsc=5CB68i4pnAekjehf",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "https://www.gohealthme.app/character?next=%2F&_rsc=tXyZJ52UQVBCVsD3",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "https://www.gohealthme.app/character?_rsc=5CB68i4pnAekjehf",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "https://www.gohealthme.app/character?next=%2F&_rsc=5CB68i4pnAekjehf",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "https://www.gohealthme.app/agent?_rsc=npSYWQ5VX_JQccqG",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "https://www.gohealthme.app/agent?_rsc=3H0u3_3iFXqFS0yw",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "https://www.gohealthme.app/character?next=%2Fpools&_rsc=3H0u3_3iFXqFS0yw",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "https://www.gohealthme.app/character?next=%2Fpools&_rsc=3H0u3_3iFXqFS0yw",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "https://www.gohealthme.app/agent?_rsc=zInaHDi3lTt_PEHP",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "https://www.gohealthme.app/character?next=%2Fpools%2F13&_rsc=zInaHDi3lTt_PEHP",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "https://www.gohealthme.app/character?next=%2Fchallenge%2Fnew&_rsc=cl5yPHHsxfMLRv0H",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "https://www.gohealthme.app/agent?_rsc=a9Rq5QxvSqDT3nlC",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "https://www.gohealthme.app/character?next=%2Fchallenges&_rsc=a9Rq5QxvSqDT3nlC",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "https://www.gohealthme.app/character?next=%2Fagent&_rsc=DSsQ4ffSEJ4o1oYx",
+          "error": "net::ERR_ABORTED"
+        }
+      ],
+      "outcome": {
+        "status": "issues",
+        "reasons": [
+          "6 console error(s)",
+          "6 failed request(s)"
+        ]
+      }
+    },
+    {
+      "device": "phone",
+      "label": "Phone",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "startedAt": "2026-11-05T22:06:13.029Z",
+      "phases": [
+        {
+          "id": "demo",
+          "title": "Demo replay",
+          "about": "Screens shown in the demo video, checked on the live app. A screen the demo shows but the app does not have is a red flag.",
+          "steps": [
+            {
+              "id": "d1",
+              "title": "Landing: \"Put money on yourself\"",
+              "demoAt": "0:00",
+              "why": null,
+              "at": 7.7,
+              "status": "passed",
+              "detail": "see \"Put money on yourself\" \u00b7 see \"Everyone stakes the same\"",
+              "ms": 5711,
+              "screenshot": "phone/smoke-phone-d1.jpg"
+            },
+            {
+              "id": "d2",
+              "title": "Payout explainer: You hit / You miss / Nobody hits",
+              "demoAt": "0:15",
+              "why": null,
+              "at": 15.5,
+              "status": "passed",
+              "detail": "click \"You miss\" \u00b7 see \"Your stake goes to the players who hit\" \u00b7 click \"Nobody hits\" \u00b7 see \"Everyone gets their stake back\" \u00b7 click \"You hit\" \u00b7 see \"Your stake comes back, plus a share\"",
+              "ms": 15210,
+              "screenshot": "phone/smoke-phone-d2.jpg"
+            },
+            {
+              "id": "d3",
+              "title": "Open challenges with the \"What do you wear?\" picker",
+              "demoAt": "0:25",
+              "why": null,
+              "at": 33.3,
+              "status": "passed",
+              "detail": "see \"What do you wear?\" \u00b7 click \"Oura\" \u00b7 see \"Oura works here\"",
+              "ms": 11024,
+              "screenshot": "phone/smoke-phone-d3.jpg"
+            },
+            {
+              "id": "d4",
+              "title": "Make your player: sign-in options",
+              "demoAt": "0:35",
+              "why": null,
+              "at": 46.4,
+              "status": "passed",
+              "detail": "see \"Your player\" \u00b7 see \"Sign in with Base\" \u00b7 see \"Email me a sign-in code\"",
+              "ms": 3751,
+              "screenshot": "phone/smoke-phone-d4.jpg"
+            },
+            {
+              "id": "d5",
+              "title": "Prove one human (World ID), pick an ENS name, pair WHOOP",
+              "demoAt": "0:44",
+              "why": "Needs a real account, a World ID credential and a wearable. Not faked.",
+              "at": 52.1,
+              "status": "blocked",
+              "detail": "Needs sign-in; not run."
+            },
+            {
+              "id": "d6",
+              "title": "SPOTTER's verdicts and payouts are public on chain",
+              "demoAt": "1:05",
+              "why": "The demo shows a verdict being recorded on chain. The public History page should list real verdict and payout transactions.",
+              "at": 52.1,
+              "status": "passed",
+              "detail": "see \"Everyone's claims\" \u00b7 at least 1 \u00d7 a[href*='/tx/']",
+              "ms": 4163,
+              "screenshot": "phone/smoke-phone-d6.jpg"
+            },
+            {
+              "id": "d7",
+              "title": "\"You hit 1 workout. Banked.\" verdict in the signed-in lobby",
+              "demoAt": "1:20",
+              "why": "Only the player who ran the challenge can see their own verdict screen.",
+              "at": 58,
+              "status": "blocked",
+              "detail": "Needs sign-in; not run."
+            },
+            {
+              "id": "d8",
+              "title": "Open challenges list and \"Start a challenge\"",
+              "demoAt": "1:45",
+              "why": null,
+              "at": 58,
+              "status": "passed",
+              "detail": "see \"Challenges\" \u00b7 at least 1 \u00d7 a[href^='/pools/'] \u00b7 see \"Start a challenge\"",
+              "ms": 15855,
+              "screenshot": "phone/smoke-phone-d8.jpg"
+            }
+          ]
+        },
+        {
+          "id": "features",
+          "title": "Major flows",
+          "about": "The app's main features from the code, exercised without an account.",
+          "steps": [
+            {
+              "id": "f1",
+              "title": "Navigate from the header to Challenges",
+              "demoAt": null,
+              "why": null,
+              "at": 76.3,
+              "status": "passed",
+              "detail": "click \"Challenges\" \u00b7 land on /pools",
+              "ms": 18208,
+              "screenshot": "phone/smoke-phone-f1.jpg"
+            },
+            {
+              "id": "f2",
+              "title": "Open a listed challenge and read how it ended",
+              "demoAt": null,
+              "why": null,
+              "at": 98.2,
+              "status": "passed",
+              "detail": "follow a[href^='/pools/'] \u00b7 land on /pools/ \u00b7 see \"How this challenge ended\"",
+              "ms": 17966,
+              "screenshot": "phone/smoke-phone-f2.jpg"
+            },
+            {
+              "id": "f3",
+              "title": "Build a challenge: pick a goal and a stake",
+              "demoAt": null,
+              "why": null,
+              "at": 118.2,
+              "status": "passed",
+              "detail": "click \"Complete at least 1 workout\u2026\" \u00b7 \"Complete at least 1 workout\" selected \u00b7 click \"10 USDC\" \u00b7 \"10 USDC\" selected",
+              "ms": 14839,
+              "screenshot": "phone/smoke-phone-f3.jpg"
+            },
+            {
+              "id": "f4",
+              "title": "Creating a challenge needs sign-in (no anonymous money moves)",
+              "demoAt": null,
+              "why": null,
+              "at": 134.6,
+              "status": "passed",
+              "detail": "see \"Sign in to start\"",
+              "ms": 9697,
+              "screenshot": "phone/smoke-phone-f4.jpg"
+            },
+            {
+              "id": "f5",
+              "title": "Friend challenges are private until you sign in",
+              "demoAt": null,
+              "why": null,
+              "at": 145.8,
+              "status": "passed",
+              "detail": "see \"Sign in to see the challenges\"",
+              "ms": 4500,
+              "screenshot": "phone/smoke-phone-f5.jpg"
+            },
+            {
+              "id": "f6",
+              "title": "SPOTTER's settlement wallet is shown and linked to Basescan",
+              "demoAt": null,
+              "why": null,
+              "at": 151.8,
+              "status": "passed",
+              "detail": "see \"The wallet SPOTTER settles from\" \u00b7 see \"View on Basescan\"",
+              "ms": 4049,
+              "screenshot": "phone/smoke-phone-f6.jpg"
+            },
+            {
+              "id": "f7",
+              "title": "Privacy policy and terms are published",
+              "demoAt": null,
+              "why": null,
+              "at": 157.2,
+              "status": "passed",
+              "detail": "see \"Privacy Policy\" \u00b7 see \"Terms of Use\" \u00b7 see \"One human, one entry\"",
+              "ms": 7518,
+              "screenshot": "phone/smoke-phone-f7.jpg"
+            },
+            {
+              "id": "f8",
+              "title": "Join a challenge, stake, and get paid",
+              "demoAt": null,
+              "why": "Moves test USDC from a signed-in wallet. Never run by the tester.",
+              "at": 166.1,
+              "status": "blocked",
+              "detail": "Needs sign-in; not run."
+            }
+          ]
+        }
+      ],
+      "browserVersion": "154.0.8037.57",
+      "home": {
+        "url": "https://www.gohealthme.app/",
+        "status": 200,
+        "wallMs": 7461,
+        "title": "GoHealthMe: stake on your health goal, get paid in USDC",
+        "h1": "Put money on yourself.",
+        "loadMs": 461,
+        "horizontalScroll": false,
+        "viewportMeta": true,
+        "brokenImages": 0
+      },
+      "video": {
+        "file": "phone/video.mp4",
+        "seconds": 166.5,
+        "frames": 957
+      },
+      "durationMs": 172026,
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "Failed to load resource: the server responded with a status of 500 ()"
+      ],
+      "failedRequests": [
+        {
+          "url": "https://www.gohealthme.app/api/activity",
+          "status": 500
+        },
+        {
+          "url": "https://www.gohealthme.app/api/activity",
+          "status": 500
+        },
+        {
+          "url": "https://www.gohealthme.app/api/activity",
+          "status": 500
+        },
+        {
+          "url": "https://www.gohealthme.app/api/activity",
+          "status": 500
+        },
+        {
+          "url": "https://www.gohealthme.app/api/activity",
+          "status": 500
+        },
+        {
+          "url": "https://www.gohealthme.app/api/ens/resolve?address=0xD375986Ac2073BEA5bcd5893055B80eB57D3026e",
+          "status": 500
+        },
+        {
+          "url": "https://www.gohealthme.app/api/ens/resolve?address=0x8a39a5160Bad34713169ad7eEf9bd779b32c6141",
+          "status": 500
+        }
+      ],
+      "cancelledRequests": [
+        {
+          "url": "https://app.dynamicauth.com/api/v0/sdk/3d446c7a-9c4e-40ba-9c41-1f603c7cff26/sdkSettings",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "https://www.gohealthme.app/character?next=%2F&_rsc=5CB68i4pnAekjehf",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "https://www.gohealthme.app/character?next=%2F&_rsc=tXyZJ52UQVBCVsD3",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "https://www.gohealthme.app/agent?_rsc=5QbZD-MKPLdynIrN",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "https://www.gohealthme.app/character?next=%2Fpools&_rsc=3H0u3_3iFXqFS0yw",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "https://www.gohealthme.app/agent?_rsc=zInaHDi3lTt_PEHP",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "https://www.gohealthme.app/agent?_rsc=5QbZD-MKPLdynIrN",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "url": "https://www.gohealthme.app/character?next=%2Fagent&_rsc=DSsQ4ffSEJ4o1oYx",
+          "error": "net::ERR_ABORTED"
+        }
+      ],
+      "outcome": {
+        "status": "issues",
+        "reasons": [
+          "7 console error(s)",
+          "7 failed request(s)"
+        ]
+      }
+    }
+  ]
+}

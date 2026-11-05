@@ -1,0 +1,13 @@
+{
+  "name": "arena-tester",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Smoke-tests a project's live app on Mozark cloud browsers (laptop + phone) and records it.",
+  "scripts": {
+    "smoke": "node smoke.mjs"
+  },
+  "dependencies": {
+    "playwright": "1.58.2"
+  }
+}

@@ -6,15 +6,16 @@ import { FighterPreview } from "./components/FighterPreview.jsx";
 import { Success } from "./components/Success.jsx";
 import { EVENT } from "./config/event.js";
 import { emptyForm, getIn, mergeDraft, setIn } from "./lib/form.js";
-import { clearDraft, loadDraft, saveDraft, saveSubmission, toPayload } from "./lib/storage.js";
+import { clearDraft, loadDraft, saveDraft, saveSubmission, submissionDigest, toPayload } from "./lib/storage.js";
 import { validate } from "./lib/validate.js";
 import { useWallet } from "./lib/wallet.js";
 import { matchRoute, useCanonical, usePath } from "./lib/router.jsx";
 import { LandingPage, ProjectPage, ProjectsPage } from "./components/Projects.jsx";
+import { JudgesPage } from "./components/JudgesPage.jsx";
 
 const hhmm = () => new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
-const TITLES = { home: "The arena", form: "Submit a project", projects: "Projects", project: "Project" };
+const TITLES = { home: "The arena", form: "Submit a project", projects: "Projects", project: "Project", judges: "Judges" };
 
 export default function App() {
   const wallet = useWallet();
@@ -63,6 +64,7 @@ export default function App() {
       `Submit "${payload.project.name}" to ${EVENT.name} Battle Arena`,
       `Repository: ${payload.repoUrl}`,
       `Owner: ${wallet.address}`,
+      `Submission: ${await submissionDigest(payload)}`,
       `Issued at: ${issuedAt}`,
     ].join("\n");
     try {
@@ -74,7 +76,7 @@ export default function App() {
       setRecord(saved);
       window.scrollTo({ top: 0 });
     } catch (e) {
-      setSubmitState({ phase: "idle", error: wallet.friendlyError(e) });
+      setSubmitState({ phase: "idle", error: e.fromServer ? e.message : wallet.friendlyError(e) });
     }
   }
 
@@ -105,6 +107,8 @@ export default function App() {
       <main id="main" key={route.name + (route.id ?? "")} className={`page ${route.name === "form" ? "solo solo--form" : "solo solo--wide"}`}>
         {route.name === "home" ? (
           <LandingPage />
+        ) : route.name === "judges" ? (
+          <JudgesPage />
         ) : route.name === "projects" ? (
           <ProjectsPage />
         ) : route.name === "project" ? (
