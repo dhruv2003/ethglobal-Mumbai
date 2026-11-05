@@ -18,6 +18,20 @@ const run = promisify(execFile);
 const MAX_VIDEO = 300 * 1024 * 1024;
 export const TRANSCRIBE_MODEL = process.env.TRANSCRIBE_MODEL ?? "gpt-4o-transcribe";
 
+/**
+ * What container is this, by its first bytes? Only real video files get near
+ * ffmpeg: a playlist or concat list could make it fetch URLs or read local files.
+ * Returns the ffmpeg demuxer to force, or null.
+ */
+export function sniffContainer(buf) {
+  if (buf.length >= 12 && buf.subarray(4, 8).toString("latin1") === "ftyp") return "mov"; // MP4, MOV, M4V
+  if (buf.length >= 4 && buf.subarray(0, 4).equals(Buffer.from([0x1a, 0x45, 0xdf, 0xa3]))) return "matroska"; // WebM, MKV
+  return null;
+}
+
+/** ffmpeg/ffprobe input flags: local file only, forced demuxer. */
+const lockedInput = (demuxer, file) => ["-protocol_whitelist", "file", "-f", demuxer, "-i", file];
+
 const fmt = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
 
 /** Which kind of demo link is this? */
@@ -63,12 +77,15 @@ async function transcribeFile(c, workDir) {
   if (!res.ok) throw new Error(`The video link returned HTTP ${res.status}.`);
   const type = res.headers.get("content-type") ?? "";
   if (c.kind === "maybe-file" && !/^video\/|octet-stream/.test(type)) throw new Error("The demo link is a web page, not a video file. Use a direct video or Loom link.");
+  const bytes = await readCapped(res, MAX_VIDEO);
+  const demuxer = sniffContainer(bytes);
+  if (!demuxer) throw new Error("The demo link didn't return an MP4, MOV or WebM video.");
   const video = path.join(workDir, "demo-video");
-  fs.writeFileSync(video, await readCapped(res, MAX_VIDEO));
+  fs.writeFileSync(video, bytes);
   const audio = path.join(workDir, "demo-audio.mp3");
   // Mono 16 kHz speech-quality audio keeps a 10-minute demo well under the 25 MB upload limit.
-  await run("ffmpeg", ["-v", "error", "-y", "-i", video, "-vn", "-ac", "1", "-ar", "16000", "-b:a", "48k", audio], { timeout: 180000 });
-  const { stdout } = await run("ffprobe", ["-v", "error", "-show_entries", "format=duration", "-of", "default=nw=1:nk=1", video], { timeout: 30000 });
+  await run("ffmpeg", ["-v", "error", "-y", ...lockedInput(demuxer, video), "-vn", "-ac", "1", "-ar", "16000", "-b:a", "48k", audio], { timeout: 180000 });
+  const { stdout } = await run("ffprobe", ["-v", "error", ...lockedInput(demuxer, video), "-show_entries", "format=duration", "-of", "default=nw=1:nk=1"], { timeout: 30000 });
   const seconds = Math.round(Number(stdout.trim()) || 0);
   fs.rmSync(video, { force: true });
   if (fs.statSync(audio).size > 24 * 1024 * 1024) throw new Error("The demo is too long to transcribe.");

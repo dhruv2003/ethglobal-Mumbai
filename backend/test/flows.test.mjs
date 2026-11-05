@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { isPrivateAddress, safeFetch } from "../src/reviewer/net.mjs";
-import { classifyDemo } from "../src/reviewer/demo.mjs";
+import { classifyDemo, sniffContainer } from "../src/reviewer/demo.mjs";
 import { corpusOf, toRunnerSteps } from "../src/reviewer/flows.mjs";
 
 const discovery = { pages: [{ path: "/", title: "Tap", headings: ["Payments at the pace of a tap"], buttons: ["Download APK"], links: [{ text: "Docs", href: "https://tap.example/docs" }], inputs: [], text: "Turn any Android phone into a terminal" }] };
@@ -51,5 +51,15 @@ test("demo links are classified: Mux and files download, YouTube is skipped", ()
 test("downloads refuse private hosts, including mapped IPv6 spellings and names that resolve locally", async () => {
   for (const url of ["https://127.0.0.1/x", "https://[::ffff:7f00:1]/x", "https://[::ffff:a9fe:a9fe]/x", "https://localhost/x", "http://example.com/x"]) {
     await assert.rejects(safeFetch(url, { timeoutMs: 5000 }), /private|https/, url);
+  }
+});
+
+test("only real video containers reach ffmpeg (no playlists or concat lists)", () => {
+  const mp4 = Buffer.concat([Buffer.from([0, 0, 0, 0x20]), Buffer.from("ftypisom"), Buffer.alloc(8)]);
+  const webm = Buffer.from([0x1a, 0x45, 0xdf, 0xa3, 0, 0, 0, 0]);
+  assert.equal(sniffContainer(mp4), "mov");
+  assert.equal(sniffContainer(webm), "matroska");
+  for (const bad of ["#EXTM3U\n#EXT-X-VERSION:3\nhttp://169.254.169.254/x.ts\n", "ffconcat version 1.0\nfile '/etc/passwd'\n", "<html>not a video</html>"]) {
+    assert.equal(sniffContainer(Buffer.from(bad)), null, bad.slice(0, 20));
   }
 });
