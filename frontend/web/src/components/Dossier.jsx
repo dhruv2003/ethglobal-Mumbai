@@ -91,7 +91,7 @@ function useLiveDossier(project) {
   const [live, setLive] = useState({ dossier: project.dossier ?? null, state: null, running: false, review: null, offline: false });
   const [tick, setTick] = useState(0);
   useEffect(() => {
-    if (project.dossier || project.kind !== "submitted") return undefined;
+    if (project.kind !== "submitted") return undefined;
     let alive = true;
     let timer;
     const started = Date.now();
@@ -155,9 +155,18 @@ export function Dossier({ project }) {
   const count = (s) => d.evidence.filter((e) => e.status === s).length;
   const c = d.continuity;
   const total = (c?.commitsBefore ?? 0) + (c?.commitsDuringEvent ?? 0);
+  const rerun = live.state && !live.state.finishedAt ? live.state.steps.findIndex((x) => x.status === "running") : -1;
 
   return (
     <div className="judge">
+      {rerun >= 0 && (
+        <div className="rerun-banner" role="status">
+          <Spinner size={18} label="A new review is running" />
+          <span className="t-body">
+            A new review is running · step {rerun + 1} of {live.state.steps.length}: {live.state.steps[rerun].title}. These results update when it finishes.
+          </span>
+        </div>
+      )}
       <section className="card stack judge__verdict rise" style={{ "--i": 0 }} aria-label="Verdict">
         <span className="t-label">Verdict</span>
         <p className="t-prompt m0">{h.headline}</p>
