@@ -8,11 +8,19 @@ import { emptyForm, getIn, mergeDraft, setIn } from "./lib/form.js";
 import { clearDraft, loadDraft, saveDraft, saveSubmission, toPayload } from "./lib/storage.js";
 import { validate } from "./lib/validate.js";
 import { useWallet } from "./lib/wallet.js";
+import { matchRoute, usePath } from "./lib/router.jsx";
+import { ProjectPage, ProjectsPage } from "./components/Projects.jsx";
 
 const hhmm = () => new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
+const TITLES = { form: "Enter your project", projects: "Projects", project: "Project" };
+
 export default function App() {
   const wallet = useWallet();
+  const route = matchRoute(usePath());
+  useEffect(() => {
+    document.title = `${TITLES[route.name]} · Battle Arena`;
+  }, [route.name]);
   const [data, setData] = useState(() => mergeDraft(loadDraft()));
   const [touched, setTouched] = useState({});
   const [showAll, setShowAll] = useState(false);
@@ -81,9 +89,9 @@ export default function App() {
   return (
     <FormCtx.Provider value={ctx}>
       <a className="skip" href="#main">
-        Skip to the form
+        Skip to content
       </a>
-      <Header wallet={wallet} />
+      <Header wallet={wallet} route={route} />
       {wallet.error && (
         <div className="banner" role="alert">
           <span>✕ {wallet.error}</span>
@@ -92,8 +100,12 @@ export default function App() {
           </button>
         </div>
       )}
-      <main id="main" className="solo">
-        {record ? (
+      <main id="main" className={route.name === "form" ? "solo" : "solo solo--wide"}>
+        {route.name === "projects" ? (
+          <ProjectsPage />
+        ) : route.name === "project" ? (
+          <ProjectPage id={route.id} />
+        ) : record ? (
           <Success record={record} onStartOver={startOver} />
         ) : (
           <>

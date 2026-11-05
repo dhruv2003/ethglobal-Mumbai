@@ -7,14 +7,16 @@ import { VitePWA } from "vite-plugin-pwa";
 const here = path.dirname(fileURLToPath(import.meta.url));
 // The design system is the single source of truth: import it, don't copy it.
 const designSystem = path.resolve(here, "../design-system/src");
+// Sample projects shown on /projects (small JSON files only).
+const fixtures = path.resolve(here, "../../backend/fixtures");
 
 export default defineConfig({
   resolve: {
-    alias: { "@ds": designSystem },
+    alias: { "@ds": designSystem, "@fixtures": fixtures },
     // ui.jsx lives outside this app; make its react imports resolve to ours.
     dedupe: ["react", "react-dom"],
   },
-  server: { fs: { allow: [path.resolve(here, "..")] } },
+  server: { fs: { allow: [path.resolve(here, ".."), fixtures] } },
   plugins: [
     react(),
     VitePWA({

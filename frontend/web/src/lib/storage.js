@@ -51,6 +51,15 @@ export function toPayload(data, { ownerWallet, chainId }) {
   };
 }
 
+export function listSubmissions() {
+  try {
+    const all = JSON.parse(localStorage.getItem(SUBMISSIONS_SLOT) || "[]");
+    return Array.isArray(all) ? all : [];
+  } catch {
+    return [];
+  }
+}
+
 /** TODO(backend): replace with POST /submissions. Must stay async. */
 export async function saveSubmission(payload) {
   const record = {

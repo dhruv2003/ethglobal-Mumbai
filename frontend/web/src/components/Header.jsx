@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { StatusPill } from "@ds/ui.jsx";
 import { EVENT } from "../config/event.js";
+import { Link } from "../lib/router.jsx";
 import { chainName, isMobile, metamaskDeepLink, shortAddress } from "../lib/wallet.js";
 
 /** Chrome/Edge/Android fire beforeinstallprompt; iOS installs via Share > Add to Home Screen. */
@@ -28,11 +29,24 @@ function useInstallPrompt() {
     : null;
 }
 
-export function Header({ wallet }) {
+export function Header({ wallet, route }) {
   const install = useInstallPrompt();
+  const onProjects = route.name === "projects" || route.name === "project";
   return (
     <header className="top">
-      <span className="brand">Battle Arena</span>
+      <div className="top__left">
+        <Link to="/" className="brand">
+          Battle Arena
+        </Link>
+        <nav className="top__nav" aria-label="Main">
+          <Link to="/" aria-current={!onProjects ? "page" : undefined}>
+            Enter
+          </Link>
+          <Link to="/projects" aria-current={onProjects ? "page" : undefined}>
+            Projects
+          </Link>
+        </nav>
+      </div>
       <div className="top__right">
         {install && (
           <button type="button" className="btn btn--ghost btn--sm" onClick={install}>

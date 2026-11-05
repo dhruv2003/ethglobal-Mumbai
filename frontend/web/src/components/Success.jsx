@@ -1,4 +1,5 @@
 import { StatusPill } from "@ds/ui.jsx";
+import { Link } from "../lib/router.jsx";
 import { shortAddress } from "../lib/wallet.js";
 
 /** The one sticker moment on this screen. */
@@ -38,7 +39,10 @@ export function Success({ record, onStartOver }) {
         </p>
       </div>
       <div className="success__actions">
-        <button type="button" className="btn btn--secondary" onClick={download}>
+        <Link to={`/projects/${encodeURIComponent(record.id)}`} className="btn btn--secondary">
+          See your project page
+        </Link>
+        <button type="button" className="btn btn--ghost" onClick={download}>
           Download a copy
         </button>
         <button type="button" className="btn btn--ghost" onClick={onStartOver}>
