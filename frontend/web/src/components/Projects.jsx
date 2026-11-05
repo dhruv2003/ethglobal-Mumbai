@@ -143,6 +143,27 @@ function HowItWorks() {
   );
 }
 
+/* ------------------------------------------------------------- landing */
+
+export function LandingPage() {
+  const [projects, setProjects] = useState(null);
+  useEffect(() => {
+    listProjects().then(setProjects);
+  }, []);
+  return (
+    <>
+      <ArenaHero projects={projects} />
+      <HowItWorks />
+      <section className="landing-cta rise" style={{ "--i": 8 }} aria-label="See the roster">
+        <p className="t-heading m0">Meet the fighters already in the ring.</p>
+        <Link to="/projects" className="btn btn--secondary">
+          See all projects <span aria-hidden="true">→</span>
+        </Link>
+      </section>
+    </>
+  );
+}
+
 /* ----------------------------------------------------------- dashboard */
 
 export function ProjectsPage() {
@@ -171,22 +192,31 @@ export function ProjectsPage() {
 
   return (
     <>
-      <ArenaHero projects={projects} />
-      <HowItWorks />
+      <div className="intro intro--row">
+        <div className="intro">
+          <h1 className="t-display-lg m0 rise">Projects</h1>
+          <p className="t-body m0 muted rise" style={{ "--i": 1 }}>
+            {EVENT.name}. Every project competes for finalist; tracks are extra.
+          </p>
+        </div>
+        <Link to="/submit" className="btn btn--primary rise" style={{ "--i": 2 }}>
+          Submit a project
+        </Link>
+      </div>
 
       <section className="stats" aria-label="Summary">
-        <StatTile i={7} label="Projects" value={all.length} note="All entries in the arena" />
+        <StatTile i={3} label="Projects" value={all.length} note="All entries in the arena" />
         <StatTile
-          i={8}
+          i={4}
           label="Submitted by teams"
           value={submitted}
           note={samples ? `Plus ${samples} sample ${samples === 1 ? "project" : "projects"}` : "No samples"}
         />
-        <StatTile i={9} label="Tracks in play" value={inPlay.length} note={`of ${EVENT.tracks.length} sponsor tracks`}>
+        <StatTile i={5} label="Tracks in play" value={inPlay.length} note={`of ${EVENT.tracks.length} sponsor tracks`}>
           <Progress value={inPlay.length} max={EVENT.tracks.length} label="Tracks with at least one entry" />
         </StatTile>
         <StatTile
-          i={10}
+          i={6}
           label="Most entered track"
           value={leaders.length === 0 ? "–" : leaders.length === 1 ? leaders[0].name : `${leaders.length}-way tie`}
           note={leaders.length === 0 ? "No tracks picked yet" : leaders.length === 1 ? plural(most) : `${leaders.map((t) => t.name).join(", ")}, ${most} each`}

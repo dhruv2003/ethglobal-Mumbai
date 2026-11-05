@@ -35,7 +35,7 @@ export function Header({ wallet, route }) {
   return (
     <header className="top">
       <div className="top__left">
-        <Link to="/projects" className="brand">
+        <Link to="/" className="brand">
           <svg className="brand__mark" viewBox="0 0 512 512" aria-hidden="true">
             <rect width="512" height="512" rx="112" fill="#17141f" />
             <circle cx="200" cy="256" r="118" fill="#ff5c93" />
@@ -48,7 +48,7 @@ export function Header({ wallet, route }) {
           <Link to="/projects" aria-current={onProjects ? "page" : undefined}>
             Projects
           </Link>
-          <Link to="/submit" aria-current={!onProjects ? "page" : undefined}>
+          <Link to="/submit" aria-current={route.name === "form" ? "page" : undefined}>
             Submit
           </Link>
         </nav>

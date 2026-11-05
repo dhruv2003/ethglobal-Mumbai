@@ -377,3 +377,7 @@ a.brand:hover .brand__mark { transform: rotate(-8deg) scale(1.08); }
 /* Hero ring: keep the roster between the corner posts */
 .hero__ring { min-height: 300px; padding-left: 9%; padding-right: 9%; }
 .hero__ring .roster { gap: var(--space-1); }
+.landing-cta {
+  display: flex; justify-content: space-between; align-items: center; gap: var(--space-4); flex-wrap: wrap;
+  padding: var(--space-5) var(--space-6); border-radius: var(--radius-lg); background: var(--arena-canvas);
+}

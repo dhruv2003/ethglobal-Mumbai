@@ -10,11 +10,11 @@ import { clearDraft, loadDraft, saveDraft, saveSubmission, toPayload } from "./l
 import { validate } from "./lib/validate.js";
 import { useWallet } from "./lib/wallet.js";
 import { matchRoute, useCanonical, usePath } from "./lib/router.jsx";
-import { ProjectPage, ProjectsPage } from "./components/Projects.jsx";
+import { LandingPage, ProjectPage, ProjectsPage } from "./components/Projects.jsx";
 
 const hhmm = () => new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
-const TITLES = { form: "Submit a project", projects: "Projects", project: "Project" };
+const TITLES = { home: "The arena", form: "Submit a project", projects: "Projects", project: "Project" };
 
 export default function App() {
   const wallet = useWallet();
@@ -102,8 +102,10 @@ export default function App() {
           </button>
         </div>
       )}
-      <main id="main" key={route.name + (route.id ?? "")} className={`page ${route.name === "projects" || route.name === "project" ? "solo solo--wide" : "solo solo--form"}`}>
-        {route.name === "projects" ? (
+      <main id="main" key={route.name + (route.id ?? "")} className={`page ${route.name === "form" ? "solo solo--form" : "solo solo--wide"}`}>
+        {route.name === "home" ? (
+          <LandingPage />
+        ) : route.name === "projects" ? (
           <ProjectsPage />
         ) : route.name === "project" ? (
           <ProjectPage id={route.id} />

@@ -26,7 +26,7 @@ export default defineConfig({
         name: "Battle Arena",
         short_name: "Arena",
         description: "Submit your hackathon project and turn it into an AI fighter.",
-        start_url: "/projects",
+        start_url: "/",
         scope: "/",
         display: "standalone",
         background_color: "#fffdf8",

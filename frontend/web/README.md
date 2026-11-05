@@ -18,9 +18,10 @@ Needs Node 18+. MetaMask must be installed in the browser. On a phone without it
 
 | URL | What it is |
 | --- | --- |
-| `/projects` | Dashboard: summary tiles, search, track filters (kept in the URL), project tiles. `/` redirects here |
-| `/projects/:id` | One project: pitch, embedded demo video, description, tracks, repo + pinned commit |
-| `/submit` | The submission form |
+| `/` | Landing: arena hero with the roster in a ring, how it works, link to projects |
+| `/projects` | Dashboard: summary tiles, search, track filters (kept in the URL), fighter cards |
+| `/projects/:id` | One project: fighter in its ring, pitch, demo video, description, tracks, repo + pinned commit |
+| `/submit` | The form, with a live preview of your fighter |
 
 ## What the form does
 

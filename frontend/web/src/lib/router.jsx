@@ -18,19 +18,20 @@ export function usePath() {
   return path;
 }
 
-/** "/submit" is the form; "/projects" the dashboard; "/" and anything unknown go to the dashboard. */
+/** "/" landing, "/projects" dashboard, "/projects/:id" one project, "/submit" the form. Unknown paths land home. */
 export function matchRoute(path) {
   const p = path.replace(/\/+$/, "") || "/";
   if (p === "/submit") return { name: "form" };
+  if (p === "/projects") return { name: "projects" };
   const m = p.match(/^\/projects\/([^/]+)$/);
   if (m) return { name: "project", id: decodeURIComponent(m[1]) };
-  return { name: "projects", canonical: p === "/projects" };
+  return { name: "home", canonical: p === "/" };
 }
 
-/** Rewrite "/" (or an unknown path) to "/projects" without adding history. */
+/** Rewrite an unknown path to "/" without adding history. */
 export function useCanonical(route) {
   useEffect(() => {
-    if (route.name === "projects" && !route.canonical) history.replaceState({}, "", "/projects");
+    if (route.name === "home" && !route.canonical) history.replaceState({}, "", "/");
   }, [route.name, route.canonical]);
 }
 
