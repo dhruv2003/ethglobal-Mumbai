@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { isPrivateAddress } from "../src/reviewer/net.mjs";
+import { isPrivateAddress, safeFetch } from "../src/reviewer/net.mjs";
 import { classifyDemo } from "../src/reviewer/demo.mjs";
 import { corpusOf, toRunnerSteps } from "../src/reviewer/flows.mjs";
 
@@ -36,8 +36,9 @@ test("steps without an expectation are dropped", () => {
 });
 
 test("private and loopback addresses are refused for downloads", () => {
-  for (const ip of ["127.0.0.1", "10.1.2.3", "192.168.0.10", "172.16.5.4", "169.254.169.254", "::1", "fd00::1", "::ffff:127.0.0.1"]) assert.ok(isPrivateAddress(ip), ip);
-  for (const ip of ["8.8.8.8", "151.101.1.1", "2606:4700::1111"]) assert.ok(!isPrivateAddress(ip), ip);
+  for (const ip of ["127.0.0.1", "10.1.2.3", "192.168.0.10", "172.16.5.4", "169.254.169.254", "0.0.0.0", "100.64.1.1", "::1", "::", "fd00::1", "fe80::1",
+    "::ffff:127.0.0.1", "::ffff:7f00:1", "::ffff:a9fe:a9fe", "0:0:0:0:0:ffff:7f00:1", "::7f00:1", "64:ff9b::7f00:1", "2002:7f00:1::", "not-an-ip"]) assert.ok(isPrivateAddress(ip), ip);
+  for (const ip of ["8.8.8.8", "151.101.1.1", "20.207.73.85", "2606:4700::1111", "::ffff:8.8.8.8", "64:ff9b::808:808"]) assert.ok(!isPrivateAddress(ip), ip);
 });
 
 test("demo links are classified: Mux and files download, YouTube is skipped", () => {
@@ -45,4 +46,10 @@ test("demo links are classified: Mux and files download, YouTube is skipped", ()
   assert.equal(classifyDemo("https://youtu.be/x").kind, "unsupported");
   assert.equal(classifyDemo("https://www.loom.com/share/17b1dc5da755422ea3177d4842556813").kind, "loom");
   assert.equal(classifyDemo("https://cdn.example/demo.mp4").kind, "file");
+});
+
+test("downloads refuse private hosts, including mapped IPv6 spellings and names that resolve locally", async () => {
+  for (const url of ["https://127.0.0.1/x", "https://[::ffff:7f00:1]/x", "https://[::ffff:a9fe:a9fe]/x", "https://localhost/x", "http://example.com/x"]) {
+    await assert.rejects(safeFetch(url, { timeoutMs: 5000 }), /private|https/, url);
+  }
 });
