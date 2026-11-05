@@ -1,6 +1,6 @@
 # AI Hackathon Battle Arena Product Requirements
 
-**Version 1.3 · 6 November 2026 · Testnet release specification**
+**Version 1.4 · 6 November 2026 · Testnet release specification**
 
 This product turns submitted hackathon projects into autonomous AI fighters. Each fighter pitches and defends a real project using a frozen GitHub repository, supporting artifacts, and automated test evidence. Three AI judges evaluate the projects through structured rounds. Spectators watch animated 1v1 battles and back match or tournament winners with testnet tokens.
 
@@ -196,13 +196,13 @@ Submission readiness, battle progress, result finalization, and token settlement
 
 ## 5.1 Submission fields
 
-**SUB-01 Required inputs.** Team name, at least one team member, project name, short pitch, problem statement, intended users, how it's made, whether it was built at this event (and a start date if not), track selection (SUB-06) with a "how we used it" note for each selected track, public GitHub URL, a demo video (link or MP4), team-owner wallet, and reward wallet.
+**SUB-01 Required inputs.** Version 1 keeps the form to seven fields: team name, project name, short pitch, what it does and how it's built, public GitHub URL, demo video link, and track selection (SUB-06). The connected wallet is the team-owner wallet and also the reward wallet. Submitting affirms the team owns the work and allows public display (SUB-03).
 
-**SUB-01a Optional inputs.** Member GitHub username and role, tech stack tags, known limitations, logo, cover image, branch or commit (default branch if empty), repository path for monorepos, deployed contract addresses with their network, live demo URL, and supporting artifacts (SUB-02). Self-declared limitations let the fighter acknowledge them honestly (AGT-03). A start date before the event is disclosed to judges so they can weigh prior work.
+Teams do not supply build, test, or start commands. The platform detects the execution setup from the frozen repository during processing (TST-01). The default branch is used.
 
-Teams do not supply build, test, or start commands. The platform detects the execution setup from the frozen repository during processing (TST-01).
+**SUB-01a Deferred inputs.** Not collected in version 1: team members, tech tags, self-declared limitations, built-at-event and start date, logo and cover image, branch or commit, monorepo path, deployed contract addresses, live demo URL, a separate reward wallet, per-track justifications, and uploaded artifacts (SUB-02).
 
-**SUB-02 Supporting artifacts.** Accept JPG, PNG, WebP, PDF, UTF-8 text, MP4, and HTTPS demo links. Defaults: 20 MB per image/PDF/text upload, 200 MB per video, 500 MB total per project. Show limits before upload. Reject unsupported files and identify which item failed.
+**SUB-02 Supporting artifacts (deferred).** Accept JPG, PNG, WebP, PDF, UTF-8 text, MP4, and HTTPS demo links. Defaults: 20 MB per image/PDF/text upload, 200 MB per video, 500 MB total per project. Show limits before upload. Reject unsupported files and identify which item failed.
 
 **SUB-03 Ownership.** Require proof of repository write/admin control through GitHub authorization or a one-time verification file committed to the repository. A public URL alone does not prove team ownership. The team must affirm that supplied artifacts may be used in the public arena.
 

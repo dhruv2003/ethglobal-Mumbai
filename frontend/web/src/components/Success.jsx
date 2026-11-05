@@ -30,7 +30,7 @@ export function Success({ record, onStartOver }) {
           </div>
           <div>
             <dt className="t-label">Owner</dt>
-            <dd className="t-mono">{shortAddress(record.team.ownerWallet)}</dd>
+            <dd className="t-mono">{shortAddress(record.ownerWallet)}</dd>
           </div>
         </dl>
         <p className="t-mono-caption m0">

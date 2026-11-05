@@ -26,32 +26,3 @@ export const EVENT = {
     { id: "ens", name: "ENS" },
   ],
 };
-
-/** Networks a team can say their contracts are deployed on. */
-export const CONTRACT_NETWORKS = [
-  "Ethereum Sepolia",
-  "Base Sepolia",
-  "Optimism Sepolia",
-  "Arbitrum Sepolia",
-  "Polygon Amoy",
-  "Ethereum mainnet",
-  "Base",
-  "Optimism",
-  "Arbitrum One",
-  "Polygon PoS",
-  "Other",
-];
-
-const MB = 1024 * 1024;
-
-/** Upload limits from PRD SUB-02. */
-export const LIMITS = {
-  image: 20 * MB,
-  pdf: 20 * MB,
-  text: 20 * MB,
-  video: 200 * MB,
-  total: 500 * MB,
-};
-
-/** ETHGlobal asks for a 2 to 4 minute demo video. */
-export const VIDEO_SECONDS = { min: 120, max: 240 };

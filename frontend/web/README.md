@@ -16,22 +16,20 @@ Needs Node 18+. MetaMask must be installed in the browser. On a phone without it
 
 ## What it does
 
-- One page, six sections (Team, Project, Tracks, Code, Demo, Review) with a sticky nav that shows each section's status in words.
-- **Connect wallet** uses MetaMask directly (`window.ethereum`). The connected address becomes the owner wallet, and the reward wallet defaults to it.
+- One card, seven fields: team name, project name, short pitch, what it does and how it's built, GitHub repo, demo video link, and 0 to 3 sponsor tracks (every project is also in the finalist competition, PRD SUB-06).
+- **Connect wallet** uses MetaMask directly (`window.ethereum`). The connected wallet owns the entry and receives the project's rewards.
 - **Submit** asks MetaMask to sign a message (no gas). The signature proves the owner wallet made the submission (PRD SUB-04).
-- Drafts autosave to this browser every half second. Files are not kept in drafts.
-- Teams pick 0 to 3 sponsor tracks. Every project is also in the finalist competition (PRD SUB-06).
+- Drafts autosave to this browser.
 
 ## Where things live
 
 | File | What it is |
 | --- | --- |
-| `src/config/event.js` | Event settings: **network and track list are placeholders**, upload limits |
+| `src/config/event.js` | Event settings: **network and track list are placeholders** |
 | `src/lib/validate.js` | Every validation rule, pure and tested |
 | `src/lib/storage.js` | Drafts, and `saveSubmission()`: **the one function to replace with the DB/API call** |
 | `src/lib/wallet.js` | MetaMask hook: connect, switch network, sign |
-| `src/lib/files.js` | Upload checks; raw `File` objects wait in `fileStore` for the upload step |
-| `src/sections/` | One component per form section |
+| `src/components/SubmissionForm.jsx` | The form |
 
 ## Design system
 
@@ -39,6 +37,6 @@ Styles come straight from `../design-system/src` through the `@ds` alias (see `v
 
 ## Not done yet
 
-- Database and file upload (`saveSubmission`, `fileStore`)
+- Database (`saveSubmission`)
 - GitHub ownership check (PRD SUB-03)
 - Real event network and track list

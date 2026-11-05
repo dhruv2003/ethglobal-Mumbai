@@ -4,17 +4,8 @@
  * API call when the backend exists. Nothing else in the app needs to change.
  */
 
-const DRAFT_SLOT = "arena.submission.draft.v1";
+const DRAFT_SLOT = "arena.submission.draft.v2";
 const SUBMISSIONS_SLOT = "arena.submissions.v1";
-
-/** Files can't go into localStorage, so drafts keep everything except them. */
-function withoutFiles(data) {
-  return {
-    ...data,
-    project: { ...data.project, logo: null, cover: null },
-    demo: { ...data.demo, videoFile: null, artifacts: [] },
-  };
-}
 
 export function loadDraft() {
   try {
@@ -27,7 +18,7 @@ export function loadDraft() {
 
 export function saveDraft(data) {
   try {
-    localStorage.setItem(DRAFT_SLOT, JSON.stringify(withoutFiles(data)));
+    localStorage.setItem(DRAFT_SLOT, JSON.stringify(data));
     return true;
   } catch {
     return false;
@@ -42,40 +33,20 @@ export function clearDraft() {
   }
 }
 
-/** Strip browser-only fields (object URLs) from file metadata. */
-const cleanFile = (f) => (f ? { id: f.id, name: f.name, size: f.size, type: f.type, kind: f.kind, duration: f.duration } : null);
-
 export function toPayload(data, { ownerWallet, chainId }) {
   return {
-    team: {
-      name: data.team.name.trim(),
-      members: data.team.members.map(({ name, github, role }) => ({
-        name: name.trim(),
-        github: github.trim().replace(/^@/, ""),
-        role: role.trim(),
-      })),
-      ownerWallet,
-      rewardWallet: data.team.rewardDifferent ? data.team.rewardWallet.trim() : ownerWallet,
-    },
+    team: { name: data.team.name.trim() },
     project: {
-      ...data.project,
-      logo: cleanFile(data.project.logo),
-      cover: cleanFile(data.project.cover),
+      name: data.project.name.trim(),
+      pitch: data.project.pitch.trim(),
+      description: data.project.description.trim(),
     },
-    tracks: data.tracks.selected.map((id) => ({ id, howUsed: (data.tracks.justification[id] ?? "").trim() })),
-    code: {
-      repoUrl: data.code.repoUrl.trim().replace(/\/$/, ""),
-      ref: data.code.ref.trim() || null,
-      monorepoPath: data.code.monorepoPath.trim() || null,
-      contracts: data.code.contracts.map(({ address, network }) => ({ address: address.trim(), network })),
-    },
-    demo: {
-      videoUrl: data.demo.videoUrl.trim() || null,
-      videoFile: cleanFile(data.demo.videoFile),
-      liveUrl: data.demo.liveUrl.trim() || null,
-      artifacts: data.demo.artifacts.map(cleanFile),
-    },
-    publicUseConsent: data.consent,
+    repoUrl: data.code.repoUrl.trim().replace(/\/$/, ""),
+    demoVideoUrl: data.demo.videoUrl.trim(),
+    tracks: [...data.tracks.selected],
+    // One wallet for now: it owns the submission and receives the project's 20%.
+    ownerWallet,
+    rewardWallet: ownerWallet,
     chainId,
   };
 }

@@ -1,36 +1,12 @@
-/* Form data shape and immutable path helpers. Paths look like "team.members.0.name". */
-
-export const newId = () =>
-  (globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`).slice(0, 8);
-
-export const emptyMember = () => ({ id: newId(), name: "", github: "", role: "" });
-export const emptyContract = () => ({ id: newId(), address: "", network: "" });
+/* Form data shape and immutable path helpers. Paths look like "project.name". */
 
 export function emptyForm() {
   return {
-    team: {
-      name: "",
-      members: [emptyMember()],
-      rewardDifferent: false,
-      rewardWallet: "",
-    },
-    project: {
-      name: "",
-      pitch: "",
-      problem: "",
-      users: "",
-      howItsMade: "",
-      tags: [],
-      limitations: "",
-      builtAtEvent: "",
-      startDate: "",
-      logo: null,
-      cover: null,
-    },
-    tracks: { selected: [], justification: {} },
-    code: { repoUrl: "", ref: "", monorepoPath: "", contracts: [] },
-    demo: { videoUrl: "", videoFile: null, liveUrl: "", artifacts: [] },
-    consent: false,
+    team: { name: "" },
+    project: { name: "", pitch: "", description: "" },
+    code: { repoUrl: "" },
+    demo: { videoUrl: "" },
+    tracks: { selected: [] },
   };
 }
 
@@ -45,20 +21,16 @@ export function setIn(obj, path, value) {
   return next;
 }
 
-/** Deep-merge a saved draft onto an empty form so new fields get defaults. */
+/** Overlay a saved draft on an empty form, keeping only fields the form still has. */
 export function mergeDraft(draft) {
-  const base = emptyForm();
-  if (!draft || typeof draft !== "object") return base;
-  const merge = (b, d) => {
-    if (Array.isArray(b)) return Array.isArray(d) ? d : b;
-    if (b && typeof b === "object") {
-      const out = { ...b };
-      for (const k of Object.keys(b)) out[k] = d && k in d ? merge(b[k], d[k]) : b[k];
-      // keep dynamic keys (track justifications)
-      if (d && typeof d === "object") for (const k of Object.keys(d)) if (!(k in b)) out[k] = d[k];
+  const merge = (base, d) => {
+    if (Array.isArray(base)) return Array.isArray(d) ? d : base;
+    if (base && typeof base === "object") {
+      const out = {};
+      for (const k of Object.keys(base)) out[k] = merge(base[k], d?.[k]);
       return out;
     }
-    return d === undefined ? b : d;
+    return typeof d === typeof base ? d : base;
   };
-  return merge(base, draft);
+  return merge(emptyForm(), draft && typeof draft === "object" ? draft : {});
 }
