@@ -7,6 +7,7 @@ import { Link } from "../lib/router.jsx";
 import { shortAddress } from "../lib/wallet.js";
 import { Ring } from "./Arena.jsx";
 import { Dossier } from "./Dossier.jsx";
+import { Spinner } from "./Feedback.jsx";
 import { JudgesPanel } from "./JudgesPanel.jsx";
 import { fighterTraitItems, PixelFighter } from "./PixelFighter.jsx";
 
@@ -21,6 +22,28 @@ function KindPill({ kind }) {
 /** Where the project was built. Prominent: it frames everything else on the card. */
 function EventBadge({ project }) {
   return <span className="event-badge">{project.event ?? EVENT.name}</span>;
+}
+
+/** Where a submitted project's review stands, on its card. */
+function ReviewBadge({ review }) {
+  if (!review) return null;
+  if (review.status === "queued")
+    return (
+      <span className="review-badge">
+        <Spinner size={14} label="Queued" />
+        <StatusPill tone="neutral">{review.position ? `In queue · #${review.position}` : "In queue"}</StatusPill>
+      </span>
+    );
+  if (review.status === "reviewing")
+    return (
+      <span className="review-badge">
+        <Spinner size={14} label="Reviewing" />
+        <StatusPill tone="live">Reviewing</StatusPill>
+      </span>
+    );
+  if (review.status === "stopped") return <StatusPill tone="danger">✕ Review stopped</StatusPill>;
+  if (review.status === "reviewed") return <StatusPill tone="success">✓ Reviewed</StatusPill>;
+  return null;
 }
 
 function Tracks({ ids }) {
@@ -293,6 +316,7 @@ export function ProjectsPage() {
                   <div className="fighter-card__badges">
                     <EventBadge project={p} />
                     {p.kind === "sample" && <StatusPill tone="neutral">Sample</StatusPill>}
+                    <ReviewBadge review={p.review} />
                   </div>
                   <div>
                     <h3 className="t-display-md m0 fighter-card__name">{p.name}</h3>

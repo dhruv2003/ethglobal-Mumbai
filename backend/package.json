@@ -7,7 +7,8 @@
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
     "test": "node --test test/",
-    "judge": "node src/judges/run.mjs"
+    "judge": "node src/judges/run.mjs",
+    "review": "node src/reviewer/run.mjs"
   },
   "keywords": [],
   "author": "",

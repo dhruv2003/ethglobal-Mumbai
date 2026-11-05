@@ -55,6 +55,7 @@ function fromSubmission(r) {
     showcaseUrl: null,
     ownerWallet: r.ownerWallet ?? null,
     submittedAt: r.submittedAt ?? null,
+    review: r.review ?? null,
     dossier: null,
     liveTest: null,
     reviews: null,

@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { StatusPill } from "@ds/ui.jsx";
 import { api, health } from "../lib/api.js";
 import { useCountUp } from "../lib/motion.js";
+import { Spinner } from "./Feedback.jsx";
 import { Ring } from "./Arena.jsx";
 import { judgeAsFighter } from "./JudgesPage.jsx";
 import { PixelFighter } from "./PixelFighter.jsx";
@@ -174,11 +175,7 @@ export function JudgesPanel({ project }) {
 
       {busy && (
         <div className="judges__busy" role="status">
-          <div className="judges__thinking" aria-hidden="true">
-            {[0, 1, 2].map((k) => (
-              <span key={k} style={{ "--k": k }} />
-            ))}
-          </div>
+          <Spinner size={22} label="Judges at work" />
           <span className="t-body">The judges are reading the dossier and the live test. This takes a minute or two.</span>
         </div>
       )}

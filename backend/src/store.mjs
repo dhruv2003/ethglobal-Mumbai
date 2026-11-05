@@ -42,3 +42,15 @@ export const reviews = {
   get: (projectId) => read(`reviews/${safeId(projectId)}.json`, null),
   save: (projectId, value) => write(`reviews/${safeId(projectId)}.json`, value),
 };
+
+fs.mkdirSync(path.join(DATA_DIR, "pipeline"), { recursive: true });
+fs.mkdirSync(path.join(DATA_DIR, "dossiers"), { recursive: true });
+export const pipelines = {
+  get: (projectId) => read(`pipeline/${safeId(projectId)}.json`, null),
+  save: (projectId, value) => write(`pipeline/${safeId(projectId)}.json`, value),
+};
+export const dossiers = {
+  get: (projectId) => read(`dossiers/${safeId(projectId)}.json`, null),
+  save: (projectId, value) => write(`dossiers/${safeId(projectId)}.json`, value),
+};
+export const repoDir = (projectId) => path.join(DATA_DIR, "repos", safeId(projectId));

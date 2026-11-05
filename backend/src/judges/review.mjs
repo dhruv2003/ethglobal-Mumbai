@@ -16,9 +16,9 @@ import { z } from "zod";
 import { CRITERIA, CRITERION_IDS } from "./criteria.mjs";
 import { liveTestSummary } from "../projects.mjs";
 
-export const PROVIDER = (process.env.JUDGE_PROVIDER ?? "openai").toLowerCase() === "anthropic" ? "anthropic" : "openai";
-export const MODEL = process.env.JUDGE_MODEL ?? (PROVIDER === "openai" ? "gpt-5.4" : "claude-opus-5-5");
-const EFFORT = process.env.JUDGE_EFFORT ?? "high";
+import { EFFORT, hasCredentials, MODEL, PROVIDER, structuredCall } from "../llm.mjs";
+
+export { hasCredentials, MODEL, PROVIDER };
 
 const ReviewSchema = z.object({
   criteria: z.array(
@@ -38,69 +38,7 @@ const ReviewSchema = z.object({
   certainty: z.enum(["low", "medium", "high"]),
 });
 
-/** Is there a key for the configured provider? */
-export const hasCredentials = () =>
-  PROVIDER === "openai" ? Boolean(process.env.OPENAI_API_KEY) : Boolean(process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_AUTH_TOKEN);
-
-/*
- * Provider adapters. Each takes (system, user) and returns
- * { parsed, refusal, usage: { input_tokens, output_tokens }, stop }.
- * SDKs are imported lazily so only the configured one loads.
- */
-let openaiCall;
-async function callOpenAI(system, user) {
-  openaiCall ??= await (async () => {
-    const { default: OpenAI } = await import("openai");
-    const { zodTextFormat } = await import("openai/helpers/zod");
-    const client = new OpenAI();
-    const format = zodTextFormat(ReviewSchema, "judge_review");
-    return (sys, usr) =>
-      client.responses.parse({
-        model: MODEL,
-        instructions: sys,
-        input: usr,
-        reasoning: { effort: EFFORT },
-        max_output_tokens: 16000,
-        text: { format },
-      });
-  })();
-  const res = await openaiCall(system, user);
-  const refusal = (res.output ?? []).flatMap((o) => (o.type === "message" ? o.content : [])).find((c) => c.type === "refusal")?.refusal ?? null;
-  return {
-    parsed: res.output_parsed ?? null,
-    refusal,
-    usage: { input_tokens: res.usage?.input_tokens ?? 0, output_tokens: res.usage?.output_tokens ?? 0 },
-    stop: res.incomplete_details?.reason ?? res.status,
-  };
-}
-
-let anthropicCall;
-async function callAnthropic(system, user) {
-  anthropicCall ??= await (async () => {
-    const { default: Anthropic } = await import("@anthropic-ai/sdk");
-    const { zodOutputFormat } = await import("@anthropic-ai/sdk/helpers/zod");
-    const client = new Anthropic();
-    const format = zodOutputFormat(ReviewSchema);
-    return (sys, usr) =>
-      client.messages.parse({
-        model: MODEL,
-        max_tokens: 16000,
-        thinking: { type: "adaptive" },
-        output_config: { effort: EFFORT, format },
-        system: sys,
-        messages: [{ role: "user", content: usr }],
-      });
-  })();
-  const res = await anthropicCall(system, user);
-  return {
-    parsed: res.parsed_output ?? null,
-    refusal: res.stop_reason === "refusal" ? res.stop_details?.explanation ?? "The model declined to review." : null,
-    usage: { input_tokens: res.usage?.input_tokens ?? 0, output_tokens: res.usage?.output_tokens ?? 0 },
-    stop: res.stop_reason,
-  };
-}
-
-const callModel = (system, user) => (PROVIDER === "openai" ? callOpenAI(system, user) : callAnthropic(system, user));
+const callModel = (system, user) => structuredCall(ReviewSchema, "judge_review", system, user);
 
 function materials(project) {
   const d = project.dossier;

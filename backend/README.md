@@ -26,6 +26,16 @@ The web app (`frontend/web`) proxies `/api` here in dev and preview.
 
 From the command line: `npm run judge -- --project go-health-me`. This also writes `fixtures/<id>/reviews.json`, so the static site can show the review.
 
+**Reviewer pipeline** (`src/reviewer/`): what happens after every submission, in a queue (`REVIEW_CONCURRENCY`, default 1; unfinished reviews resume on restart), with live status at `GET /api/projects/:id/pipeline`:
+
+1. **Fetch:** shallow clone of a public github.com repo. Hooks, submodules and LFS are off; blobs over 1 MB are skipped; 300 MB cap. Nothing from the repo is ever run.
+2. **Pin:** the exact commit reviewed, plus history split at `EVENT_START`.
+3. **Tests:** counted by reading files. **Not run**: that needs the sandbox (PRD TST-05), which isn't built yet.
+4. **Dossier:** the reviewer agent reads a bounded, line-numbered pack of the repo and writes the evidence dossier. Every `file:line` it cites is checked against the clone; a "supported" claim with no real line is downgraded to "unverified".
+5. **Judges:** the panel scores with the dossier.
+
+Re-run one by hand: `npm run review -- --project <id>`.
+
 **Store** (`src/store.mjs`): JSON files in `data/` (gitignored), standing in for the database. Swap those functions for real queries later.
 
 **Routes** (`src/api.mjs`): health, criteria, judges (CRUD, max 3), submissions, and project reviews (get, run).
