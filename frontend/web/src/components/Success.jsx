@@ -1,4 +1,6 @@
 import { StatusPill } from "@ds/ui.jsx";
+import { Confetti, Ring } from "./Arena.jsx";
+import { PixelFighter } from "./PixelFighter.jsx";
 import { Link } from "../lib/router.jsx";
 import { shortAddress } from "../lib/wallet.js";
 
@@ -14,9 +16,17 @@ export function Success({ record, onStartOver }) {
 
   return (
     <div className="success">
+      <Confetti />
       <div className="card card--sticker success__card">
+        <Ring className="success__ring">
+          <PixelFighter
+            project={{ seed: record.fighterSeed ?? record.id, name: record.project.name, pitch: record.project.pitch, description: record.project.description, tracks: record.tracks }}
+            scale={9}
+            className="fighter--cheer"
+          />
+        </Ring>
         <StatusPill tone="success">✓ Submitted</StatusPill>
-        <h1 className="t-display-lg m0">{record.project.name} is in</h1>
+        <h1 className="t-display-lg m0">{record.project.name} is in the arena</h1>
         <p className="t-body m0">
           Next we fetch your repo, pin the commit and build your fighter's dossier. You can still edit until freeze.
         </p>

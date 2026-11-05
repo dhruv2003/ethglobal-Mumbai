@@ -1,15 +1,19 @@
 import { useEffect, useState } from "react";
-import { StatusPill } from "@ds/ui.jsx";
-import { FighterTraits, PixelFighter } from "./PixelFighter.jsx";
+import { Progress, StatusPill } from "@ds/ui.jsx";
 import { EVENT } from "../config/event.js";
+import { useCountUp } from "../lib/motion.js";
 import { embedUrl, getProject, listProjects } from "../lib/projects.js";
 import { Link } from "../lib/router.jsx";
 import { shortAddress } from "../lib/wallet.js";
+import { Ring } from "./Arena.jsx";
+import { FighterTraits, PixelFighter } from "./PixelFighter.jsx";
 
-const trackName = (id) => EVENT.tracks.find((t) => t.id === id)?.name ?? id;
+export const trackName = (id) => EVENT.tracks.find((t) => t.id === id)?.name ?? id;
+const GHOST = { id: "your-fighter", name: "Your fighter", pitch: "", description: "", tracks: [] };
+const ROSTER_MAX = 6;
 
 function KindPill({ kind }) {
-  return kind === "sample" ? <StatusPill tone="neutral">Sample project</StatusPill> : <StatusPill tone="success">✓ Submitted</StatusPill>;
+  return kind === "sample" ? <StatusPill tone="neutral">Sample</StatusPill> : <StatusPill tone="success">✓ Submitted</StatusPill>;
 }
 
 /** Where the project was built. Prominent: it frames everything else on the card. */
@@ -48,15 +52,98 @@ function useFilters() {
   return [f, update];
 }
 
-function StatTile({ label, value, note }) {
+function StatTile({ label, value, note, children, i }) {
+  const shown = useCountUp(value);
   return (
-    <div className="card stat">
+    <div className="card stat rise" style={{ "--i": i }}>
       <span className="t-label">{label}</span>
-      <span className="stat__value t-num">{value}</span>
+      <span className="stat__value t-num">{shown}</span>
+      {children}
       <span className="t-caption">{note}</span>
     </div>
   );
 }
+
+/* ---------------------------------------------------------------- hero */
+
+function ArenaHero({ projects }) {
+  const count = useCountUp(projects?.length ?? 0);
+  const roster = (projects ?? []).slice(0, ROSTER_MAX);
+  // Everyone stands on the mat in one row: shrink as the roster grows.
+  const slots = roster.length + 1;
+  const scale = slots <= 5 ? 5 : slots <= 7 ? 4 : 3;
+  return (
+    <section className="hero" aria-labelledby="hero-h">
+      <div className="hero__copy">
+        <span className="event-badge rise" style={{ "--i": 0 }}>
+          {EVENT.name}
+        </span>
+        <h1 id="hero-h" className="t-display-xl m0 rise" style={{ "--i": 1 }}>
+          <span className="t-num hero__count">{count}</span> {count === 1 ? "fighter" : "fighters"} in the arena
+        </h1>
+        <p className="t-body m0 hero__lede rise" style={{ "--i": 2 }}>
+          Every project becomes an AI fighter. Three judges score the evidence, and the fight shows the score.
+        </p>
+        <div className="hero__actions rise" style={{ "--i": 3 }}>
+          <Link to="/submit" className="btn btn--primary btn--lg">
+            Submit your project
+          </Link>
+          <a href="#how" className="btn btn--ghost">
+            How it works
+          </a>
+        </div>
+      </div>
+
+      <Ring className="hero__ring">
+        <ul className="roster" aria-label="Fighters in the arena">
+          {roster.map((p, i) => (
+            <li key={p.id} className="roster__slot" style={{ "--i": i }}>
+              <Link to={`/projects/${encodeURIComponent(p.id)}`} className="roster__link">
+                <PixelFighter project={p} scale={scale} />
+                <span className="roster__name">{p.name}</span>
+              </Link>
+            </li>
+          ))}
+          <li className="roster__slot" style={{ "--i": roster.length }}>
+            <Link to="/submit" className="roster__link roster__link--ghost">
+              <PixelFighter project={GHOST} scale={scale} ghost label="Empty slot for your fighter" />
+              <span className="roster__name roster__name--always">Your fighter?</span>
+            </Link>
+          </li>
+        </ul>
+      </Ring>
+    </section>
+  );
+}
+
+const STEPS = [
+  ["Submit", "Seven fields and a public repo. Takes two minutes."],
+  ["We read the code", "We pin your commit, run the tests and build an evidence dossier."],
+  ["Your fighter battles", "Three AI judges score five rounds. Health follows the score."],
+];
+
+function HowItWorks() {
+  return (
+    <section id="how" className="how" aria-labelledby="how-h">
+      <h2 id="how-h" className="visually-hidden">
+        How it works
+      </h2>
+      <ol className="how__list">
+        {STEPS.map(([title, body], i) => (
+          <li key={title} className="how__step rise" style={{ "--i": i + 4 }}>
+            <span className="how__num t-num">{i + 1}</span>
+            <div>
+              <h3 className="t-heading m0">{title}</h3>
+              <p className="t-caption m0">{body}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
+
+/* ----------------------------------------------------------- dashboard */
 
 export function ProjectsPage() {
   const [projects, setProjects] = useState(null);
@@ -84,110 +171,117 @@ export function ProjectsPage() {
 
   return (
     <>
-      <div className="intro intro--row">
-        <div className="intro">
-          <h1 className="t-display-lg m0">Projects</h1>
-          <p className="t-body m0 muted">{EVENT.name}. Every project competes for finalist; tracks are extra.</p>
-        </div>
-        <Link to="/submit" className="btn btn--primary">
-          Submit a project
-        </Link>
-      </div>
+      <ArenaHero projects={projects} />
+      <HowItWorks />
 
       <section className="stats" aria-label="Summary">
-        <StatTile label="Projects" value={projects ? all.length : "–"} note="All entries in the arena" />
+        <StatTile i={7} label="Projects" value={all.length} note="All entries in the arena" />
         <StatTile
+          i={8}
           label="Submitted by teams"
-          value={projects ? submitted : "–"}
+          value={submitted}
           note={samples ? `Plus ${samples} sample ${samples === 1 ? "project" : "projects"}` : "No samples"}
         />
-        <StatTile label="Tracks in play" value={projects ? `${inPlay.length} of ${EVENT.tracks.length}` : "–"} note="Sponsor tracks with at least one entry" />
+        <StatTile i={9} label="Tracks in play" value={inPlay.length} note={`of ${EVENT.tracks.length} sponsor tracks`}>
+          <Progress value={inPlay.length} max={EVENT.tracks.length} label="Tracks with at least one entry" />
+        </StatTile>
         <StatTile
+          i={10}
           label="Most entered track"
           value={leaders.length === 0 ? "–" : leaders.length === 1 ? leaders[0].name : `${leaders.length}-way tie`}
-          note={
-            leaders.length === 0
-              ? "No tracks picked yet"
-              : leaders.length === 1
-                ? plural(most)
-                : `${leaders.map((t) => t.name).join(", ")}, ${most} each`
-          }
+          note={leaders.length === 0 ? "No tracks picked yet" : leaders.length === 1 ? plural(most) : `${leaders.map((t) => t.name).join(", ")}, ${most} each`}
         />
       </section>
 
-      <section className="filters" aria-label="Filter projects">
-        <label className="visually-hidden" htmlFor="search">
-          Search projects
-        </label>
-        <input
-          id="search"
-          className="input filters__search"
-          type="search"
-          placeholder="Search by project, team or pitch"
-          value={filters.q}
-          onChange={(e) => setFilters({ q: e.target.value })}
-        />
-        <div className="chips" role="group" aria-label="Filter by track">
-          <button type="button" className="chip" aria-pressed={!filters.track} onClick={() => setFilters({ track: "" })}>
-            All tracks
-          </button>
-          {EVENT.tracks.map((t) => (
-            <button
-              key={t.id}
-              type="button"
-              className="chip"
-              aria-pressed={filters.track === t.id}
-              onClick={() => setFilters({ track: filters.track === t.id ? "" : t.id })}
-            >
-              {t.name} <span className="t-num chip__count">{counts[t.id] ?? 0}</span>
-            </button>
-          ))}
-        </div>
-      </section>
-
-      {projects && (
-        <p className="t-caption m0" role="status" aria-live="polite">
-          {filtered ? `Showing ${shown.length} of ${all.length}` : `${all.length} ${all.length === 1 ? "project" : "projects"}`}
-        </p>
-      )}
-
-      {projects && shown.length === 0 && (
-        <div className="card card--surface empty">
-          <p className="t-body m0">{all.length ? "No projects match these filters." : "No projects yet. Submit yours and it shows up here."}</p>
-          {filtered && (
-            <button type="button" className="btn btn--ghost btn--sm" onClick={() => setFilters({ track: "", q: "" })}>
-              Clear filters
-            </button>
+      <section className="roster-section" aria-labelledby="roster-h">
+        <div className="section-head">
+          <h2 id="roster-h" className="t-display-md m0">
+            The roster
+          </h2>
+          {projects && (
+            <span className="t-caption" role="status" aria-live="polite">
+              {filtered ? `Showing ${shown.length} of ${all.length}` : plural(all.length)}
+            </span>
           )}
         </div>
-      )}
 
-      <ul className="fighter-grid">
-        {shown.map((p) => (
-          <li key={p.id}>
-            <Link to={`/projects/${encodeURIComponent(p.id)}`} className="card fighter-card">
-              <div className="fighter-card__stage">
-                <PixelFighter project={p} scale={7} />
-              </div>
-              <div className="fighter-card__body">
-                <div className="fighter-card__badges">
-                  <EventBadge project={p} />
-                  {p.kind === "sample" && <StatusPill tone="neutral">Sample</StatusPill>}
+        <div className="filters">
+          <label className="visually-hidden" htmlFor="search">
+            Search projects
+          </label>
+          <input
+            id="search"
+            className="input filters__search"
+            type="search"
+            placeholder="Search by project, team or pitch"
+            value={filters.q}
+            onChange={(e) => setFilters({ q: e.target.value })}
+          />
+          <div className="chips" role="group" aria-label="Filter by track">
+            <button type="button" className="chip" aria-pressed={!filters.track} onClick={() => setFilters({ track: "" })}>
+              All tracks
+            </button>
+            {EVENT.tracks.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                className="chip"
+                aria-pressed={filters.track === t.id}
+                onClick={() => setFilters({ track: filters.track === t.id ? "" : t.id })}
+              >
+                {t.name} <span className="t-num chip__count">{counts[t.id] ?? 0}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {projects && shown.length === 0 && (
+          <div className="card card--surface empty">
+            <p className="t-body m0">{all.length ? "No fighters match these filters." : "The arena is empty. Be the first in."}</p>
+            {filtered ? (
+              <button type="button" className="btn btn--ghost btn--sm" onClick={() => setFilters({ track: "", q: "" })}>
+                Clear filters
+              </button>
+            ) : (
+              <Link to="/submit" className="btn btn--secondary btn--sm">
+                Submit a project
+              </Link>
+            )}
+          </div>
+        )}
+
+        <ul className="fighter-grid" key={`${filters.track}|${needle}`}>
+          {shown.map((p, i) => (
+            <li key={p.id} className="rise" style={{ "--i": Math.min(i, 8) }}>
+              <Link to={`/projects/${encodeURIComponent(p.id)}`} className="card fighter-card">
+                <Ring compact className="fighter-card__stage">
+                  <PixelFighter project={p} scale={7} />
+                </Ring>
+                <div className="fighter-card__body">
+                  <div className="fighter-card__badges">
+                    <EventBadge project={p} />
+                    {p.kind === "sample" && <StatusPill tone="neutral">Sample</StatusPill>}
+                  </div>
+                  <div>
+                    <h3 className="t-display-md m0 fighter-card__name">{p.name}</h3>
+                    <p className="t-caption m0">by {p.teamName}</p>
+                  </div>
+                  <p className="t-body m0 fighter-card__pitch">{p.pitch}</p>
+                  <Tracks ids={p.tracks} />
+                  <span className="fighter-card__cta">
+                    View fighter <span aria-hidden="true">→</span>
+                  </span>
                 </div>
-                <div>
-                  <h2 className="t-display-md m0 fighter-card__name">{p.name}</h2>
-                  <p className="t-caption m0">by {p.teamName}</p>
-                </div>
-                <p className="t-body m0 fighter-card__pitch">{p.pitch}</p>
-                <Tracks ids={p.tracks} />
-              </div>
-            </Link>
-          </li>
-        ))}
-      </ul>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </section>
     </>
   );
 }
+
+/* --------------------------------------------------------- project page */
 
 export function ProjectPage({ id }) {
   const [state, setState] = useState({ loading: true, project: null });
@@ -207,9 +301,12 @@ export function ProjectPage({ id }) {
     return (
       <>
         {back}
-        <div className="card card--surface">
-          <h1 className="t-display-md m0">We can't find that project</h1>
-          <p className="t-body">It may have been entered in a different browser. Submissions only live on the device that sent them for now.</p>
+        <div className="card card--surface stack">
+          <h1 className="t-display-md m0">We can't find that fighter</h1>
+          <p className="t-body m0">It may have been entered in a different browser. Submissions only live on the device that sent them for now.</p>
+          <Link to="/projects" className="btn btn--secondary btn--sm back">
+            Back to the arena
+          </Link>
         </div>
       </>
     );
@@ -220,96 +317,94 @@ export function ProjectPage({ id }) {
     <>
       {back}
       <div className="project-layout">
-      <aside className="project-layout__side" aria-label="Fighter">
-        <div className="fighter-stage">
-          <PixelFighter project={p} scale={11} />
-        </div>
-        <div className="stack-xs">
-          <span className="t-label">Built from this project</span>
-          <FighterTraits project={p} trackName={trackName} />
-        </div>
-      </aside>
-      <div className="project-layout__main">
-      <header className="intro">
-        <div className="fighter-card__badges">
-          <EventBadge project={p} />
-          <KindPill kind={p.kind} />
-        </div>
-        <h1 className="t-display-lg m0">{p.name}</h1>
-        <p className="t-prompt m0">{p.pitch}</p>
-      </header>
+        <aside className="project-layout__side" aria-label="Fighter">
+          <Ring className="project-ring rise" style={{ "--i": 0 }}>
+            <PixelFighter project={p} scale={10} className="fighter--enter" />
+          </Ring>
+          <div className="card stack-xs rise" style={{ "--i": 1 }}>
+            <span className="t-label">Built from this project</span>
+            <FighterTraits project={p} trackName={trackName} />
+          </div>
+        </aside>
 
-      <section className="card stack" aria-label="Demo video">
-        {embed ? (
-          <div className="video">
-            <iframe src={embed} title={`${p.name} demo video`} allow="fullscreen; picture-in-picture" allowFullScreen loading="lazy" />
-          </div>
-        ) : (
-          <p className="t-body m0">This video can't be embedded.</p>
-        )}
-        <a className="t-caption" href={p.videoUrl} target="_blank" rel="noreferrer">
-          Open the demo video
-        </a>
-      </section>
+        <div className="project-layout__main">
+          <header className="intro project-head rise" style={{ "--i": 1 }}>
+            <div className="fighter-card__badges">
+              <EventBadge project={p} />
+              <KindPill kind={p.kind} />
+            </div>
+            <h1 className="t-display-xl m0 project-head__name">{p.name}</h1>
+            <p className="t-prompt m0">{p.pitch}</p>
+            <p className="t-caption m0">by {p.teamName}</p>
+          </header>
 
-      <section className="card stack" aria-labelledby="about-h">
-        <h2 id="about-h" className="t-display-md m0">What it does and how it's built</h2>
-        {p.description.split(/\n{2,}/).map((para, i) => (
-          <p key={i} className="t-body m0">
-            {para}
-          </p>
-        ))}
-      </section>
+          <section className="card stack rise" style={{ "--i": 2 }} aria-label="Demo video">
+            {embed ? (
+              <div className="video">
+                <iframe src={embed} title={`${p.name} demo video`} allow="fullscreen; picture-in-picture" allowFullScreen loading="lazy" />
+              </div>
+            ) : (
+              <p className="t-body m0">This video can't be embedded.</p>
+            )}
+            <a className="t-caption" href={p.videoUrl} target="_blank" rel="noreferrer">
+              Open the demo video
+            </a>
+          </section>
 
-      <section className="card" aria-labelledby="facts-h">
-        <h2 id="facts-h" className="visually-hidden">Details</h2>
-        <dl className="facts">
-          <div>
-            <dt className="t-label">Team</dt>
-            <dd className="t-body">{p.teamName}</dd>
-          </div>
-          <div>
-            <dt className="t-label">Competing in</dt>
-            <dd>
-              <Tracks ids={p.tracks} />
-            </dd>
-          </div>
-          <div>
-            <dt className="t-label">Source code</dt>
-            <dd>
-              <a className="t-mono addr" href={p.repoUrl} target="_blank" rel="noreferrer">
-                {p.repoUrl.replace(/^https:\/\//, "")}
-              </a>
-              {p.pinnedCommit && <div className="t-mono-caption">pinned at {p.pinnedCommit.slice(0, 7)}</div>}
-            </dd>
-          </div>
-          {p.ownerWallet && (
-            <div>
-              <dt className="t-label">Owner wallet</dt>
-              <dd className="t-mono" title={p.ownerWallet}>
-                {shortAddress(p.ownerWallet)}
-              </dd>
-            </div>
-          )}
-          {p.submittedAt && (
-            <div>
-              <dt className="t-label">Submitted</dt>
-              <dd className="t-body">{new Date(p.submittedAt).toLocaleString()}</dd>
-            </div>
-          )}
-          {p.showcaseUrl && (
-            <div>
-              <dt className="t-label">Originally at</dt>
-              <dd>
-                <a className="t-body" href={p.showcaseUrl} target="_blank" rel="noreferrer">
-                  {p.event ?? "ETHGlobal showcase"}
-                </a>
-              </dd>
-            </div>
-          )}
-        </dl>
-      </section>
-      </div>
+          <section className="card stack rise" style={{ "--i": 3 }} aria-labelledby="about-h">
+            <h2 id="about-h" className="t-display-md m0">What it does and how it's built</h2>
+            {p.description.split(/\n{2,}/).map((para, i) => (
+              <p key={i} className="t-body m0">
+                {para}
+              </p>
+            ))}
+          </section>
+
+          <section className="card rise" style={{ "--i": 4 }} aria-labelledby="facts-h">
+            <h2 id="facts-h" className="visually-hidden">Details</h2>
+            <dl className="facts">
+              <div>
+                <dt className="t-label">Competing in</dt>
+                <dd>
+                  <Tracks ids={p.tracks} />
+                </dd>
+              </div>
+              <div>
+                <dt className="t-label">Source code</dt>
+                <dd>
+                  <a className="t-mono addr" href={p.repoUrl} target="_blank" rel="noreferrer">
+                    {p.repoUrl.replace(/^https:\/\/(www\.)?github\.com\//, "")}
+                  </a>
+                  {p.pinnedCommit && <div className="t-mono-caption">pinned at {p.pinnedCommit.slice(0, 7)}</div>}
+                </dd>
+              </div>
+              {p.ownerWallet && (
+                <div>
+                  <dt className="t-label">Owner wallet</dt>
+                  <dd className="t-mono" title={p.ownerWallet}>
+                    {shortAddress(p.ownerWallet)}
+                  </dd>
+                </div>
+              )}
+              {p.submittedAt && (
+                <div>
+                  <dt className="t-label">Submitted</dt>
+                  <dd className="t-body">{new Date(p.submittedAt).toLocaleString()}</dd>
+                </div>
+              )}
+              {p.showcaseUrl && (
+                <div>
+                  <dt className="t-label">Original showcase</dt>
+                  <dd>
+                    <a className="t-body" href={p.showcaseUrl} target="_blank" rel="noreferrer">
+                      {p.event ?? "ETHGlobal"} ↗
+                    </a>
+                  </dd>
+                </div>
+              )}
+            </dl>
+          </section>
+        </div>
       </div>
     </>
   );

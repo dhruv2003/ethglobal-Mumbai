@@ -29,6 +29,7 @@ function fromFixture(id, { form }, source) {
 function fromSubmission(r) {
   return {
     id: r.id,
+    seed: r.fighterSeed ?? r.id,
     kind: "submitted",
     teamName: r.team?.name ?? "",
     name: r.project?.name ?? "Untitled",

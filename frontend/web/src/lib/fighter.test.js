@@ -51,7 +51,8 @@ describe("fighterLayers", () => {
   it("draws every rect inside the 16x20 sprite", () => {
     for (const d of ["", "AI agent payments", "VR game", "music", "privacy", "health"]) {
       const L = fighterLayers(fighterTraits({ ...base, id: d, description: d }));
-      for (const r of Object.values(L).flat()) {
+      const { gearById, ...lists } = L;
+      for (const r of [...Object.values(lists), ...Object.values(gearById)].flat()) {
         expect(r.x).toBeGreaterThanOrEqual(0);
         expect(r.x + r.w).toBeLessThanOrEqual(16);
         expect(r.y).toBeGreaterThanOrEqual(0);

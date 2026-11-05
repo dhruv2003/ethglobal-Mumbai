@@ -71,7 +71,7 @@ export const GEAR_RULES = [
 ];
 
 export function fighterTraits(project) {
-  const h = hash(project.id || project.name);
+  const h = hash(project.seed || project.id || project.name);
   const text = [project.name, project.pitch, project.description].join(" ");
   const gear = {};
   for (const r of GEAR_RULES) {
@@ -190,6 +190,7 @@ export function fighterLayers(t) {
   return {
     upper: toRects(upper, t),
     gear: toRects(gear, t),
+    gearById: Object.fromEntries(Object.values(t.gear).map((g) => [g.id, toRects([...(GEAR_PIXELS[g.id] ?? [])], t)])),
     legs: toRects(legs, t),
     eyesOpen: toRects(eyes(EYES_OPEN), t),
     eyesClosed: toRects(eyes(EYES_CLOSED), t),

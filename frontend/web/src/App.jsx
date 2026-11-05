@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { FormCtx, fieldId } from "./components/fields.jsx";
 import { Header } from "./components/Header.jsx";
 import { SubmissionForm } from "./components/SubmissionForm.jsx";
+import { FighterPreview } from "./components/FighterPreview.jsx";
 import { Success } from "./components/Success.jsx";
 import { EVENT } from "./config/event.js";
 import { emptyForm, getIn, mergeDraft, setIn } from "./lib/form.js";
@@ -101,7 +102,7 @@ export default function App() {
           </button>
         </div>
       )}
-      <main id="main" className={route.name === "form" ? "solo" : "solo solo--wide"}>
+      <main id="main" key={route.name + (route.id ?? "")} className={`page ${route.name === "projects" || route.name === "project" ? "solo solo--wide" : "solo solo--form"}`}>
         {route.name === "projects" ? (
           <ProjectsPage />
         ) : route.name === "project" ? (
@@ -111,11 +112,14 @@ export default function App() {
         ) : (
           <>
             <div className="intro">
-              <h1 className="t-display-lg m0">Enter your project</h1>
-              <p className="t-body m0 muted">Seven fields. Your AI fighter is built from these and your repo.</p>
+              <h1 className="t-display-lg m0">Build your fighter</h1>
+              <p className="t-body m0 muted">Seven fields. Watch your fighter take shape as you fill them in.</p>
               <span className="t-caption">{savedAt ? `Draft saved ${savedAt}` : "Drafts save as you type"}</span>
             </div>
-            <SubmissionForm wallet={wallet} onSubmit={submit} submitState={submitState} problemCount={fieldErrors.length} />
+            <div className="submit-layout">
+              <SubmissionForm wallet={wallet} onSubmit={submit} submitState={submitState} problemCount={fieldErrors.length} />
+              <FighterPreview />
+            </div>
           </>
         )}
       </main>

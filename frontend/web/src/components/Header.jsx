@@ -36,6 +36,12 @@ export function Header({ wallet, route }) {
     <header className="top">
       <div className="top__left">
         <Link to="/projects" className="brand">
+          <svg className="brand__mark" viewBox="0 0 512 512" aria-hidden="true">
+            <rect width="512" height="512" rx="112" fill="#17141f" />
+            <circle cx="200" cy="256" r="118" fill="#ff5c93" />
+            <circle cx="312" cy="256" r="118" fill="#2f4bf0" stroke="#17141f" strokeWidth="20" />
+            <circle cx="256" cy="120" r="34" fill="#ffd43b" />
+          </svg>
           Battle Arena
         </Link>
         <nav className="top__nav" aria-label="Main">

@@ -7,8 +7,12 @@ export function emptyForm() {
     code: { repoUrl: "" },
     demo: { videoUrl: "" },
     tracks: { selected: [] },
+    // Stable look for this draft's fighter, so the preview matches the published card.
+    fighter: { seed: newSeed() },
   };
 }
+
+export const newSeed = () => (globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`).slice(0, 12);
 
 export function getIn(obj, path) {
   return path.split(".").reduce((o, k) => (o == null ? undefined : o[k]), obj);

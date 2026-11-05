@@ -44,6 +44,7 @@ export function toPayload(data, { ownerWallet, chainId }) {
     repoUrl: data.code.repoUrl.trim().replace(/\/$/, ""),
     demoVideoUrl: data.demo.videoUrl.trim(),
     tracks: [...data.tracks.selected],
+    fighterSeed: data.fighter?.seed ?? null,
     // One wallet for now: it owns the submission and receives the project's 20%.
     ownerWallet,
     rewardWallet: ownerWallet,
