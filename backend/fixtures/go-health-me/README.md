@@ -10,6 +10,7 @@ Showcase: https://ethglobal.com/showcase/go-health-me-3xrns
 | --- | --- | --- |
 | `submission.json` | The project entered through our 7-field form. Fields we had to derive are explained in `_derived`. | yes |
 | `showcase.md` | Showcase page text, verbatim: tagline, description, how it's made, links | yes |
+| `dossier.json` | Reviewer agent's findings (PRD EVD-04/05): summary, verdict, 22 claims checked against code with file:line refs, test counts, continuity, risks, questions. Static read only; nothing was run | yes |
 | `source.json` | Provenance: where everything came from, pinned commit, continuity facts, SHA-256 of every media file | yes |
 | `raw/showcase.html` | The showcase page as fetched | yes |
 | `media/demo-transcript.md` | Timed transcript of the demo video | yes |

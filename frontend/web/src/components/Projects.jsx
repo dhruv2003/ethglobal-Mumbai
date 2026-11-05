@@ -6,7 +6,8 @@ import { embedUrl, getProject, listProjects } from "../lib/projects.js";
 import { Link } from "../lib/router.jsx";
 import { shortAddress } from "../lib/wallet.js";
 import { Ring } from "./Arena.jsx";
-import { FighterTraits, PixelFighter } from "./PixelFighter.jsx";
+import { Dossier } from "./Dossier.jsx";
+import { fighterTraitItems, PixelFighter } from "./PixelFighter.jsx";
 
 export const trackName = (id) => EVENT.tracks.find((t) => t.id === id)?.name ?? id;
 const GHOST = { id: "your-fighter", name: "Your fighter", pitch: "", description: "", tracks: [] };
@@ -313,7 +314,54 @@ export function ProjectsPage() {
 
 /* --------------------------------------------------------- project page */
 
+/** Which side of a project page is showing; kept in ?view= so it can be linked. */
+function useView() {
+  const [view, setViewState] = useState(() => (new URLSearchParams(location.search).get("view") === "judge" ? "judge" : "team"));
+  const setView = (v) => {
+    setViewState(v);
+    history.replaceState({}, "", v === "judge" ? `${location.pathname}?view=judge` : location.pathname);
+  };
+  return [view, setView];
+}
+
+/** Segmented toggle: real tabs (arrow keys move between them), sliding thumb. */
+function ViewToggle({ view, onChange, hasDossier }) {
+  const tabs = [
+    { id: "team", label: "Team submission", hint: "What they entered" },
+    { id: "judge", label: "Agent judge", hint: hasDossier ? "What our reviewer found" : "Review pending" },
+  ];
+  const onKey = (e) => {
+    if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+    e.preventDefault();
+    const next = view === "team" ? "judge" : "team";
+    onChange(next);
+    document.getElementById(`tab-${next}`)?.focus();
+  };
+  return (
+    <div className="toggle rise" style={{ "--i": 2 }} role="tablist" aria-label="Project view" data-view={view} onKeyDown={onKey}>
+      <span className="toggle__thumb" aria-hidden="true" />
+      {tabs.map((t) => (
+        <button
+          key={t.id}
+          id={`tab-${t.id}`}
+          type="button"
+          role="tab"
+          aria-selected={view === t.id}
+          aria-controls={`panel-${t.id}`}
+          tabIndex={view === t.id ? 0 : -1}
+          className={`toggle__tab toggle__tab--${t.id}`}
+          onClick={() => onChange(t.id)}
+        >
+          <span className="toggle__label">{t.label}</span>
+          <span className="toggle__hint">{t.hint}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
 export function ProjectPage({ id }) {
+  const [view, setView] = useView();
   const [state, setState] = useState({ loading: true, project: null });
   useEffect(() => {
     getProject(id).then((project) => setState({ loading: false, project }));
@@ -346,28 +394,32 @@ export function ProjectPage({ id }) {
   return (
     <>
       {back}
-      <div className="project-layout">
-        <aside className="project-layout__side" aria-label="Fighter">
-          <Ring className="project-ring rise" style={{ "--i": 0 }}>
-            <PixelFighter project={p} scale={10} className="fighter--enter" />
-          </Ring>
-          <div className="card stack-xs rise" style={{ "--i": 1 }}>
-            <span className="t-label">Built from this project</span>
-            <FighterTraits project={p} trackName={trackName} />
+      <header className="project-hero">
+        <Ring className="project-hero__ring rise" style={{ "--i": 0 }}>
+          <PixelFighter project={p} scale={8} className="fighter--enter" />
+        </Ring>
+        <div className="intro project-head rise" style={{ "--i": 1 }}>
+          <div className="fighter-card__badges">
+            <EventBadge project={p} />
+            <KindPill kind={p.kind} />
           </div>
-        </aside>
+          <h1 className="t-display-xl m0 project-head__name">{p.name}</h1>
+          <p className="t-prompt m0">{p.pitch}</p>
+          <p className="t-caption m0">by {p.teamName}</p>
+          <div className="gear-row" aria-label="Fighter gear">
+            {fighterTraitItems(p, trackName).map((t) => (
+              <span key={t.id} className="chip chip--tag" title={t.why}>
+                {t.label}
+              </span>
+            ))}
+          </div>
+        </div>
+      </header>
 
-        <div className="project-layout__main">
-          <header className="intro project-head rise" style={{ "--i": 1 }}>
-            <div className="fighter-card__badges">
-              <EventBadge project={p} />
-              <KindPill kind={p.kind} />
-            </div>
-            <h1 className="t-display-xl m0 project-head__name">{p.name}</h1>
-            <p className="t-prompt m0">{p.pitch}</p>
-            <p className="t-caption m0">by {p.teamName}</p>
-          </header>
+      <ViewToggle view={view} onChange={setView} hasDossier={Boolean(p.dossier)} />
 
+      {view === "team" ? (
+        <section id="panel-team" role="tabpanel" aria-labelledby="tab-team" className="panel panel--team" key="team">
           <section className="card stack rise" style={{ "--i": 2 }} aria-label="Demo video">
             {embed ? (
               <div className="video">
@@ -382,7 +434,7 @@ export function ProjectPage({ id }) {
           </section>
 
           <section className="card stack rise" style={{ "--i": 3 }} aria-labelledby="about-h">
-            <h2 id="about-h" className="t-display-md m0">What it does and how it's built</h2>
+            <h3 id="about-h" className="t-heading m0">What it does and how it's built</h3>
             {p.description.split(/\n{2,}/).map((para, i) => (
               <p key={i} className="t-body m0">
                 {para}
@@ -391,8 +443,12 @@ export function ProjectPage({ id }) {
           </section>
 
           <section className="card rise" style={{ "--i": 4 }} aria-labelledby="facts-h">
-            <h2 id="facts-h" className="visually-hidden">Details</h2>
-            <dl className="facts">
+            <h3 id="facts-h" className="visually-hidden">Details</h3>
+            <dl className="facts facts--stack">
+              <div>
+                <dt className="t-label">Team</dt>
+                <dd className="t-body">{p.teamName}</dd>
+              </div>
               <div>
                 <dt className="t-label">Competing in</dt>
                 <dd>
@@ -434,8 +490,12 @@ export function ProjectPage({ id }) {
               )}
             </dl>
           </section>
-        </div>
-      </div>
+        </section>
+      ) : (
+        <section id="panel-judge" role="tabpanel" aria-labelledby="tab-judge" className="panel panel--judge" key="judge">
+          <Dossier project={p} />
+        </section>
+      )}
     </>
   );
 }

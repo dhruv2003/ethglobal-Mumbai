@@ -43,10 +43,20 @@ function fromSubmission(r) {
     showcaseUrl: null,
     ownerWallet: r.ownerWallet ?? null,
     submittedAt: r.submittedAt ?? null,
+    dossier: null,
   };
 }
 
-const SAMPLES = [fromFixture("go-health-me", goHealthMe, goHealthMeSource)];
+/* Reviewer dossiers, keyed by fixture folder name (= project id). Optional per project.
+   TODO(backend): becomes part of GET /projects/:id once the reviewer agent runs server-side. */
+const DOSSIERS = Object.fromEntries(
+  Object.entries(import.meta.glob("@fixtures/*/dossier.json", { eager: true, import: "default" })).map(([path, d]) => [
+    path.split("/").at(-2),
+    d,
+  ]),
+);
+
+const SAMPLES = [fromFixture("go-health-me", goHealthMe, goHealthMeSource)].map((p) => ({ ...p, dossier: DOSSIERS[p.id] ?? null }));
 
 export async function listProjects() {
   const submitted = listSubmissions()

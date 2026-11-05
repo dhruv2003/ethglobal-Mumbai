@@ -20,7 +20,7 @@ Needs Node 18+. MetaMask must be installed in the browser. On a phone without it
 | --- | --- |
 | `/` | Landing: arena hero with the roster in a ring, how it works, link to projects |
 | `/projects` | Dashboard: summary tiles, search, track filters (kept in the URL), fighter cards |
-| `/projects/:id` | One project: fighter in its ring, pitch, demo video, description, tracks, repo + pinned commit |
+| `/projects/:id` | One project. Toggle between **Team submission** (what they entered) and **Agent judge** (`?view=judge`, the reviewer's dossier) |
 | `/submit` | The form, with a live preview of your fighter |
 
 ## What the form does
