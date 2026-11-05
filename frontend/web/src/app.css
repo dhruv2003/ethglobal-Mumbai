@@ -488,3 +488,17 @@ a.brand:hover .brand__mark { transform: rotate(-8deg) scale(1.08); }
   .toggle__hint { display: none; }
   .toggle__tab { min-height: 48px; }
 }
+
+/* ---------- Agent judge: highlights only ---------- */
+.judge { display: flex; flex-direction: column; gap: var(--space-4); }
+.judge__verdict .t-prompt { max-width: 46ch; }
+.judge__pair { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+.findings__list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: var(--space-3); }
+.findings__list li { position: relative; padding-left: var(--space-6); }
+.findings__list li::before {
+  position: absolute; left: 0; top: 2px; display: grid; place-items: center; width: 20px; height: 20px;
+  border-radius: 50%; font: 700 12px/1 var(--font-sans);
+}
+.findings--good .findings__list li::before { content: "✓"; background: var(--success-soft); color: var(--success); }
+.findings--watch .findings__list li::before { content: "!"; background: var(--stake-no-soft); color: var(--stake-no); }
+@media (max-width: 860px) { .judge__pair { grid-template-columns: 1fr; } }

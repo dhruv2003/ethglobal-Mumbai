@@ -7,6 +7,15 @@ import goHealthMe from "@fixtures/go-health-me/submission.json";
 import goHealthMeSource from "@fixtures/go-health-me/source.json";
 import { listSubmissions } from "./storage.js";
 
+/*
+ * Project record (what the DB will store per project):
+ *   identity + submission fields (name, team, pitch, description, repo, video, tracks, wallet)
+ *   dossier: the reviewer agent's FULL output (summary, verdict, every claim with
+ *            file:line refs, tests, continuity, architecture, dependencies, journey,
+ *            strengths, risks, questions) plus `highlights`, the short version the
+ *            dashboard shows. Only highlights are rendered today; the rest is kept
+ *            for fight generation and judge prompts later.
+ */
 function fromFixture(id, { form }, source) {
   return {
     id,
