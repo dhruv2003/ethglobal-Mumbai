@@ -104,7 +104,9 @@ export function JudgesPanel({ project }) {
 
   useEffect(() => {
     let live = true;
-    (async () => {
+    let timer;
+    const startedAt = Date.now();
+    const load = async () => {
       const h = await health();
       let result = null;
       let running = false;
@@ -117,12 +119,20 @@ export function JudgesPanel({ project }) {
           /* keep the stored one */
         }
       }
-      if (live) setState({ loading: false, health: h, result: result ?? project.reviews ?? null, running });
-    })();
+      // A project submitted in the last few minutes with no review yet is being judged in the background.
+      const fresh = project.submittedAt && Date.now() - Date.parse(project.submittedAt) < 5 * 60 * 1000;
+      const pending = Boolean(h?.judgesReady) && (running || (!result && fresh));
+      if (!live) return;
+      setState({ loading: false, health: h, result: result ?? project.reviews ?? null, running: pending });
+      // Keep checking while the judges work; stop after 10 minutes so a stuck run can't poll forever.
+      if (pending && Date.now() - startedAt < 10 * 60 * 1000) timer = setTimeout(load, 4000);
+    };
+    load();
     return () => {
       live = false;
+      clearTimeout(timer);
     };
-  }, [project.id, project.reviews]);
+  }, [project.id, project.reviews, project.submittedAt]);
 
   async function ask() {
     setAsking(true);
