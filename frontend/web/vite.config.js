@@ -9,16 +9,18 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const designSystem = path.resolve(here, "../design-system/src");
 // Sample projects shown on /projects (small JSON files only).
 const fixtures = path.resolve(here, "../../backend/fixtures");
+// Contract ABIs (JSON only).
+const contracts = path.resolve(here, "../../backend/contracts");
 
 export default defineConfig({
   resolve: {
-    alias: { "@ds": designSystem, "@fixtures": fixtures },
+    alias: { "@ds": designSystem, "@fixtures": fixtures, "@contracts": contracts },
     // ui.jsx lives outside this app; make its react imports resolve to ours.
     dedupe: ["react", "react-dom"],
   },
   // The backend (backend/src/server.js) serves /api on port 3000.
   // xfwd marks proxied requests, so the backend never mistakes a visitor for a local operator.
-  server: { fs: { allow: [path.resolve(here, ".."), fixtures] }, proxy: { "/api": { target: "http://localhost:3000", xfwd: true } } },
+  server: { fs: { allow: [path.resolve(here, ".."), fixtures, contracts] }, proxy: { "/api": { target: "http://localhost:3000", xfwd: true } } },
   preview: { proxy: { "/api": { target: "http://localhost:3000", xfwd: true } } },
   plugins: [
     react(),

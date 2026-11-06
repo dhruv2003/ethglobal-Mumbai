@@ -26,7 +26,7 @@ export function PixelFighter({ project, scale = 6, className = "", ghost = false
       height={21 * scale}
       shapeRendering="crispEdges"
       role="img"
-      aria-label={label ?? `${project.name}'s fighter`}
+      aria-label={label ?? `${project.name}'s fighter: ${traits.archetypeName}`}
       style={phase}
     >
       <ellipse className="fighter__shadow" cx="8" cy="19.6" rx="5" ry="0.7" />
@@ -57,9 +57,10 @@ export function PixelFighter({ project, scale = 6, className = "", ghost = false
 export function fighterTraitItems(project, trackName) {
   const t = fighterTraits(project);
   return [
+    { id: "archetype", label: t.archetypeName, why: t.archetypeDetail },
     t.jacketFrom
-      ? { id: "jacket", label: `${trackName(t.jacketFrom)} jacket`, why: "first sponsor track" }
-      : { id: "jacket", label: "Grey jacket", why: "no sponsor track yet" },
+      ? { id: "jacket", label: `${trackName(t.jacketFrom)} trim`, why: "first sponsor track" }
+      : { id: "jacket", label: "Grey trim", why: "no sponsor track yet" },
     ...Object.values(t.gear).map((g) => ({ id: g.id, label: g.label, why: g.why })),
   ];
 }

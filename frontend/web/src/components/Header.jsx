@@ -46,6 +46,9 @@ const NAV = [
   { to: "/projects", label: "Projects", on: (r) => r.name === "projects" || r.name === "project" },
   { to: "/submit", label: "Submit", on: (r) => r.name === "form" },
   { to: "/judge", label: "Judges", on: (r) => r.name === "judges" },
+  { to: "/tournaments", label: "Tournaments", on: (r) => r.name === "tournaments" || r.name === "tournament" },
+  { to: "/arena", label: "Arena", on: (r) => r.name === "arena" || r.name === "matchFight" },
+  { to: "/wallet", label: "Wallet", on: (r) => r.name === "wallet" },
 ];
 
 export function Header({ wallet, route }) {

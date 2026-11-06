@@ -6,6 +6,7 @@
 import { useMemo, useState } from "react";
 import { FightStage } from "../fight/FightStage.jsx";
 import { MOCK_EVENTS, MOCK_MATCH } from "../fight/mockFight.js";
+import { useFightSound } from "../fight/useFightSound.js";
 import { usePlayback } from "../fight/usePlayback.js";
 import { scoreSoFar, stateAt } from "../fight/reducer.js";
 import { CRITERIA, CRITERION_LABEL, RULING_TEXT, WEIGHTS, fmtHealth, fmtScore } from "../fight/score.js";
@@ -76,6 +77,7 @@ export function FightDemo() {
   const events = MOCK_EVENTS;
   const match = MOCK_MATCH;
   const pb = usePlayback(events, { start: startFromUrl(events) });
+  const sound = useFightSound(events, pb);
   const state = useMemo(() => stateAt(events, events[pb.index].seq), [events, pb.index]);
   const [captions, setCaptions] = useState(true);
   const [reduced, setReduced] = useState(() => !!prefersReducedMotion());
@@ -103,7 +105,7 @@ export function FightDemo() {
       <FightStage match={match} state={state} event={pb.event} ms={pb.ms} reduced={reduced} captions={captions} typing={pb.playing} />
 
       <div className="fd__controls">
-        <button type="button" className="fd__play" onClick={pb.toggle} aria-label={pb.playing ? "Pause" : "Play"}>
+        <button type="button" className="fd__play" onClick={sound.togglePlay} aria-label={pb.playing ? "Pause" : "Play"}>
           <PlayIcon playing={pb.playing} />
         </button>
         <div className="fd__seg" role="group" aria-label="Playback speed">
@@ -136,6 +138,9 @@ export function FightDemo() {
           Next ruling
         </button>
         <div className="fd__toggles">
+          <button type="button" className="fd__toggle" aria-pressed={!sound.muted} onClick={sound.toggleMute}>
+            Sound
+          </button>
           <button type="button" className="fd__toggle" aria-pressed={captions} onClick={() => setCaptions((v) => !v)}>
             Captions
           </button>

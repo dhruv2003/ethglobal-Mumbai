@@ -5,14 +5,24 @@
  * PLACEHOLDERS: the network (PRD 18.2, not decided yet) and the track list.
  * Replace both with the real values before the event.
  */
+const env = import.meta.env ?? {};
+
+export const CONTRACTS = {
+  token: env.VITE_TOKEN_ADDRESS || "0x564B51f96406328Ad3dBD6E89b63219938F4fbb7",
+  manager: env.VITE_TOURNAMENT_MANAGER_ADDRESS || "0x21b7F85B689d27e0066b95F9cC1a23942861D84d",
+  pools: env.VITE_BETTING_POOLS_ADDRESS || "0x3D8aCAE312bFBBE900421d4236d70b62D59A8F5e",
+};
+
 export const EVENT = {
   name: "ETHGlobal Mumbai",
   startDate: "2026-11-06",
+  // Set these in frontend/web/.env (see .env.example) to change chain.
   network: {
-    name: "Base Sepolia",
-    chainId: 84532,
-    rpcUrl: "https://sepolia.base.org",
-    explorerUrl: "https://sepolia.basescan.org",
+    name: env.VITE_CHAIN_NAME || "Base Sepolia",
+    chainId: Number(env.VITE_CHAIN_ID || 84532),
+    rpcUrl: env.VITE_RPC_URL || "https://sepolia.base.org",
+    explorerUrl: env.VITE_EXPLORER_URL || "https://sepolia.basescan.org",
+    symbol: env.VITE_NATIVE_SYMBOL || "ETH",
   },
   maxTracks: 3,
   tracks: [

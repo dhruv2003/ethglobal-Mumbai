@@ -1,0 +1,1388 @@
+[
+  {
+    "inputs": [],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [],
+    "name": "AccessControlBadConfirmation",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "neededRole",
+        "type": "bytes32"
+      }
+    ],
+    "name": "AccessControlUnauthorizedAccount",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "BettingClosed",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "BettingStillOpen",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "DeadlineNotReached",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "DeadlinePassed",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "DeadlineTooSoon",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidAddress",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidBetLimits",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidCapacity",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidMatch",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidProjectCount",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidSchedule",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidScore",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidWinner",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NotOrganizer",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NotPublisher",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NotReviewer",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "PreviousRoundUnfinished",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "PublisherNotApproved",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "UnexpectedTiebreak",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "WrongMatchStatus",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "WrongTournamentStatus",
+    "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "matchIndex",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "resultHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "HumanReviewRequired",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "matchIndex",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint8",
+        "name": "winner",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "rationaleHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "HumanReviewResolved",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "matchIndex",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint8",
+        "name": "winner",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "enum TournamentManager.WinSource",
+        "name": "source",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "resultHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "MatchFinalized",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "matchIndex",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint8",
+        "name": "projectA",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint8",
+        "name": "projectB",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "cutoff",
+        "type": "uint64"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "deadline",
+        "type": "uint64"
+      }
+    ],
+    "name": "MatchOpened",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "matchIndex",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "reasonHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "MatchVoided",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "role",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "previousAdminRole",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "newAdminRole",
+        "type": "bytes32"
+      }
+    ],
+    "name": "RoleAdminChanged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "role",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "sender",
+        "type": "address"
+      }
+    ],
+    "name": "RoleGranted",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "role",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "sender",
+        "type": "address"
+      }
+    ],
+    "name": "RoleRevoked",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "reasonHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "TournamentCanceled",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint8",
+        "name": "champion",
+        "type": "uint8"
+      }
+    ],
+    "name": "TournamentCompleted",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "organizer",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "configHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "TournamentCreated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint8",
+        "name": "projectCount",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "seed",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "bracketHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "TournamentFrozen",
+    "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "DEFAULT_ADMIN_ROLE",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "MAX_SCORE",
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "",
+        "type": "uint16"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "ORGANIZER_ROLE",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "PUBLISHER_ROLE",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      }
+    ],
+    "name": "betLimits",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "minBet",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "maxBet",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "reasonHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "cancelTournament",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "configHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint8",
+            "name": "capacity",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint64",
+            "name": "scheduledStart",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "bettingCutoff",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "resolutionDeadline",
+            "type": "uint64"
+          },
+          {
+            "internalType": "address",
+            "name": "reviewer",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "publisher",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "platformRecipient",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "minBet",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maxBet",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct TournamentManager.TournamentConfig",
+        "name": "config",
+        "type": "tuple"
+      }
+    ],
+    "name": "createTournament",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "matchIndex",
+        "type": "uint256"
+      }
+    ],
+    "name": "expireMatch",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      }
+    ],
+    "name": "expireTournament",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      },
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "owner",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "rewardWallet",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "snapshotHash",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct TournamentManager.Project[]",
+        "name": "projects",
+        "type": "tuple[]"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "seed",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "bracketHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "freeze",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "market",
+        "type": "uint256"
+      }
+    ],
+    "name": "getMarket",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "bool",
+            "name": "exists",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "hasWinner",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isVoid",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint8",
+            "name": "winner",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint64",
+            "name": "cutoff",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "deadline",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint256",
+            "name": "tournamentId",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct TournamentManager.MarketView",
+        "name": "v",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "matchIndex",
+        "type": "uint256"
+      }
+    ],
+    "name": "getMatch",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "enum TournamentManager.MatchStatus",
+            "name": "status",
+            "type": "uint8"
+          },
+          {
+            "internalType": "enum TournamentManager.WinSource",
+            "name": "source",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "projectA",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "projectB",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "winner",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint16",
+            "name": "scoreA",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "scoreB",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "tieA",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "tieB",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint64",
+            "name": "cutoff",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "scheduledStart",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "deadline",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "resultHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "rationaleHash",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct TournamentManager.Match",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "project",
+        "type": "uint256"
+      }
+    ],
+    "name": "getProject",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "owner",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "rewardWallet",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "snapshotHash",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct TournamentManager.Project",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "role",
+        "type": "bytes32"
+      }
+    ],
+    "name": "getRoleAdmin",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      }
+    ],
+    "name": "getTournament",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "configHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "seed",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "bracketHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "address",
+            "name": "organizer",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "reviewer",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "publisher",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "platformRecipient",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "minBet",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maxBet",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint64",
+            "name": "scheduledStart",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "bettingCutoff",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "resolutionDeadline",
+            "type": "uint64"
+          },
+          {
+            "internalType": "enum TournamentManager.TournamentStatus",
+            "name": "status",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "capacity",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "projectCount",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "finalizedCount",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "champion",
+            "type": "uint8"
+          }
+        ],
+        "internalType": "struct TournamentManager.Tournament",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "role",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "grantRole",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "role",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "hasRole",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "wallet",
+        "type": "address"
+      }
+    ],
+    "name": "isBlocked",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "market",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "project",
+        "type": "uint256"
+      }
+    ],
+    "name": "isSelection",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "matchIndex",
+        "type": "uint256"
+      }
+    ],
+    "name": "matchMarket",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "matchIndex",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint64",
+        "name": "cutoff",
+        "type": "uint64"
+      },
+      {
+        "internalType": "uint64",
+        "name": "scheduledStart",
+        "type": "uint64"
+      }
+    ],
+    "name": "openMatch",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      }
+    ],
+    "name": "platformRecipient",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "matchIndex",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint16",
+        "name": "scoreA",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint16",
+        "name": "scoreB",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint16",
+        "name": "tieA",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint16",
+        "name": "tieB",
+        "type": "uint16"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "resultHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "publishResult",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "role",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "callerConfirmation",
+        "type": "address"
+      }
+    ],
+    "name": "renounceRole",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "matchIndex",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint8",
+        "name": "winner",
+        "type": "uint8"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "rationaleHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "resolveHumanReview",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "role",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "revokeRole",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "project",
+        "type": "uint256"
+      }
+    ],
+    "name": "rewardWallet",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes4",
+        "name": "interfaceId",
+        "type": "bytes4"
+      }
+    ],
+    "name": "supportsInterface",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "tournamentCount",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      }
+    ],
+    "name": "tournamentMarket",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "matchIndex",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "reasonHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "voidMatch",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]

@@ -1,6 +1,7 @@
 /*
  * Optional evidence step: a vision model on 0G looks at each live-test screenshot
- * (backend/fixtures/<id>/smoke/<device>/*.jpg) and writes down what is on screen.
+ * (fixtures/<id>/smoke/ for samples, data/live/<id>/ for submissions) and writes
+ * down what is on screen.
  *
  * Judges get these as untrusted evidence with IDs they can cite (V-laptop-d1...),
  * next to the live-test step results they already see. Each observation keeps its
@@ -16,7 +17,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import zg from "../zg/client.js";
 import zgModels from "../zg/models.js";
-import { DATA_DIR } from "../store.mjs";
+import { DATA_DIR, liveDir } from "../store.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const FIXTURES = path.resolve(here, "../../fixtures");
@@ -26,6 +27,7 @@ const MATCHES = ["yes", "partly", "no", "unclear"];
 /** Every screenshot the live test saved, with the step it belongs to. */
 export function screenshotsOf(project) {
   const runs = project.liveTest?.runs ?? [];
+  const directory = project.kind === "submitted" ? liveDir(project.id) : path.join(FIXTURES, project.id, "smoke");
   const out = [];
   for (const run of runs) {
     for (const phase of run.phases ?? []) {
@@ -37,7 +39,7 @@ export function screenshotsOf(project) {
           stepId: step.id,
           stepTitle: step.title,
           stepStatus: step.status,
-          file: path.join(FIXTURES, project.id, "smoke", step.screenshot),
+          file: path.join(directory, step.screenshot),
         });
       }
     }
