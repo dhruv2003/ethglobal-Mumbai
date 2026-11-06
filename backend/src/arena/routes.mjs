@@ -22,6 +22,7 @@ import { requireOrganizer } from "../security.mjs";
 import { hasCredentials } from "../judges/review.mjs";
 import { judgeCast, runFight } from "./fight.mjs";
 import { proposeBracket, verifyProposal } from "./matchmaking.mjs";
+import { syncFightInBackground, syncTournamentInBackground } from "../arkiv/records/sync.mjs";
 
 const safe = (v) => String(v).replace(/[^a-zA-Z0-9_-]/g, "");
 const dir = (name) => {
@@ -107,6 +108,7 @@ arenaRouter.put("/tournaments/:id", requireOrganizer, (req, res) => {
   const prior = readJson(tournamentFile(req.params.id));
   const record = { id: String(req.params.id), title: String(title || `Tournament #${req.params.id}`).slice(0, 80), track: String(track || "Open").slice(0, 40), matching, createdAt: prior?.createdAt ?? new Date().toISOString(), projects };
   writeJson(tournamentFile(req.params.id), record);
+  syncTournamentInBackground(req.params.id);
   res.json(record);
 });
 
@@ -159,5 +161,8 @@ arenaRouter.post("/fights/:t/:m", requireOrganizer, async (req, res) => {
       console.error(`[fight ${key}] failed: ${e.message}`);
       writeJson(fightFile(t, m), { tournamentId: String(t), match: Number(m), error: String(e.message ?? e).slice(0, 300), ranAt: new Date().toISOString() });
     })
-    .finally(() => running.delete(key));
+    .finally(() => {
+      running.delete(key);
+      syncFightInBackground(t, m);
+    });
 });

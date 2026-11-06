@@ -38,6 +38,7 @@ import { canReadScreens, describeScreenshots, VISION_MODEL } from "./screens.mjs
 import { writeDossier } from "./dossier.mjs";
 import { writeFlows } from "./flows.mjs";
 import { readCapped, safeFetch } from "./net.mjs";
+import { syncProjectInBackground } from "../arkiv/records/sync.mjs";
 import { GITHUB_REPO, cloneRepo, contextPack, countTests, historyFacts, inventory } from "./repo.mjs";
 
 export const STEPS = [
@@ -563,6 +564,7 @@ async function execute(projectId, judge) {
 
   state.finishedAt = new Date().toISOString();
   save();
+  syncProjectInBackground(projectId); // pipeline, dossier, transcript, live test on Arkiv
   return state;
 }
 

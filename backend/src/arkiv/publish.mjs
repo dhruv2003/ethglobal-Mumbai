@@ -50,7 +50,7 @@ export async function publishRun(project, result, { upload = uploadBundle, publi
       }
     }
     try {
-      record.arkiv = await publish(project.id, result, { swarmRef: record.swarm?.reference ?? null });
+      record.arkiv = await publish(project.id, result, { swarmRef: record.swarm?.reference ?? null, projectName: project.submission?.name ?? null });
       log(`arkiv: panel ${record.arkiv.panelKey}`);
     } catch (e) {
       record.arkivError = String(e?.shortMessage ?? e?.message ?? e).slice(0, 300);

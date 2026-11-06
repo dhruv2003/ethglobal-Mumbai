@@ -42,8 +42,11 @@ import { deleteProject, dossiers, judges, liveDir, mediaDir, pipelines, reviews,
 import { cleanUploads, IMAGE_MAX, IMAGE_REF, MAX_IMAGES, MIME, storeImageUpload, storeUpload, UPLOAD_DIR, UPLOAD_FILE, UPLOAD_REF, VIDEO_MAX } from "./reviewer/media.mjs";
 import { dequeue, enqueue, isRunning, queueLength, queuePosition, resumeQueue } from "./reviewer/pipeline.mjs";
 import { checkSubmissionSignature, rateLimit, requireOrganizer } from "./security.mjs";
-import { canRead, canWrite, publisher, readLatest } from "./arkiv/arkiv.mjs";
+import { canRead, canWrite, explorerEntity, publisher, readLatest } from "./arkiv/arkiv.mjs";
 import { lastPublish, publishInBackground, publishing, publishRun } from "./arkiv/publish.mjs";
+import { syncJudgesInBackground, syncProjectInBackground } from "./arkiv/records/sync.mjs";
+import { listRecords, readRecord } from "./arkiv/records/store.mjs";
+import { TYPES } from "./arkiv/records/schemas.mjs";
 import { swarmConfigured } from "./arkiv/swarm.mjs";
 import { arenaRouter } from "./arena/routes.mjs";
 
@@ -95,6 +98,7 @@ export async function reviewNow(projectId, { evidence = EVIDENCE_ENABLED, freshE
     if (!save) return result;
     const saved = reviews.save(projectId, result);
     publishInBackground(project, saved); // Swarm + Arkiv, when set up; never fails the review
+    syncProjectInBackground(projectId); // judge context (dossier, live test, screenshot notes) on Arkiv
     return saved;
   })()
     .catch((e) => {
@@ -138,6 +142,7 @@ router.post("/judges", requireOrganizer, (req, res) => {
   const { persona, errors } = validateForm(req.body ?? {});
   if (errors) return res.status(400).json({ errors });
   judges.save([...all, persona]);
+  syncJudgesInBackground();
   res.status(201).json(persona);
 });
 
@@ -180,6 +185,7 @@ router.put("/judges/:id", requireOrganizer, (req, res) => {
   const { persona, errors } = validateForm(req.body ?? {}, { existing });
   if (errors) return res.status(400).json({ errors });
   judges.save(all.map((j) => (j.id === existing.id ? persona : j)));
+  syncJudgesInBackground();
   res.json(persona);
 });
 
@@ -253,6 +259,7 @@ router.post("/submissions", rateLimit({ max: 5, windowMs: 60 * 60 * 1000 }), asy
   if (sigError) return res.status(401).json({ error: sigError });
   const record = { ...body, id: crypto.randomUUID(), submittedAt: new Date().toISOString() };
   submissions.add(record);
+  syncProjectInBackground(record.id);
   // Into the review queue: fetch, pin, count tests, build the dossier, then the judges score.
   enqueue(record.id, { judge: reviewNow });
   res.status(201).json(publicSubmission(record));
@@ -287,6 +294,35 @@ router.get("/projects/:id/arkiv", async (req, res) => {
     out.error = `Arkiv read failed: ${String(e?.shortMessage ?? e?.message ?? e).slice(0, 200)}`;
   }
   res.json(out);
+});
+
+/*
+ * Any arena record, read from Arkiv (not the local store).
+ *   GET /api/arkiv/:type?projectId=...        newest versions, columns only
+ *   GET /api/arkiv/:type/latest?projectId=... the newest one with its full payload
+ * Query parameters filter on the type's indexed columns (identity columns for /latest).
+ */
+const ARKIV_FILTERS = new Set(["projectId", "projectName", "judgeId", "tournamentId", "match", "projectA", "projectB", "status", "kind", "winner", "track"]);
+const arkivFilters = (q) => Object.fromEntries(Object.entries(q).filter(([k, v]) => ARKIV_FILTERS.has(k) && typeof v === "string" && v).map(([k, v]) => [k, k === "match" ? Number(v) : v]));
+router.get("/arkiv/:type", async (req, res) => {
+  if (!TYPES.includes(req.params.type)) return res.status(404).json({ error: `Unknown record type. One of: ${TYPES.join(", ")}.` });
+  if (!canRead()) return res.status(503).json({ error: "Arkiv is not set up on this server." });
+  try {
+    res.json(await listRecords(req.params.type, arkivFilters(req.query)));
+  } catch (e) {
+    res.status(502).json({ error: `Arkiv read failed: ${String(e?.shortMessage ?? e?.message ?? e).slice(0, 200)}` });
+  }
+});
+router.get("/arkiv/:type/latest", async (req, res) => {
+  if (!TYPES.includes(req.params.type)) return res.status(404).json({ error: `Unknown record type. One of: ${TYPES.join(", ")}.` });
+  if (!canRead()) return res.status(503).json({ error: "Arkiv is not set up on this server." });
+  try {
+    const r = await readRecord(req.params.type, arkivFilters(req.query));
+    if (!r) return res.status(404).json({ error: "Nothing published on Arkiv for that yet." });
+    res.json({ ...r, explorer: explorerEntity(r.$key) });
+  } catch (e) {
+    res.status(502).json({ error: `Arkiv read failed: ${String(e?.shortMessage ?? e?.message ?? e).slice(0, 200)}` });
+  }
 });
 
 /** Publish the latest saved review again (organizer). */
