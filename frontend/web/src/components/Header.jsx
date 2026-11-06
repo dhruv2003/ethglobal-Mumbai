@@ -52,7 +52,6 @@ const NAV = [
   { to: "/projects", label: "Projects", on: (r) => r.name === "projects" || r.name === "project" },
   { to: "/rankings", label: "Rankings", on: (r) => r.name === "fighters" },
   { to: SUBMIT_PATH, label: "Submit", on: (r) => r.name === "form" || r.name === "event" },
-  { to: "/judge", label: "Judges", on: (r) => r.name === "judges" },
   { to: "/graph", label: "Graph", on: (r) => r.name === "graph" },
 ];
 const ORGANIZER_NAV = [
