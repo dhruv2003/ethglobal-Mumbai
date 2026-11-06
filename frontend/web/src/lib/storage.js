@@ -42,7 +42,8 @@ export function toPayload(data, { ownerWallet, chainId }) {
       description: data.project.description.trim(),
     },
     repoUrl: data.code.repoUrl.trim().replace(/\/$/, ""),
-    demoVideoUrl: data.demo.videoUrl.trim(),
+    // An uploaded file is sent as its server ref ("upload:<sha256>.<ext>"), so the signature covers it.
+    demoVideoUrl: data.demo.source === "upload" && data.demo.upload?.ref ? data.demo.upload.ref : data.demo.videoUrl.trim(),
     liveUrl: (data.demo.liveUrl ?? "").trim() || null,
     tracks: [...data.tracks.selected],
     fighterSeed: data.fighter?.seed ?? null,

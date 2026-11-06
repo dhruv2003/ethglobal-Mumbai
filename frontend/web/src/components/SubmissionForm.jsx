@@ -4,6 +4,7 @@ import { bouncy } from "./fx.jsx";
 import { EVENT } from "../config/event.js";
 import { LIMITS } from "../lib/validate.js";
 import { Msg, TextField, useForm } from "./fields.jsx";
+import { DemoVideoField } from "./DemoVideoField.jsx";
 
 /** The whole form: seven fields, one card. */
 export function SubmissionForm({ wallet, onSubmit, submitState, problemCount }) {
@@ -50,16 +51,7 @@ export function SubmissionForm({ wallet, onSubmit, submitState, problemCount }) 
         autoCapitalize="off"
         spellCheck={false}
       />
-      <TextField
-        path="demo.videoUrl"
-        label="Demo video"
-        type="url"
-        inputMode="url"
-        placeholder="https://youtu.be/…"
-        help="2 to 4 minutes. A direct video file or a Loom link can be transcribed automatically."
-        autoCapitalize="off"
-        spellCheck={false}
-      />
+      <DemoVideoField />
       <TextField
         path="demo.liveUrl"
         label="Live app (optional)"

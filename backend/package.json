@@ -8,7 +8,8 @@
     "dev": "nodemon src/server.js",
     "test": "node --test test/",
     "judge": "node src/judges/run.mjs",
-    "review": "node src/reviewer/run.mjs"
+    "review": "node src/reviewer/run.mjs",
+    "videos": "node src/reviewer/save-videos.mjs"
   },
   "keywords": [],
   "author": "",

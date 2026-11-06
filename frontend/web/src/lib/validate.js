@@ -44,9 +44,13 @@ export function validate(d, { walletAddress = "" } = {}) {
   if (!repo) errors["code.repoUrl"] = "Add your public GitHub repository.";
   else if (!GITHUB_REPO.test(repo)) errors["code.repoUrl"] = "Use a GitHub repo link, like https://github.com/team/project.";
 
-  const video = d.demo.videoUrl.trim();
-  if (!video) errors["demo.videoUrl"] = "Add a link to your demo video.";
-  else if (!isHttpsUrl(video)) errors["demo.videoUrl"] = "Use an https:// link.";
+  if (d.demo.source === "upload") {
+    if (!d.demo.upload?.ref) errors["demo.videoUrl"] = "Upload your demo video, or switch to a link.";
+  } else {
+    const video = d.demo.videoUrl.trim();
+    if (!video) errors["demo.videoUrl"] = "Add a link to your demo video.";
+    else if (!isHttpsUrl(video)) errors["demo.videoUrl"] = "Use an https:// link.";
+  }
 
   const live = (d.demo.liveUrl ?? "").trim();
   if (live && !isHttpsUrl(live)) errors["demo.liveUrl"] = "Use an https:// link to the running app.";

@@ -5,7 +5,9 @@ export function emptyForm() {
     team: { name: "" },
     project: { name: "", pitch: "", description: "" },
     code: { repoUrl: "" },
-    demo: { videoUrl: "", liveUrl: "" },
+    // source: "link" (paste a URL) or "upload" (a file from this computer, stored on our server).
+    // upload: { ref, url, name, bytes, seconds } once the file is on the server.
+    demo: { videoUrl: "", liveUrl: "", source: "link", upload: null },
     tracks: { selected: [] },
     // Stable look for this draft's fighter, so the preview matches the published card.
     fighter: { seed: newSeed() },

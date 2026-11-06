@@ -5,7 +5,7 @@
  *   fetch    clone the public repo (never run)
  *   pin      record the exact commit reviewed, and history facts
  *   tests    count tests by reading files; NOT run (no sandbox yet, PRD TST-05)
- *   demo     transcribe the demo video (Loom captions or OpenAI transcription)
+ *   demo     save our copy of the demo video, then transcribe it (Loom captions or OpenAI)
  *   dossier  reviewer agent writes the evidence dossier; refs checked against the clone
  *   live     explore the live app on cloud browsers, write flows (demo replay +
  *            major flows), run them on laptop and phone, recorded
@@ -23,8 +23,9 @@ import os from "node:os";
 import path from "node:path";
 import { discoverSite, runLiveTest } from "../../tester/runner.mjs";
 import { hasCredentials } from "../llm.mjs";
-import { dossiers, liveDir, pipelines, repoDir, submissions, transcripts, workDir } from "../store.mjs";
+import { dossiers, liveDir, mediaDir, pipelines, repoDir, submissions, transcripts, videos, workDir } from "../store.mjs";
 import { demoTranscript, describeDuration } from "./demo.mjs";
+import { reason, saveDemoVideo } from "./media.mjs";
 import { writeDossier } from "./dossier.mjs";
 import { writeFlows } from "./flows.mjs";
 import { readCapped, safeFetch } from "./net.mjs";
@@ -34,7 +35,7 @@ export const STEPS = [
   { id: "fetch", title: "Fetch the repository" },
   { id: "pin", title: "Pin the commit" },
   { id: "tests", title: "Count the tests" },
-  { id: "demo", title: "Read the demo video" },
+  { id: "demo", title: "Save and read the demo video" },
   { id: "dossier", title: "Build the evidence dossier" },
   { id: "live", title: "Test the live app on cloud browsers" },
   { id: "judges", title: "Judges score it" },
@@ -182,19 +183,31 @@ async function execute(projectId, judge) {
     }));
 
   // Demo video: independent of the repo, so it runs even if the clone failed.
+  // 1) keep our own copy (uploads, Loom, direct files, HLS), 2) transcribe it.
   let transcript = null;
-  if (!sub.demoVideoUrl) skip("demo", "Skipped: no demo video link.");
+  if (!sub.demoVideoUrl) skip("demo", "Skipped: no demo video.");
   else {
     const s = step("demo");
     s.status = "running";
     s.startedAt = new Date().toISOString();
     save();
+    let video = null;
+    let copyNote;
     try {
-      transcript = await demoTranscript(sub.demoVideoUrl, workDir(projectId));
-      transcripts.save(projectId, { ...transcript, videoUrl: sub.demoVideoUrl, at: new Date().toISOString() });
-      Object.assign(s, { status: "done", detail: `${transcript.source}${transcript.seconds ? ` · ${describeDuration(transcript.seconds)}` : ""} · ${transcript.text.split(/\s+/).length} words` });
+      video = await saveDemoVideo(sub.demoVideoUrl, mediaDir(projectId));
+      videos.save(projectId, { ext: video.ext, bytes: video.bytes, seconds: video.seconds, source: video.source, savedAt: new Date().toISOString() });
+      copyNote = `Saved our copy (${describeDuration(video.seconds)}, ${Math.max(1, Math.round(video.bytes / 1048576))} MB, ${video.source})`;
     } catch (e) {
-      Object.assign(s, { status: e.skip ? "skipped" : "failed", detail: String(e.message).slice(0, 240) });
+      videos.save(projectId, { error: reason(e).slice(0, 240), skipped: Boolean(e.skip), savedAt: new Date().toISOString() });
+      copyNote = `No copy: ${reason(e).slice(0, 160)}`;
+    }
+    try {
+      transcript = await demoTranscript(sub.demoVideoUrl, { video, workDir: workDir(projectId) });
+      transcripts.save(projectId, { ...transcript, videoUrl: sub.demoVideoUrl, at: new Date().toISOString() });
+      Object.assign(s, { status: "done", detail: `${copyNote} · ${transcript.source}${transcript.seconds && !video ? ` · ${describeDuration(transcript.seconds)}` : ""} · ${transcript.text.split(/\s+/).length} words` });
+    } catch (e) {
+      // A saved copy is still worth something even when there's no speech to read.
+      Object.assign(s, { status: video ? "done" : e.skip ? "skipped" : "failed", detail: `${copyNote} · ${String(e.message).slice(0, 200)}` });
     } finally {
       s.finishedAt = new Date().toISOString();
       fs.rmSync(workDir(projectId), { recursive: true, force: true });
@@ -264,7 +277,7 @@ async function execute(projectId, judge) {
         });
         Object.assign(s, { status: summary.runs.some((r) => r.outcome.status === "error") ? "failed" : "done", detail: `${live.url.replace("https://", "")} · ${words.join(" · ")}` });
       } catch (e) {
-        Object.assign(s, { status: "failed", detail: String(e.message).slice(0, 240) });
+        Object.assign(s, { status: "failed", detail: reason(e).slice(0, 240) });
       } finally {
         s.finishedAt = new Date().toISOString();
         save();
