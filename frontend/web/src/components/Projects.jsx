@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { ReviewTab } from "./review/ReviewTab.jsx";
 import { AnimatePresence, LayoutGroup, motion } from "motion/react";
 import { Progress, StatusPill } from "@ds/ui.jsx";
 import { EVENT } from "../config/event.js";
@@ -8,14 +9,10 @@ import { DemoVideo } from "./DemoVideo.jsx";
 import { Link } from "../lib/router.jsx";
 import { shortAddress } from "../lib/wallet.js";
 import { Ring } from "./Arena.jsx";
-import { Dossier } from "./Dossier.jsx";
 import { Spinner, toast } from "./Feedback.jsx";
 import { api } from "../lib/api.js";
 import { navigate } from "../lib/router.jsx";
 import { rerunReview } from "../lib/review.js";
-import { JudgesPanel } from "./JudgesPanel.jsx";
-import { PipelineView, usePipeline } from "./PipelineView.jsx";
-import { ReviewHero } from "./ReviewHero.jsx";
 import { fighterTraitItems, PixelFighter } from "./PixelFighter.jsx";
 import { FloatSticker, Magnetic, Marquee, Reveal, SplitWords, Squiggle, Tilt, bouncy, easeOut, fadeUp, stagger } from "./fx.jsx";
 
@@ -713,25 +710,10 @@ export function ProjectPage({ id }) {
           exit={{ opacity: 0, x: 24, transition: { duration: 0.15 } }}
           transition={{ duration: 0.4, ease: easeOut }}
         >
-          <JudgeTab project={p} />
+          <ReviewTab project={p} />
         </motion.section>
       )}
       </AnimatePresence>
-    </>
-  );
-}
-
-/** Agent judge tab: at a glance, the pipeline, the judges, then the evidence. */
-function JudgeTab({ project }) {
-  const [live, refresh] = usePipeline(project);
-  // Remount the panels when a review finishes so they show the new results.
-  const round = live.state?.finishedAt ?? "pending";
-  return (
-    <>
-      <ReviewHero project={project} live={live} />
-      {project.kind === "submitted" && <PipelineView project={project} live={live} onChanged={refresh} />}
-      <JudgesPanel key={`j-${round}`} project={project} />
-      <Dossier key={`d-${round}`} project={project} />
     </>
   );
 }
