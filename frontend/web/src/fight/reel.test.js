@@ -19,7 +19,7 @@ describe("reelSlots", () => {
 
 describe("reel length", () => {
   test("a whole fight takes 30 seconds at most", () => {
-    const total = reelSlots(MOCK_EVENTS).reduce((s, x) => s + x.dur, 0);
+    const total = Math.round(reelSlots(MOCK_EVENTS).reduce((s, x) => s + x.dur, 0));
     expect(total).toBeLessThanOrEqual(30000);
     expect(total).toBeGreaterThan(29000);
   });

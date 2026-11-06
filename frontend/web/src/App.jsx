@@ -11,6 +11,7 @@ import { validate } from "./lib/validate.js";
 import { useWallet } from "./lib/wallet.js";
 import { matchRoute, navigate, useCanonical, usePath } from "./lib/router.jsx";
 import { LandingPage, ProjectPage, ProjectsPage } from "./components/Projects.jsx";
+import { StoragePage } from "./components/StoragePage.jsx";
 import { JudgesPage } from "./components/JudgesPage.jsx";
 import { WalletPage } from "./components/WalletPage.jsx";
 import { OrganizerPage } from "./components/OrganizerPage.jsx";
@@ -38,6 +39,7 @@ const TITLES = {
   event: "Tournament",
   arena: "Arena",
   matchFight: "Fight",
+  storage: "0G Storage",
 };
 
 export default function App() {
@@ -196,6 +198,8 @@ export default function App() {
               <MatchFightPage id={route.id} matchIndex={route.match} wallet={wallet} />
             ) : route.name === "projects" ? (
               <ProjectsPage wallet={wallet} />
+            ) : route.name === "storage" ? (
+              <StoragePage />
             ) : route.name === "project" ? (
               <ProjectPage id={route.id} wallet={wallet} />
             ) : entering.loading ? (

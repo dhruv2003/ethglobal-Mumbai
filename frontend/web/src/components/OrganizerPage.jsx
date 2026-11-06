@@ -281,11 +281,11 @@ function MatchRow({ wallet, view, match, busy, run }) {
                 </span>
               )}
             </div>
-            {fight?.status === "running" && <p className="t-caption m0">5 rounds on 0G ({fight.note ?? "starting"}). This takes a few minutes.</p>}
+            {fight?.status === "running" && <p className="t-caption m0">A UI face-off and 6 rounds on 0G ({fight.note ?? "starting"}). This takes a few minutes.</p>}
             {fight?.status === "failed" && <p className="field__error">The last run failed: {fight.error}</p>}
             {fight?.status === "done" && (
               <p className="t-caption m0">
-                Judged by 3 judges over 5 rounds ({fight.calls} 0G calls). {autoPublish ? "The server is publishing the scores" : "Scores are filled in below"}{fight.needsReview ? "; both rounds tied, so the contract will send this to human review" : ""}.
+                Judged by 3 judges over 6 rounds ({fight.calls} 0G calls). {autoPublish ? "The server is publishing the scores" : "Scores are filled in below"}{fight.needsReview ? "; both rounds tied, so the contract will send this to human review" : ""}.
               </p>
             )}
             {fightError && <p className="field__error" role="alert">{fightError}</p>}

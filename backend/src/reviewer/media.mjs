@@ -52,7 +52,7 @@ export function sniffVideo(buf) {
   return null;
 }
 
-const head = (file, n = 400) => {
+export const head = (file, n = 400) => {
   const fd = fs.openSync(file, "r");
   try {
     const b = Buffer.alloc(n);

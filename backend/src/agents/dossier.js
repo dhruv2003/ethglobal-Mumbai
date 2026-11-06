@@ -13,7 +13,7 @@ const list = (items) => (items?.length ? items.map((x) => `- ${typeof x === "str
 /** Plain-text brief of one dossier. side: "A" | "B". */
 function dossierBrief(dossier, side, projectName) {
   const ev = (dossier.evidence ?? [])
-    .map((e) => `[${side}:${e.id}] (${e.status}) ${e.claim}. Observed: ${e.observation ?? "-"}${e.limitations ? ` Limits: ${e.limitations}` : ""}`)
+    .map((e) => `[${side}:${e.id}] (${e.status}${e.impact ? `, ${e.impact}` : ""}) ${e.claim}. Observed: ${e.observation ?? "-"}${e.limitations ? ` Limits: ${e.limitations}` : ""}`)
     .join("\n");
   const tests = dossier.tests
     ? `status=${dossier.tests.status}; claimed=${dossier.tests.claimed ?? "-"}; found=${JSON.stringify(dossier.tests.found ?? {})}; note=${dossier.tests.note ?? "-"}`

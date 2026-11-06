@@ -52,6 +52,7 @@ const NAV = [
 const ORGANIZER_NAV = [
   { to: "/judge", label: "Judges", on: (r) => r.name === "judges" },
   { to: "/organizer", label: "Organizer", on: (r) => r.name === "organizer" },
+  { to: "/storage", label: "0G Storage", on: (r) => r.name === "storage" },
 ];
 
 export function Header({ wallet, route }) {

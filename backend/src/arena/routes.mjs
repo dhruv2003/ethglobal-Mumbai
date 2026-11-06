@@ -24,6 +24,7 @@ import { hasCredentials } from "../judges/review.mjs";
 import { judgeCast, runFight } from "./fight.mjs";
 import { proposeBracket, verifyProposal } from "./matchmaking.mjs";
 import { syncFightInBackground, syncTournamentInBackground } from "../arkiv/records/sync.mjs";
+import { collectUiImages } from "./ui.mjs";
 
 const safe = (v) => String(v).replace(/[^a-zA-Z0-9_-]/g, "");
 const dir = (name) => {
@@ -184,7 +185,15 @@ export function startFight(t, m, { a: slotA, b: slotB, revealAt, rerun } = {}) {
   const live = { startedAt: new Date().toISOString(), note: "Starting", events: [], cast, revealAt: Number(revealAt) || 0 };
   running.set(key, live);
 
-  runFight({ corners, judges: panel, onProgress: (note, fightEvents) => Object.assign(live, { note, events: fightEvents }) })
+  (async () => {
+    // The UI face-off needs each project's screenshots and demo frames before the fight starts.
+    live.note = "Collecting screenshots and demo frames";
+    for (const side of ["A", "B"]) {
+      const sub = corners[side].submission;
+      corners[side].ui = sub ? await collectUiImages(sub, side).catch(() => ({ images: [], sources: null })) : { images: [], sources: null };
+    }
+    return runFight({ corners, judges: panel, onProgress: (note, fightEvents) => Object.assign(live, { note, events: fightEvents }) });
+  })()
     .then((result) => {
       writeJson(fightFile(t, m), { tournamentId: String(t), match: Number(m), a: a.index, b: b.index, cast, revealAt: Number(revealAt) || 0, ranAt: new Date().toISOString(), id: crypto.randomUUID(), ...result });
     })
