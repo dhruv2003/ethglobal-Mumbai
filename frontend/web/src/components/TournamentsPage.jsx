@@ -2,7 +2,7 @@
  * /tournaments: every event. /tournaments/:id: one event's bracket and tournament betting.
  * Everything here is read from the chain and the registered bracket. PRD UI-01, UI-02.
  */
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion } from "motion/react";
 import confetti from "canvas-confetti";
 import { Card, Chip, StatusPill } from "@ds/ui.jsx";
@@ -11,7 +11,9 @@ import { loadTournament, loadTournaments } from "../lib/arena.js";
 import { findMockTournament } from "../lib/demoArena.js";
 import { MATCH_LABEL, PHASE_LABEL } from "../lib/labels.js";
 import { POOL_LABEL, tournamentMarket } from "../lib/pools.js";
-import { Link } from "../lib/router.jsx";
+import { Link, navigate } from "../lib/router.jsx";
+import { practicePools } from "../lib/practice.js";
+import { BetModal } from "./BetModal.jsx";
 import { isMatchOpen, openPools } from "../lib/tournamentView.js";
 import { BetPanel, SamplePool } from "./BetPanel.jsx";
 import { useCountdown } from "./ChainBits.jsx";
@@ -30,9 +32,9 @@ const ORDER = { live: 0, upcoming: 1, completed: 2, canceled: 3 };
 const when = (iso) => new Date(iso).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
 
 function TournamentCard({ t }) {
-  const open = openPools(t).length > 0;
+  const open = openPools(t).length > 0 || (t.demo && (t.phase === "live" || t.phase === "upcoming"));
   const label = open ? POOL_LABEL.OPEN : PHASE_LABEL[t.phase];
-  const cta = t.demo ? "View demo" : open ? "Bet now" : t.phase === "live" ? "Watch" : t.phase === "upcoming" ? "View bracket" : "View results";
+  const cta = t.demo && !open ? "View results" : open ? "Bet now" : t.phase === "live" ? "Watch" : t.phase === "upcoming" ? "View bracket" : "View results";
   return (
     <motion.div variants={fadeUp} layout>
       <Tilt className="tcard-tilt" sheen={false} max={4}>
@@ -59,37 +61,58 @@ function TournamentCard({ t }) {
   );
 }
 
-function OpenPool({ pool }) {
+function OpenPool({ pool, onBet }) {
   const countdown = useCountdown(pool.cutoffMs);
+  const content = (
+    <>
+      {pool.fighters.length > 0 && (
+        <span className="open-pool__fighters" aria-hidden="true">
+          {pool.fighters.map((p) => (
+            <PixelFighter key={p.id} project={p} scale={2} label="" />
+          ))}
+        </span>
+      )}
+      <span className="open-pool__text">
+        <span className="t-body-strong">{pool.title}</span>
+        <span className="t-caption">{pool.detail}</span>
+      </span>
+      <span className="t-caption t-num open-pool__clock">
+        {pool.live ? (
+          <span className="open-pool__live">
+            <span className="live-dot" aria-hidden="true" /> Live
+          </span>
+        ) : null}
+        Closes in {countdown?.text}
+      </span>
+      <span className="btn btn--secondary btn--sm">Bet</span>
+    </>
+  );
   return (
     <motion.li variants={fadeUp} layout>
-      <Link to={pool.to} className="open-pool">
-        {pool.fighters.length > 0 && (
-          <span className="open-pool__fighters" aria-hidden="true">
-            {pool.fighters.map((p) => (
-              <PixelFighter key={p.id} project={p} scale={2} label="" />
-            ))}
-          </span>
-        )}
-        <span className="open-pool__text">
-          <span className="t-body-strong">{pool.title}</span>
-          <span className="t-caption">{pool.detail}</span>
-        </span>
-        <span className="t-caption t-num open-pool__clock">Closes in {countdown?.text}</span>
-        <span className="btn btn--secondary btn--sm">Bet</span>
-      </Link>
+      {pool.selections ? (
+        <button type="button" className="open-pool" onClick={() => onBet(pool)}>
+          {content}
+        </button>
+      ) : (
+        <Link to={pool.to} className="open-pool">
+          {content}
+        </Link>
+      )}
     </motion.li>
   );
 }
 
 /** Everything you can bet on this second: real pools only, gone when their cutoff passes. */
-function OpenForBetting({ tournaments, loaded, failed }) {
+function OpenForBetting({ tournaments, loaded, failed, wallet }) {
+  const [betting, setBetting] = useState(null);
+  const close = useCallback(() => setBetting(null), []);
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(t);
   }, []);
-  const pools = tournaments.flatMap((t) => openPools(t, now));
+  // Real chain pools first; the demo events take practice bets so there is always a live fight.
+  const pools = useMemo(() => [...tournaments.flatMap((t) => openPools(t, now)), ...practicePools().slice(0, 6)], [tournaments, now]);
   return (
     <section className="stack" aria-label="Open for betting">
       <div className="section-head">
@@ -99,7 +122,7 @@ function OpenForBetting({ tournaments, loaded, failed }) {
       {pools.length > 0 ? (
         <motion.ol className="open-pools" variants={stagger(0.05)} initial="hidden" animate="show">
           {pools.map((pool) => (
-            <OpenPool key={pool.key} pool={pool} />
+            <OpenPool key={pool.key} pool={pool} onBet={setBetting} />
           ))}
         </motion.ol>
       ) : (
@@ -112,11 +135,12 @@ function OpenForBetting({ tournaments, loaded, failed }) {
           )}
         </Card>
       )}
+      <BetModal pool={betting} wallet={wallet} onClose={close} onPlaced={() => navigate(`${betting.to}?watch=1`)} />
     </section>
   );
 }
 
-export function TournamentsPage() {
+export function TournamentsPage({ wallet }) {
   const [filter, setFilter] = useState("all");
   const { data: all, error } = usePoll(loadTournaments, [], 10000);
   const list = useMemo(() => [...(all ?? [])].sort((a, b) => ORDER[a.phase] - ORDER[b.phase]), [all]);
@@ -140,7 +164,7 @@ export function TournamentsPage() {
           Open the arena map
         </Link>
       </header>
-      <OpenForBetting tournaments={real} loaded={chainList != null} failed={!!error && chainList == null} />
+      <OpenForBetting wallet={wallet} tournaments={real} loaded={chainList != null} failed={!!error && chainList == null} />
       <h2 className="t-heading m0">All tournaments</h2>
       <div className="trade__presets" role="group" aria-label="Filter by status">
         {FILTERS.map(([id, word]) => (

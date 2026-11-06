@@ -1,5 +1,5 @@
 /* One shape for tournaments, whether they're on chain or sample data, so pages don't care which. */
-import { MATCH_STATUS, TOURNAMENT_STATUS, WIN_SOURCE, bracketRounds, feeders, matchRound, roundName } from "./pools.js";
+import { matchMarket, MATCH_STATUS, TOURNAMENT_STATUS, WIN_SOURCE, bracketRounds, feeders, matchRound, roundName } from "./pools.js";
 
 /** A bracket slot: the registered project when the organizer saved the bracket, else a plain numbered slot. */
 export const chainProject = (id, index, meta) => {
@@ -82,7 +82,24 @@ export function openPools(view, now = Date.now()) {
     if (!isMatchOpen(view, match, now)) continue;
     const a = view.projects[match.a];
     const b = view.projects[match.b];
-    pools.push({ key: `${view.id}-${match.index}`, title: `${a.name} vs ${b.name}`, detail: `${view.title} · Match ${match.index + 1}`, to: `/fights/${view.id}/${match.index}`, cutoffMs: match.cutoffMs, fighters: [a, b] });
+    pools.push({ key: `${view.id}-${match.index}`, title: `${a.name} vs ${b.name}`, detail: `${view.title} · Match ${match.index + 1}`, to: `/fights/${view.id}/${match.index}`, cutoffMs: match.cutoffMs, fighters: [a, b], ...chainBetPool(view, match) });
   }
   return pools;
 }
+
+/** What the bet popup needs to bet on one chain match. */
+export const chainBetPool = (view, match) => ({
+  key: `${view.id}-${match.index}`,
+  practice: false,
+  tournamentId: view.id,
+  matchIndex: match.index,
+  market: matchMarket(view.id, match.index),
+  title: `${view.projects[match.a].name} vs ${view.projects[match.b].name}`,
+  live: match.status === "live",
+  cutoffMs: match.cutoffMs,
+  to: `/fights/${view.id}/${match.index}`,
+  selections: [
+    { id: match.a, project: view.projects[match.a] },
+    { id: match.b, project: view.projects[match.b] },
+  ],
+});

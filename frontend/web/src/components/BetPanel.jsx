@@ -56,11 +56,11 @@ function Header({ title, state }) {
   );
 }
 
-export function BetPanel({ wallet, tournamentId, market, selections, title }) {
-  const info = useToken();
+/** Live chain reads for one pool and this wallet: stakes, limits, balance, allowance. */
+export function usePoolData(wallet, tournamentId, market, selections) {
   const address = wallet.address;
   const key = `${market}:${selections.map((s) => s.id).join(",")}:${address}`;
-  const { data, error, refresh } = usePoll(
+  return usePoll(
     async () => {
       const [pool, stateIndex, view, limits] = await Promise.all([
         read(pools, "getPool", [market]),
@@ -86,6 +86,12 @@ export function BetPanel({ wallet, tournamentId, market, selections, title }) {
     [key],
     8000,
   );
+}
+
+export function BetPanel({ wallet, tournamentId, market, selections, title }) {
+  const info = useToken();
+  const address = wallet.address;
+  const { data, error, refresh } = usePoolData(wallet, tournamentId, market, selections);
   const countdown = useCountdown(data?.state === "OPEN" ? Number(data.view.cutoff) * 1000 : null);
   const { tx, run, reset, busy } = useTx(wallet, refresh);
   const [picked, setPicked] = useState(null);

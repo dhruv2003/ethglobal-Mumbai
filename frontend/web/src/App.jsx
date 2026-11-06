@@ -165,7 +165,7 @@ export default function App() {
             ) : route.name === "organizer" ? (
               <OrganizerPage wallet={wallet} />
             ) : route.name === "tournaments" ? (
-              <TournamentsPage />
+              <TournamentsPage wallet={wallet} />
             ) : route.name === "tournament" ? (
               <TournamentPage id={route.id} wallet={wallet} />
             ) : route.name === "arena" ? (
