@@ -6,6 +6,7 @@ import "./app.css";
 import "./polish.css";
 import "./web3.css";
 import "./submit.css";
+import "./project.css";
 import App from "./App.jsx";
 
 ReactDOM.createRoot(document.getElementById("root")).render(

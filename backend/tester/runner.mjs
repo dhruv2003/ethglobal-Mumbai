@@ -25,6 +25,23 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+// Progress lines go to the console and, during a pipeline run, to the review page.
+let listener = null;
+export function onRunnerLog(fn) {
+  listener = fn;
+  return () => {
+    if (listener === fn) listener = null;
+  };
+}
+function say(msg) {
+  console.log(msg);
+  try {
+    listener?.(msg);
+  } catch {
+    /* a progress listener never breaks a run */
+  }
+}
+
 const here = path.dirname(fileURLToPath(import.meta.url));
 const HUB = "wss://cdp-hub.preprod.mozark.ai/playwright";
 const PROJECT_ID = process.env.MOZARK_PROJECT_ID ?? "b0ceec50-63c5-4a57-902b-c21046ee7cf2";
@@ -90,10 +107,24 @@ async function startRecording(ctx, page, dir, maxWidth) {
   fs.mkdirSync(framesDir, { recursive: true });
   const cdp = await ctx.newCDPSession(page);
   const frames = [];
+  // The newest frame, for watching the run live (GET /api/projects/:id/live/stream/:device).
+  // Written to a temp name and renamed, so a reader never gets half a JPEG.
+  const liveFile = path.join(dir, "live.jpg");
+  let lastLive = 0;
   cdp.on("Page.screencastFrame", async (f) => {
     const file = path.join(framesDir, `f${String(frames.length).padStart(5, "0")}.jpg`);
-    fs.writeFileSync(file, Buffer.from(f.data, "base64"));
+    const jpg = Buffer.from(f.data, "base64");
+    fs.writeFileSync(file, jpg);
     frames.push({ file, ts: f.metadata.timestamp });
+    if (Date.now() - lastLive > 250) {
+      lastLive = Date.now();
+      try {
+        fs.writeFileSync(`${liveFile}.tmp`, jpg);
+        fs.renameSync(`${liveFile}.tmp`, liveFile);
+      } catch {
+        /* watching is best effort */
+      }
+    }
     cdp.send("Page.screencastFrameAck", { sessionId: f.sessionId }).catch(() => {});
   });
   await cdp.send("Page.startScreencast", { format: "jpeg", quality: 70, maxWidth, maxHeight: 2000, everyNthFrame: 1 });
@@ -103,6 +134,7 @@ async function startRecording(ctx, page, dir, maxWidth) {
     now: () => Math.round(((Date.now() - startedAt) / 1000) * 10) / 10,
     async stop(outFile) {
       await cdp.send("Page.stopScreencast").catch(() => {});
+      fs.rmSync(liveFile, { force: true }); // the run is over: viewers switch to the recording
       await sleep(300);
       if (frames.length < 2) return { seconds: 0, frames: frames.length };
       const lines = [];
@@ -230,7 +262,7 @@ async function runStep(page, device, dir, rec, step) {
   const file = `smoke-${device}-${step.id}.jpg`;
   await page.screenshot({ path: path.join(dir, file), type: "jpeg", quality: 80 }).catch(() => {});
   out.screenshot = `${device}/${file}`;
-  console.log(`[${device}] ${step.id} ${out.status.padEnd(7)} ${step.title}`);
+  say(`[${device}] ${step.id} ${out.status.padEnd(7)} ${step.title}`);
   return out;
 }
 
@@ -249,9 +281,10 @@ async function runDevice(device) {
   let browser;
   let rec;
   try {
-    console.log(`[${device}] connecting to Mozark…`);
+    say(`[${device}] connecting to Mozark…`);
     browser = await connect(device);
     result.browserVersion = browser.version();
+    say(`[${device}] cloud browser ready (Chrome ${String(result.browserVersion).split(".")[0]}, ${spec.context.viewport.width}×${spec.context.viewport.height}); recording`);
     const ctx = await browser.newContext(spec.context);
     const page = await ctx.newPage();
     page.on("console", (m) => m.type() === "error" && consoleErrors.length < 20 && consoleErrors.push(m.text().slice(0, 240)));
@@ -267,7 +300,7 @@ async function runDevice(device) {
     rec = await startRecording(ctx, page, dir, spec.shotWidth);
 
     // Health: first load of the home page
-    console.log(`[${device}] loading ${target}`);
+    say(`[${device}] loading ${target}`);
     const t0 = Date.now();
     const res = await page.goto(target, { waitUntil: "domcontentloaded", timeout: 60000 });
     await page.waitForLoadState("load", { timeout: 30000 }).catch(() => {});
@@ -300,7 +333,7 @@ async function runDevice(device) {
   result.failedRequests = failedRequests;
   result.cancelledRequests = cancelledRequests;
   result.outcome = outcomeOf(result);
-  console.log(`[${device}] ${result.outcome.status}: ${result.outcome.reasons.join("; ") || "no issues found"}`);
+  say(`[${device}] ${result.outcome.status}: ${result.outcome.reasons.join("; ") || "no issues found"}`);
   return result;
 }
 
@@ -351,18 +384,18 @@ async function runLiveTestNow({ project: id, target: url, flows: f, outDir: dir,
   flowsLabel = flowsSource;
   fs.mkdirSync(outDir, { recursive: true });
 
-  const runs = [];
-  for (const d of devices) {
-    if (!DEVICES[d]) continue;
+  // Laptop and phone run at the same time, each in its own cloud browser (about half the wall time).
+  const one = async (d) => {
     let run = await runDevice(d);
     if (run.infrastructure) {
-      console.log(`[${d}] cloud browser problem; retrying once in a fresh session (PRD TST-08)`);
+      say(`[${d}] cloud browser problem; retrying once in a fresh session (PRD TST-08)`);
       const retry = await runDevice(d);
       retry.retriedAfter = run.error;
       run = retry;
     }
-    runs.push(run);
-  }
+    return run;
+  };
+  const runs = await Promise.all(devices.filter((d) => DEVICES[d]).map(one));
   // Keep other devices' results when only some devices were run.
   const previous = (() => {
     try {
@@ -394,7 +427,9 @@ async function runLiveTestNow({ project: id, target: url, flows: f, outDir: dir,
 export async function discoverSite({ target: url, token: t, maxPages = 6 }) {
   token = t;
   const base = new URL(url);
+  say("[explore] connecting to Mozark…");
   const browser = await connect("laptop");
+  say("[explore] connected; reading the home page");
   try {
     const ctx = await browser.newContext(DEVICES.laptop.context);
     const page = await ctx.newPage();
@@ -430,6 +465,7 @@ export async function discoverSite({ target: url, token: t, maxPages = 6 }) {
       .filter((u) => u && u.origin === base.origin && !seen.has(u.pathname) && !/(logout|sign-?out|api\/|\.(pdf|zip|apk)$)/i.test(u.pathname))
       .filter((u) => !seen.has(u.pathname) && seen.add(u.pathname));
     for (const u of next.slice(0, maxPages - 1)) {
+      say(`[explore] reading ${u.pathname}`);
       try {
         const r = await page.goto(u.origin + u.pathname, { waitUntil: "domcontentloaded", timeout: 45000 });
         await page.waitForLoadState("networkidle", { timeout: 8000 }).catch(() => {});

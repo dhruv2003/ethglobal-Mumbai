@@ -13,7 +13,10 @@ import { Spinner, toast } from "./Feedback.jsx";
 import { api } from "../lib/api.js";
 import { navigate } from "../lib/router.jsx";
 import { removeLocalSubmission } from "../lib/storage.js";
+import { rerunReview } from "../lib/review.js";
 import { JudgesPanel } from "./JudgesPanel.jsx";
+import { PipelineView, usePipeline } from "./PipelineView.jsx";
+import { ReviewHero } from "./ReviewHero.jsx";
 import { fighterTraitItems, PixelFighter } from "./PixelFighter.jsx";
 import { FloatSticker, Magnetic, Marquee, Reveal, SplitWords, Squiggle, Tilt, bouncy, easeOut, fadeUp, stagger } from "./fx.jsx";
 
@@ -48,7 +51,8 @@ function ReviewBadge({ review }) {
       </span>
     );
   if (review.status === "stopped") return <StatusPill tone="danger">✕ Review stopped</StatusPill>;
-  if (review.status === "reviewed") return <StatusPill tone="success">✓ Reviewed</StatusPill>;
+  if (review.status === "reviewed")
+    return review.failed ? <StatusPill tone="neutral">✓ Reviewed · {review.failed} step{review.failed === 1 ? "" : "s"} failed</StatusPill> : <StatusPill tone="success">✓ Reviewed</StatusPill>;
   return null;
 }
 
@@ -473,6 +477,34 @@ export function ProjectsPage() {
 /* --------------------------------------------------------- project page */
 
 /** Delete a submitted project (organizer). Local-only drafts just leave this browser. */
+/** Run the whole review again (organizer). Opens the Agent judge side to watch it. */
+function RerunReview({ project, onStarted }) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const running = project.review?.status === "reviewing" || project.review?.status === "queued";
+  async function go() {
+    setBusy(true);
+    setError("");
+    try {
+      const r = await rerunReview(project.id);
+      toast(r.review?.position ? `${project.name} is in the review queue (#${r.review.position}).` : `Reviewing ${project.name} again.`);
+      onStarted?.();
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <>
+      <button type="button" className="btn btn--oracle btn--sm" onClick={go} disabled={busy || running} title="Runs every step again: code review, demo, live test, fact-check, judges">
+        {busy ? "Starting…" : running ? "Review running…" : "↻ Run the review again"}
+      </button>
+      {error && <span className="field__error">✕ {error}</span>}
+    </>
+  );
+}
+
 function DeleteProject({ project }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -517,10 +549,14 @@ function useView() {
 }
 
 /** Segmented toggle: real tabs (arrow keys move between them), sliding thumb. */
-function ViewToggle({ view, onChange, hasDossier }) {
+function ViewToggle({ view, onChange, hasDossier, review }) {
   const tabs = [
     { id: "team", label: "Submission", hint: "From the team" },
-    { id: "judge", label: "Review", hint: hasDossier ? "From the AI judges" : "Pending" },
+    {
+      id: "judge",
+      label: "Review",
+      hint: review?.status === "reviewing" ? "Reviewing now" : review?.status === "queued" ? "In the queue" : hasDossier ? "From the AI judges" : "Pending",
+    },
   ];
   const onKey = (e) => {
     if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
@@ -614,7 +650,12 @@ export function ProjectPage({ id }) {
           </h1>
           <p className="t-prompt m0">{p.pitch}</p>
           <p className="t-caption m0">by {p.teamName}</p>
-          {p.kind === "submitted" && <DeleteProject project={p} />}
+          {p.kind === "submitted" && (
+            <div className="project-actions">
+              <RerunReview project={p} onStarted={() => setView("judge")} />
+              <DeleteProject project={p} />
+            </div>
+          )}
           <motion.div className="gear-row" aria-label="Fighter gear" initial="hidden" animate="show" variants={stagger(0.06, 0.45)}>
             {fighterTraitItems(p, trackName).map((t) => (
               <motion.span key={t.id} className="chip chip--tag chip--gear" title={t.why} variants={{ hidden: { opacity: 0, scale: 0.6, y: 8 }, show: { opacity: 1, scale: 1, y: 0, transition: bouncy } }}>
@@ -625,7 +666,7 @@ export function ProjectPage({ id }) {
         </div>
       </header>
 
-      <ViewToggle view={view} onChange={setView} hasDossier={Boolean(p.dossier) || p.review?.status === "reviewed"} />
+      <ViewToggle view={view} onChange={setView} hasDossier={Boolean(p.dossier) || p.review?.status === "reviewed"} review={p.review} />
 
       <AnimatePresence mode="wait" initial={false}>
       {view === "team" ? (
@@ -640,65 +681,22 @@ export function ProjectPage({ id }) {
           exit={{ opacity: 0, x: -24, transition: { duration: 0.15 } }}
           transition={{ duration: 0.4, ease: easeOut }}
         >
+          <div className="team-main">
           <DemoVideo project={p} />
 
-          <section className="card stack rise" style={{ "--i": 3 }} aria-labelledby="about-h">
+          <section className="card stack about rise" style={{ "--i": 3 }} aria-labelledby="about-h">
             <h3 id="about-h" className="t-heading m0">About</h3>
-            {p.description.split(/\n{2,}/).map((para, i) => (
-              <p key={i} className="t-body m0">
-                {para}
-              </p>
-            ))}
+            <div className="about__body">
+              {p.description.split(/\n{2,}/).map((para, i) => (
+                <p key={i} className={`m0 ${i === 0 ? "about__lead" : "t-body"}`}>
+                  {para}
+                </p>
+              ))}
+            </div>
           </section>
+          </div>
 
-          <section className="card rise" style={{ "--i": 4 }} aria-labelledby="facts-h">
-            <h3 id="facts-h" className="visually-hidden">Details</h3>
-            <dl className="facts facts--stack">
-              <div>
-                <dt className="t-label">Team</dt>
-                <dd className="t-body">{p.teamName}</dd>
-              </div>
-              <div>
-                <dt className="t-label">Tracks</dt>
-                <dd>
-                  <Tracks ids={p.tracks} />
-                </dd>
-              </div>
-              <div>
-                <dt className="t-label">Code</dt>
-                <dd>
-                  <a className="t-mono addr" href={p.repoUrl} target="_blank" rel="noreferrer">
-                    {p.repoUrl.replace(/^https:\/\/(www\.)?github\.com\//, "")}
-                  </a>
-                  {p.pinnedCommit && <div className="t-mono-caption">pinned at {p.pinnedCommit.slice(0, 7)}</div>}
-                </dd>
-              </div>
-              {p.ownerWallet && (
-                <div>
-                  <dt className="t-label">Owner wallet</dt>
-                  <dd className="t-mono" title={p.ownerWallet}>
-                    {shortAddress(p.ownerWallet)}
-                  </dd>
-                </div>
-              )}
-              {p.submittedAt && (
-                <div>
-                  <dt className="t-label">Submitted</dt>
-                  <dd className="t-body">{new Date(p.submittedAt).toLocaleString()}</dd>
-                </div>
-              )}
-              {p.showcaseUrl && (
-                <div>
-                  <dt className="t-label">Showcase</dt>
-                  <dd>
-                    <a className="t-body" href={p.showcaseUrl} target="_blank" rel="noreferrer">
-                      {p.event ?? "ETHGlobal"} ↗
-                    </a>
-                  </dd>
-                </div>
-              )}
-            </dl>
-          </section>
+          <EntryCard project={p} />
         </motion.section>
       ) : (
         <motion.section
@@ -712,11 +710,104 @@ export function ProjectPage({ id }) {
           exit={{ opacity: 0, x: 24, transition: { duration: 0.15 } }}
           transition={{ duration: 0.4, ease: easeOut }}
         >
-          <JudgesPanel project={p} />
-          <Dossier project={p} />
+          <JudgeTab project={p} />
         </motion.section>
       )}
       </AnimatePresence>
     </>
+  );
+}
+
+/** Agent judge tab: at a glance, the pipeline, the judges, then the evidence. */
+function JudgeTab({ project }) {
+  const [live, refresh] = usePipeline(project);
+  // Remount the panels when a review finishes so they show the new results.
+  const round = live.state?.finishedAt ?? "pending";
+  return (
+    <>
+      <ReviewHero project={project} live={live} />
+      {project.kind === "submitted" && <PipelineView project={project} live={live} onChanged={refresh} />}
+      <JudgesPanel key={`j-${round}`} project={project} />
+      <Dossier key={`d-${round}`} project={project} />
+    </>
+  );
+}
+
+const ago = (iso) => {
+  const s = Math.max(0, (Date.now() - Date.parse(iso)) / 1000);
+  if (s < 90) return "just now";
+  if (s < 3600) return `${Math.round(s / 60)} min ago`;
+  if (s < 86400) return `${Math.round(s / 3600)} h ago`;
+  return `${Math.round(s / 86400)} days ago`;
+};
+
+/** Team submission tab, side column: everything the team entered besides the story. */
+function EntryCard({ project: p }) {
+  return (
+    <aside className="entry rise" style={{ "--i": 4 }} aria-labelledby="entry-h">
+      <div className="entry__band">
+        <span id="entry-h">Entry</span>
+        <span className="t-mono-caption">{p.submittedAt ? ago(p.submittedAt) : ""}</span>
+      </div>
+      <dl className="entry__list">
+        <div>
+          <dt>Team</dt>
+          <dd className="t-body-strong">{p.teamName || "—"}</dd>
+        </div>
+        <div>
+          <dt>Tracks</dt>
+          <dd>
+            <Tracks ids={p.tracks} />
+          </dd>
+        </div>
+        <div>
+          <dt>Code</dt>
+          <dd>
+            <a className="entry__link" href={p.repoUrl} target="_blank" rel="noopener noreferrer">
+              <span aria-hidden="true">{"</>"}</span>
+              <span className="t-mono">{p.repoUrl.replace(/^https:\/\/(www\.)?github\.com\//, "")}</span>
+              <span aria-hidden="true">↗</span>
+            </a>
+            {p.pinnedCommit && <div className="t-mono-caption">pinned at {p.pinnedCommit.slice(0, 7)}</div>}
+          </dd>
+        </div>
+        {/^https:\/\//.test(p.liveUrl ?? "") && (
+          <div>
+            <dt>Live app</dt>
+            <dd>
+              <a className="entry__link entry__link--live" href={p.liveUrl} target="_blank" rel="noopener noreferrer">
+                <span aria-hidden="true">●</span>
+                <span>{p.liveUrl.replace(/^https:\/\//, "")}</span>
+                <span aria-hidden="true">↗</span>
+              </a>
+            </dd>
+          </div>
+        )}
+        {p.ownerWallet && (
+          <div>
+            <dt>Owner wallet</dt>
+            <dd className="t-mono" title={p.ownerWallet}>
+              {shortAddress(p.ownerWallet)}
+            </dd>
+          </div>
+        )}
+        {p.submittedAt && (
+          <div>
+            <dt>Submitted</dt>
+            <dd className="t-body">{new Date(p.submittedAt).toLocaleString([], { dateStyle: "medium", timeStyle: "short" })}</dd>
+          </div>
+        )}
+        {p.showcaseUrl && (
+          <div>
+            <dt>Showcase</dt>
+            <dd>
+              <a className="t-body" href={p.showcaseUrl} target="_blank" rel="noopener noreferrer">
+                {p.event ?? "ETHGlobal"} ↗
+              </a>
+            </dd>
+          </div>
+        )}
+      </dl>
+    </aside>
   );
 }

@@ -76,9 +76,10 @@ function userPrompt(sub, pack, facts) {
   ].join("\n");
 }
 
-export async function writeDossier({ submission, dir, pack, facts, commit }) {
+export async function writeDossier({ submission, dir, pack, facts, commit, onStage }) {
   const started = Date.now();
   const res = await structuredCall(DossierSchema, "evidence_dossier", SYSTEM, userPrompt(submission, pack, facts));
+  onStage?.("verify");
   if (res.refusal) throw new Error(`The reviewer declined: ${res.refusal}`);
   const d = res.parsed;
   if (!d) throw new Error(`The reviewer returned no usable dossier (${res.stop}).`);

@@ -46,8 +46,10 @@ async function transcribeLocal(video, workDir) {
     // Mono 16 kHz speech-quality audio keeps a 10-minute demo well under the 25 MB upload limit.
     await run("ffmpeg", ["-v", "error", "-y", ...lockedInput(video.demuxer, video.file), "-vn", "-ac", "1", "-ar", "16000", "-b:a", "48k", audio], { timeout: 180000 });
     if (fs.statSync(audio).size > 24 * 1024 * 1024) throw new Error("The demo is too long to transcribe.");
-    const { default: OpenAI } = await import("openai");
-    const t = await new OpenAI().audio.transcriptions.create({ file: fs.createReadStream(audio), model: TRANSCRIBE_MODEL, response_format: "text" });
+    const { default: OpenAI, toFile } = await import("openai");
+    // From memory, not a stream: a stream can't be re-read, so the SDK's retries would have nothing to resend.
+    const file = await toFile(fs.readFileSync(audio), "demo-audio.mp3", { type: "audio/mpeg" });
+    const t = await new OpenAI({ maxRetries: 5, timeout: 180000 }).audio.transcriptions.create({ file, model: TRANSCRIBE_MODEL, response_format: "text" });
     const text = typeof t === "string" ? t : t?.text ?? "";
     if (!text.trim()) throw new Error("The demo has no speech to transcribe.");
     return { source: `transcribed with ${TRANSCRIBE_MODEL}`, text: text.trim(), seconds: video.seconds ?? null };

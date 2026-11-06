@@ -167,3 +167,6 @@
 .gallery__thumb[aria-pressed="true"] { border-color: var(--ink); box-shadow: var(--shadow-pop-sm); }
 .gallery__thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .gallery__thumb:focus-visible { outline: 3px solid var(--oracle); outline-offset: 2px; }
+
+/* The description can be long (5,000 characters): grow with the text, then scroll. */
+.round .input--area { field-sizing: content; min-height: 160px; max-height: 480px; }
