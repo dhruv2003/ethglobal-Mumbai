@@ -193,7 +193,7 @@ export default function App() {
             {route.name === "home" ? (
               <LandingPage />
             ) : route.name === "judges" ? (
-              <OrganizerGate wallet={wallet}><JudgesPage /></OrganizerGate>
+              <JudgesPage />
             ) : route.name === "wallet" ? (
               <WalletPage wallet={wallet} />
             ) : route.name === "transactions" ? (

@@ -1,7 +1,7 @@
 /*
  * Testing sub-tab: the project's real app, driven on cloud browsers.
  *
- *  - A stage with a laptop and a phone, each playing its recording. A strip
+ *  - A stage with the laptop and phone cloud browsers, each playing its recording. A strip
  *    under each device marks every test step at the moment it ran; click one
  *    to jump there. The step on screen is labelled on the device.
  *  - The steps as a matrix (step × device) per phase, each with its actions,
@@ -12,7 +12,7 @@
 import { useEffect, useRef, useState } from "react";
 import { motion } from "motion/react";
 import { api, apiUrl } from "../../lib/api.js";
-import { Icon } from "../Icon.jsx";
+import { Icon, OsLogo, osOf } from "../Icon.jsx";
 import { Device, LiveStage } from "./TestDevices.jsx";
 import { Steps } from "./TestSteps.jsx";
 import { ST, allSteps } from "./testRun.js";
@@ -90,7 +90,7 @@ function Artifacts({ runs, onSeek }) {
         <div className="tart__dev" role="group" aria-label="Device">
           {runs.map((x) => (
             <button key={x.device} type="button" aria-pressed={x.device === r.device} onClick={() => setDev(x.device)} aria-label={x.label}>
-              <Icon name={x.device} size={15} />
+              <OsLogo os={osOf(x)} size={15} />
             </button>
           ))}
         </div>
@@ -139,7 +139,7 @@ function Artifacts({ runs, onSeek }) {
         </div>
       )}
       <p className="tart__meta m0 t-num">
-        Chrome {r.browserVersion?.split(".")[0]} · {r.viewport?.width}×{r.viewport?.height}
+        {r.model ? `${r.model} · ` : ""}{r.browser ?? `Chrome ${r.browserVersion?.split(".")[0]}`} · {r.viewport?.width}×{r.viewport?.height}
         {r.durationMs ? ` · ${Math.round(r.durationMs / 1000)}s run` : ""}
       </p>
     </aside>
@@ -154,7 +154,7 @@ export function TestingView({ project, live }) {
   const lt = useLiveTest(project, pending);
   const seekRef = useRef({});
   const [now, setNow] = useState({});
-  const [view, setView] = useState("both");
+  const [view, setView] = useState("all");
 
   // A re-run in progress shows the live browsers, not the previous run's recordings.
   if (liveStep?.status === "running") return <LiveStage project={project} liveStep={liveStep} />;
@@ -183,8 +183,8 @@ export function TestingView({ project, live }) {
   const seek = (device, at) => {
     const go = () => seekRef.current[device]?.(at);
     // The other device isn't mounted yet: show both, then seek once it has rendered.
-    if (view !== "both" && view !== device) {
-      setView("both");
+    if (view !== "all" && view !== device) {
+      setView("all");
       requestAnimationFrame(() => requestAnimationFrame(go));
     } else go();
     document.querySelector(`.tvdev--${device}`)?.scrollIntoView({ block: "nearest", behavior: "smooth" });
@@ -220,21 +220,21 @@ export function TestingView({ project, live }) {
           </a>
           <div className="tview" role="group" aria-label="Devices shown">
             {[
-              ["both", "Both"],
+              ["all", "All"],
               ...runs.map((r) => [r.device, r.label]),
             ].map(([id, label]) => (
               <button key={id} type="button" aria-pressed={view === id} onClick={() => setView(id)}>
-                {label}
+                {id !== "all" && <OsLogo os={osOf(runs.find((r) => r.device === id))} size={13} />} {label}
               </button>
             ))}
           </div>
         </div>
         <div className={`tstage__devices tstage__devices--${view}`}>
           {runs.map((r) =>
-            view === "both" || view === r.device ? <Device key={r.device} run={r} focus={view === r.device} onTime={onTime} seekRef={seekRef} /> : null,
+            view === "all" || view === r.device ? <Device key={r.device} run={r} focus={view === r.device} onTime={onTime} seekRef={seekRef} /> : null,
           )}
         </div>
-        <p className="tstage__note m0">Tap a marker to jump to that step · never signs in, pays or connects a wallet</p>
+        <p className="tstage__note m0">Tap a marker to jump to that step</p>
       </section>
 
       <div className="tv__grid">

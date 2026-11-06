@@ -8,16 +8,56 @@ import { usePoll } from "../lib/chain.js";
 import { peek } from "../lib/cache.js";
 import { Link, navigate } from "../lib/router.jsx";
 import { shortAddress } from "../lib/wallet.js";
-import { api } from "../lib/api.js";
+import { api, peekApi } from "../lib/api.js";
 import { rerunReview } from "../lib/review.js";
 import { ReviewTab } from "./review/ReviewTab.jsx";
 import { DemoVideo } from "./DemoVideo.jsx";
 import { Ring } from "./Arena.jsx";
 import { toast } from "./Feedback.jsx";
-import { fighterTraitItems, PixelFighter } from "./PixelFighter.jsx";
-import { SplitWords, bouncy, stagger } from "./fx.jsx";
+import { PixelFighter } from "./PixelFighter.jsx";
+import { SplitWords } from "./fx.jsx";
 import { FighterEns } from "./EnsName.jsx";
 import { EventBadge, Tracks } from "./Projects.jsx";
+import { ClaimBar } from "./review/EvidenceView.jsx";
+import { judgeAsFighter } from "./JudgesPage.jsx";
+import { BAND_WORD, JUDGE_TONES, band } from "./review/useReviewData.js";
+import { loadTournaments } from "../lib/arena.js";
+
+/**
+ * This project's fight in the arena, from the real tournaments on chain: the live or next
+ * match it's in, else its latest result. Hidden until it's in a registered bracket.
+ */
+export function fightOfProject(id, tournaments) {
+  const order = { live: 0, review: 1, scheduled: 2, finalized: 3 };
+  const found = [];
+  for (const t of tournaments ?? []) {
+    if (!t.projects?.length || !t.projects.every((p) => p.registered)) continue;
+    const slot = t.projects.findIndex((p) => p.id === id);
+    if (slot < 0) continue;
+    for (const m of t.matches) {
+      if ((m.a !== slot && m.b !== slot) || m.a == null || m.b == null || m.status === "void") continue;
+      found.push({ t, m, slot });
+    }
+  }
+  found.sort((x, y) => (order[x.m.status] ?? 9) - (order[y.m.status] ?? 9) || Number(y.t.id) - Number(x.t.id) || y.m.index - x.m.index);
+  const hit = found[0];
+  if (!hit) return null;
+  const { t, m, slot } = hit;
+  const opponent = t.projects[m.a === slot ? m.b : m.a]?.name ?? "TBD";
+  const word = m.status === "live" ? "Live" : m.status === "finalized" ? (m.winner === slot ? "Won" : "Lost") : m.status === "review" ? "Judges deciding" : "Up next";
+  return { href: `/fights/${t.id}/${m.index}`, opponent, word };
+}
+
+function FightLink({ id }) {
+  const { data } = usePoll(loadTournaments, [], 30000, { key: "tournaments" });
+  const f = fightOfProject(id, data);
+  if (!f) return null;
+  return (
+    <Link to={f.href} className="btn btn--crush btn--sm btn--arrow">
+      {f.word} vs {f.opponent} <span aria-hidden="true">→</span>
+    </Link>
+  );
+}
 
 function KindPill() {
   return <StatusPill tone="success">✓ Submitted</StatusPill>;
@@ -43,8 +83,8 @@ function RerunReview({ project, onStarted }) {
   }
   return (
     <>
-      <button type="button" className="btn btn--oracle btn--sm" onClick={go} disabled={busy || running} title="Runs every step again: code review, demo, live test, fact-check, judges">
-        {busy ? "Starting…" : running ? "Review running…" : "↻ Run the review again"}
+      <button type="button" className="quiet-link" onClick={go} disabled={busy || running} title="Runs every step again: code review, demo, live test, fact-check, judges">
+        {busy ? "Starting…" : running ? "Reviewing…" : "↻ Replay review"}
       </button>
       {error && <span className="field__error">✕ {error}</span>}
     </>
@@ -82,6 +122,63 @@ function DeleteProject({ project }) {
         {busy ? "Deleting…" : "Delete project"}
       </button>
     </div>
+  );
+}
+
+/** Hero side card: the panel's call at a glance. One number, one bar, three faces. */
+function VerdictCard({ project }) {
+  const id = encodeURIComponent(project.id);
+  const [result, setResult] = useState(() => project.reviews ?? peekApi(`/projects/${id}/reviews`)?.result ?? null);
+  const [dossier, setDossier] = useState(() => peekApi(`/projects/${id}/dossier`)?.dossier ?? null);
+  const evidence = dossier?.evidence ?? [];
+  const score = result?.panelHundredths == null ? null : result.panelHundredths / 100;
+  // One word for the call ("Proven", "Overpromised"); the sentence behind it is in the evidence below.
+  const word = dossier?.highlights?.word ?? (score == null ? null : BAND_WORD[band(score)]);
+  useEffect(() => {
+    let alive = true;
+    api(`/projects/${id}/reviews`).then((r) => alive && r?.result && setResult(r.result)).catch(() => {});
+    api(`/projects/${id}/dossier`).then((d) => alive && d?.dossier && setDossier(d.dossier)).catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [id]);
+
+  const b = band(score);
+  const backed = evidence.filter((e) => e.status === "supported_by_code").length;
+  const judges = (result?.reviews ?? []).filter((r) => r.status === "scored");
+  const toEvidence = () => document.getElementById("evidence")?.scrollIntoView({ behavior: "smooth" });
+
+  return (
+    <aside className={`vcard vcard--${b} rise`} style={{ "--i": 2 }} aria-label="Agent verdict">
+      <span className="vcard__kicker">Agent verdict</span>
+      <p className={`vcard__word vcard__word--${b} m0`}>{word ?? "Not judged yet"}</p>
+      <div className="vcard__score" title="Average of the three judges' scores">
+        <span className="vcard__n t-num">{score == null ? "—" : score.toFixed(1)}</span>
+        <span className="vcard__of">/100 judges' score</span>
+      </div>
+      {evidence.length > 0 && (
+        <div className="vcard__claims">
+          <ClaimBar evidence={evidence} />
+          <span className="t-caption">
+            <b className="t-num">{backed}</b> of <span className="t-num">{evidence.length}</span> claims checked out in the code
+          </span>
+        </div>
+      )}
+      <div className="vcard__foot">
+        {judges.length > 0 && (
+          <ul className="vcard__judges m0" aria-label="Judges">
+            {judges.map((r, i) => (
+              <li key={r.judge.id} className={`vcard__judge vcard__judge--${JUDGE_TONES[i % 3]}`} title={`${r.judge.name}: ${(r.overallHundredths / 100).toFixed(1)}`}>
+                <PixelFighter project={judgeAsFighter(r.judge)} scale={2} label={`${r.judge.name}, judge`} />
+              </li>
+            ))}
+          </ul>
+        )}
+        <button type="button" className="vcard__go" onClick={toEvidence}>
+          {score == null ? "See the review" : "See why"} <span aria-hidden="true">↓</span>
+        </button>
+      </div>
+    </aside>
   );
 }
 
@@ -151,26 +248,20 @@ export function ProjectPage({ id, wallet }) {
           </h1>
           <p className="t-prompt m0">{p.pitch}</p>
           <p className="t-caption m0">by {p.teamName}</p>
-          {isOrganizer && (
-            <div className="project-actions">
-              <RerunReview
-                project={p}
-                onStarted={() => {
-                  document.getElementById("evidence")?.scrollIntoView({ behavior: "smooth" });
-                  refresh();
-                }}
-              />
-              <DeleteProject project={p} />
-            </div>
-          )}
-          <motion.div className="gear-row" aria-label="Fighter gear" initial="hidden" animate="show" variants={stagger(0.06, 0.45)}>
-            {fighterTraitItems(p, trackNameOf).map((t) => (
-              <motion.span key={t.id} className="chip chip--tag chip--gear" title={t.why} variants={{ hidden: { opacity: 0, scale: 0.6, y: 8 }, show: { opacity: 1, scale: 1, y: 0, transition: bouncy } }}>
-                {t.label}
-              </motion.span>
-            ))}
-          </motion.div>
+          <div className="project-actions">
+            <FightLink id={p.id} />
+            <RerunReview
+              project={p}
+              onStarted={() => {
+                document.getElementById("evidence")?.scrollIntoView({ behavior: "smooth" });
+                refresh();
+              }}
+            />
+            {isOrganizer && <DeleteProject project={p} />}
+          </div>
+          
         </div>
+        <VerdictCard project={p} />
       </header>
 
       <section className="panel panel--team" aria-label="What the team submitted">
@@ -178,7 +269,7 @@ export function ProjectPage({ id, wallet }) {
           <DemoVideo project={p} />
 
           <section className="card stack about rise" style={{ "--i": 3 }} aria-labelledby="about-h">
-            <h3 id="about-h" className="t-heading m0">About</h3>
+            <span id="about-h" className="vcard__kicker">About</span>
             <div className="about__body">
               {p.description.split(/\n{2,}/).map((para, i) => (
                 <p key={i} className={`m0 ${i === 0 ? "about__lead" : "t-body"}`}>
@@ -196,7 +287,6 @@ export function ProjectPage({ id, wallet }) {
         <header className="evidence-section__head">
           <span className="eyebrow">The evidence</span>
           <h2 id="evidence-h" className="t-display-md m0">What the agents found</h2>
-          <p className="t-body muted m0">We read the code, watched the demo, checked every claim against the repo and tested the live app on a laptop and a phone. This is what held up.</p>
         </header>
         <ReviewTab project={p} canAct={isOrganizer} />
       </section>
@@ -218,13 +308,11 @@ function EntryCard({ project: p }) {
     <aside className="entry rise" style={{ "--i": 4 }} aria-labelledby="entry-h">
       <div className="entry__band">
         <span id="entry-h">Entry</span>
-        <span className="t-mono-caption">{p.submittedAt ? ago(p.submittedAt) : ""}</span>
+        <span className="t-mono-caption" title={p.submittedAt ? new Date(p.submittedAt).toLocaleString([], { dateStyle: "medium", timeStyle: "short" }) : undefined}>
+          {p.submittedAt ? `Submitted ${ago(p.submittedAt)}` : ""}
+        </span>
       </div>
       <dl className="entry__list">
-        <div>
-          <dt>Team</dt>
-          <dd className="t-body-strong">{p.teamName || "—"}</dd>
-        </div>
         <div>
           <dt>Tracks</dt>
           <dd>
@@ -256,16 +344,10 @@ function EntryCard({ project: p }) {
         )}
         {p.ownerWallet && (
           <div>
-            <dt>Owner wallet</dt>
+            <dt>Owner</dt>
             <dd className="t-mono" title={p.ownerWallet}>
               {shortAddress(p.ownerWallet)}
             </dd>
-          </div>
-        )}
-        {p.submittedAt && (
-          <div>
-            <dt>Submitted</dt>
-            <dd className="t-body">{new Date(p.submittedAt).toLocaleString([], { dateStyle: "medium", timeStyle: "short" })}</dd>
           </div>
         )}
         {p.showcaseUrl && (
@@ -273,7 +355,7 @@ function EntryCard({ project: p }) {
             <dt>Showcase</dt>
             <dd>
               <a className="t-body" href={p.showcaseUrl} target="_blank" rel="noopener noreferrer">
-                {p.event ?? "ETHGlobal"} ↗
+                ETHGlobal showcase ↗
               </a>
             </dd>
           </div>

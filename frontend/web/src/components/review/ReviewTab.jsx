@@ -2,7 +2,7 @@
  * The Review tab of a project, split into five sub-tabs so each one does one job:
  *   Overview  – the score, the verdict and the gist, at a glance
  *   Pipeline  – the 1→4 flow the agents ran, live
- *   Testing   – the live app driven on a laptop and a phone
+ *   Testing   – the live app driven in cloud Chrome at laptop and phone size
  *   Judges    – each judge's take and the panel side by side
  *   Evidence  – claims vs. code, screenshots
  * The sub-tab lives in the URL (?view=judge&tab=…), so links keep it.
@@ -13,7 +13,7 @@ import { useCountUp } from "../../lib/motion.js";
 import { judgeAsFighter } from "../JudgesPage.jsx";
 import { PixelFighter } from "../PixelFighter.jsx";
 import { FlowStrip, PipelineView, usePipeline } from "../PipelineView.jsx";
-import { Icon } from "../Icon.jsx";
+import { Icon, OsLogo } from "../Icon.jsx";
 import { Spinner } from "../Feedback.jsx";
 import { ClaimBar, EvidenceView } from "./EvidenceView.jsx";
 import { JudgesView } from "./JudgesView.jsx";
@@ -92,7 +92,7 @@ function Overview({ project, data, live, open, pickJudge }) {
   const step = (id) => live.state?.steps?.find((s) => s.id === id);
   const liveStep = step("live");
   const fact = (s, label) => s?.facts?.find((f) => f.label === label)?.value;
-  const devices = ["Laptop", "Phone"].map((k) => [k, fact(liveStep, k)]).filter(([, v]) => v);
+  const devices = [["Laptop", "desktop"], ["Phone", "mobile"]].map(([k, os]) => [k, fact(liveStep, k), os]).filter(([, v]) => v);
   const took = live.state?.startedAt && live.state?.finishedAt ? fmt(secs(live.state.startedAt, live.state.finishedAt)) : null;
   const headline = d?.highlights?.headline ?? (result ? `${reviews.filter((r) => r.status === "scored").length} of ${reviews.length} judges scored ${project.name}.` : `${project.name} hasn't been judged yet.`);
 
@@ -151,9 +151,9 @@ function Overview({ project, data, live, open, pickJudge }) {
         <Tile i={3} tone="crush" icon={<Icon name="browser" size={18} />} value={devices.length ? "" : liveStep?.status === "skipped" ? "Skipped" : liveStep?.status === "running" ? "Testing" : "—"} label="live app test" onClick={() => open("testing")}>
           {devices.length > 0 && (
             <span className="ovt__devices">
-              {devices.map(([k, v]) => (
+              {devices.map(([k, v, os]) => (
                 <span key={k} className={`ovt__dev ovt__dev--${/pass/i.test(v) ? "good" : /fail|broken/i.test(v) ? "bad" : "meh"}`}>
-                  <Icon name={k.toLowerCase()} size={16} /> {/pass/i.test(v) ? "✓" : /fail|broken/i.test(v) ? "✕" : "!"}
+                  <OsLogo os={os} size={15} /> {/pass/i.test(v) ? "✓" : /fail|broken/i.test(v) ? "✕" : "!"}
                   <span className="visually-hidden">
                     {k}: {v}
                   </span>
