@@ -1090,13 +1090,3 @@ fieldset.field { border: 0; margin: 0; padding: 0; min-width: 0; }
   .podium__persona { font-size: 13px; line-height: 17px; }
 }
 
-/* ---------- Arena: waiting for the first real tournament ---------- */
-.waiting { grid-column: 1 / -1; display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-4); padding: var(--space-5); border: 2px solid var(--ink); border-radius: var(--radius-xl); background: var(--canvas); box-shadow: var(--shadow-pop); }
-.waiting__line { display: flex; flex-wrap: wrap; gap: var(--space-3); margin: 0; padding: 0; list-style: none; }
-.waiting__line li { animation: rise var(--dur-slow) var(--ease-out) both; animation-delay: calc(var(--i, 0) * 80ms); }
-.waiting__fighter { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 120px; color: inherit; text-decoration: none; }
-.waiting__fighter:focus-visible { outline: 3px solid var(--oracle); outline-offset: 3px; border-radius: 12px; }
-.waiting__spot { display: grid; place-items: end center; width: 100%; height: 110px; border: 2px solid var(--ink); border-radius: 18px; background: linear-gradient(180deg, var(--oracle-soft) 0 70%, color-mix(in srgb, var(--oracle) 30%, var(--canvas)) 70%); overflow: hidden; }
-.waiting__fighter:hover .fighter { animation: frow-bob 0.6s var(--ease-pop) infinite alternate; }
-.waiting__name { font: 700 13px/18px var(--font-sans); text-align: center; overflow-wrap: anywhere; }
-@media (prefers-reduced-motion: reduce) { .waiting__line li { animation: none; } .waiting__fighter:hover .fighter { animation: none; } }

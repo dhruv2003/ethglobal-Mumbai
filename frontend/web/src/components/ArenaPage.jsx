@@ -9,7 +9,6 @@ import { usePoll } from "../lib/chain.js";
 import { loadTournaments } from "../lib/arena.js";
 import { Link } from "../lib/router.jsx";
 import { listProjects } from "../lib/projects.js";
-import { PixelFighter } from "./PixelFighter.jsx";
 import { AerialRing } from "./AerialRing.jsx";
 import { bouncy, stagger } from "./fx.jsx";
 
@@ -20,13 +19,18 @@ function withHealth(match) {
   return { ...match, healthA: hp(match.scoreA ?? 0), healthB: hp(match.scoreB ?? 0) };
 }
 
-/**
- * A tournament counts once its bracket is registered with real projects. Contract
- * tournaments without one (left from testing) only have numbered slots and are not shown.
- */
+/** A tournament whose bracket is registered with real projects (contract tournaments left from testing only have numbered slots). */
 const isReal = (t) => t.projects.length > 0 && t.projects.every((p) => p.registered);
 
-/** Every fight worth showing, across real tournaments: live first, then the newest finished. */
+/** Before any real tournament: the submitted projects paired up as upcoming bouts (no results are invented). */
+function upNext(projects) {
+  const list = projects ?? [];
+  const t = { id: "next", preview: true, projects: list, matches: [] };
+  for (let i = 0; i + 1 < list.length; i += 2) t.matches.push({ index: t.matches.length, a: i, b: i + 1, status: "scheduled", winner: null });
+  return t.matches.map((match) => ({ t, match }));
+}
+
+/** Every fight worth showing, across tournaments: live first, then the newest finished. */
 function fightsOf(tournaments) {
   const rank = { live: 0, review: 1, finalized: 2, scheduled: 3 };
   return tournaments
@@ -47,7 +51,7 @@ function FightCard({ t, match, big }) {
   const won = winner ? (winner === "a" ? a : b) : null;
   return (
     <motion.div variants={{ hidden: { opacity: 0, scale: 0.9 }, show: { opacity: 1, scale: 1, transition: bouncy } }}>
-      <Link to={`/fights/${t.id}/${match.index}`} className={`bout ${big ? "bout--big" : ""} bout--${match.status}`} aria-label={`Open fight: ${a.name} against ${b.name}, ${word}`}>
+      <Link to={t.preview ? `/projects/${encodeURIComponent(a.id)}` : `/fights/${t.id}/${match.index}`} className={`bout ${big ? "bout--big" : ""} bout--${match.status}`} aria-label={`Open fight: ${a.name} against ${b.name}, ${word}`}>
         <span className="bout__top">
           <StatusPill tone={tone}>{word}</StatusPill>
         </span>
@@ -75,41 +79,11 @@ function FightCard({ t, match, big }) {
 
 const PER_SCREEN = 4;
 
-/** Before the first real tournament: the submitted projects, waiting for their bracket. */
-function WaitingRoom() {
-  const { data: projects } = usePoll(() => listProjects().catch(() => []), [], 30000, { key: "projects" });
-  const list = projects ?? [];
-  return (
-    <div className="waiting">
-      <p className="t-body m0">
-        <strong>No fights yet.</strong> The first bouts start when the organizer opens a tournament. These fighters are ready:
-      </p>
-      {list.length > 0 ? (
-        <ul className="waiting__line">
-          {list.map((p, i) => (
-            <li key={p.id} style={{ "--i": i }}>
-              <Link to={`/projects/${encodeURIComponent(p.id)}`} className="waiting__fighter" title={p.pitch}>
-                <span className="waiting__spot">
-                  <PixelFighter project={p} scale={4} />
-                </span>
-                <span className="waiting__name">{p.name}</span>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="t-caption m0">No projects submitted yet.</p>
-      )}
-      <Link to="/rankings" className="btn btn--secondary btn--sm">
-        See the rankings →
-      </Link>
-    </div>
-  );
-}
-
 export function ArenaPage() {
   const { data, error } = usePoll(loadTournaments, [], 15000, { key: "tournaments" });
-  const fights = useMemo(() => fightsOf(data ?? []), [data]);
+  const { data: projects } = usePoll(() => listProjects().catch(() => []), [], 30000, { key: "projects" });
+  const real = useMemo(() => fightsOf(data ?? []), [data]);
+  const fights = real.length ? real : upNext(projects);
   const shown = fights.slice(0, PER_SCREEN);
   const earlier = fights.slice(PER_SCREEN);
   const live = fights.filter((f) => f.match.status === "live").length;
@@ -135,8 +109,7 @@ export function ArenaPage() {
           Arena
         </h1>
         <p className="t-body muted m0 rise" style={{ "--i": 2 }}>
-          {live ? `${live} ${live === 1 ? "fight" : "fights"} live now.` : "Every fight, judged on evidence."}
-          {fights.length ? " Tap a ring to watch." : ""}
+          {live ? `${live} ${live === 1 ? "fight" : "fights"} live now.` : "Every fight, judged on evidence."} Tap a ring to watch.
         </p>
       </header>
 
@@ -145,7 +118,7 @@ export function ArenaPage() {
           <FightCard key={`${t.id}-${match.index}`} t={t} match={match} big />
         ))}
         {data == null && error && <p className="plot__empty m0">Couldn't reach the chain. Retrying…</p>}
-        {data != null && !fights.length && <WaitingRoom />}
+        {data != null && !fights.length && <p className="plot__empty m0">No fights yet.</p>}
       </motion.div>
 
       {earlier.length > 0 && (
