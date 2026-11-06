@@ -33,7 +33,8 @@ export function TextField({ path, label, help, multiline, limit, mono, ...rest }
   const id = fieldId(path);
   const Tag = multiline ? "textarea" : "input";
   const len = String(f.value ?? "").length;
-  const count = limit ? (
+  // Counters only show up once you're getting close to the limit.
+  const count = limit && len >= limit * 0.8 ? (
     <span className={`t-num ${len > limit ? "over" : ""}`}>
       {len} / {limit}
     </span>

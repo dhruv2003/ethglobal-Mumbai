@@ -175,12 +175,11 @@ export function ArenaPage() {
 
       <header className="intro intro--row village__sign">
         <div className="intro">
-          <span className="eyebrow rise">Every fight, one map</span>
           <h1 className="t-display-lg m0 rise" style={{ "--i": 1 }}>
-            <span className="hl hl--crush">The arena</span>
+            Arena
           </h1>
-          <span className="t-caption rise" style={{ "--i": 2 }}>
-            Click a ring to watch that fight. Click a plaque to see the whole tournament.
+          <span className="t-body muted rise" style={{ "--i": 2 }}>
+            Every fight, live. Tap a ring to watch.
           </span>
         </div>
         <div className="village__sign-right">
