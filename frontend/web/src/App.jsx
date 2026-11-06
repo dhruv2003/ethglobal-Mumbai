@@ -17,6 +17,7 @@ import { OrganizerPage } from "./components/OrganizerPage.jsx";
 import { TournamentPage, TournamentsPage } from "./components/TournamentsPage.jsx";
 import { ArenaPage } from "./components/ArenaPage.jsx";
 import { MatchFightPage } from "./components/MatchFightPage.jsx";
+import { GraphPage } from "./components/GraphPage.jsx";
 import { Footer } from "./components/Footer.jsx";
 import { Backdrop, ScrollProgress, easeOut } from "./components/fx.jsx";
 import { AnimatePresence, MotionConfig, motion } from "motion/react";
@@ -35,6 +36,7 @@ const TITLES = {
   tournament: "Tournament",
   arena: "Arena",
   matchFight: "Fight",
+  graph: "Knowledge graph",
 };
 
 export default function App() {
@@ -170,6 +172,8 @@ export default function App() {
               <ArenaPage />
             ) : route.name === "matchFight" ? (
               <MatchFightPage id={route.id} matchIndex={route.match} wallet={wallet} />
+            ) : route.name === "graph" ? (
+              <GraphPage />
             ) : route.name === "projects" ? (
               <ProjectsPage />
             ) : route.name === "project" ? (

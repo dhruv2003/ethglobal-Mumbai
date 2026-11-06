@@ -47,6 +47,7 @@ const NAV = [
   { to: "/tournaments", label: "Tournaments", on: (r) => r.name === "tournaments" || r.name === "tournament" || r.name === "matchFight" },
   { to: "/projects", label: "Projects", on: (r) => r.name === "projects" || r.name === "project" },
   { to: "/judge", label: "Judges", on: (r) => r.name === "judges" },
+  { to: "/graph", label: "Graph", on: (r) => r.name === "graph" },
   { to: "/wallet", label: "Wallet", on: (r) => r.name === "wallet" },
   { to: "/submit", label: "Submit", on: (r) => r.name === "form" },
   { to: "/organizer", label: "Organizer", on: (r) => r.name === "organizer" },

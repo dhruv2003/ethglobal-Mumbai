@@ -25,6 +25,7 @@ export function matchRoute(path) {
   if (p === "/wallet") return { name: "wallet" };
   if (p === "/organizer") return { name: "organizer" };
   if (p === "/arena") return { name: "arena" };
+  if (p === "/graph") return { name: "graph" };
   if (p === "/tournaments") return { name: "tournaments" };
   const tournament = p.match(/^\/tournaments\/([^/]+)$/);
   if (tournament) return { name: "tournament", id: decodeURIComponent(tournament[1]) };
