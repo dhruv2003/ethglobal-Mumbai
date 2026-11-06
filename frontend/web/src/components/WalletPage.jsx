@@ -13,6 +13,7 @@ import { POOL_LABEL, POOL_STATE, matchMarket, tournamentMarket } from "../lib/po
 import { Link } from "../lib/router.jsx";
 import { AddressLink, AnimatedNumber, TxStatus, WalletGate } from "./ChainBits.jsx";
 import { FreePack } from "./FreePack.jsx";
+import { WalletTabs } from "./TransactionsPage.jsx";
 import { fadeUp, popIn, stagger } from "./fx.jsx";
 
 const BURST = ["#ffd43b", "#ff5c93", "#2f4bf0"];
@@ -261,6 +262,8 @@ export function WalletPage({ wallet }) {
           </p>
         </div>
       </header>
+
+      <WalletTabs current="overview" />
 
       <WalletGate wallet={wallet} reason="to buy and bet" />
 

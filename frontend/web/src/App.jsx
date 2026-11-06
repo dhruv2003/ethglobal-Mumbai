@@ -14,6 +14,7 @@ import { LandingPage, ProjectPage, ProjectsPage } from "./components/Projects.js
 import { StoragePage } from "./components/StoragePage.jsx";
 import { JudgesPage } from "./components/JudgesPage.jsx";
 import { WalletPage } from "./components/WalletPage.jsx";
+import { TransactionsPage } from "./components/TransactionsPage.jsx";
 import { OrganizerPage } from "./components/OrganizerPage.jsx";
 import { TournamentPage, TournamentsPage } from "./components/TournamentsPage.jsx";
 import { EventPage } from "./components/EventPage.jsx";
@@ -33,6 +34,7 @@ const TITLES = {
   project: "Project",
   judges: "Judges",
   wallet: "Wallet",
+  transactions: "Transactions",
   organizer: "Organizer",
   tournaments: "Tournaments",
   tournament: "Tournament",
@@ -184,6 +186,8 @@ export default function App() {
               <OrganizerGate wallet={wallet}><JudgesPage /></OrganizerGate>
             ) : route.name === "wallet" ? (
               <WalletPage wallet={wallet} />
+            ) : route.name === "transactions" ? (
+              <TransactionsPage wallet={wallet} />
             ) : route.name === "organizer" ? (
               <OrganizerGate wallet={wallet}><OrganizerPage wallet={wallet} /></OrganizerGate>
             ) : route.name === "tournaments" ? (
