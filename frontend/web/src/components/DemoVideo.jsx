@@ -23,6 +23,15 @@ const providerOf = (url) => {
   }
 };
 
+const httpsHref = (raw) => {
+  try {
+    const u = new URL(String(raw));
+    return u.protocol === "https:" ? u.href : null;
+  } catch {
+    return null;
+  }
+};
+
 /** Our copy's facts, refreshed while the review is still saving it. */
 function useSavedVideo(project) {
   const [saved, setSaved] = useState(project.savedVideo ?? null);
@@ -51,6 +60,8 @@ export function DemoVideo({ project: p }) {
   const [mode, setMode] = useState(embed ? "embed" : "ours");
   const showEmbed = embed && (mode === "embed" || !ours);
   const provider = uploaded ? null : providerOf(p.videoUrl);
+  // Only https links become clickable: older or local-only entries were never server-checked.
+  const originalHref = uploaded ? null : httpsHref(p.videoUrl);
 
   return (
     <section className="card stack rise" style={{ "--i": 2 }} aria-label="Demo video">
@@ -97,8 +108,8 @@ export function DemoVideo({ project: p }) {
                 ? `Plays from ${provider}`
                 : ""}
         </span>
-        {!uploaded && p.videoUrl && (
-          <a className="t-caption" href={p.videoUrl} target="_blank" rel="noreferrer">
+        {!uploaded && originalHref && (
+          <a className="t-caption" href={originalHref} target="_blank" rel="noopener noreferrer">
             Open the original ↗
           </a>
         )}
