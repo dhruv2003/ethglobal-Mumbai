@@ -105,7 +105,10 @@ export function EvidenceList({ evidence }) {
       <summary className="t-label">
         Screenshot evidence read on 0G ({ok.length} of {evidence.length})
       </summary>
-      <p className="t-caption m0">A vision model looked at each live-test screenshot. The judges saw these notes as untrusted evidence and could cite them by ID.</p>
+      <p className="t-caption m0">
+        A vision model looked at each live-test screenshot{evidence.some((e) => e.cached) ? " in an earlier run (reused here, not paid for again)" : ""}. The judges saw these notes as untrusted evidence and
+        could cite them by ID.
+      </p>
       <ul className="zgevidence__list">
         {evidence.map((e) => (
           <li key={e.id} className="zgevidence__item">

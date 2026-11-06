@@ -30,14 +30,14 @@ export function requireOrganizer(req, res, next) {
 }
 
 /** Simple per-IP fixed window. In memory: fine for one server process. */
-export function rateLimit({ max, windowMs }) {
+export function rateLimit({ max, windowMs, message = "Too many submissions from here. Try again later." }) {
   const hits = new Map();
   return (req, res, next) => {
     const key = req.ip ?? req.socket.remoteAddress ?? "?";
     const now = Date.now();
     const h = hits.get(key);
     if (!h || now - h.start > windowMs) hits.set(key, { start: now, n: 1 });
-    else if (++h.n > max) return res.status(429).json({ error: "Too many submissions from here. Try again later." });
+    else if (++h.n > max) return res.status(429).json({ error: message });
     next();
   };
 }
