@@ -8,7 +8,7 @@ import { EVENT } from "../config/event.js";
 import { Ring } from "./Arena.jsx";
 import { useForm } from "./fields.jsx";
 import { PixelFighter } from "./PixelFighter.jsx";
-import { trackName } from "./Projects.jsx";
+import { trackNameOf } from "../lib/events.js";
 
 const REQUIRED = ["team.name", "project.name", "project.pitch", "project.description", "code.repoUrl", "demo.videoUrl"];
 
@@ -81,7 +81,7 @@ export function FighterPreview({ eventName }) {
   };
 
   const ready = REQUIRED.filter((k) => !errors[k]).length;
-  const trim = t.jacketFrom ? `${trackName(t.jacketFrom)} trim` : "Grey trim";
+  const trim = t.jacketFrom ? `${trackNameOf(t.jacketFrom)} trim` : "Grey trim";
 
   return (
     <aside className="fcard" aria-label="Your fighter preview">

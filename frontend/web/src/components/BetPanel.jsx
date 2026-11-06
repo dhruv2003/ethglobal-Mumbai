@@ -57,6 +57,13 @@ function Header({ title, state }) {
   );
 }
 
+/** This wallet's bet in a pool (the first selection it staked on), formatted; null if none or still loading. */
+export function myBet(data, info, selections) {
+  if (!data || !info) return null;
+  const i = data.mine.findIndex((v) => v > 0n);
+  return i >= 0 ? { amount: formatAmount(data.mine[i], info.decimals), symbol: info.symbol, name: selections[i].project.name } : null;
+}
+
 /** Live chain reads for one pool and this wallet: stakes, limits, balance, allowance. */
 export function usePoolData(wallet, tournamentId, market, selections) {
   const address = wallet.address;

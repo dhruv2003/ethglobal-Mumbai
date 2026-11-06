@@ -1,9 +1,10 @@
 /*
- * The Review tab of a project, split into four sub-tabs so each one does one job:
+ * The Review tab of a project, split into five sub-tabs so each one does one job:
  *   Overview  – the score, the verdict and the gist, at a glance
  *   Pipeline  – the 1→4 flow the agents ran, live
+ *   Testing   – the live app driven on a laptop and a phone
  *   Judges    – each judge's take and the panel side by side
- *   Evidence  – claims vs. code, the live test, screenshots
+ *   Evidence  – claims vs. code, screenshots
  * The sub-tab lives in the URL (?view=judge&tab=…), so links keep it.
  */
 import { useEffect, useRef, useState } from "react";
@@ -11,10 +12,10 @@ import { AnimatePresence, motion } from "motion/react";
 import { useCountUp } from "../../lib/motion.js";
 import { judgeAsFighter } from "../JudgesPage.jsx";
 import { PixelFighter } from "../PixelFighter.jsx";
-import { FlowStrip, Icon, PipelineView, usePipeline } from "../PipelineView.jsx";
+import { FlowStrip, PipelineView, usePipeline } from "../PipelineView.jsx";
+import { Icon } from "../Icon.jsx";
 import { Spinner } from "../Feedback.jsx";
-import { ClaimBar } from "./EvidenceView.jsx";
-import { EvidenceView } from "./EvidenceView.jsx";
+import { ClaimBar, EvidenceView } from "./EvidenceView.jsx";
 import { JudgesView } from "./JudgesView.jsx";
 import { TestingView } from "./TestingView.jsx";
 import { BAND_WORD, CLAIM, JUDGE_TONES, band, fmt, secs, useReviewData } from "./useReviewData.js";

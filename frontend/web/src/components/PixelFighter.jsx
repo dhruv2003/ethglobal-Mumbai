@@ -64,16 +64,3 @@ export function fighterTraitItems(project, trackName) {
     ...Object.values(t.gear).map((g) => ({ id: g.id, label: g.label, why: g.why })),
   ];
 }
-
-export function FighterTraits({ project, trackName }) {
-  return (
-    <ul className="traits">
-      {fighterTraitItems(project, trackName).map((i) => (
-        <li key={i.id} className="trait">
-          <span className="t-body-strong">{i.label}</span>
-          <span className="t-caption">{i.why}</span>
-        </li>
-      ))}
-    </ul>
-  );
-}

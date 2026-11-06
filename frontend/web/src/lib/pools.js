@@ -56,9 +56,6 @@ export function feeders(matchIndex, count) {
   return [first, first + 1];
 }
 
-/** Round-one projects of a match. */
-export const firstRoundPair = (matchIndex) => [matchIndex * 2, matchIndex * 2 + 1];
-
 /** Group match indexes by round: [{ round, name, matches: [index, ...] }]. */
 export function bracketRounds(count) {
   const rounds = [];

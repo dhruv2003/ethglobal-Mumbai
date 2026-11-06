@@ -13,8 +13,11 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { api, health, peekApi } from "../lib/api.js";
 import { RERUN_EVENT, rerunReview } from "../lib/review.js";
+import { useNow } from "../lib/useNow.js";
 import { Spinner } from "./Feedback.jsx";
-import { band, fmt, secs } from "./review/useReviewData.js";
+import { JUDGE_TONES, band, fmt, secs } from "./review/useReviewData.js";
+import { Icon } from "./Icon.jsx";
+import { LiveScreen } from "./review/LiveScreen.jsx";
 
 const PLACEHOLDER = [
   ["code", "Code review", "Fetch the repo, pin the commit, count the tests"],
@@ -53,6 +56,7 @@ const EDGES = [
 const R = 38; // node radius
 const FINISHED = ["done", "failed", "skipped"];
 const WORD = { queued: "Waiting", running: "Working", done: "Done", failed: "Failed", skipped: "Skipped" };
+const GLYPH = { done: "✓", failed: "✕", skipped: "–" };
 
 /*
  * Older runs split "Code review" into fetch / pin / tests steps. Fold those
@@ -133,16 +137,6 @@ export function usePipeline(project) {
   return [live, () => setTick((t) => t + 1)];
 }
 
-/** Ticks once a second while something is running, so elapsed times move. */
-function useClock(on) {
-  const [, set] = useState(0);
-  useEffect(() => {
-    if (!on) return undefined;
-    const t = setInterval(() => set((n) => n + 1), 1000);
-    return () => clearInterval(t);
-  }, [on]);
-}
-
 function useWidth(ref) {
   const [w, setW] = useState(900);
   useLayoutEffect(() => {
@@ -153,64 +147,6 @@ function useWidth(ref) {
     return () => ro.disconnect();
   }, [ref]);
   return w;
-}
-
-/* ---------- icons ---------- */
-
-const ICONS = {
-  code: <path d="M9 7 4 12l5 5M15 7l5 5-5 5" />,
-  play: <path d="M8 5.5v13l10.5-6.5z" />,
-  browser: (
-    <>
-      <rect x="3" y="4.5" width="18" height="15" rx="2.5" />
-      <path d="M3 9h18M6.5 6.8h.01M9 6.8h.01" />
-    </>
-  ),
-  search: (
-    <>
-      <circle cx="10.5" cy="10.5" r="6" />
-      <path d="m15 15 5 5M8 10.5l1.8 1.8L13.5 8.6" />
-    </>
-  ),
-  gavel: (
-    <>
-      <path d="m13.5 4.5 6 6M10.5 7.5l6 6M12 6l-4.5 4.5 6 6L18 12" />
-      <path d="M9.5 14.5 3.5 20.5M3 21h9" />
-    </>
-  ),
-  trophy: (
-    <>
-      <path d="M7.5 4h9v5a4.5 4.5 0 0 1-9 0z" />
-      <path d="M7.5 6H4.5a3 3 0 0 0 3 4M16.5 6h3a3 3 0 0 1-3 4M12 13.5V17M8.5 20h7M9.5 17h5v3h-5z" />
-    </>
-  ),
-  flow: (
-    <>
-      <circle cx="5" cy="7" r="2.5" />
-      <circle cx="5" cy="17" r="2.5" />
-      <circle cx="19" cy="12" r="2.5" />
-      <path d="M7.5 7c4 0 4 5 9 5M7.5 17c4 0 4-5 9-5" />
-    </>
-  ),
-  laptop: (
-    <>
-      <rect x="4" y="4.5" width="16" height="11" rx="1.5" />
-      <path d="M2 19h20" />
-    </>
-  ),
-  phone: (
-    <>
-      <rect x="7" y="2.5" width="10" height="19" rx="2.5" />
-      <path d="M12 18h.01" />
-    </>
-  ),
-};
-export function Icon({ name, size = 24 }) {
-  return (
-    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      {ICONS[name]}
-    </svg>
-  );
 }
 
 /* ---------- canvas ---------- */
@@ -233,7 +169,7 @@ function edgeState(a, b) {
 function Node({ n, s, x, selected, onPick, score, i }) {
   const pct = partPct(s);
   const C = 2 * Math.PI * (R + 7);
-  const glyph = s.status === "done" ? "✓" : s.status === "failed" ? "✕" : s.status === "skipped" ? "–" : null;
+  const glyph = GLYPH[s.status];
   const time = s.startedAt ? fmt(secs(s.startedAt, s.finishedAt)) : null;
   return (
     <motion.button
@@ -393,59 +329,14 @@ const initials = (name) =>
     .slice(0, 2)
     .toUpperCase();
 
-/**
- * The cloud browser's screen, live, while its test runs: an MJPEG stream the
- * backend serves from the newest screencast frame. Reconnects when frames
- * start (the browser takes a few seconds to come up).
- */
-export function LiveScreen({ projectId, device }) {
-  const [on, setOn] = useState(false);
-  const [n, setN] = useState(0);
-  useEffect(() => {
-    let alive = true;
-    const check = async () => {
-      const r = await api(`/projects/${encodeURIComponent(projectId)}/live/now`).catch(() => null);
-      if (!alive) return;
-      setOn((was) => {
-        if (r?.[device] && !was) setN((k) => k + 1); // (re)connect when frames appear
-        return Boolean(r?.[device]);
-      });
-    };
-    check();
-    const t = setInterval(check, 3000);
-    return () => {
-      alive = false;
-      clearInterval(t);
-    };
-  }, [projectId, device]);
-  return (
-    <div className={`screen screen--${device}`}>
-      {on ? (
-        <img key={n} src={`/api/projects/${encodeURIComponent(projectId)}/live/stream/${device}?n=${n}`} alt={`Live view of the ${device} cloud browser`} />
-      ) : (
-        <span className="screen__wait">
-          <Spinner size={18} label="Starting" /> Starting the {device}…
-        </span>
-      )}
-      {on && (
-        <span className="screen__live">
-          <span aria-hidden="true">●</span> LIVE
-        </span>
-      )}
-    </div>
-  );
-}
-
 function Mark({ status }) {
   if (status === "running") return <Spinner size={14} label="Working" />;
   return (
     <span className={`dmark dmark--${status}`} aria-hidden="true">
-      {status === "done" ? "✓" : status === "failed" ? "✕" : status === "skipped" ? "–" : ""}
+      {GLYPH[status] ?? ""}
     </span>
   );
 }
-
-const TONES = ["crush", "oracle", "amber"];
 
 /** Parts that run side by side (judges, laptop + phone) as cards; the rest as a stepper. */
 function Parts({ s, projectId }) {
@@ -472,7 +363,7 @@ function Parts({ s, projectId }) {
             const name = s.id === "judges" ? p.label.split(",")[0] : p.label.replace(/ browser$/, "");
             const device = p.id === "phone" || p.id === "laptop" ? p.id : null;
             return (
-              <motion.li key={p.id} className={`dlane dlane--${p.status} dlane--${TONES[i % 3]}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}>
+              <motion.li key={p.id} className={`dlane dlane--${p.status} dlane--${JUDGE_TONES[i % 3]}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}>
                 <span className="dlane__badge" aria-hidden="true">
                   {device ? <Icon name={device} size={18} /> : initials(name)}
                 </span>
@@ -565,7 +456,7 @@ export function PipelineView({ project, live, onChanged, panelScore, onOpen }) {
   const finished = Boolean(live.state?.finishedAt) && !running && !queued;
   const failedN = steps.filter((s) => s.status === "failed").length;
   const runningIds = steps.filter((s) => s.status === "running").map((s) => s.id);
-  useClock(Boolean(running));
+  useNow(Boolean(running)); // re-render each second so elapsed times move
 
   const judges = steps.find((s) => s.id === "judges");
   const verdict = {

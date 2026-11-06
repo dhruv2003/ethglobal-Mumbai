@@ -17,21 +17,6 @@
  * Labels: upheld | partially_upheld | rejected | inconclusive (mixed is derived).
  */
 
-export const MOCK_MATCH = {
-  id: "qf2",
-  title: "Quarterfinal 2",
-  event: "ETHGlobal Mumbai",
-  fighters: {
-    a: { id: "stepquest", name: "StepQuest", tracks: ["base"], pitch: "A fitness game that rewards daily steps", description: "Team quests for walking." },
-    b: { id: "splitpay-x", name: "SplitPay", tracks: ["uniswap"], pitch: "AI agents that split USDC payments", description: "Agents read the receipt and settle payments." },
-  },
-  judges: {
-    ada: { name: "Ada", focus: "Product" },
-    rook: { name: "Rook", focus: "Engineering" },
-    nova: { name: "Nova", focus: "Innovation" },
-  },
-};
-
 const S = [];
 const add = (type, payload = {}) => S.push({ type, ...payload });
 

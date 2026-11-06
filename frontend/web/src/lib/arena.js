@@ -15,11 +15,6 @@ export const getBracket = (id) =>
 
 const allBrackets = () => api("/arena/tournaments").catch(() => peekApi("/arena/tournaments") ?? []);
 
-/** Ask the backend who should fight whom. Returns the bracket order, its audit hashes and why each first-round fight exists. */
-export const matchmake = (body) => api("/arena/matchmaking", { method: "POST", body });
-
-export const registerBracket = (id, body) => api(`/arena/tournaments/${id}`, { method: "PUT", body });
-
 export const runFight = (t, m, body) => api(`/arena/fights/${t}/${m}`, { method: "POST", body });
 
 /** The recorded fight of a match. */

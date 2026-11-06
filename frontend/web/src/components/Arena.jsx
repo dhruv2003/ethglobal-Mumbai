@@ -18,23 +18,3 @@ export function Ring({ children, className = "", compact = false, style }) {
     </div>
   );
 }
-
-/** Celebration confetti: crush is the people/celebration colour (design system). */
-export function Confetti({ pieces = 28 }) {
-  return (
-    <div className="confetti" aria-hidden="true">
-      {Array.from({ length: pieces }, (_, i) => (
-        <span
-          key={i}
-          style={{
-            "--x": `${(i * 37) % 100}%`,
-            "--drift": `${((i * 53) % 60) - 30}px`,
-            "--spin": `${((i * 97) % 720) - 360}deg`,
-            "--d": `${(i % 7) * 60}ms`,
-          }}
-          className={`confetti__bit confetti__bit--${i % 3}`}
-        />
-      ))}
-    </div>
-  );
-}

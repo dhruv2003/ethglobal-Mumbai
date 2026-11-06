@@ -4,6 +4,7 @@ import { AnimatePresence, animate, motion, useReducedMotion } from "motion/react
 import { Button, StatusPill } from "@ds/ui.jsx";
 import { EVENT } from "../config/event.js";
 import { addressUrl, txUrl } from "../lib/chain.js";
+import { useNow } from "../lib/useNow.js";
 import { chainName, isMobile, metamaskDeepLink, shortAddress } from "../lib/wallet.js";
 import { bouncy, easeOut } from "./fx.jsx";
 
@@ -106,11 +107,7 @@ export function AddressLink({ address, className = "" }) {
 
 /** Ticks once a second. Advisory only: the contract's chain time decides. */
 export function useCountdown(targetMs) {
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    const t = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(t);
-  }, []);
+  const now = useNow();
   if (!targetMs) return null;
   const left = Math.max(0, Math.floor((targetMs - now) / 1000));
   const d = Math.floor(left / 86400);

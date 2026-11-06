@@ -10,7 +10,9 @@ import { clearDraft, loadDraft, saveDraft, saveSubmission, submissionDigest, toP
 import { validate } from "./lib/validate.js";
 import { useWallet } from "./lib/wallet.js";
 import { matchRoute, navigate, useCanonical, usePath } from "./lib/router.jsx";
-import { LandingPage, ProjectPage, ProjectsPage } from "./components/Projects.jsx";
+import { LandingPage } from "./components/LandingPage.jsx";
+import { ProjectPage } from "./components/ProjectPage.jsx";
+import { ProjectsPage } from "./components/Projects.jsx";
 import { StoragePage } from "./components/StoragePage.jsx";
 import { JudgesPage } from "./components/JudgesPage.jsx";
 import { WalletPage } from "./components/WalletPage.jsx";

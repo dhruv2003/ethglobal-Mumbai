@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { isAddress, keccak256, stringToHex } from "viem";
 import { Button, Card, Chip, Input, StatusPill } from "@ds/ui.jsx";
-import { chainNow, formatAmount, listTournaments, manager, read, readTournament, toUnits, usePoll, useToken, useTx } from "../lib/chain.js";
+import { chainNow, formatAmount, listTournaments, manager, read, readTournament, usePoll, useToken, useTx } from "../lib/chain.js";
 import { bracketRounds, parseScore } from "../lib/pools.js";
 import { MATCH_LABEL, PHASE_LABEL } from "../lib/labels.js";
 import { api } from "../lib/api.js";

@@ -14,6 +14,7 @@ import { Link, navigate } from "../lib/router.jsx";
 import { BetModal } from "./BetModal.jsx";
 import { eventIsOpen, listEvents } from "../lib/events.js";
 import { isMatchOpen, openPools } from "../lib/tournamentView.js";
+import { useNow } from "../lib/useNow.js";
 import { BetPanel } from "./BetPanel.jsx";
 import { useCountdown } from "./ChainBits.jsx";
 import { PixelFighter } from "./PixelFighter.jsx";
@@ -130,11 +131,7 @@ function OpenPool({ pool, onBet }) {
 function OpenForBetting({ tournaments, loaded, failed, wallet }) {
   const [betting, setBetting] = useState(null);
   const close = useCallback(() => setBetting(null), []);
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    const t = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(t);
-  }, []);
+  const now = useNow();
   const pools = useMemo(() => tournaments.flatMap((t) => openPools(t, now)), [tournaments, now]);
   return (
     <section className="stack" aria-label="Open for betting">
