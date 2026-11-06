@@ -11,6 +11,8 @@ import { AnimatePresence, motion } from "motion/react";
 import { Card, StatusPill } from "@ds/ui.jsx";
 import { formatAmount, usePoll, useToken } from "../lib/chain.js";
 import { cachedTournament, getFight, loadTournament } from "../lib/arena.js";
+import { listProjects } from "../lib/projects.js";
+import { previewTournament } from "./ArenaPage.jsx";
 import { MATCH_LABEL } from "../lib/labels.js";
 import { POOL_LABEL, matchMarket, percent } from "../lib/pools.js";
 import { Link } from "../lib/router.jsx";
@@ -42,6 +44,7 @@ function PreFight({ tournament, match, fight, fightMatch }) {
   let title = "Sealed until betting closes";
   let note;
   if (open) note = "Pick a side. The fight starts when betting closes.";
+  else if (tournament.preview) (title = "Up next"), (note = "These two meet in the next tournament. Nothing is judged yet.");
   else if (!match.opened) note = "The organizer hasn't opened this match yet.";
   else if (fight?.status === "running") (title = "The judges are finishing"), (note = "The fight plays here as soon as the judges finish.");
   else if (fight?.status === "sealed") (title = "Fight recorded"), (note = "The fight has been judged. The replay unlocks when betting closes.");
@@ -264,8 +267,19 @@ function Layout({ tournament, match, fight, theater, wallet, onBet }) {
             <Stage tournament={tournament} match={match} fight={fight} a={a} b={b} covered={theater.open} />
           </div>
           <div className="fight-side">
-            <PredictionCard wallet={wallet} tournament={tournament} match={match} a={a} b={b} onBet={onBet} />
-            {!theater.open && <CrowdChat tournament={tournament} match={match} a={a} b={b} symbol="FILTER" />}
+            {tournament.preview ? (
+              <Card variant="surface" className="empty">
+                <span className="t-body muted">This pairing isn't on chain yet. Betting and the fight open once the organizer starts the tournament.</span>
+                <Link className="btn btn--secondary btn--sm" to="/arena?view=bracket">
+                  See the bracket
+                </Link>
+              </Card>
+            ) : (
+              <>
+                <PredictionCard wallet={wallet} tournament={tournament} match={match} a={a} b={b} onBet={onBet} />
+                {!theater.open && <CrowdChat tournament={tournament} match={match} a={a} b={b} symbol="FILTER" />}
+              </>
+            )}
           </div>
         </div>
       ) : (
@@ -291,7 +305,23 @@ function NoFight({ word = "We couldn't find that fight." }) {
 
 const wantsWatch = () => new URLSearchParams(location.search).has("watch");
 
+/** An 'Up next' bout from the arena: the submitted projects paired up before any tournament is on chain. */
+function PreviewFight({ matchIndex, wallet }) {
+  const { data: projects, loading } = usePoll(() => listProjects(), [], 30000, { key: "projects" });
+  const t = useMemo(() => previewTournament(projects), [projects]);
+  const noop = useCallback(() => {}, []);
+  if (loading && !projects) return <div className="skeleton skeleton--seat" aria-label="Loading match" />;
+  const match = t.matches[matchIndex];
+  if (!match) return <NoFight />;
+  return <Layout tournament={t} match={match} fight={null} wallet={wallet} onBet={noop} theater={{ open: false, wallet, close: noop, watch: noop }} />;
+}
+
 export function MatchFightPage({ id, matchIndex, wallet }) {
+  if (id === "next") return <PreviewFight matchIndex={matchIndex} wallet={wallet} />;
+  return <ChainFight id={id} matchIndex={matchIndex} wallet={wallet} />;
+}
+
+function ChainFight({ id, matchIndex, wallet }) {
   const { data: t, loading, error } = usePoll(() => loadTournament(id), [id], 10000, { key: `tournament:${id}`, initial: () => cachedTournament(id) });
   const { data: fight } = usePoll(() => getFight(id, matchIndex), [id, matchIndex], 4000, { key: `fight:${id}:${matchIndex}` });
   const [watching, setWatching] = useState(wantsWatch);

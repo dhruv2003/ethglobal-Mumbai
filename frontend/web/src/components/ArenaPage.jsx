@@ -25,10 +25,14 @@ function withHealth(match) {
 const isReal = (t) => t.projects.length > 0 && t.projects.every((p) => p.registered);
 
 /** Before any real tournament: the submitted projects paired up as upcoming bouts (no results are invented). */
-function upNext(projects) {
+export function previewTournament(projects) {
   const list = projects ?? [];
-  const t = { id: "next", preview: true, projects: list, matches: [] };
-  for (let i = 0; i + 1 < list.length; i += 2) t.matches.push({ index: t.matches.length, a: i, b: i + 1, status: "scheduled", winner: null });
+  const t = { id: "next", preview: true, title: "Next tournament", projects: list, matches: [] };
+  for (let i = 0; i + 1 < list.length; i += 2) t.matches.push({ index: t.matches.length, a: i, b: i + 1, status: "scheduled", opened: false, winner: null, cutoffMs: 0 });
+  return t;
+}
+function upNext(projects) {
+  const t = previewTournament(projects);
   return t.matches.map((match) => ({ t, match }));
 }
 
@@ -78,7 +82,7 @@ function FightCard({ t, match, big }) {
   const won = winner ? (winner === "a" ? a : b) : null;
   return (
     <motion.div variants={{ hidden: { opacity: 0, scale: 0.9 }, show: { opacity: 1, scale: 1, transition: bouncy } }}>
-      <Link to={t.preview ? `/projects/${encodeURIComponent(a.id)}` : `/fights/${t.id}/${match.index}`} className={`bout ${big ? "bout--big" : ""} bout--${match.status}`} aria-label={`Open fight: ${a.name} against ${b.name}, ${word}`}>
+      <Link to={`/fights/${t.id}/${match.index}`} className={`bout ${big ? "bout--big" : ""} bout--${match.status}`} aria-label={`Open fight: ${a.name} against ${b.name}, ${word}`}>
         <span className="bout__top">
           <StatusPill tone={tone}>{word}</StatusPill>
         </span>
