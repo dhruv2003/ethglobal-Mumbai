@@ -1,0 +1,2622 @@
+{
+ "go-health-me": {
+  "running": false,
+  "review": {
+   "status": "reviewed",
+   "failed": 0
+  },
+  "queueLength": 0,
+  "state": {
+   "projectId": "go-health-me",
+   "startedAt": "2026-11-06T08:12:00.000Z",
+   "finishedAt": "2026-11-06T08:38:58.000Z",
+   "steps": [
+    {
+     "about": "Fetch the repo, pin the commit, count the tests",
+     "detail": "5ba47c7 · 2476 tests found · 726 files",
+     "facts": [
+      {
+       "label": "Repository",
+       "value": "aspiringsecurity/gohealthme-tokyo"
+      },
+      {
+       "label": "Commit",
+       "value": "5ba47c7"
+      },
+      {
+       "label": "Commits since the event began",
+       "value": "0 of 437"
+      },
+      {
+       "label": "Tests found",
+       "value": "2476"
+      },
+      {
+       "label": "Files",
+       "value": 726
+      }
+     ],
+     "finishedAt": "2026-11-06T08:13:00.000Z",
+     "id": "code",
+     "parts": [
+      {
+       "detail": "github.com/aspiringsecurity/gohealthme-tokyo",
+       "finishedAt": "2026-11-06T08:12:49.000Z",
+       "id": "clone",
+       "label": "Clone the code (never run)",
+       "startedAt": "2026-11-06T08:12:00.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "5ba47c7",
+       "finishedAt": "2026-11-06T08:12:50.000Z",
+       "id": "pin",
+       "label": "Pin the exact commit",
+       "startedAt": "2026-11-06T08:12:49.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "0 of 437 commits made at the event",
+       "finishedAt": "2026-11-06T08:12:53.000Z",
+       "id": "history",
+       "label": "Read the commit history",
+       "startedAt": "2026-11-06T08:12:50.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "2476 tests · counted, not run",
+       "finishedAt": "2026-11-06T08:13:00.000Z",
+       "id": "tests",
+       "label": "Count the tests",
+       "startedAt": "2026-11-06T08:12:53.000Z",
+       "status": "done"
+      }
+     ],
+     "startedAt": "2026-11-06T08:12:00.000Z",
+     "status": "done",
+     "title": "Code review"
+    },
+    {
+     "about": "Save the video, transcribe it, check the screenshots",
+     "detail": "2:22 video saved · 429-word transcript",
+     "facts": [
+      {
+       "label": "Video",
+       "value": "2:22 long"
+      },
+      {
+       "label": "Picture",
+       "value": "1352×720"
+      },
+      {
+       "label": "Transcript",
+       "value": "429 words"
+      }
+     ],
+     "finishedAt": "2026-11-06T08:13:04.000Z",
+     "id": "demo",
+     "parts": [
+      {
+       "detail": "17.6 MB · copied from Loom",
+       "finishedAt": "2026-11-06T08:12:19.000Z",
+       "id": "download",
+       "label": "Save our copy of the video",
+       "startedAt": "2026-11-06T08:12:00.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "429 words",
+       "finishedAt": "2026-11-06T08:13:04.000Z",
+       "id": "transcribe",
+       "label": "Transcribe the speech",
+       "startedAt": "2026-11-06T08:12:19.000Z",
+       "status": "done"
+      }
+     ],
+     "startedAt": "2026-11-06T08:12:00.000Z",
+     "status": "done",
+     "title": "Process the demo"
+    },
+    {
+     "about": "Replay the demo, then the main flows, on Windows, Android and iPhone",
+     "detail": "www.gohealthme.app · Windows: 16 of 16 pass · Android: 16 of 16 pass · iPhone: 16 of 16 pass",
+     "facts": [
+      {
+       "label": "Live app",
+       "value": "www.gohealthme.app"
+      },
+      {
+       "label": "Steps written",
+       "value": "16 per device"
+      },
+      {
+       "label": "Windows",
+       "value": "16 of 16 pass"
+      },
+      {
+       "label": "Android",
+       "value": "16 of 16 pass"
+      },
+      {
+       "label": "iPhone",
+       "value": "16 of 16 pass"
+      },
+      {
+       "label": "Took",
+       "value": "24m 59s"
+      }
+     ],
+     "finishedAt": "2026-11-06T08:36:59.000Z",
+     "id": "live",
+     "parts": [
+      {
+       "detail": "Windows 11 laptop, Pixel 8, iPhone 15",
+       "finishedAt": "2026-11-06T08:12:43.000Z",
+       "id": "connect",
+       "label": "Book devices on the Mozark cloud",
+       "startedAt": "2026-11-06T08:12:00.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "www.gohealthme.app · pages mapped against the demo",
+       "finishedAt": "2026-11-06T08:15:45.000Z",
+       "id": "explore",
+       "label": "Agent explores the site",
+       "startedAt": "2026-11-06T08:12:43.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "16 steps per device",
+       "finishedAt": "2026-11-06T08:20:23.000Z",
+       "id": "write",
+       "label": "Agent writes the test steps",
+       "startedAt": "2026-11-06T08:15:45.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "16 of 16 pass · 12m 09s",
+       "finishedAt": "2026-11-06T08:32:32.000Z",
+       "id": "laptop",
+       "label": "Windows 11 laptop · Chrome 131",
+       "startedAt": "2026-11-06T08:20:23.000Z",
+       "status": "done",
+       "os": "windows"
+      },
+      {
+       "detail": "16 of 16 pass · 14m 37s",
+       "finishedAt": "2026-11-06T08:35:00.000Z",
+       "id": "android",
+       "label": "Pixel 8 · Chrome 131",
+       "startedAt": "2026-11-06T08:20:23.000Z",
+       "status": "done",
+       "os": "android"
+      },
+      {
+       "detail": "16 of 16 pass · 16m 00s",
+       "finishedAt": "2026-11-06T08:36:23.000Z",
+       "id": "ios",
+       "label": "iPhone 15 · Safari 18",
+       "startedAt": "2026-11-06T08:20:23.000Z",
+       "status": "done",
+       "os": "ios"
+      },
+      {
+       "detail": "Video and a screenshot for every step, on every device",
+       "finishedAt": "2026-11-06T08:36:59.000Z",
+       "id": "save",
+       "label": "Save recordings and screenshots",
+       "startedAt": "2026-11-06T08:36:23.000Z",
+       "status": "done"
+      }
+     ],
+     "startedAt": "2026-11-06T08:12:00.000Z",
+     "status": "done",
+     "title": "Test the live app on real devices"
+    },
+    {
+     "about": "Check what the team says against the code",
+     "detail": "16 claims checked · 11 supported · 2 contradicted",
+     "facts": [
+      {
+       "label": "Claims checked",
+       "value": 16
+      },
+      {
+       "label": "Supported by code",
+       "value": 11
+      },
+      {
+       "label": "Unverified",
+       "value": 3
+      },
+      {
+       "label": "Contradicted",
+       "value": 2
+      }
+     ],
+     "finishedAt": "2026-11-06T08:18:28.000Z",
+     "id": "dossier",
+     "parts": [
+      {
+       "detail": "60 files",
+       "finishedAt": "2026-11-06T08:13:06.000Z",
+       "id": "pack",
+       "label": "Gather the code for the reviewer",
+       "startedAt": "2026-11-06T08:13:00.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "Claims listed with the lines that back them",
+       "finishedAt": "2026-11-06T08:18:10.000Z",
+       "id": "ask",
+       "label": "Reviewer agent reads the code and the claims",
+       "startedAt": "2026-11-06T08:13:06.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "21 references checked",
+       "finishedAt": "2026-11-06T08:18:24.000Z",
+       "id": "verify",
+       "label": "Verify every cited line exists",
+       "startedAt": "2026-11-06T08:18:10.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "16 claims: 11 supported, 3 unverified, 2 contradicted",
+       "finishedAt": "2026-11-06T08:18:28.000Z",
+       "id": "save",
+       "label": "Save the fact-check",
+       "startedAt": "2026-11-06T08:18:24.000Z",
+       "status": "done"
+      }
+     ],
+     "startedAt": "2026-11-06T08:13:00.000Z",
+     "status": "done",
+     "title": "Fact-check the claims"
+    },
+    {
+     "about": "Every judge on the panel scores it with all of the above",
+     "detail": "3 of 3 judges scored · panel 76.61",
+     "facts": [
+      {
+       "label": "Panel average",
+       "value": "76.61 / 100"
+      },
+      {
+       "label": "Priya Raman",
+       "value": "81.40"
+      },
+      {
+       "label": "Marcus Lee",
+       "value": "72.12"
+      },
+      {
+       "label": "Ana Okafor",
+       "value": "76.32"
+      }
+     ],
+     "finishedAt": "2026-11-06T08:38:58.000Z",
+     "id": "judges",
+     "parts": [
+      {
+       "detail": "Scored 81.40 / 100 · \"Opened it on Android and iPhone: every flow works, and I understood it in under a minute.\"",
+       "finishedAt": "2026-11-06T08:38:23.000Z",
+       "focus": "Product journey 20% · Real-world value 20% · UI / UX 16%",
+       "id": "judge_11631c00",
+       "label": "Priya Raman",
+       "role": "Product lead",
+       "startedAt": "2026-11-06T08:37:02.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "Scored 72.12 / 100 · \"Clean money path: pull payments, split roles, no health data on chain.\"",
+       "finishedAt": "2026-11-06T08:38:48.000Z",
+       "focus": "Code quality 23% · SDLC practices 18% · Feasibility 18%",
+       "id": "judge_e9c669c4",
+       "label": "Marcus Lee",
+       "role": "Smart-contract engineer",
+       "startedAt": "2026-11-06T08:37:02.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "Scored 76.32 / 100 · \"A real habit with real money behind it, live today on Base Sepolia.\"",
+       "finishedAt": "2026-11-06T08:38:58.000Z",
+       "focus": "Business model 21% · Real-world value 17% · Scalability 17%",
+       "id": "judge_c876a259",
+       "label": "Ana Okafor",
+       "role": "Investor",
+       "startedAt": "2026-11-06T08:37:02.000Z",
+       "status": "done"
+      }
+     ],
+     "startedAt": "2026-11-06T08:37:02.000Z",
+     "status": "done",
+     "title": "Judges score it"
+    }
+   ]
+  }
+ },
+ "fittercoin": {
+  "running": false,
+  "review": {
+   "status": "reviewed",
+   "failed": 0
+  },
+  "queueLength": 0,
+  "state": {
+   "projectId": "fittercoin",
+   "startedAt": "2026-11-06T10:09:47.000Z",
+   "finishedAt": "2026-11-06T10:36:12.000Z",
+   "steps": [
+    {
+     "about": "Fetch the repo, pin the commit, count the tests",
+     "detail": "b28c5ca · 0 tests found · 88 files",
+     "facts": [
+      {
+       "label": "Repository",
+       "value": "musteryasm/ethDelhi-2025"
+      },
+      {
+       "label": "Commit",
+       "value": "b28c5ca"
+      },
+      {
+       "label": "Commits since the event began",
+       "value": "0 of 23"
+      },
+      {
+       "label": "Tests found",
+       "value": "0"
+      },
+      {
+       "label": "Files",
+       "value": 88
+      }
+     ],
+     "finishedAt": "2026-11-06T10:10:25.000Z",
+     "id": "code",
+     "parts": [
+      {
+       "detail": "github.com/musteryasm/ethDelhi-2025",
+       "finishedAt": "2026-11-06T10:10:16.000Z",
+       "id": "clone",
+       "label": "Clone the code (never run)",
+       "startedAt": "2026-11-06T10:09:47.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "b28c5ca",
+       "finishedAt": "2026-11-06T10:10:17.000Z",
+       "id": "pin",
+       "label": "Pin the exact commit",
+       "startedAt": "2026-11-06T10:10:16.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "0 of 23 commits made at the event",
+       "finishedAt": "2026-11-06T10:10:21.000Z",
+       "id": "history",
+       "label": "Read the commit history",
+       "startedAt": "2026-11-06T10:10:17.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "0 tests · counted, not run",
+       "finishedAt": "2026-11-06T10:10:25.000Z",
+       "id": "tests",
+       "label": "Count the tests",
+       "startedAt": "2026-11-06T10:10:21.000Z",
+       "status": "done"
+      }
+     ],
+     "startedAt": "2026-11-06T10:09:47.000Z",
+     "status": "done",
+     "title": "Code review"
+    },
+    {
+     "about": "Save the video, transcribe it, check the screenshots",
+     "detail": "3:56 video saved · 642-word transcript",
+     "facts": [
+      {
+       "label": "Video",
+       "value": "3:56 long"
+      },
+      {
+       "label": "Picture",
+       "value": "1920×948"
+      },
+      {
+       "label": "Transcript",
+       "value": "642 words"
+      }
+     ],
+     "finishedAt": "2026-11-06T10:11:36.000Z",
+     "id": "demo",
+     "parts": [
+      {
+       "detail": "41.4 MB · copied from the link",
+       "finishedAt": "2026-11-06T10:10:21.000Z",
+       "id": "download",
+       "label": "Save our copy of the video",
+       "startedAt": "2026-11-06T10:09:47.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "642 words",
+       "finishedAt": "2026-11-06T10:11:36.000Z",
+       "id": "transcribe",
+       "label": "Transcribe the speech",
+       "startedAt": "2026-11-06T10:10:21.000Z",
+       "status": "done"
+      }
+     ],
+     "startedAt": "2026-11-06T10:09:47.000Z",
+     "status": "done",
+     "title": "Process the demo"
+    },
+    {
+     "about": "Replay the demo, then the main flows, on Windows, Android and iPhone",
+     "detail": "fittercoin.vercel.app · Windows: 10 work · 2 broken · Android: 7 work · 5 broken · iPhone: 7 work · 5 broken",
+     "facts": [
+      {
+       "label": "Live app",
+       "value": "fittercoin.vercel.app"
+      },
+      {
+       "label": "Steps written",
+       "value": "12 per device"
+      },
+      {
+       "label": "Windows",
+       "value": "10 work · 2 broken"
+      },
+      {
+       "label": "Android",
+       "value": "7 work · 5 broken"
+      },
+      {
+       "label": "iPhone",
+       "value": "7 work · 5 broken"
+      },
+      {
+       "label": "Wallet",
+       "value": "MetaMask test wallet · Citrea testnet"
+      },
+      {
+       "label": "Took",
+       "value": "24m 27s"
+      }
+     ],
+     "finishedAt": "2026-11-06T10:34:14.000Z",
+     "id": "live",
+     "parts": [
+      {
+       "detail": "Windows 11 laptop, Pixel 8, iPhone 15",
+       "finishedAt": "2026-11-06T10:10:27.000Z",
+       "id": "connect",
+       "label": "Book devices on the Mozark cloud",
+       "startedAt": "2026-11-06T10:09:47.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "fittercoin.vercel.app · pages mapped against the demo",
+       "finishedAt": "2026-11-06T10:13:25.000Z",
+       "id": "explore",
+       "label": "Agent explores the site",
+       "startedAt": "2026-11-06T10:10:27.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "12 steps per device, MetaMask approvals included",
+       "finishedAt": "2026-11-06T10:17:37.000Z",
+       "id": "write",
+       "label": "Agent writes the test steps",
+       "startedAt": "2026-11-06T10:13:25.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "10 work · 2 broken · 11m 40s",
+       "finishedAt": "2026-11-06T10:29:17.000Z",
+       "id": "laptop",
+       "label": "Windows 11 laptop · Chrome 131",
+       "startedAt": "2026-11-06T10:17:37.000Z",
+       "status": "done",
+       "os": "windows"
+      },
+      {
+       "detail": "7 work · 5 broken · 14m 36s",
+       "finishedAt": "2026-11-06T10:32:13.000Z",
+       "id": "android",
+       "label": "Pixel 8 · Chrome 131",
+       "startedAt": "2026-11-06T10:17:37.000Z",
+       "status": "done",
+       "os": "android"
+      },
+      {
+       "detail": "7 work · 5 broken · 16m 09s",
+       "finishedAt": "2026-11-06T10:33:46.000Z",
+       "id": "ios",
+       "label": "iPhone 15 · Safari 18",
+       "startedAt": "2026-11-06T10:17:37.000Z",
+       "status": "done",
+       "os": "ios"
+      },
+      {
+       "detail": "Video and a screenshot for every step, on every device",
+       "finishedAt": "2026-11-06T10:34:14.000Z",
+       "id": "save",
+       "label": "Save recordings and screenshots",
+       "startedAt": "2026-11-06T10:33:46.000Z",
+       "status": "done"
+      }
+     ],
+     "startedAt": "2026-11-06T10:09:47.000Z",
+     "status": "done",
+     "title": "Test the live app on real devices"
+    },
+    {
+     "about": "Check what the team says against the code",
+     "detail": "6 claims checked · 2 supported · 4 contradicted",
+     "facts": [
+      {
+       "label": "Claims checked",
+       "value": 6
+      },
+      {
+       "label": "Supported by code",
+       "value": 2
+      },
+      {
+       "label": "Unverified",
+       "value": 0
+      },
+      {
+       "label": "Contradicted",
+       "value": 4
+      }
+     ],
+     "finishedAt": "2026-11-06T10:15:56.000Z",
+     "id": "dossier",
+     "parts": [
+      {
+       "detail": "60 files",
+       "finishedAt": "2026-11-06T10:10:31.000Z",
+       "id": "pack",
+       "label": "Gather the code for the reviewer",
+       "startedAt": "2026-11-06T10:10:25.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "Claims listed with the lines that back them",
+       "finishedAt": "2026-11-06T10:15:38.000Z",
+       "id": "ask",
+       "label": "Reviewer agent reads the code and the claims",
+       "startedAt": "2026-11-06T10:10:31.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "6 references checked",
+       "finishedAt": "2026-11-06T10:15:52.000Z",
+       "id": "verify",
+       "label": "Verify every cited line exists",
+       "startedAt": "2026-11-06T10:15:38.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "6 claims: 2 supported, 0 unverified, 4 contradicted",
+       "finishedAt": "2026-11-06T10:15:56.000Z",
+       "id": "save",
+       "label": "Save the fact-check",
+       "startedAt": "2026-11-06T10:15:52.000Z",
+       "status": "done"
+      }
+     ],
+     "startedAt": "2026-11-06T10:10:25.000Z",
+     "status": "done",
+     "title": "Fact-check the claims"
+    },
+    {
+     "about": "Every judge on the panel scores it with all of the above",
+     "detail": "3 of 3 judges scored · panel 35.86",
+     "facts": [
+      {
+       "label": "Panel average",
+       "value": "35.86 / 100"
+      },
+      {
+       "label": "Priya Raman",
+       "value": "44.20"
+      },
+      {
+       "label": "Marcus Lee",
+       "value": "25.09"
+      },
+      {
+       "label": "Ana Okafor",
+       "value": "38.29"
+      }
+     ],
+     "finishedAt": "2026-11-06T10:36:12.000Z",
+     "id": "judges",
+     "parts": [
+      {
+       "detail": "Scored 44.20 / 100 · \"The best video of the day. On Android and iPhone the layout spills off screen and the camera never opens.\"",
+       "finishedAt": "2026-11-06T10:35:55.000Z",
+       "focus": "Product journey 20% · Real-world value 20% · UI / UX 16%",
+       "id": "judge_11631c00",
+       "label": "Priya Raman",
+       "role": "Product lead",
+       "startedAt": "2026-11-06T10:34:17.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "Scored 25.09 / 100 · \"The betting feature has no code behind it: settle() is an empty view.\"",
+       "finishedAt": "2026-11-06T10:35:50.000Z",
+       "focus": "Code quality 23% · SDLC practices 18% · Feasibility 18%",
+       "id": "judge_e9c669c4",
+       "label": "Marcus Lee",
+       "role": "Smart-contract engineer",
+       "startedAt": "2026-11-06T10:34:17.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "Scored 38.29 / 100 · \"A pitch, not a product yet: entry is free and no bet has ever paid out.\"",
+       "finishedAt": "2026-11-06T10:36:12.000Z",
+       "focus": "Business model 21% · Real-world value 17% · Scalability 17%",
+       "id": "judge_c876a259",
+       "label": "Ana Okafor",
+       "role": "Investor",
+       "startedAt": "2026-11-06T10:34:17.000Z",
+       "status": "done"
+      }
+     ],
+     "startedAt": "2026-11-06T10:34:17.000Z",
+     "status": "done",
+     "title": "Judges score it"
+    }
+   ]
+  }
+ },
+ "mozark-app-studio": {
+  "running": false,
+  "review": {
+   "status": "reviewed",
+   "failed": 0
+  },
+  "queueLength": 0,
+  "state": {
+   "projectId": "mozark-app-studio",
+   "startedAt": "2026-11-06T11:23:49.000Z",
+   "finishedAt": "2026-11-06T11:40:32.000Z",
+   "steps": [
+    {
+     "about": "Fetch the repo, pin the commit, count the tests",
+     "detail": "6d0117b · 1232 tests found · 412 files",
+     "facts": [
+      {
+       "label": "Repository",
+       "value": "mozarkai/optics-framework"
+      },
+      {
+       "label": "Commit",
+       "value": "6d0117b"
+      },
+      {
+       "label": "Commits since the event began",
+       "value": "49 of 200"
+      },
+      {
+       "label": "Tests found",
+       "value": "1232"
+      },
+      {
+       "label": "Files",
+       "value": 412
+      }
+     ],
+     "finishedAt": "2026-11-06T11:24:33.000Z",
+     "id": "code",
+     "parts": [
+      {
+       "detail": "github.com/mozarkai/optics-framework",
+       "finishedAt": "2026-11-06T11:24:24.000Z",
+       "id": "clone",
+       "label": "Clone the code (never run)",
+       "startedAt": "2026-11-06T11:23:49.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "6d0117b",
+       "finishedAt": "2026-11-06T11:24:25.000Z",
+       "id": "pin",
+       "label": "Pin the exact commit",
+       "startedAt": "2026-11-06T11:24:24.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "49 of 200 commits made at the event",
+       "finishedAt": "2026-11-06T11:24:30.000Z",
+       "id": "history",
+       "label": "Read the commit history",
+       "startedAt": "2026-11-06T11:24:25.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "1232 tests · counted, not run",
+       "finishedAt": "2026-11-06T11:24:33.000Z",
+       "id": "tests",
+       "label": "Count the tests",
+       "startedAt": "2026-11-06T11:24:30.000Z",
+       "status": "done"
+      }
+     ],
+     "startedAt": "2026-11-06T11:23:49.000Z",
+     "status": "done",
+     "title": "Code review"
+    },
+    {
+     "about": "Save the video, transcribe it, check the screenshots",
+     "detail": "1:58 video saved · 311-word transcript",
+     "facts": [
+      {
+       "label": "Video",
+       "value": "1:58 long"
+      },
+      {
+       "label": "Picture",
+       "value": "1920×1080"
+      },
+      {
+       "label": "Transcript",
+       "value": "311 words"
+      }
+     ],
+     "finishedAt": "2026-11-06T11:24:39.000Z",
+     "id": "demo",
+     "parts": [
+      {
+       "detail": "6.2 MB · copied from the link",
+       "finishedAt": "2026-11-06T11:24:01.000Z",
+       "id": "download",
+       "label": "Save our copy of the video",
+       "startedAt": "2026-11-06T11:23:49.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "311 words",
+       "finishedAt": "2026-11-06T11:24:39.000Z",
+       "id": "transcribe",
+       "label": "Transcribe the speech",
+       "startedAt": "2026-11-06T11:24:01.000Z",
+       "status": "done"
+      }
+     ],
+     "startedAt": "2026-11-06T11:23:49.000Z",
+     "status": "done",
+     "title": "Process the demo"
+    },
+    {
+     "about": "Replay the demo, then the main flows, on Windows, Android and iPhone",
+     "detail": "app-studio.mozark.ai · Windows: 5 of 6 pass · Android: 5 of 6 pass · iPhone: 5 of 6 pass",
+     "facts": [
+      {
+       "label": "Live app",
+       "value": "app-studio.mozark.ai"
+      },
+      {
+       "label": "Steps written",
+       "value": "6 per device"
+      },
+      {
+       "label": "Windows",
+       "value": "5 of 6 pass"
+      },
+      {
+       "label": "Android",
+       "value": "5 of 6 pass"
+      },
+      {
+       "label": "iPhone",
+       "value": "5 of 6 pass"
+      },
+      {
+       "label": "Took",
+       "value": "14m 38s"
+      }
+     ],
+     "finishedAt": "2026-11-06T11:38:27.000Z",
+     "id": "live",
+     "parts": [
+      {
+       "detail": "Windows 11 laptop, Pixel 8, iPhone 15",
+       "finishedAt": "2026-11-06T11:24:32.000Z",
+       "id": "connect",
+       "label": "Book devices on the Mozark cloud",
+       "startedAt": "2026-11-06T11:23:49.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "app-studio.mozark.ai · pages mapped against the demo",
+       "finishedAt": "2026-11-06T11:26:38.000Z",
+       "id": "explore",
+       "label": "Agent explores the site",
+       "startedAt": "2026-11-06T11:24:32.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "6 steps per device",
+       "finishedAt": "2026-11-06T11:29:40.000Z",
+       "id": "write",
+       "label": "Agent writes the test steps",
+       "startedAt": "2026-11-06T11:26:38.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "5 of 6 pass · 6m 09s",
+       "finishedAt": "2026-11-06T11:35:49.000Z",
+       "id": "laptop",
+       "label": "Windows 11 laptop · Chrome 131",
+       "startedAt": "2026-11-06T11:29:40.000Z",
+       "status": "done",
+       "os": "windows"
+      },
+      {
+       "detail": "5 of 6 pass · 7m 20s",
+       "finishedAt": "2026-11-06T11:37:00.000Z",
+       "id": "android",
+       "label": "Pixel 8 · Chrome 131",
+       "startedAt": "2026-11-06T11:29:40.000Z",
+       "status": "done",
+       "os": "android"
+      },
+      {
+       "detail": "5 of 6 pass · 8m 16s",
+       "finishedAt": "2026-11-06T11:37:56.000Z",
+       "id": "ios",
+       "label": "iPhone 15 · Safari 18",
+       "startedAt": "2026-11-06T11:29:40.000Z",
+       "status": "done",
+       "os": "ios"
+      },
+      {
+       "detail": "Video and a screenshot for every step, on every device",
+       "finishedAt": "2026-11-06T11:38:27.000Z",
+       "id": "save",
+       "label": "Save recordings and screenshots",
+       "startedAt": "2026-11-06T11:37:56.000Z",
+       "status": "done"
+      }
+     ],
+     "startedAt": "2026-11-06T11:23:49.000Z",
+     "status": "done",
+     "title": "Test the live app on real devices"
+    },
+    {
+     "about": "Check what the team says against the code",
+     "detail": "8 claims checked · 6 supported · 1 contradicted",
+     "facts": [
+      {
+       "label": "Claims checked",
+       "value": 8
+      },
+      {
+       "label": "Supported by code",
+       "value": 6
+      },
+      {
+       "label": "Unverified",
+       "value": 1
+      },
+      {
+       "label": "Contradicted",
+       "value": 1
+      }
+     ],
+     "finishedAt": "2026-11-06T11:30:10.000Z",
+     "id": "dossier",
+     "parts": [
+      {
+       "detail": "60 files",
+       "finishedAt": "2026-11-06T11:24:39.000Z",
+       "id": "pack",
+       "label": "Gather the code for the reviewer",
+       "startedAt": "2026-11-06T11:24:33.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "Claims listed with the lines that back them",
+       "finishedAt": "2026-11-06T11:29:52.000Z",
+       "id": "ask",
+       "label": "Reviewer agent reads the code and the claims",
+       "startedAt": "2026-11-06T11:24:39.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "7 references checked",
+       "finishedAt": "2026-11-06T11:30:06.000Z",
+       "id": "verify",
+       "label": "Verify every cited line exists",
+       "startedAt": "2026-11-06T11:29:52.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "8 claims: 6 supported, 1 unverified, 1 contradicted",
+       "finishedAt": "2026-11-06T11:30:10.000Z",
+       "id": "save",
+       "label": "Save the fact-check",
+       "startedAt": "2026-11-06T11:30:06.000Z",
+       "status": "done"
+      }
+     ],
+     "startedAt": "2026-11-06T11:24:33.000Z",
+     "status": "done",
+     "title": "Fact-check the claims"
+    },
+    {
+     "about": "Every judge on the panel scores it with all of the above",
+     "detail": "3 of 3 judges scored · panel 78.42",
+     "facts": [
+      {
+       "label": "Panel average",
+       "value": "78.42 / 100"
+      },
+      {
+       "label": "Priya Raman",
+       "value": "75.48"
+      },
+      {
+       "label": "Marcus Lee",
+       "value": "80.53"
+      },
+      {
+       "label": "Ana Okafor",
+       "value": "79.26"
+      }
+     ],
+     "finishedAt": "2026-11-06T11:40:32.000Z",
+     "id": "judges",
+     "parts": [
+      {
+       "detail": "Scored 75.48 / 100 · \"A real product for a real pain. The public flows work; the rest is behind sign-in.\"",
+       "finishedAt": "2026-11-06T11:39:50.000Z",
+       "focus": "Product journey 20% · Real-world value 20% · UI / UX 16%",
+       "id": "judge_11631c00",
+       "label": "Priya Raman",
+       "role": "Product lead",
+       "startedAt": "2026-11-06T11:38:30.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "Scored 80.53 / 100 · \"1,232 tests and 49 commits at the event. It practices what it sells.\"",
+       "finishedAt": "2026-11-06T11:40:18.000Z",
+       "focus": "Code quality 23% · SDLC practices 18% · Feasibility 18%",
+       "id": "judge_e9c669c4",
+       "label": "Marcus Lee",
+       "role": "Smart-contract engineer",
+       "startedAt": "2026-11-06T11:38:30.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "Scored 79.26 / 100 · \"Teams pay for testing today. This is a business.\"",
+       "finishedAt": "2026-11-06T11:40:32.000Z",
+       "focus": "Business model 21% · Real-world value 17% · Scalability 17%",
+       "id": "judge_c876a259",
+       "label": "Ana Okafor",
+       "role": "Investor",
+       "startedAt": "2026-11-06T11:38:30.000Z",
+       "status": "done"
+      }
+     ],
+     "startedAt": "2026-11-06T11:38:30.000Z",
+     "status": "done",
+     "title": "Judges score it"
+    }
+   ]
+  }
+ },
+ "qagent": {
+  "running": false,
+  "review": {
+   "status": "reviewed",
+   "failed": 0
+  },
+  "queueLength": 0,
+  "state": {
+   "projectId": "qagent",
+   "startedAt": "2026-11-06T12:32:11.000Z",
+   "finishedAt": "2026-11-06T12:48:39.000Z",
+   "steps": [
+    {
+     "about": "Fetch the repo, pin the commit, count the tests",
+     "detail": "a6071d2 · 0 tests found · 64 files",
+     "facts": [
+      {
+       "label": "Repository",
+       "value": "nullpointers-hq/qagent"
+      },
+      {
+       "label": "Commit",
+       "value": "a6071d2"
+      },
+      {
+       "label": "Commits since the event began",
+       "value": "31 of 31"
+      },
+      {
+       "label": "Tests found",
+       "value": "0"
+      },
+      {
+       "label": "Files",
+       "value": 64
+      }
+     ],
+     "finishedAt": "2026-11-06T12:32:49.000Z",
+     "id": "code",
+     "parts": [
+      {
+       "detail": "github.com/nullpointers-hq/qagent",
+       "finishedAt": "2026-11-06T12:32:36.000Z",
+       "id": "clone",
+       "label": "Clone the code (never run)",
+       "startedAt": "2026-11-06T12:32:11.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "a6071d2",
+       "finishedAt": "2026-11-06T12:32:37.000Z",
+       "id": "pin",
+       "label": "Pin the exact commit",
+       "startedAt": "2026-11-06T12:32:36.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "31 of 31 commits made at the event",
+       "finishedAt": "2026-11-06T12:32:40.000Z",
+       "id": "history",
+       "label": "Read the commit history",
+       "startedAt": "2026-11-06T12:32:37.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "0 tests · counted, not run",
+       "finishedAt": "2026-11-06T12:32:49.000Z",
+       "id": "tests",
+       "label": "Count the tests",
+       "startedAt": "2026-11-06T12:32:40.000Z",
+       "status": "done"
+      }
+     ],
+     "startedAt": "2026-11-06T12:32:11.000Z",
+     "status": "done",
+     "title": "Code review"
+    },
+    {
+     "about": "Save the video, transcribe it, check the screenshots",
+     "detail": "2 screenshots read",
+     "facts": [
+      {
+       "label": "Screenshots",
+       "value": 2
+      }
+     ],
+     "finishedAt": "2026-11-06T12:32:26.000Z",
+     "id": "demo",
+     "parts": [
+      {
+       "detail": "2 screenshots",
+       "finishedAt": "2026-11-06T12:32:26.000Z",
+       "id": "images",
+       "label": "Read the screenshots",
+       "startedAt": "2026-11-06T12:32:11.000Z",
+       "status": "done"
+      }
+     ],
+     "startedAt": "2026-11-06T12:32:11.000Z",
+     "status": "done",
+     "title": "Process the demo"
+    },
+    {
+     "about": "Replay the demo, then the main flows, on Windows, Android and iPhone",
+     "detail": "qagent-demo.vercel.app · Windows: 2 work · 3 broken · Android: 2 work · 3 broken · iPhone: 2 work · 3 broken",
+     "facts": [
+      {
+       "label": "Live app",
+       "value": "qagent-demo.vercel.app"
+      },
+      {
+       "label": "Steps written",
+       "value": "5 per device"
+      },
+      {
+       "label": "Windows",
+       "value": "2 work · 3 broken"
+      },
+      {
+       "label": "Android",
+       "value": "2 work · 3 broken"
+      },
+      {
+       "label": "iPhone",
+       "value": "2 work · 3 broken"
+      },
+      {
+       "label": "Took",
+       "value": "14m 35s"
+      }
+     ],
+     "finishedAt": "2026-11-06T12:46:46.000Z",
+     "id": "live",
+     "parts": [
+      {
+       "detail": "Windows 11 laptop, Pixel 8, iPhone 15",
+       "finishedAt": "2026-11-06T12:32:57.000Z",
+       "id": "connect",
+       "label": "Book devices on the Mozark cloud",
+       "startedAt": "2026-11-06T12:32:11.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "qagent-demo.vercel.app · pages mapped against the demo",
+       "finishedAt": "2026-11-06T12:35:36.000Z",
+       "id": "explore",
+       "label": "Agent explores the site",
+       "startedAt": "2026-11-06T12:32:57.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "5 steps per device",
+       "finishedAt": "2026-11-06T12:38:44.000Z",
+       "id": "write",
+       "label": "Agent writes the test steps",
+       "startedAt": "2026-11-06T12:35:36.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "2 work · 3 broken · 5m 25s",
+       "finishedAt": "2026-11-06T12:44:09.000Z",
+       "id": "laptop",
+       "label": "Windows 11 laptop · Chrome 131",
+       "startedAt": "2026-11-06T12:38:44.000Z",
+       "status": "done",
+       "os": "windows"
+      },
+      {
+       "detail": "2 work · 3 broken · 6m 40s",
+       "finishedAt": "2026-11-06T12:45:24.000Z",
+       "id": "android",
+       "label": "Pixel 8 · Chrome 131",
+       "startedAt": "2026-11-06T12:38:44.000Z",
+       "status": "done",
+       "os": "android"
+      },
+      {
+       "detail": "2 work · 3 broken · 7m 28s",
+       "finishedAt": "2026-11-06T12:46:12.000Z",
+       "id": "ios",
+       "label": "iPhone 15 · Safari 18",
+       "startedAt": "2026-11-06T12:38:44.000Z",
+       "status": "done",
+       "os": "ios"
+      },
+      {
+       "detail": "Video and a screenshot for every step, on every device",
+       "finishedAt": "2026-11-06T12:46:46.000Z",
+       "id": "save",
+       "label": "Save recordings and screenshots",
+       "startedAt": "2026-11-06T12:46:12.000Z",
+       "status": "done"
+      }
+     ],
+     "startedAt": "2026-11-06T12:32:11.000Z",
+     "status": "done",
+     "title": "Test the live app on real devices"
+    },
+    {
+     "about": "Check what the team says against the code",
+     "detail": "5 claims checked · 2 supported · 2 contradicted",
+     "facts": [
+      {
+       "label": "Claims checked",
+       "value": 5
+      },
+      {
+       "label": "Supported by code",
+       "value": 2
+      },
+      {
+       "label": "Unverified",
+       "value": 1
+      },
+      {
+       "label": "Contradicted",
+       "value": 2
+      }
+     ],
+     "finishedAt": "2026-11-06T12:39:15.000Z",
+     "id": "dossier",
+     "parts": [
+      {
+       "detail": "60 files",
+       "finishedAt": "2026-11-06T12:32:55.000Z",
+       "id": "pack",
+       "label": "Gather the code for the reviewer",
+       "startedAt": "2026-11-06T12:32:49.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "Claims listed with the lines that back them",
+       "finishedAt": "2026-11-06T12:38:57.000Z",
+       "id": "ask",
+       "label": "Reviewer agent reads the code and the claims",
+       "startedAt": "2026-11-06T12:32:55.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "4 references checked",
+       "finishedAt": "2026-11-06T12:39:11.000Z",
+       "id": "verify",
+       "label": "Verify every cited line exists",
+       "startedAt": "2026-11-06T12:38:57.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "5 claims: 2 supported, 1 unverified, 2 contradicted",
+       "finishedAt": "2026-11-06T12:39:15.000Z",
+       "id": "save",
+       "label": "Save the fact-check",
+       "startedAt": "2026-11-06T12:39:11.000Z",
+       "status": "done"
+      }
+     ],
+     "startedAt": "2026-11-06T12:32:49.000Z",
+     "status": "done",
+     "title": "Fact-check the claims"
+    },
+    {
+     "about": "Every judge on the panel scores it with all of the above",
+     "detail": "3 of 3 judges scored · panel 49.05",
+     "facts": [
+      {
+       "label": "Panel average",
+       "value": "49.05 / 100"
+      },
+      {
+       "label": "Priya Raman",
+       "value": "56.12"
+      },
+      {
+       "label": "Marcus Lee",
+       "value": "36.58"
+      },
+      {
+       "label": "Ana Okafor",
+       "value": "54.45"
+      }
+     ],
+     "finishedAt": "2026-11-06T12:48:39.000Z",
+     "id": "judges",
+     "parts": [
+      {
+       "detail": "Scored 56.12 / 100 · \"Great pitch. The dashboard in the video is a 404 on the live site.\"",
+       "finishedAt": "2026-11-06T12:48:17.000Z",
+       "focus": "Product journey 20% · Real-world value 20% · UI / UX 16%",
+       "id": "judge_11631c00",
+       "label": "Priya Raman",
+       "role": "Product lead",
+       "startedAt": "2026-11-06T12:46:49.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "Scored 36.58 / 100 · \"You sell testing and ship zero tests.\"",
+       "finishedAt": "2026-11-06T12:48:39.000Z",
+       "focus": "Code quality 23% · SDLC practices 18% · Feasibility 18%",
+       "id": "judge_e9c669c4",
+       "label": "Marcus Lee",
+       "role": "Smart-contract engineer",
+       "startedAt": "2026-11-06T12:46:49.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "Scored 54.45 / 100 · \"Big market, but the agent returns canned findings.\"",
+       "finishedAt": "2026-11-06T12:48:37.000Z",
+       "focus": "Business model 21% · Real-world value 17% · Scalability 17%",
+       "id": "judge_c876a259",
+       "label": "Ana Okafor",
+       "role": "Investor",
+       "startedAt": "2026-11-06T12:46:49.000Z",
+       "status": "done"
+      }
+     ],
+     "startedAt": "2026-11-06T12:46:49.000Z",
+     "status": "done",
+     "title": "Judges score it"
+    }
+   ]
+  }
+ },
+ "vaultline": {
+  "running": false,
+  "review": {
+   "status": "reviewed",
+   "failed": 0
+  },
+  "queueLength": 0,
+  "state": {
+   "projectId": "vaultline",
+   "startedAt": "2026-11-06T12:51:30.000Z",
+   "finishedAt": "2026-11-06T13:07:36.000Z",
+   "steps": [
+    {
+     "about": "Fetch the repo, pin the commit, count the tests",
+     "detail": "ea70606 · 230 tests found · 140 files",
+     "facts": [
+      {
+       "label": "Repository",
+       "value": "merkle-mafia/vaultline"
+      },
+      {
+       "label": "Commit",
+       "value": "ea70606"
+      },
+      {
+       "label": "Commits since the event began",
+       "value": "88 of 100"
+      },
+      {
+       "label": "Tests found",
+       "value": "230"
+      },
+      {
+       "label": "Files",
+       "value": 140
+      }
+     ],
+     "finishedAt": "2026-11-06T12:52:07.000Z",
+     "id": "code",
+     "parts": [
+      {
+       "detail": "github.com/merkle-mafia/vaultline",
+       "finishedAt": "2026-11-06T12:51:54.000Z",
+       "id": "clone",
+       "label": "Clone the code (never run)",
+       "startedAt": "2026-11-06T12:51:30.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "ea70606",
+       "finishedAt": "2026-11-06T12:51:55.000Z",
+       "id": "pin",
+       "label": "Pin the exact commit",
+       "startedAt": "2026-11-06T12:51:54.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "88 of 100 commits made at the event",
+       "finishedAt": "2026-11-06T12:52:01.000Z",
+       "id": "history",
+       "label": "Read the commit history",
+       "startedAt": "2026-11-06T12:51:55.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "230 tests · counted, not run",
+       "finishedAt": "2026-11-06T12:52:07.000Z",
+       "id": "tests",
+       "label": "Count the tests",
+       "startedAt": "2026-11-06T12:52:01.000Z",
+       "status": "done"
+      }
+     ],
+     "startedAt": "2026-11-06T12:51:30.000Z",
+     "status": "done",
+     "title": "Code review"
+    },
+    {
+     "about": "Save the video, transcribe it, check the screenshots",
+     "detail": "2 screenshots read",
+     "facts": [
+      {
+       "label": "Screenshots",
+       "value": 2
+      }
+     ],
+     "finishedAt": "2026-11-06T12:51:49.000Z",
+     "id": "demo",
+     "parts": [
+      {
+       "detail": "2 screenshots",
+       "finishedAt": "2026-11-06T12:51:49.000Z",
+       "id": "images",
+       "label": "Read the screenshots",
+       "startedAt": "2026-11-06T12:51:30.000Z",
+       "status": "done"
+      }
+     ],
+     "startedAt": "2026-11-06T12:51:30.000Z",
+     "status": "done",
+     "title": "Process the demo"
+    },
+    {
+     "about": "Replay the demo, then the main flows, on Windows, Android and iPhone",
+     "detail": "vaultline.xyz · Windows: 3 work · 2 broken · Android: 3 work · 2 broken · iPhone: 3 work · 2 broken",
+     "facts": [
+      {
+       "label": "Live app",
+       "value": "vaultline.xyz"
+      },
+      {
+       "label": "Steps written",
+       "value": "5 per device"
+      },
+      {
+       "label": "Windows",
+       "value": "3 work · 2 broken"
+      },
+      {
+       "label": "Android",
+       "value": "3 work · 2 broken"
+      },
+      {
+       "label": "iPhone",
+       "value": "3 work · 2 broken"
+      },
+      {
+       "label": "Took",
+       "value": "13m 49s"
+      }
+     ],
+     "finishedAt": "2026-11-06T13:05:19.000Z",
+     "id": "live",
+     "parts": [
+      {
+       "detail": "Windows 11 laptop, Pixel 8, iPhone 15",
+       "finishedAt": "2026-11-06T12:52:09.000Z",
+       "id": "connect",
+       "label": "Book devices on the Mozark cloud",
+       "startedAt": "2026-11-06T12:51:30.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "vaultline.xyz · pages mapped against the demo",
+       "finishedAt": "2026-11-06T12:54:32.000Z",
+       "id": "explore",
+       "label": "Agent explores the site",
+       "startedAt": "2026-11-06T12:52:09.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "5 steps per device",
+       "finishedAt": "2026-11-06T12:57:28.000Z",
+       "id": "write",
+       "label": "Agent writes the test steps",
+       "startedAt": "2026-11-06T12:54:32.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "3 work · 2 broken · 5m 49s",
+       "finishedAt": "2026-11-06T13:03:17.000Z",
+       "id": "laptop",
+       "label": "Windows 11 laptop · Chrome 131",
+       "startedAt": "2026-11-06T12:57:28.000Z",
+       "status": "done",
+       "os": "windows"
+      },
+      {
+       "detail": "3 work · 2 broken · 6m 43s",
+       "finishedAt": "2026-11-06T13:04:11.000Z",
+       "id": "android",
+       "label": "Pixel 8 · Chrome 131",
+       "startedAt": "2026-11-06T12:57:28.000Z",
+       "status": "done",
+       "os": "android"
+      },
+      {
+       "detail": "3 work · 2 broken · 7m 15s",
+       "finishedAt": "2026-11-06T13:04:43.000Z",
+       "id": "ios",
+       "label": "iPhone 15 · Safari 18",
+       "startedAt": "2026-11-06T12:57:28.000Z",
+       "status": "done",
+       "os": "ios"
+      },
+      {
+       "detail": "Video and a screenshot for every step, on every device",
+       "finishedAt": "2026-11-06T13:05:19.000Z",
+       "id": "save",
+       "label": "Save recordings and screenshots",
+       "startedAt": "2026-11-06T13:04:43.000Z",
+       "status": "done"
+      }
+     ],
+     "startedAt": "2026-11-06T12:51:30.000Z",
+     "status": "done",
+     "title": "Test the live app on real devices"
+    },
+    {
+     "about": "Check what the team says against the code",
+     "detail": "6 claims checked · 5 supported · 1 contradicted",
+     "facts": [
+      {
+       "label": "Claims checked",
+       "value": 6
+      },
+      {
+       "label": "Supported by code",
+       "value": 5
+      },
+      {
+       "label": "Unverified",
+       "value": 0
+      },
+      {
+       "label": "Contradicted",
+       "value": 1
+      }
+     ],
+     "finishedAt": "2026-11-06T12:57:55.000Z",
+     "id": "dossier",
+     "parts": [
+      {
+       "detail": "60 files",
+       "finishedAt": "2026-11-06T12:52:13.000Z",
+       "id": "pack",
+       "label": "Gather the code for the reviewer",
+       "startedAt": "2026-11-06T12:52:07.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "Claims listed with the lines that back them",
+       "finishedAt": "2026-11-06T12:57:37.000Z",
+       "id": "ask",
+       "label": "Reviewer agent reads the code and the claims",
+       "startedAt": "2026-11-06T12:52:13.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "6 references checked",
+       "finishedAt": "2026-11-06T12:57:51.000Z",
+       "id": "verify",
+       "label": "Verify every cited line exists",
+       "startedAt": "2026-11-06T12:57:37.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "6 claims: 5 supported, 0 unverified, 1 contradicted",
+       "finishedAt": "2026-11-06T12:57:55.000Z",
+       "id": "save",
+       "label": "Save the fact-check",
+       "startedAt": "2026-11-06T12:57:51.000Z",
+       "status": "done"
+      }
+     ],
+     "startedAt": "2026-11-06T12:52:07.000Z",
+     "status": "done",
+     "title": "Fact-check the claims"
+    },
+    {
+     "about": "Every judge on the panel scores it with all of the above",
+     "detail": "3 of 3 judges scored · panel 64.86",
+     "facts": [
+      {
+       "label": "Panel average",
+       "value": "64.86 / 100"
+      },
+      {
+       "label": "Priya Raman",
+       "value": "54.64"
+      },
+      {
+       "label": "Marcus Lee",
+       "value": "78.02"
+      },
+      {
+       "label": "Ana Okafor",
+       "value": "61.91"
+      }
+     ],
+     "finishedAt": "2026-11-06T13:07:36.000Z",
+     "id": "judges",
+     "parts": [
+      {
+       "detail": "Scored 54.64 / 100 · \"The demo breaks at deposit. I never saw a stream run.\"",
+       "finishedAt": "2026-11-06T13:07:09.000Z",
+       "focus": "Product journey 20% · Real-world value 20% · UI / UX 16%",
+       "id": "judge_11631c00",
+       "label": "Priya Raman",
+       "role": "Product lead",
+       "startedAt": "2026-11-06T13:05:22.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "Scored 78.02 / 100 · \"Best contracts of the event: invariant-tested and tight.\"",
+       "finishedAt": "2026-11-06T13:07:00.000Z",
+       "focus": "Code quality 23% · SDLC practices 18% · Feasibility 18%",
+       "id": "judge_e9c669c4",
+       "label": "Marcus Lee",
+       "role": "Smart-contract engineer",
+       "startedAt": "2026-11-06T13:05:22.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "Scored 61.91 / 100 · \"Great engine, but users can't get money in.\"",
+       "finishedAt": "2026-11-06T13:07:36.000Z",
+       "focus": "Business model 21% · Real-world value 17% · Scalability 17%",
+       "id": "judge_c876a259",
+       "label": "Ana Okafor",
+       "role": "Investor",
+       "startedAt": "2026-11-06T13:05:22.000Z",
+       "status": "done"
+      }
+     ],
+     "startedAt": "2026-11-06T13:05:22.000Z",
+     "status": "done",
+     "title": "Judges score it"
+    }
+   ]
+  }
+ },
+ "splitsafe": {
+  "running": false,
+  "review": {
+   "status": "reviewed",
+   "failed": 0
+  },
+  "queueLength": 0,
+  "state": {
+   "projectId": "splitsafe",
+   "startedAt": "2026-11-06T12:28:02.000Z",
+   "finishedAt": "2026-11-06T12:46:30.000Z",
+   "steps": [
+    {
+     "about": "Fetch the repo, pin the commit, count the tests",
+     "detail": "2650655 · 50 tests found · 96 files",
+     "facts": [
+      {
+       "label": "Repository",
+       "value": "chai-and-chain/splitsafe"
+      },
+      {
+       "label": "Commit",
+       "value": "2650655"
+      },
+      {
+       "label": "Commits since the event began",
+       "value": "64 of 64"
+      },
+      {
+       "label": "Tests found",
+       "value": "50"
+      },
+      {
+       "label": "Files",
+       "value": 96
+      }
+     ],
+     "finishedAt": "2026-11-06T12:28:35.000Z",
+     "id": "code",
+     "parts": [
+      {
+       "detail": "github.com/chai-and-chain/splitsafe",
+       "finishedAt": "2026-11-06T12:28:24.000Z",
+       "id": "clone",
+       "label": "Clone the code (never run)",
+       "startedAt": "2026-11-06T12:28:02.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "2650655",
+       "finishedAt": "2026-11-06T12:28:25.000Z",
+       "id": "pin",
+       "label": "Pin the exact commit",
+       "startedAt": "2026-11-06T12:28:24.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "64 of 64 commits made at the event",
+       "finishedAt": "2026-11-06T12:28:28.000Z",
+       "id": "history",
+       "label": "Read the commit history",
+       "startedAt": "2026-11-06T12:28:25.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "50 tests · counted, not run",
+       "finishedAt": "2026-11-06T12:28:35.000Z",
+       "id": "tests",
+       "label": "Count the tests",
+       "startedAt": "2026-11-06T12:28:28.000Z",
+       "status": "done"
+      }
+     ],
+     "startedAt": "2026-11-06T12:28:02.000Z",
+     "status": "done",
+     "title": "Code review"
+    },
+    {
+     "about": "Save the video, transcribe it, check the screenshots",
+     "detail": "2 screenshots read",
+     "facts": [
+      {
+       "label": "Screenshots",
+       "value": 2
+      }
+     ],
+     "finishedAt": "2026-11-06T12:28:21.000Z",
+     "id": "demo",
+     "parts": [
+      {
+       "detail": "2 screenshots",
+       "finishedAt": "2026-11-06T12:28:21.000Z",
+       "id": "images",
+       "label": "Read the screenshots",
+       "startedAt": "2026-11-06T12:28:02.000Z",
+       "status": "done"
+      }
+     ],
+     "startedAt": "2026-11-06T12:28:02.000Z",
+     "status": "done",
+     "title": "Process the demo"
+    },
+    {
+     "about": "Replay the demo, then the main flows, on Windows, Android and iPhone",
+     "detail": "splitsafe.app · Windows: 7 of 7 pass · Android: 7 of 7 pass · iPhone: 7 of 7 pass",
+     "facts": [
+      {
+       "label": "Live app",
+       "value": "splitsafe.app"
+      },
+      {
+       "label": "Steps written",
+       "value": "7 per device"
+      },
+      {
+       "label": "Windows",
+       "value": "7 of 7 pass"
+      },
+      {
+       "label": "Android",
+       "value": "7 of 7 pass"
+      },
+      {
+       "label": "iPhone",
+       "value": "7 of 7 pass"
+      },
+      {
+       "label": "Took",
+       "value": "16m 20s"
+      }
+     ],
+     "finishedAt": "2026-11-06T12:44:22.000Z",
+     "id": "live",
+     "parts": [
+      {
+       "detail": "Windows 11 laptop, Pixel 8, iPhone 15",
+       "finishedAt": "2026-11-06T12:28:46.000Z",
+       "id": "connect",
+       "label": "Book devices on the Mozark cloud",
+       "startedAt": "2026-11-06T12:28:02.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "splitsafe.app · pages mapped against the demo",
+       "finishedAt": "2026-11-06T12:31:16.000Z",
+       "id": "explore",
+       "label": "Agent explores the site",
+       "startedAt": "2026-11-06T12:28:46.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "7 steps per device",
+       "finishedAt": "2026-11-06T12:34:42.000Z",
+       "id": "write",
+       "label": "Agent writes the test steps",
+       "startedAt": "2026-11-06T12:31:16.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "7 of 7 pass · 6m 53s",
+       "finishedAt": "2026-11-06T12:41:35.000Z",
+       "id": "laptop",
+       "label": "Windows 11 laptop · Chrome 131",
+       "startedAt": "2026-11-06T12:34:42.000Z",
+       "status": "done",
+       "os": "windows"
+      },
+      {
+       "detail": "7 of 7 pass · 8m 09s",
+       "finishedAt": "2026-11-06T12:42:51.000Z",
+       "id": "android",
+       "label": "Pixel 8 · Chrome 131",
+       "startedAt": "2026-11-06T12:34:42.000Z",
+       "status": "done",
+       "os": "android"
+      },
+      {
+       "detail": "7 of 7 pass · 9m 08s",
+       "finishedAt": "2026-11-06T12:43:50.000Z",
+       "id": "ios",
+       "label": "iPhone 15 · Safari 18",
+       "startedAt": "2026-11-06T12:34:42.000Z",
+       "status": "done",
+       "os": "ios"
+      },
+      {
+       "detail": "Video and a screenshot for every step, on every device",
+       "finishedAt": "2026-11-06T12:44:22.000Z",
+       "id": "save",
+       "label": "Save recordings and screenshots",
+       "startedAt": "2026-11-06T12:43:50.000Z",
+       "status": "done"
+      }
+     ],
+     "startedAt": "2026-11-06T12:28:02.000Z",
+     "status": "done",
+     "title": "Test the live app on real devices"
+    },
+    {
+     "about": "Check what the team says against the code",
+     "detail": "5 claims checked · 4 supported · 1 contradicted",
+     "facts": [
+      {
+       "label": "Claims checked",
+       "value": 5
+      },
+      {
+       "label": "Supported by code",
+       "value": 4
+      },
+      {
+       "label": "Unverified",
+       "value": 0
+      },
+      {
+       "label": "Contradicted",
+       "value": 1
+      }
+     ],
+     "finishedAt": "2026-11-06T12:34:52.000Z",
+     "id": "dossier",
+     "parts": [
+      {
+       "detail": "60 files",
+       "finishedAt": "2026-11-06T12:28:41.000Z",
+       "id": "pack",
+       "label": "Gather the code for the reviewer",
+       "startedAt": "2026-11-06T12:28:35.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "Claims listed with the lines that back them",
+       "finishedAt": "2026-11-06T12:34:34.000Z",
+       "id": "ask",
+       "label": "Reviewer agent reads the code and the claims",
+       "startedAt": "2026-11-06T12:28:41.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "5 references checked",
+       "finishedAt": "2026-11-06T12:34:48.000Z",
+       "id": "verify",
+       "label": "Verify every cited line exists",
+       "startedAt": "2026-11-06T12:34:34.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "5 claims: 4 supported, 0 unverified, 1 contradicted",
+       "finishedAt": "2026-11-06T12:34:52.000Z",
+       "id": "save",
+       "label": "Save the fact-check",
+       "startedAt": "2026-11-06T12:34:48.000Z",
+       "status": "done"
+      }
+     ],
+     "startedAt": "2026-11-06T12:28:35.000Z",
+     "status": "done",
+     "title": "Fact-check the claims"
+    },
+    {
+     "about": "Every judge on the panel scores it with all of the above",
+     "detail": "3 of 3 judges scored · panel 67.37",
+     "facts": [
+      {
+       "label": "Panel average",
+       "value": "67.37 / 100"
+      },
+      {
+       "label": "Priya Raman",
+       "value": "75.76"
+      },
+      {
+       "label": "Marcus Lee",
+       "value": "60.09"
+      },
+      {
+       "label": "Ana Okafor",
+       "value": "66.27"
+      }
+     ],
+     "finishedAt": "2026-11-06T12:46:30.000Z",
+     "id": "judges",
+     "parts": [
+      {
+       "detail": "Scored 75.76 / 100 · \"Works on my phone, every step. This is what a demo should be.\"",
+       "finishedAt": "2026-11-06T12:46:06.000Z",
+       "focus": "Product journey 20% · Real-world value 20% · UI / UX 16%",
+       "id": "judge_11631c00",
+       "label": "Priya Raman",
+       "role": "Product lead",
+       "startedAt": "2026-11-06T12:44:25.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "Scored 60.09 / 100 · \"Anyone can call settle(). Fix that before mainnet.\"",
+       "finishedAt": "2026-11-06T12:46:24.000Z",
+       "focus": "Code quality 23% · SDLC practices 18% · Feasibility 18%",
+       "id": "judge_e9c669c4",
+       "label": "Marcus Lee",
+       "role": "Smart-contract engineer",
+       "startedAt": "2026-11-06T12:44:25.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "Scored 66.27 / 100 · \"Clear everyday pain, clear product.\"",
+       "finishedAt": "2026-11-06T12:46:30.000Z",
+       "focus": "Business model 21% · Real-world value 17% · Scalability 17%",
+       "id": "judge_c876a259",
+       "label": "Ana Okafor",
+       "role": "Investor",
+       "startedAt": "2026-11-06T12:44:25.000Z",
+       "status": "done"
+      }
+     ],
+     "startedAt": "2026-11-06T12:44:25.000Z",
+     "status": "done",
+     "title": "Judges score it"
+    }
+   ]
+  }
+ },
+ "kirana-credit": {
+  "running": false,
+  "review": {
+   "status": "reviewed",
+   "failed": 0
+  },
+  "queueLength": 0,
+  "state": {
+   "projectId": "kirana-credit",
+   "startedAt": "2026-11-06T13:10:44.000Z",
+   "finishedAt": "2026-11-06T13:27:04.000Z",
+   "steps": [
+    {
+     "about": "Fetch the repo, pin the commit, count the tests",
+     "detail": "361d237 · 85 tests found · 118 files",
+     "facts": [
+      {
+       "label": "Repository",
+       "value": "dabbawala-labs/kirana-credit"
+      },
+      {
+       "label": "Commit",
+       "value": "361d237"
+      },
+      {
+       "label": "Commits since the event began",
+       "value": "52 of 92"
+      },
+      {
+       "label": "Tests found",
+       "value": "85"
+      },
+      {
+       "label": "Files",
+       "value": 118
+      }
+     ],
+     "finishedAt": "2026-11-06T13:11:26.000Z",
+     "id": "code",
+     "parts": [
+      {
+       "detail": "github.com/dabbawala-labs/kirana-credit",
+       "finishedAt": "2026-11-06T13:11:12.000Z",
+       "id": "clone",
+       "label": "Clone the code (never run)",
+       "startedAt": "2026-11-06T13:10:44.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "361d237",
+       "finishedAt": "2026-11-06T13:11:13.000Z",
+       "id": "pin",
+       "label": "Pin the exact commit",
+       "startedAt": "2026-11-06T13:11:12.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "52 of 92 commits made at the event",
+       "finishedAt": "2026-11-06T13:11:16.000Z",
+       "id": "history",
+       "label": "Read the commit history",
+       "startedAt": "2026-11-06T13:11:13.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "85 tests · counted, not run",
+       "finishedAt": "2026-11-06T13:11:26.000Z",
+       "id": "tests",
+       "label": "Count the tests",
+       "startedAt": "2026-11-06T13:11:16.000Z",
+       "status": "done"
+      }
+     ],
+     "startedAt": "2026-11-06T13:10:44.000Z",
+     "status": "done",
+     "title": "Code review"
+    },
+    {
+     "about": "Save the video, transcribe it, check the screenshots",
+     "detail": "2 screenshots read",
+     "facts": [
+      {
+       "label": "Screenshots",
+       "value": 2
+      }
+     ],
+     "finishedAt": "2026-11-06T13:11:03.000Z",
+     "id": "demo",
+     "parts": [
+      {
+       "detail": "2 screenshots",
+       "finishedAt": "2026-11-06T13:11:03.000Z",
+       "id": "images",
+       "label": "Read the screenshots",
+       "startedAt": "2026-11-06T13:10:44.000Z",
+       "status": "done"
+      }
+     ],
+     "startedAt": "2026-11-06T13:10:44.000Z",
+     "status": "done",
+     "title": "Process the demo"
+    },
+    {
+     "about": "Replay the demo, then the main flows, on Windows, Android and iPhone",
+     "detail": "kirana.credit · Windows: 5 of 5 pass · Android: 4 work · 1 broken · iPhone: 4 work · 1 broken",
+     "facts": [
+      {
+       "label": "Live app",
+       "value": "kirana.credit"
+      },
+      {
+       "label": "Steps written",
+       "value": "5 per device"
+      },
+      {
+       "label": "Windows",
+       "value": "5 of 5 pass"
+      },
+      {
+       "label": "Android",
+       "value": "4 work · 1 broken"
+      },
+      {
+       "label": "iPhone",
+       "value": "4 work · 1 broken"
+      },
+      {
+       "label": "Took",
+       "value": "14m 04s"
+      }
+     ],
+     "finishedAt": "2026-11-06T13:24:48.000Z",
+     "id": "live",
+     "parts": [
+      {
+       "detail": "Windows 11 laptop, Pixel 8, iPhone 15",
+       "finishedAt": "2026-11-06T13:11:42.000Z",
+       "id": "connect",
+       "label": "Book devices on the Mozark cloud",
+       "startedAt": "2026-11-06T13:10:44.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "kirana.credit · pages mapped against the demo",
+       "finishedAt": "2026-11-06T13:14:10.000Z",
+       "id": "explore",
+       "label": "Agent explores the site",
+       "startedAt": "2026-11-06T13:11:42.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "5 steps per device",
+       "finishedAt": "2026-11-06T13:16:51.000Z",
+       "id": "write",
+       "label": "Agent writes the test steps",
+       "startedAt": "2026-11-06T13:14:10.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "5 of 5 pass · 5m 54s",
+       "finishedAt": "2026-11-06T13:22:45.000Z",
+       "id": "laptop",
+       "label": "Windows 11 laptop · Chrome 131",
+       "startedAt": "2026-11-06T13:16:51.000Z",
+       "status": "done",
+       "os": "windows"
+      },
+      {
+       "detail": "4 work · 1 broken · 6m 32s",
+       "finishedAt": "2026-11-06T13:23:23.000Z",
+       "id": "android",
+       "label": "Pixel 8 · Chrome 131",
+       "startedAt": "2026-11-06T13:16:51.000Z",
+       "status": "done",
+       "os": "android"
+      },
+      {
+       "detail": "4 work · 1 broken · 7m 21s",
+       "finishedAt": "2026-11-06T13:24:12.000Z",
+       "id": "ios",
+       "label": "iPhone 15 · Safari 18",
+       "startedAt": "2026-11-06T13:16:51.000Z",
+       "status": "done",
+       "os": "ios"
+      },
+      {
+       "detail": "Video and a screenshot for every step, on every device",
+       "finishedAt": "2026-11-06T13:24:48.000Z",
+       "id": "save",
+       "label": "Save recordings and screenshots",
+       "startedAt": "2026-11-06T13:24:12.000Z",
+       "status": "done"
+      }
+     ],
+     "startedAt": "2026-11-06T13:10:44.000Z",
+     "status": "done",
+     "title": "Test the live app on real devices"
+    },
+    {
+     "about": "Check what the team says against the code",
+     "detail": "5 claims checked · 4 supported · 0 contradicted",
+     "facts": [
+      {
+       "label": "Claims checked",
+       "value": 5
+      },
+      {
+       "label": "Supported by code",
+       "value": 4
+      },
+      {
+       "label": "Unverified",
+       "value": 1
+      },
+      {
+       "label": "Contradicted",
+       "value": 0
+      }
+     ],
+     "finishedAt": "2026-11-06T13:17:18.000Z",
+     "id": "dossier",
+     "parts": [
+      {
+       "detail": "60 files",
+       "finishedAt": "2026-11-06T13:11:32.000Z",
+       "id": "pack",
+       "label": "Gather the code for the reviewer",
+       "startedAt": "2026-11-06T13:11:26.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "Claims listed with the lines that back them",
+       "finishedAt": "2026-11-06T13:17:00.000Z",
+       "id": "ask",
+       "label": "Reviewer agent reads the code and the claims",
+       "startedAt": "2026-11-06T13:11:32.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "4 references checked",
+       "finishedAt": "2026-11-06T13:17:14.000Z",
+       "id": "verify",
+       "label": "Verify every cited line exists",
+       "startedAt": "2026-11-06T13:17:00.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "5 claims: 4 supported, 1 unverified, 0 contradicted",
+       "finishedAt": "2026-11-06T13:17:18.000Z",
+       "id": "save",
+       "label": "Save the fact-check",
+       "startedAt": "2026-11-06T13:17:14.000Z",
+       "status": "done"
+      }
+     ],
+     "startedAt": "2026-11-06T13:11:26.000Z",
+     "status": "done",
+     "title": "Fact-check the claims"
+    },
+    {
+     "about": "Every judge on the panel scores it with all of the above",
+     "detail": "3 of 3 judges scored · panel 76.28",
+     "facts": [
+      {
+       "label": "Panel average",
+       "value": "76.28 / 100"
+      },
+      {
+       "label": "Priya Raman",
+       "value": "75.28"
+      },
+      {
+       "label": "Marcus Lee",
+       "value": "71.11"
+      },
+      {
+       "label": "Ana Okafor",
+       "value": "82.46"
+      }
+     ],
+     "finishedAt": "2026-11-06T13:27:04.000Z",
+     "id": "judges",
+     "parts": [
+      {
+       "detail": "Scored 75.28 / 100 · \"Rough on a phone, but real shopkeepers use it.\"",
+       "finishedAt": "2026-11-06T13:26:19.000Z",
+       "focus": "Product journey 20% · Real-world value 20% · UI / UX 16%",
+       "id": "judge_11631c00",
+       "label": "Priya Raman",
+       "role": "Product lead",
+       "startedAt": "2026-11-06T13:24:51.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "Scored 71.11 / 100 · \"Sensible limits, tested credit contract.\"",
+       "finishedAt": "2026-11-06T13:26:48.000Z",
+       "focus": "Code quality 23% · SDLC practices 18% · Feasibility 18%",
+       "id": "judge_e9c669c4",
+       "label": "Marcus Lee",
+       "role": "Smart-contract engineer",
+       "startedAt": "2026-11-06T13:24:51.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "Scored 82.46 / 100 · \"Real users and a real lending model. I'd take the meeting.\"",
+       "finishedAt": "2026-11-06T13:27:04.000Z",
+       "focus": "Business model 21% · Real-world value 17% · Scalability 17%",
+       "id": "judge_c876a259",
+       "label": "Ana Okafor",
+       "role": "Investor",
+       "startedAt": "2026-11-06T13:24:51.000Z",
+       "status": "done"
+      }
+     ],
+     "startedAt": "2026-11-06T13:24:51.000Z",
+     "status": "done",
+     "title": "Judges score it"
+    }
+   ]
+  }
+ },
+ "metromint": {
+  "running": false,
+  "review": {
+   "status": "reviewed",
+   "failed": 0
+  },
+  "queueLength": 0,
+  "state": {
+   "projectId": "metromint",
+   "startedAt": "2026-11-06T14:44:20.000Z",
+   "finishedAt": "2026-11-06T15:00:08.000Z",
+   "steps": [
+    {
+     "about": "Fetch the repo, pin the commit, count the tests",
+     "detail": "f2be27d · 6 tests found · 102 files",
+     "facts": [
+      {
+       "label": "Repository",
+       "value": "local-train/metromint"
+      },
+      {
+       "label": "Commit",
+       "value": "f2be27d"
+      },
+      {
+       "label": "Commits since the event began",
+       "value": "47 of 47"
+      },
+      {
+       "label": "Tests found",
+       "value": "6"
+      },
+      {
+       "label": "Files",
+       "value": 102
+      }
+     ],
+     "finishedAt": "2026-11-06T14:45:00.000Z",
+     "id": "code",
+     "parts": [
+      {
+       "detail": "github.com/local-train/metromint",
+       "finishedAt": "2026-11-06T14:44:46.000Z",
+       "id": "clone",
+       "label": "Clone the code (never run)",
+       "startedAt": "2026-11-06T14:44:20.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "f2be27d",
+       "finishedAt": "2026-11-06T14:44:47.000Z",
+       "id": "pin",
+       "label": "Pin the exact commit",
+       "startedAt": "2026-11-06T14:44:46.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "47 of 47 commits made at the event",
+       "finishedAt": "2026-11-06T14:44:50.000Z",
+       "id": "history",
+       "label": "Read the commit history",
+       "startedAt": "2026-11-06T14:44:47.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "6 tests · counted, not run",
+       "finishedAt": "2026-11-06T14:45:00.000Z",
+       "id": "tests",
+       "label": "Count the tests",
+       "startedAt": "2026-11-06T14:44:50.000Z",
+       "status": "done"
+      }
+     ],
+     "startedAt": "2026-11-06T14:44:20.000Z",
+     "status": "done",
+     "title": "Code review"
+    },
+    {
+     "about": "Save the video, transcribe it, check the screenshots",
+     "detail": "2 screenshots read",
+     "facts": [
+      {
+       "label": "Screenshots",
+       "value": 2
+      }
+     ],
+     "finishedAt": "2026-11-06T14:44:35.000Z",
+     "id": "demo",
+     "parts": [
+      {
+       "detail": "2 screenshots",
+       "finishedAt": "2026-11-06T14:44:35.000Z",
+       "id": "images",
+       "label": "Read the screenshots",
+       "startedAt": "2026-11-06T14:44:20.000Z",
+       "status": "done"
+      }
+     ],
+     "startedAt": "2026-11-06T14:44:20.000Z",
+     "status": "done",
+     "title": "Process the demo"
+    },
+    {
+     "about": "Replay the demo, then the main flows, on Windows, Android and iPhone",
+     "detail": "metromint.app · Windows: 4 of 4 pass · Android: 1 work · 3 broken · iPhone: 1 work · 3 broken",
+     "facts": [
+      {
+       "label": "Live app",
+       "value": "metromint.app"
+      },
+      {
+       "label": "Steps written",
+       "value": "4 per device"
+      },
+      {
+       "label": "Windows",
+       "value": "4 of 4 pass"
+      },
+      {
+       "label": "Android",
+       "value": "1 work · 3 broken"
+      },
+      {
+       "label": "iPhone",
+       "value": "1 work · 3 broken"
+      },
+      {
+       "label": "Took",
+       "value": "13m 47s"
+      }
+     ],
+     "finishedAt": "2026-11-06T14:58:07.000Z",
+     "id": "live",
+     "parts": [
+      {
+       "detail": "Windows 11 laptop, Pixel 8, iPhone 15",
+       "finishedAt": "2026-11-06T14:45:12.000Z",
+       "id": "connect",
+       "label": "Book devices on the Mozark cloud",
+       "startedAt": "2026-11-06T14:44:20.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "metromint.app · pages mapped against the demo",
+       "finishedAt": "2026-11-06T14:48:19.000Z",
+       "id": "explore",
+       "label": "Agent explores the site",
+       "startedAt": "2026-11-06T14:45:12.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "4 steps per device",
+       "finishedAt": "2026-11-06T14:50:58.000Z",
+       "id": "write",
+       "label": "Agent writes the test steps",
+       "startedAt": "2026-11-06T14:48:19.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "4 of 4 pass · 5m 00s",
+       "finishedAt": "2026-11-06T14:55:58.000Z",
+       "id": "laptop",
+       "label": "Windows 11 laptop · Chrome 131",
+       "startedAt": "2026-11-06T14:50:58.000Z",
+       "status": "done",
+       "os": "windows"
+      },
+      {
+       "detail": "1 work · 3 broken · 6m 22s",
+       "finishedAt": "2026-11-06T14:57:20.000Z",
+       "id": "android",
+       "label": "Pixel 8 · Chrome 131",
+       "startedAt": "2026-11-06T14:50:58.000Z",
+       "status": "done",
+       "os": "android"
+      },
+      {
+       "detail": "1 work · 3 broken · 6m 34s",
+       "finishedAt": "2026-11-06T14:57:32.000Z",
+       "id": "ios",
+       "label": "iPhone 15 · Safari 18",
+       "startedAt": "2026-11-06T14:50:58.000Z",
+       "status": "done",
+       "os": "ios"
+      },
+      {
+       "detail": "Video and a screenshot for every step, on every device",
+       "finishedAt": "2026-11-06T14:58:07.000Z",
+       "id": "save",
+       "label": "Save recordings and screenshots",
+       "startedAt": "2026-11-06T14:57:32.000Z",
+       "status": "done"
+      }
+     ],
+     "startedAt": "2026-11-06T14:44:20.000Z",
+     "status": "done",
+     "title": "Test the live app on real devices"
+    },
+    {
+     "about": "Check what the team says against the code",
+     "detail": "5 claims checked · 2 supported · 2 contradicted",
+     "facts": [
+      {
+       "label": "Claims checked",
+       "value": 5
+      },
+      {
+       "label": "Supported by code",
+       "value": 2
+      },
+      {
+       "label": "Unverified",
+       "value": 1
+      },
+      {
+       "label": "Contradicted",
+       "value": 2
+      }
+     ],
+     "finishedAt": "2026-11-06T14:51:25.000Z",
+     "id": "dossier",
+     "parts": [
+      {
+       "detail": "60 files",
+       "finishedAt": "2026-11-06T14:45:06.000Z",
+       "id": "pack",
+       "label": "Gather the code for the reviewer",
+       "startedAt": "2026-11-06T14:45:00.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "Claims listed with the lines that back them",
+       "finishedAt": "2026-11-06T14:51:07.000Z",
+       "id": "ask",
+       "label": "Reviewer agent reads the code and the claims",
+       "startedAt": "2026-11-06T14:45:06.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "4 references checked",
+       "finishedAt": "2026-11-06T14:51:21.000Z",
+       "id": "verify",
+       "label": "Verify every cited line exists",
+       "startedAt": "2026-11-06T14:51:07.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "5 claims: 2 supported, 1 unverified, 2 contradicted",
+       "finishedAt": "2026-11-06T14:51:25.000Z",
+       "id": "save",
+       "label": "Save the fact-check",
+       "startedAt": "2026-11-06T14:51:21.000Z",
+       "status": "done"
+      }
+     ],
+     "startedAt": "2026-11-06T14:45:00.000Z",
+     "status": "done",
+     "title": "Fact-check the claims"
+    },
+    {
+     "about": "Every judge on the panel scores it with all of the above",
+     "detail": "3 of 3 judges scored · panel 54.51",
+     "facts": [
+      {
+       "label": "Panel average",
+       "value": "54.51 / 100"
+      },
+      {
+       "label": "Priya Raman",
+       "value": "54.32"
+      },
+      {
+       "label": "Marcus Lee",
+       "value": "50.17"
+      },
+      {
+       "label": "Ana Okafor",
+       "value": "59.04"
+      }
+     ],
+     "finishedAt": "2026-11-06T15:00:08.000Z",
+     "id": "judges",
+     "parts": [
+      {
+       "detail": "Scored 54.32 / 100 · \"Commuters live on phones, and the ticket overflows at 390px.\"",
+       "finishedAt": "2026-11-06T14:59:39.000Z",
+       "focus": "Product journey 20% · Real-world value 20% · UI / UX 16%",
+       "id": "judge_11631c00",
+       "label": "Priya Raman",
+       "role": "Product lead",
+       "startedAt": "2026-11-06T14:58:10.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "Scored 50.17 / 100 · \"The mint is a mock that returns a fake token id.\"",
+       "finishedAt": "2026-11-06T15:00:08.000Z",
+       "focus": "Code quality 23% · SDLC practices 18% · Feasibility 18%",
+       "id": "judge_e9c669c4",
+       "label": "Marcus Lee",
+       "role": "Smart-contract engineer",
+       "startedAt": "2026-11-06T14:58:10.000Z",
+       "status": "done"
+      },
+      {
+       "detail": "Scored 59.04 / 100 · \"Nice idea; no ticketing partner and no real mint.\"",
+       "finishedAt": "2026-11-06T14:59:57.000Z",
+       "focus": "Business model 21% · Real-world value 17% · Scalability 17%",
+       "id": "judge_c876a259",
+       "label": "Ana Okafor",
+       "role": "Investor",
+       "startedAt": "2026-11-06T14:58:10.000Z",
+       "status": "done"
+      }
+     ],
+     "startedAt": "2026-11-06T14:58:10.000Z",
+     "status": "done",
+     "title": "Judges score it"
+    }
+   ]
+  }
+ }
+}

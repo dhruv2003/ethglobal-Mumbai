@@ -1,0 +1,505 @@
+{
+ "0": [
+  {
+   "bettor": "sid_onchain",
+   "address": "0x63981a22003b53597e0e07d68d7fc7d6328cdfe0",
+   "side": "b",
+   "selection": 1,
+   "amount": "120",
+   "at": -260,
+   "txHash": "0xf377632e5f1ba5b20e62037a21dbc2733c17cba35867cdf30906f0bc7b3d56f6"
+  },
+  {
+   "bettor": "rohan.eth",
+   "address": "0x06cabf5e9dae4a4d887a751512ebdb4edd08feca",
+   "side": "a",
+   "selection": 0,
+   "amount": "60",
+   "at": -240,
+   "txHash": "0x61155e1c16bc61f2aca94e6e21d4fbf1096bc718a21cc5daa8db02cdf845ec90"
+  },
+  {
+   "bettor": "bandra-bull",
+   "address": "0x761cdfa3c8cb9f38073239c4a39c00df8b2cd48e",
+   "side": "b",
+   "selection": 1,
+   "amount": "200",
+   "at": -230,
+   "txHash": "0x9c81b7ca771f59d6285093dfa4afc4c7f257197e7244e6e144b6da74951d8837"
+  },
+  {
+   "bettor": "mehta.base",
+   "address": "0x48acb6ef1619705b8a9b936bb637acb082192db0",
+   "side": "a",
+   "selection": 0,
+   "amount": "40",
+   "at": -200,
+   "txHash": "0x259edefa20df61ef2fbde062ac1f01a9b0c0b616e3069f50ad54d8696c12aec4"
+  },
+  {
+   "bettor": "juhu-whale",
+   "address": "0x37471c01ee220c9aad21a36f6901b5fba1d16c48",
+   "side": "b",
+   "selection": 1,
+   "amount": "150",
+   "at": -190,
+   "txHash": "0xe6d9ad43c8c4b680ac1cc264f453e33cb361e4faa51f0d51011b8c8575f85dbe"
+  },
+  {
+   "bettor": "ana-fan",
+   "address": "0xf13266925b476ddcb238a0eefda4dfa14657b0ac",
+   "side": "b",
+   "selection": 1,
+   "amount": "90",
+   "at": -150,
+   "txHash": "0x06fc3f169cb9faa3c202d4e230bd51dd3d2b29c08364a7f89cb097a0c2e147f5"
+  },
+  {
+   "bettor": "colaba-capital",
+   "address": "0x2f1dcfb73ff2ea3e0481486b3c443b6491482ee8",
+   "side": "b",
+   "selection": 1,
+   "amount": "180",
+   "at": -120,
+   "txHash": "0x7568bdcff1516d8a57e417b67f2e0b9b47f0b38baf8f867aa5386ca6bcbfaf60"
+  },
+  {
+   "bettor": "priyadarshini",
+   "address": "0x2b7234132a8667ad50cef0c586d41bbddf10e671",
+   "side": "a",
+   "selection": 0,
+   "amount": "80",
+   "at": -90,
+   "txHash": "0x5162f841d5e2c20a464006aa56270579c489f934855d62e48a847091ed4da12d"
+  },
+  {
+   "bettor": "kaju.eth",
+   "address": "0xca6f43c0088a8d597ec484a5288c060dcd879d38",
+   "side": "b",
+   "selection": 1,
+   "amount": "110",
+   "at": -80,
+   "txHash": "0x49401a471e042d97a7c7323fb297c3ececd7fb734a6306d20d7f1172c6ff8df5"
+  },
+  {
+   "bettor": "worli-wagers",
+   "address": "0xa4c822cbd8c669f9b6bd4141b04b443927c3dfcb",
+   "side": "b",
+   "selection": 1,
+   "amount": "140",
+   "at": -40,
+   "txHash": "0xfd96366724c6514ead86fc86d5afa2d25ac20de581f38e0f9c04c94aee00eaec"
+  },
+  {
+   "bettor": "tiffin.eth",
+   "address": "0x2ed09e892d9a457b69cf1f914bc045193108b1fc",
+   "side": "b",
+   "selection": 1,
+   "amount": "95",
+   "at": 10,
+   "txHash": "0x1c5177a144bb55170fb1d39a96b1901feb32959df18434b8c66bf8b4e55b6e99"
+  },
+  {
+   "bettor": "0xKaran",
+   "address": "0x30295a36bf35987951c4a8735eb459cf0bfe83ef",
+   "side": "a",
+   "selection": 0,
+   "amount": "50",
+   "at": 30,
+   "txHash": "0xaeb679b91c278ed3e09f84a46eef41d0fac733f47c3237957c72c5cfb334721e"
+  },
+  {
+   "bettor": "ghatkopar",
+   "address": "0x68cca75f022fd24f91731324b59e3157259b23ca",
+   "side": "b",
+   "selection": 1,
+   "amount": "160",
+   "at": 45,
+   "txHash": "0x83694df566889e778bbfd29e7c7417bd7a6ec984ce9946a57298eff09cebece6"
+  },
+  {
+   "bettor": "degen-dosa",
+   "address": "0xf140e7189513f23a5346b0b94a84be56a2a7a102",
+   "side": "a",
+   "selection": 0,
+   "amount": "45",
+   "at": 75,
+   "txHash": "0x9ed5cf287992e7eb41799f7075de7ed5ec630f83eaf06c3bb5cc3c74aea1be3b"
+  },
+  {
+   "bettor": "andheri-ape",
+   "address": "0xb9dcdcbe5514f4beb4a1bf69fc35bf52577460b6",
+   "side": "b",
+   "selection": 1,
+   "amount": "130",
+   "at": 90,
+   "txHash": "0xafc97316f4ee536db5f146cf44a463e6b5fb146c1a421a02076218e97ed8e57e"
+  },
+  {
+   "bettor": "powai-punter",
+   "address": "0x5c332a1c26ac9bbab0896d418d29c0ba7d7f0cde",
+   "side": "b",
+   "selection": 1,
+   "amount": "75",
+   "at": 120,
+   "txHash": "0xf031a984aae23fb021e69343e1a540c61eb3e7601d48ed34630b183b358c3dc4"
+  },
+  {
+   "bettor": "vada-pav-dao",
+   "address": "0x2fed6469dc725104b8755c76248120e108f926cb",
+   "side": "a",
+   "selection": 0,
+   "amount": "70",
+   "at": 130,
+   "txHash": "0x3fed058f2fd386b722df82d45757071cf51ff2c6a0d5edb119364be17f44a4c3"
+  },
+  {
+   "bettor": "malad-maxi",
+   "address": "0xd4a52582e2559cca7dcb1d48b83112acc9a475d0",
+   "side": "b",
+   "selection": 1,
+   "amount": "220",
+   "at": 160,
+   "txHash": "0x648ded66c0c0e64feab50f99233030a9fd870ec70b0014955926b9d0ca52c38a"
+  },
+  {
+   "bettor": "thane-trader",
+   "address": "0x3f1eaf5aa6cc8dc769d4589ad461a94b6b417663",
+   "side": "b",
+   "selection": 1,
+   "amount": "105",
+   "at": 190,
+   "txHash": "0x951206dc296e20f2dd7e7bbb6fa9e276b0307d70ecf7f01df72197ac09c0fd86"
+  },
+  {
+   "bettor": "neha.eth",
+   "address": "0x9e453c2bfa36160d8759ae84624c1c33dd8c5de6",
+   "side": "a",
+   "selection": 0,
+   "amount": "35",
+   "at": 210,
+   "txHash": "0xb25bc25f22b71bb494a4fb9c0aa3c993f4d9104bdb626946e70fb96d06b5c130"
+  },
+  {
+   "bettor": "dadar-degen",
+   "address": "0x5bfdcda966d8747c8d343990193492ff5861cb5d",
+   "side": "b",
+   "selection": 1,
+   "amount": "85",
+   "at": 240,
+   "txHash": "0x31e1222b80748789c16883fb050ae905199979a8a1143778586bb9b8266a3cb1"
+  },
+  {
+   "bettor": "matunga-moon",
+   "address": "0x9f4995788527df2c4d188b5881c67a367a7f6b3c",
+   "side": "b",
+   "selection": 1,
+   "amount": "125",
+   "at": 280,
+   "txHash": "0x7eab4f8924c2f26149397d3e3080db1ed3ee7c7ecdb67564f75efebeac387e61"
+  }
+ ],
+ "1": [
+  {
+   "bettor": "vada-pav-dao",
+   "address": "0x2fed6469dc725104b8755c76248120e108f926cb",
+   "side": "a",
+   "selection": 2,
+   "amount": "90",
+   "at": 0,
+   "txHash": "0xf34f141b354e4145897c027f10cd8a8fff8a1943d34be988cee0e7c5632ab4b7"
+  },
+  {
+   "bettor": "colaba-capital",
+   "address": "0x2f1dcfb73ff2ea3e0481486b3c443b6491482ee8",
+   "side": "b",
+   "selection": 3,
+   "amount": "70",
+   "at": 10,
+   "txHash": "0x316e3f95f1667c65c98ba40e4d05e39d0f873035c1133c1ac3e22c93c5864a99"
+  },
+  {
+   "bettor": "neha.eth",
+   "address": "0x9e453c2bfa36160d8759ae84624c1c33dd8c5de6",
+   "side": "a",
+   "selection": 2,
+   "amount": "120",
+   "at": 40,
+   "txHash": "0x89612f3823b1484447ef877661cef8732227953339fd6ab68c94299f90b0d30d"
+  },
+  {
+   "bettor": "kaju.eth",
+   "address": "0xca6f43c0088a8d597ec484a5288c060dcd879d38",
+   "side": "b",
+   "selection": 3,
+   "amount": "85",
+   "at": 60,
+   "txHash": "0xf3461ab026dd02eb3180eca8774ba5cd7b651002250d046851581b7923b32731"
+  },
+  {
+   "bettor": "sid_onchain",
+   "address": "0x63981a22003b53597e0e07d68d7fc7d6328cdfe0",
+   "side": "a",
+   "selection": 2,
+   "amount": "60",
+   "at": 80,
+   "txHash": "0x520a123c11aed7ae7a073eaafc361e71edc6413d6d158fc5f610fb06f24ccf21"
+  },
+  {
+   "bettor": "worli-wagers",
+   "address": "0xa4c822cbd8c669f9b6bd4141b04b443927c3dfcb",
+   "side": "b",
+   "selection": 3,
+   "amount": "40",
+   "at": 100,
+   "txHash": "0x9579501ee39d449bb82a723f0fa3f7079f943f3ce6e1f25a7f44d398eb6c7e37"
+  },
+  {
+   "bettor": "bandra-bull",
+   "address": "0x761cdfa3c8cb9f38073239c4a39c00df8b2cd48e",
+   "side": "a",
+   "selection": 2,
+   "amount": "140",
+   "at": 120,
+   "txHash": "0x10db340c29b47a9e98ddb2a9aa74fc0a04a9e6bd99c36a5ee65dba39684f3dee"
+  },
+  {
+   "bettor": "tiffin.eth",
+   "address": "0x2ed09e892d9a457b69cf1f914bc045193108b1fc",
+   "side": "b",
+   "selection": 3,
+   "amount": "55",
+   "at": 150,
+   "txHash": "0x52f25f24a00a9e339d4f8ac6368e87b8bf2905daa5ef964dda5e6051e188eed8"
+  },
+  {
+   "bettor": "juhu-whale",
+   "address": "0x37471c01ee220c9aad21a36f6901b5fba1d16c48",
+   "side": "a",
+   "selection": 2,
+   "amount": "75",
+   "at": 160,
+   "txHash": "0x94025806aeeafa29287e655a4bc3117d842e90a2f2a620ebae50527da28d74d4"
+  },
+  {
+   "bettor": "ana-fan",
+   "address": "0xf13266925b476ddcb238a0eefda4dfa14657b0ac",
+   "side": "a",
+   "selection": 2,
+   "amount": "110",
+   "at": 200,
+   "txHash": "0xc6cd575815673c9b71548b19b6b07b7b2449a5963d22f8da9117b1c6aa712296"
+  }
+ ],
+ "2": [
+  {
+   "bettor": "ana-fan",
+   "address": "0xf13266925b476ddcb238a0eefda4dfa14657b0ac",
+   "side": "a",
+   "selection": 4,
+   "amount": "150",
+   "at": 0,
+   "txHash": "0x27c5b7881d75e6ab50ec924e5eaae2ee45a8623c420922bc61f2ff804f6c6d2b"
+  },
+  {
+   "bettor": "powai-punter",
+   "address": "0x5c332a1c26ac9bbab0896d418d29c0ba7d7f0cde",
+   "side": "b",
+   "selection": 5,
+   "amount": "80",
+   "at": 20,
+   "txHash": "0x4382231c0165f24d2a43a86997228c2dbe5fb4dbf600c2c21804bdde7978528e"
+  },
+  {
+   "bettor": "colaba-capital",
+   "address": "0x2f1dcfb73ff2ea3e0481486b3c443b6491482ee8",
+   "side": "a",
+   "selection": 4,
+   "amount": "200",
+   "at": 30,
+   "txHash": "0xabdf63e1dc3d4355a6dbc7ae24f6b39a36ff5513b5ba8674d2bf99aa495d7138"
+  },
+  {
+   "bettor": "malad-maxi",
+   "address": "0xd4a52582e2559cca7dcb1d48b83112acc9a475d0",
+   "side": "b",
+   "selection": 5,
+   "amount": "95",
+   "at": 60,
+   "txHash": "0x1a2b535506dfc8e9e345148d86ab228b81c221bf58a0a22ce9ca251bd76a3c2d"
+  },
+  {
+   "bettor": "kaju.eth",
+   "address": "0xca6f43c0088a8d597ec484a5288c060dcd879d38",
+   "side": "a",
+   "selection": 4,
+   "amount": "120",
+   "at": 70,
+   "txHash": "0x3c7a293fc53f0fc7f6d5258629c327e96f1a9d1ddcdec02126b816bea8765320"
+  },
+  {
+   "bettor": "thane-trader",
+   "address": "0x3f1eaf5aa6cc8dc769d4589ad461a94b6b417663",
+   "side": "b",
+   "selection": 5,
+   "amount": "70",
+   "at": 100,
+   "txHash": "0x2a4783a810847fb6406f71d14792a4c6fa03e00b84de5ff3a4814fe40add725b"
+  },
+  {
+   "bettor": "worli-wagers",
+   "address": "0xa4c822cbd8c669f9b6bd4141b04b443927c3dfcb",
+   "side": "a",
+   "selection": 4,
+   "amount": "180",
+   "at": 110,
+   "txHash": "0xc86e7f1f278e3933e616deb1f9c5cf14fa86efd3f86436b0a1ebfd9bcc826b94"
+  },
+  {
+   "bettor": "dadar-degen",
+   "address": "0x5bfdcda966d8747c8d343990193492ff5861cb5d",
+   "side": "b",
+   "selection": 5,
+   "amount": "120",
+   "at": 140,
+   "txHash": "0x3f5acaeba07e39c2353ef0f15626cfbe4fb3359aadf12ace5d3e7339908ef419"
+  },
+  {
+   "bettor": "tiffin.eth",
+   "address": "0x2ed09e892d9a457b69cf1f914bc045193108b1fc",
+   "side": "a",
+   "selection": 4,
+   "amount": "90",
+   "at": 150,
+   "txHash": "0x456a1917061568844ed53dae9e99f5d4c6831b5c7c5ca01a624ae31b9de3ba93"
+  },
+  {
+   "bettor": "matunga-moon",
+   "address": "0x9f4995788527df2c4d188b5881c67a367a7f6b3c",
+   "side": "b",
+   "selection": 5,
+   "amount": "60",
+   "at": 180,
+   "txHash": "0x23c1f271d8fcdd283db2fc6c3830e1409228850243bed92ca43888b4d27518ef"
+  },
+  {
+   "bettor": "ghatkopar",
+   "address": "0x68cca75f022fd24f91731324b59e3157259b23ca",
+   "side": "a",
+   "selection": 4,
+   "amount": "160",
+   "at": 190,
+   "txHash": "0x0da5507bc1db2539458227c756b00931de8b83d8777181ad8bd477ebd94325e8"
+  },
+  {
+   "bettor": "andheri-ape",
+   "address": "0xb9dcdcbe5514f4beb4a1bf69fc35bf52577460b6",
+   "side": "a",
+   "selection": 4,
+   "amount": "110",
+   "at": 230,
+   "txHash": "0x683165f5191ac816fb11f481cbe1a54f3bf8b45ca62037cdddf2eda2db6509d0"
+  }
+ ],
+ "3": [
+  {
+   "bettor": "dadar-degen",
+   "address": "0x5bfdcda966d8747c8d343990193492ff5861cb5d",
+   "side": "b",
+   "selection": 7,
+   "amount": "110",
+   "at": -200,
+   "txHash": "0x518b322e5df680a0dd3e8738c77afd907aee108b7197914854ad4c5aa4a0b61a"
+  },
+  {
+   "bettor": "ghatkopar",
+   "address": "0x68cca75f022fd24f91731324b59e3157259b23ca",
+   "side": "a",
+   "selection": 6,
+   "amount": "70",
+   "at": -180,
+   "txHash": "0x26733e3e9fb833b1567989e3774adb3818165cdec028c2db05dd18f348d32819"
+  },
+  {
+   "bettor": "matunga-moon",
+   "address": "0x9f4995788527df2c4d188b5881c67a367a7f6b3c",
+   "side": "b",
+   "selection": 7,
+   "amount": "95",
+   "at": -160,
+   "txHash": "0x3fa0ba620f3db8eda42ec257aedd1317f8ebfca1edc950b8a38d12ba2fe59fad"
+  },
+  {
+   "bettor": "andheri-ape",
+   "address": "0xb9dcdcbe5514f4beb4a1bf69fc35bf52577460b6",
+   "side": "a",
+   "selection": 6,
+   "amount": "55",
+   "at": -100,
+   "txHash": "0x2b4586a3571c85178a31d603a0ad460c364c1d1df4ac88b16c52b51096d3e2e6"
+  },
+  {
+   "bettor": "rohan.eth",
+   "address": "0x06cabf5e9dae4a4d887a751512ebdb4edd08feca",
+   "side": "b",
+   "selection": 7,
+   "amount": "130",
+   "at": -60,
+   "txHash": "0xc773e44a88b0575fe9a1820d16a055d7402cd19110fe1f18dcc87c750831670c"
+  },
+  {
+   "bettor": "powai-punter",
+   "address": "0x5c332a1c26ac9bbab0896d418d29c0ba7d7f0cde",
+   "side": "a",
+   "selection": 6,
+   "amount": "90",
+   "at": 20,
+   "txHash": "0x4584ab4de95ce5c436b2e18cbf743b581ebe532cb4cbcf1d0971c381605cb0d7"
+  },
+  {
+   "bettor": "mehta.base",
+   "address": "0x48acb6ef1619705b8a9b936bb637acb082192db0",
+   "side": "b",
+   "selection": 7,
+   "amount": "75",
+   "at": 40,
+   "txHash": "0x3da1103a6854f70553459ed94b3f3bd285e90c7ee58cb69d2bd0af9bb14ae943"
+  },
+  {
+   "bettor": "malad-maxi",
+   "address": "0xd4a52582e2559cca7dcb1d48b83112acc9a475d0",
+   "side": "a",
+   "selection": 6,
+   "amount": "60",
+   "at": 80,
+   "txHash": "0xfab13868b99f4b163b0266d4d63dd6233d6b634e32516cd5ed695783de57ac5c"
+  },
+  {
+   "bettor": "priyadarshini",
+   "address": "0x2b7234132a8667ad50cef0c586d41bbddf10e671",
+   "side": "b",
+   "selection": 7,
+   "amount": "100",
+   "at": 110,
+   "txHash": "0x73051f688bb6b1b595f15cf4b45e1bd6ed313965d0bf2305fc8f6462d5756725"
+  },
+  {
+   "bettor": "thane-trader",
+   "address": "0x3f1eaf5aa6cc8dc769d4589ad461a94b6b417663",
+   "side": "a",
+   "selection": 6,
+   "amount": "85",
+   "at": 150,
+   "txHash": "0xb0efc234cd0b72e1f653b11585d2d90cf9afd7ccf2fae181c47f301945c00cc2"
+  },
+  {
+   "bettor": "0xKaran",
+   "address": "0x30295a36bf35987951c4a8735eb459cf0bfe83ef",
+   "side": "b",
+   "selection": 7,
+   "amount": "90",
+   "at": 200,
+   "txHash": "0xb3a2b6ef49eb40964bbeeb3f7d1b8dda21b12e64b921f13a556d78efafc0454f"
+  }
+ ]
+}

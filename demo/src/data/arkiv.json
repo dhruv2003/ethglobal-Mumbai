@@ -1,0 +1,546 @@
+{
+ "go-health-me": {
+  "configured": {
+   "read": true,
+   "write": true,
+   "swarm": false
+  },
+  "publishing": false,
+  "last": {
+   "at": "2026-11-06T08:39:47.000Z",
+   "panelKey": "0xb96344cd752cac0e56fea81488a8f3a3c12e21a7c2e5eb625d853e9490d36028",
+   "txHash": "0xed84e819766055da99b623a68115cf30139305aaa7098d4259af6e3332b73689"
+  },
+  "onchain": {
+   "panel": {
+    "entityKey": "0xb96344cd752cac0e56fea81488a8f3a3c12e21a7c2e5eb625d853e9490d36028",
+    "owner": "0x429C0C8C8cDBf6b24D02075D808088983988B515",
+    "projectId": "go-health-me",
+    "runAt": "2026-11-06T08:38:58.000Z",
+    "panelScore": "76.61",
+    "complete": true,
+    "judges": 3,
+    "provider": "0g",
+    "model": "0gm-1.0-35b-a3b",
+    "expiresAtBlock": "5488285",
+    "expiresAt": "2027-05-07T00:00:00.000Z",
+    "explorer": "https://rabdi.explorer.arkiv.network/entity-explorer?q=%24key%20%3D%20key(0xb96344cd752cac0e56fea81488a8f3a3c12e21a7c2e5eb625d853e9490d36028)",
+    "txHash": "0xed84e819766055da99b623a68115cf30139305aaa7098d4259af6e3332b73689"
+   },
+   "scorecards": [
+    {
+     "entityKey": "0xf73d4942de19f6d6f7df208240fa0e002e65a00f77557d2120b62c97e268e33a",
+     "judgeId": "judge_11631c00",
+     "judgeName": "Priya Raman",
+     "status": "scored",
+     "overall": "81.40",
+     "headline": "Opened it on Android and iPhone: every flow works, and I understood it in under a minute.",
+     "explorer": "https://rabdi.explorer.arkiv.network/entity-explorer?q=%24key%20%3D%20key(0xf73d4942de19f6d6f7df208240fa0e002e65a00f77557d2120b62c97e268e33a)",
+     "txHash": "0x8efd03077eb6817c14ac9060e77495d5e15d54450ee07d1945d8ac6364237d06"
+    },
+    {
+     "entityKey": "0xfbe4f8d041310465f86c6ad53beb829c64088011fbe10799ed85beca29ae7717",
+     "judgeId": "judge_e9c669c4",
+     "judgeName": "Marcus Lee",
+     "status": "scored",
+     "overall": "72.12",
+     "headline": "Clean money path: pull payments, split roles, no health data on chain.",
+     "explorer": "https://rabdi.explorer.arkiv.network/entity-explorer?q=%24key%20%3D%20key(0xfbe4f8d041310465f86c6ad53beb829c64088011fbe10799ed85beca29ae7717)",
+     "txHash": "0xd9b7dd6bf037c5662a8489a41296ef582967a66fff1d0caca73ce9bf010f0ef2"
+    },
+    {
+     "entityKey": "0xd0ed60c3264e4a4f97efa4598708394c2530a249b0b38c72d9d155eba9512ec7",
+     "judgeId": "judge_c876a259",
+     "judgeName": "Ana Okafor",
+     "status": "scored",
+     "overall": "76.32",
+     "headline": "A real habit with real money behind it, live today on Base Sepolia.",
+     "explorer": "https://rabdi.explorer.arkiv.network/entity-explorer?q=%24key%20%3D%20key(0xd0ed60c3264e4a4f97efa4598708394c2530a249b0b38c72d9d155eba9512ec7)",
+     "txHash": "0x4835e287627347725ed2ab96bc7c8b22a03821f3b05ffc56cb3e7e1b74223d4a"
+    }
+   ],
+   "swarm": null,
+   "zg": {
+    "dossier": "0x9d9bf8f23159eed10401f9894e93576f44d0b05e512b5c9dc6c17a7da262e567",
+    "review": "0x78768ca1ee82c2e974ea5db40abc34626e1df43e33ae51b798b21a8e94c69e79",
+    "liveTest": "0xee0c8fa72df6347cee85e33d1c49fc99ad54334c6d0dea46337fca2b169a0ddb"
+   }
+  }
+ },
+ "fittercoin": {
+  "configured": {
+   "read": true,
+   "write": true,
+   "swarm": false
+  },
+  "publishing": false,
+  "last": {
+   "at": "2026-11-06T10:37:01.000Z",
+   "panelKey": "0x2a6698f485ff3b49a378bcb54d3ebbdc38b8b979ec5b091947e4ce1d93552fa6",
+   "txHash": "0x0039c35f511d33d959b8eaf76d9a824245d6e3a0e8144df90b9ff8659301e1b4"
+  },
+  "onchain": {
+   "panel": {
+    "entityKey": "0x2a6698f485ff3b49a378bcb54d3ebbdc38b8b979ec5b091947e4ce1d93552fa6",
+    "owner": "0x429C0C8C8cDBf6b24D02075D808088983988B515",
+    "projectId": "fittercoin",
+    "runAt": "2026-11-06T10:36:12.000Z",
+    "panelScore": "35.86",
+    "complete": true,
+    "judges": 3,
+    "provider": "0g",
+    "model": "0gm-1.0-35b-a3b",
+    "expiresAtBlock": "5488285",
+    "expiresAt": "2027-05-07T00:00:00.000Z",
+    "explorer": "https://rabdi.explorer.arkiv.network/entity-explorer?q=%24key%20%3D%20key(0x2a6698f485ff3b49a378bcb54d3ebbdc38b8b979ec5b091947e4ce1d93552fa6)",
+    "txHash": "0x0039c35f511d33d959b8eaf76d9a824245d6e3a0e8144df90b9ff8659301e1b4"
+   },
+   "scorecards": [
+    {
+     "entityKey": "0xd3aef045a12e196482461d18131a0192a73393bc23f7a66b7dfd174a440afa83",
+     "judgeId": "judge_11631c00",
+     "judgeName": "Priya Raman",
+     "status": "scored",
+     "overall": "44.20",
+     "headline": "The best video of the day. On Android and iPhone the layout spills off screen and the camera never opens.",
+     "explorer": "https://rabdi.explorer.arkiv.network/entity-explorer?q=%24key%20%3D%20key(0xd3aef045a12e196482461d18131a0192a73393bc23f7a66b7dfd174a440afa83)",
+     "txHash": "0xb63852809d3330421a7044b94ac49596def55916a0f87cea04a6b46faf6b7a77"
+    },
+    {
+     "entityKey": "0x429ac380b5ad51382e3978fcf3348d8b4e52da52c7501152dce1a3646023add4",
+     "judgeId": "judge_e9c669c4",
+     "judgeName": "Marcus Lee",
+     "status": "scored",
+     "overall": "25.09",
+     "headline": "The betting feature has no code behind it: settle() is an empty view.",
+     "explorer": "https://rabdi.explorer.arkiv.network/entity-explorer?q=%24key%20%3D%20key(0x429ac380b5ad51382e3978fcf3348d8b4e52da52c7501152dce1a3646023add4)",
+     "txHash": "0x12faed2cfa040aba60dde0a553e9ab4ea9a5a54040e1788e4ba16884f7a169e8"
+    },
+    {
+     "entityKey": "0xed60fd21115884318041ed3bd022fc94c2009065bf3aa0050d3088c65e58fd9a",
+     "judgeId": "judge_c876a259",
+     "judgeName": "Ana Okafor",
+     "status": "scored",
+     "overall": "38.29",
+     "headline": "A pitch, not a product yet: entry is free and no bet has ever paid out.",
+     "explorer": "https://rabdi.explorer.arkiv.network/entity-explorer?q=%24key%20%3D%20key(0xed60fd21115884318041ed3bd022fc94c2009065bf3aa0050d3088c65e58fd9a)",
+     "txHash": "0x95c27f095c75a20406ced47badf0eb106031ccbd129355c10ed729e8acdc42d9"
+    }
+   ],
+   "swarm": null,
+   "zg": {
+    "dossier": "0x9a2a484b25a71b8316eb216665a2c9a28d6ca30e982e3a2bc6f260020e423203",
+    "review": "0xd7ad60f8def7e6e59b3f2dae6f49f0396d3a32a704fb54c72e2c493bdaee5c5f",
+    "liveTest": "0x9d1b9847db1815156f951da5aa5ea4220bb0ec41210de15ca0d433a0cee90940"
+   }
+  }
+ },
+ "mozark-app-studio": {
+  "configured": {
+   "read": true,
+   "write": true,
+   "swarm": false
+  },
+  "publishing": false,
+  "last": {
+   "at": "2026-11-06T11:41:21.000Z",
+   "panelKey": "0x83701cc6f520e68d4a223474fd89d1c941fb4d32fdd5df3fe9b3b0773b163fff",
+   "txHash": "0xf354f279a353b3b91e2865426eb6a9c104e840110739beeadeeaeb0d3338e1a1"
+  },
+  "onchain": {
+   "panel": {
+    "entityKey": "0x83701cc6f520e68d4a223474fd89d1c941fb4d32fdd5df3fe9b3b0773b163fff",
+    "owner": "0x429C0C8C8cDBf6b24D02075D808088983988B515",
+    "projectId": "mozark-app-studio",
+    "runAt": "2026-11-06T11:40:32.000Z",
+    "panelScore": "78.42",
+    "complete": true,
+    "judges": 3,
+    "provider": "0g",
+    "model": "0gm-1.0-35b-a3b",
+    "expiresAtBlock": "5488285",
+    "expiresAt": "2027-05-07T00:00:00.000Z",
+    "explorer": "https://rabdi.explorer.arkiv.network/entity-explorer?q=%24key%20%3D%20key(0x83701cc6f520e68d4a223474fd89d1c941fb4d32fdd5df3fe9b3b0773b163fff)",
+    "txHash": "0xf354f279a353b3b91e2865426eb6a9c104e840110739beeadeeaeb0d3338e1a1"
+   },
+   "scorecards": [
+    {
+     "entityKey": "0xf77b7abcca505b9cc7c36142393f1c4737ac40e13885a05f1cbec54c11eb352b",
+     "judgeId": "judge_11631c00",
+     "judgeName": "Priya Raman",
+     "status": "scored",
+     "overall": "75.48",
+     "headline": "A real product for a real pain. The public flows work; the rest is behind sign-in.",
+     "explorer": "https://rabdi.explorer.arkiv.network/entity-explorer?q=%24key%20%3D%20key(0xf77b7abcca505b9cc7c36142393f1c4737ac40e13885a05f1cbec54c11eb352b)",
+     "txHash": "0x09108107a1561c3979f8635387951c0f5f002532877794462e6550de29ccd507"
+    },
+    {
+     "entityKey": "0x985a85d8a2e1ef693260a32ff3508865dd2df4cc32c732c77fb2e48fe0b416c7",
+     "judgeId": "judge_e9c669c4",
+     "judgeName": "Marcus Lee",
+     "status": "scored",
+     "overall": "80.53",
+     "headline": "1,232 tests and 49 commits at the event. It practices what it sells.",
+     "explorer": "https://rabdi.explorer.arkiv.network/entity-explorer?q=%24key%20%3D%20key(0x985a85d8a2e1ef693260a32ff3508865dd2df4cc32c732c77fb2e48fe0b416c7)",
+     "txHash": "0x7e6866f956db64eca947a377b450b0e9e3b79e67d1819cab5ef55db635d79db5"
+    },
+    {
+     "entityKey": "0xe2f937952bb6c0fef6e258777856fcc9573ba2c3d4453a81388b5b71f057a8be",
+     "judgeId": "judge_c876a259",
+     "judgeName": "Ana Okafor",
+     "status": "scored",
+     "overall": "79.26",
+     "headline": "Teams pay for testing today. This is a business.",
+     "explorer": "https://rabdi.explorer.arkiv.network/entity-explorer?q=%24key%20%3D%20key(0xe2f937952bb6c0fef6e258777856fcc9573ba2c3d4453a81388b5b71f057a8be)",
+     "txHash": "0xe73286f17933e18afa13920871fe7a336e36d62d3a55592ef60179de763309da"
+    }
+   ],
+   "swarm": null,
+   "zg": {
+    "dossier": "0x620fe3c9ac7460c562ce05545965b9d4dd38f20aa307b46447eca4e320435302",
+    "review": "0xd12bd366779f6772e5ea851b7f094eb3c78de74d046dcc404a5ad8098f565ca9",
+    "liveTest": "0x0df0668e21ababbf9e8c8813a9ae0383edb1557a7e70871db4f89d81ccbe682d"
+   }
+  }
+ },
+ "qagent": {
+  "configured": {
+   "read": true,
+   "write": true,
+   "swarm": false
+  },
+  "publishing": false,
+  "last": {
+   "at": "2026-11-06T12:49:28.000Z",
+   "panelKey": "0xebf139a81429caa0578e14ede66f4fe72e451b1ccf546d6e91f2cdb9fe9bb17b",
+   "txHash": "0xc11655248f6a42cff4a0f157c71e776a816f2717b1ecfe6ab3c9abee6a21d592"
+  },
+  "onchain": {
+   "panel": {
+    "entityKey": "0xebf139a81429caa0578e14ede66f4fe72e451b1ccf546d6e91f2cdb9fe9bb17b",
+    "owner": "0x429C0C8C8cDBf6b24D02075D808088983988B515",
+    "projectId": "qagent",
+    "runAt": "2026-11-06T12:48:39.000Z",
+    "panelScore": "49.05",
+    "complete": true,
+    "judges": 3,
+    "provider": "0g",
+    "model": "0gm-1.0-35b-a3b",
+    "expiresAtBlock": "5488285",
+    "expiresAt": "2027-05-07T00:00:00.000Z",
+    "explorer": "https://rabdi.explorer.arkiv.network/entity-explorer?q=%24key%20%3D%20key(0xebf139a81429caa0578e14ede66f4fe72e451b1ccf546d6e91f2cdb9fe9bb17b)",
+    "txHash": "0xc11655248f6a42cff4a0f157c71e776a816f2717b1ecfe6ab3c9abee6a21d592"
+   },
+   "scorecards": [
+    {
+     "entityKey": "0xa9f5c2df0a7fa8f35e3177558a126da0c2fc567473b6cc10196ab96ac3ce7cc2",
+     "judgeId": "judge_11631c00",
+     "judgeName": "Priya Raman",
+     "status": "scored",
+     "overall": "56.12",
+     "headline": "Great pitch. The dashboard in the video is a 404 on the live site.",
+     "explorer": "https://rabdi.explorer.arkiv.network/entity-explorer?q=%24key%20%3D%20key(0xa9f5c2df0a7fa8f35e3177558a126da0c2fc567473b6cc10196ab96ac3ce7cc2)",
+     "txHash": "0x1166a19307c7957c3031d8da2a60bccea9a470417343c78e4f51854e727ddacf"
+    },
+    {
+     "entityKey": "0x48c9c63972818a8253cf11d101820e8acc5601c7a991e0ef81c60093bef72280",
+     "judgeId": "judge_e9c669c4",
+     "judgeName": "Marcus Lee",
+     "status": "scored",
+     "overall": "36.58",
+     "headline": "You sell testing and ship zero tests.",
+     "explorer": "https://rabdi.explorer.arkiv.network/entity-explorer?q=%24key%20%3D%20key(0x48c9c63972818a8253cf11d101820e8acc5601c7a991e0ef81c60093bef72280)",
+     "txHash": "0x625ecadc010e66b88c583b8547a1748ccd81a0118c2abc91d49f1fabbb2fe197"
+    },
+    {
+     "entityKey": "0xc89643a829ea8e71fff57ec31720bf2c482de80abe914148a2063b30462b6974",
+     "judgeId": "judge_c876a259",
+     "judgeName": "Ana Okafor",
+     "status": "scored",
+     "overall": "54.45",
+     "headline": "Big market, but the agent returns canned findings.",
+     "explorer": "https://rabdi.explorer.arkiv.network/entity-explorer?q=%24key%20%3D%20key(0xc89643a829ea8e71fff57ec31720bf2c482de80abe914148a2063b30462b6974)",
+     "txHash": "0xfcbfdc3b54a4ec3391b39fa01b22c063f97ae905b14d295f4307b70640db083a"
+    }
+   ],
+   "swarm": null,
+   "zg": {
+    "dossier": "0x8c6cebf9640317f753bb5952d3005d27f9d2e626497451bf0285c9dda6c69b21",
+    "review": "0x7ea58d5e2b8780cdcfc8df5524871c6be1cc851ea1ecf70a4b1d2007c774204e",
+    "liveTest": "0x44116a62ef49ff3182702d1cb707ef8a8f2291f4ef48218e550c10cee6c73073"
+   }
+  }
+ },
+ "vaultline": {
+  "configured": {
+   "read": true,
+   "write": true,
+   "swarm": false
+  },
+  "publishing": false,
+  "last": {
+   "at": "2026-11-06T13:08:25.000Z",
+   "panelKey": "0xfb68985c2cd7acfcbcf8e580387805583a183c4c7d6d63496e6e29b6057b481a",
+   "txHash": "0x2184798faafb502e5e84c91360b561fc7b8331bedae76349c13d2ca25f8eaaac"
+  },
+  "onchain": {
+   "panel": {
+    "entityKey": "0xfb68985c2cd7acfcbcf8e580387805583a183c4c7d6d63496e6e29b6057b481a",
+    "owner": "0x429C0C8C8cDBf6b24D02075D808088983988B515",
+    "projectId": "vaultline",
+    "runAt": "2026-11-06T13:07:36.000Z",
+    "panelScore": "64.86",
+    "complete": true,
+    "judges": 3,
+    "provider": "0g",
+    "model": "0gm-1.0-35b-a3b",
+    "expiresAtBlock": "5488285",
+    "expiresAt": "2027-05-07T00:00:00.000Z",
+    "explorer": "https://rabdi.explorer.arkiv.network/entity-explorer?q=%24key%20%3D%20key(0xfb68985c2cd7acfcbcf8e580387805583a183c4c7d6d63496e6e29b6057b481a)",
+    "txHash": "0x2184798faafb502e5e84c91360b561fc7b8331bedae76349c13d2ca25f8eaaac"
+   },
+   "scorecards": [
+    {
+     "entityKey": "0x14fb1a6604c4af19aef9190c2fff6928b5d0f7dd984fd438850954c34e2c64e3",
+     "judgeId": "judge_11631c00",
+     "judgeName": "Priya Raman",
+     "status": "scored",
+     "overall": "54.64",
+     "headline": "The demo breaks at deposit. I never saw a stream run.",
+     "explorer": "https://rabdi.explorer.arkiv.network/entity-explorer?q=%24key%20%3D%20key(0x14fb1a6604c4af19aef9190c2fff6928b5d0f7dd984fd438850954c34e2c64e3)",
+     "txHash": "0xe8b8ae3ced4137f7a18378c449ec159c381df3bf9b2041efe2d63e8de9255517"
+    },
+    {
+     "entityKey": "0xb29ca66857cd18b7a3930b00d75a1f636851d287e8c8e3f86446296921872158",
+     "judgeId": "judge_e9c669c4",
+     "judgeName": "Marcus Lee",
+     "status": "scored",
+     "overall": "78.02",
+     "headline": "Best contracts of the event: invariant-tested and tight.",
+     "explorer": "https://rabdi.explorer.arkiv.network/entity-explorer?q=%24key%20%3D%20key(0xb29ca66857cd18b7a3930b00d75a1f636851d287e8c8e3f86446296921872158)",
+     "txHash": "0x58f2ecb8d8094d9f99809b229e0d625e346f3733085f0715b2cdfe95aaf82215"
+    },
+    {
+     "entityKey": "0x4547a173ea9194b5939f3a68df2e58297d9687d6b789ef24886d8dfebe8f026d",
+     "judgeId": "judge_c876a259",
+     "judgeName": "Ana Okafor",
+     "status": "scored",
+     "overall": "61.91",
+     "headline": "Great engine, but users can't get money in.",
+     "explorer": "https://rabdi.explorer.arkiv.network/entity-explorer?q=%24key%20%3D%20key(0x4547a173ea9194b5939f3a68df2e58297d9687d6b789ef24886d8dfebe8f026d)",
+     "txHash": "0x47d68d43bdda3a15d6f2fda59d32efb9528762285b06b538096fe0144ff9c122"
+    }
+   ],
+   "swarm": null,
+   "zg": {
+    "dossier": "0x4ab9f7a9a344872e0891367d52a0fb01c1b6fc3069c943cd1dc749898f2aa68d",
+    "review": "0xf47aac7516d13a6e0d2fdd74440b4306fe8e061ae239c8a282fd7a10ebff55dd",
+    "liveTest": "0xa6da6db8b84078b1dc115fc2c9ce2ff974d66bd0b2ff66fe9d635591e3377776"
+   }
+  }
+ },
+ "splitsafe": {
+  "configured": {
+   "read": true,
+   "write": true,
+   "swarm": false
+  },
+  "publishing": false,
+  "last": {
+   "at": "2026-11-06T12:47:19.000Z",
+   "panelKey": "0x0be27d31fd948109183c4915197db25da5a0a2d81dad3ed2de8fdd8d583c271c",
+   "txHash": "0x10f6acb044ed228de62aa8d448f6051400a097eeb96057136d0e4d74b76fcb3d"
+  },
+  "onchain": {
+   "panel": {
+    "entityKey": "0x0be27d31fd948109183c4915197db25da5a0a2d81dad3ed2de8fdd8d583c271c",
+    "owner": "0x429C0C8C8cDBf6b24D02075D808088983988B515",
+    "projectId": "splitsafe",
+    "runAt": "2026-11-06T12:46:30.000Z",
+    "panelScore": "67.37",
+    "complete": true,
+    "judges": 3,
+    "provider": "0g",
+    "model": "0gm-1.0-35b-a3b",
+    "expiresAtBlock": "5488285",
+    "expiresAt": "2027-05-07T00:00:00.000Z",
+    "explorer": "https://rabdi.explorer.arkiv.network/entity-explorer?q=%24key%20%3D%20key(0x0be27d31fd948109183c4915197db25da5a0a2d81dad3ed2de8fdd8d583c271c)",
+    "txHash": "0x10f6acb044ed228de62aa8d448f6051400a097eeb96057136d0e4d74b76fcb3d"
+   },
+   "scorecards": [
+    {
+     "entityKey": "0x6182b075e6cbcb6685cb5141f08992ba6b1cd8efb1f821292a178453dd42223c",
+     "judgeId": "judge_11631c00",
+     "judgeName": "Priya Raman",
+     "status": "scored",
+     "overall": "75.76",
+     "headline": "Works on my phone, every step. This is what a demo should be.",
+     "explorer": "https://rabdi.explorer.arkiv.network/entity-explorer?q=%24key%20%3D%20key(0x6182b075e6cbcb6685cb5141f08992ba6b1cd8efb1f821292a178453dd42223c)",
+     "txHash": "0x682a3883666918f022b3b66353a368cff3645c55f1f5600d929aad418e9e2400"
+    },
+    {
+     "entityKey": "0x1021e6550e24c916835e9031b6519454149b4791b151aa31b6945ef1b48e6837",
+     "judgeId": "judge_e9c669c4",
+     "judgeName": "Marcus Lee",
+     "status": "scored",
+     "overall": "60.09",
+     "headline": "Anyone can call settle(). Fix that before mainnet.",
+     "explorer": "https://rabdi.explorer.arkiv.network/entity-explorer?q=%24key%20%3D%20key(0x1021e6550e24c916835e9031b6519454149b4791b151aa31b6945ef1b48e6837)",
+     "txHash": "0x7fef7466ee123799718c1740f86ed7319a10819b6eb40039ffa6c29ac78c7d9e"
+    },
+    {
+     "entityKey": "0xaab84b8197db35ffec9ce34d158e66a1d1253d1b660372fc97820a57a955ba68",
+     "judgeId": "judge_c876a259",
+     "judgeName": "Ana Okafor",
+     "status": "scored",
+     "overall": "66.27",
+     "headline": "Clear everyday pain, clear product.",
+     "explorer": "https://rabdi.explorer.arkiv.network/entity-explorer?q=%24key%20%3D%20key(0xaab84b8197db35ffec9ce34d158e66a1d1253d1b660372fc97820a57a955ba68)",
+     "txHash": "0xb25601093baab0b1b2d9a8fb52f722111d791ada991b8a8ce0b0a93adf18865f"
+    }
+   ],
+   "swarm": null,
+   "zg": {
+    "dossier": "0xd91322afd46478a3dcae4550e7d2179096ef3745b9c5a14e7a4b45adf11e4a78",
+    "review": "0x324a84355bba273f3ea034126d4defc3d3d77cef676baa6ef95032f08dd04b2e",
+    "liveTest": "0x43fab111c0a02fa9cb207fcc23442c4218c9140fc2f01ddcd138aaffc4fa4307"
+   }
+  }
+ },
+ "kirana-credit": {
+  "configured": {
+   "read": true,
+   "write": true,
+   "swarm": false
+  },
+  "publishing": false,
+  "last": {
+   "at": "2026-11-06T13:27:53.000Z",
+   "panelKey": "0xace0aadd7d3112ff67379dd1fdd0f57dd8bd4e21b1c4d774f459b711b8a56ae3",
+   "txHash": "0xeb5bdcc0a8ee8b250f150deb825d31628a5f62e358ebeaaa5fca0a2560628923"
+  },
+  "onchain": {
+   "panel": {
+    "entityKey": "0xace0aadd7d3112ff67379dd1fdd0f57dd8bd4e21b1c4d774f459b711b8a56ae3",
+    "owner": "0x429C0C8C8cDBf6b24D02075D808088983988B515",
+    "projectId": "kirana-credit",
+    "runAt": "2026-11-06T13:27:04.000Z",
+    "panelScore": "76.28",
+    "complete": true,
+    "judges": 3,
+    "provider": "0g",
+    "model": "0gm-1.0-35b-a3b",
+    "expiresAtBlock": "5488285",
+    "expiresAt": "2027-05-07T00:00:00.000Z",
+    "explorer": "https://rabdi.explorer.arkiv.network/entity-explorer?q=%24key%20%3D%20key(0xace0aadd7d3112ff67379dd1fdd0f57dd8bd4e21b1c4d774f459b711b8a56ae3)",
+    "txHash": "0xeb5bdcc0a8ee8b250f150deb825d31628a5f62e358ebeaaa5fca0a2560628923"
+   },
+   "scorecards": [
+    {
+     "entityKey": "0x046100c958a881d558d94481f8ddc7eb9145319707345c5eef0de0b6f52b0231",
+     "judgeId": "judge_11631c00",
+     "judgeName": "Priya Raman",
+     "status": "scored",
+     "overall": "75.28",
+     "headline": "Rough on a phone, but real shopkeepers use it.",
+     "explorer": "https://rabdi.explorer.arkiv.network/entity-explorer?q=%24key%20%3D%20key(0x046100c958a881d558d94481f8ddc7eb9145319707345c5eef0de0b6f52b0231)",
+     "txHash": "0xef3dcd0596618cc4b5b58ae5e20d596acffb31dc964f2572f10a341ab63b4388"
+    },
+    {
+     "entityKey": "0x362f8cf41111bdcb464c0ffdec9007bfc8dc39fc35ada6e2604d571f328480c2",
+     "judgeId": "judge_e9c669c4",
+     "judgeName": "Marcus Lee",
+     "status": "scored",
+     "overall": "71.11",
+     "headline": "Sensible limits, tested credit contract.",
+     "explorer": "https://rabdi.explorer.arkiv.network/entity-explorer?q=%24key%20%3D%20key(0x362f8cf41111bdcb464c0ffdec9007bfc8dc39fc35ada6e2604d571f328480c2)",
+     "txHash": "0xe16d576fb13d094a1cc6ff92f1582230d87d988a3dc1fb42fa139b28e16e40ac"
+    },
+    {
+     "entityKey": "0xb193d0f7173897836fb444514c3f7a48e2d22e42d40a31be197cf24b6cd7be1e",
+     "judgeId": "judge_c876a259",
+     "judgeName": "Ana Okafor",
+     "status": "scored",
+     "overall": "82.46",
+     "headline": "Real users and a real lending model. I'd take the meeting.",
+     "explorer": "https://rabdi.explorer.arkiv.network/entity-explorer?q=%24key%20%3D%20key(0xb193d0f7173897836fb444514c3f7a48e2d22e42d40a31be197cf24b6cd7be1e)",
+     "txHash": "0xcb3e42658908cd10abba0c53ebcebae6fc731a3f6c408621e93bfaf807e63b7f"
+    }
+   ],
+   "swarm": null,
+   "zg": {
+    "dossier": "0x42e717dff335d1bd45b029ba42b4f6fe75d7b2d5477b2f9c6b6526027dbd6b85",
+    "review": "0x9d5e07c9632cd792df3c31d18b27da79c0e1492cc5127fe203b273b61108344f",
+    "liveTest": "0xdaafbb518a372725da11addc719586888326dae2daf7077a66e341c6386d174b"
+   }
+  }
+ },
+ "metromint": {
+  "configured": {
+   "read": true,
+   "write": true,
+   "swarm": false
+  },
+  "publishing": false,
+  "last": {
+   "at": "2026-11-06T15:00:57.000Z",
+   "panelKey": "0x36287782a27a9caf3660def02a2c1fce27a43b432aeed3225baa018d1ac69cb0",
+   "txHash": "0x3917d44ef9b3ad62a921d825563880bd3b9a49f595be45a078fb205bb5bca779"
+  },
+  "onchain": {
+   "panel": {
+    "entityKey": "0x36287782a27a9caf3660def02a2c1fce27a43b432aeed3225baa018d1ac69cb0",
+    "owner": "0x429C0C8C8cDBf6b24D02075D808088983988B515",
+    "projectId": "metromint",
+    "runAt": "2026-11-06T15:00:08.000Z",
+    "panelScore": "54.51",
+    "complete": true,
+    "judges": 3,
+    "provider": "0g",
+    "model": "0gm-1.0-35b-a3b",
+    "expiresAtBlock": "5488285",
+    "expiresAt": "2027-05-07T00:00:00.000Z",
+    "explorer": "https://rabdi.explorer.arkiv.network/entity-explorer?q=%24key%20%3D%20key(0x36287782a27a9caf3660def02a2c1fce27a43b432aeed3225baa018d1ac69cb0)",
+    "txHash": "0x3917d44ef9b3ad62a921d825563880bd3b9a49f595be45a078fb205bb5bca779"
+   },
+   "scorecards": [
+    {
+     "entityKey": "0x07d6db82132e81dfa737615bcb1f17ad730ef25511c020c2ae52449bd70ef419",
+     "judgeId": "judge_11631c00",
+     "judgeName": "Priya Raman",
+     "status": "scored",
+     "overall": "54.32",
+     "headline": "Commuters live on phones, and the ticket overflows at 390px.",
+     "explorer": "https://rabdi.explorer.arkiv.network/entity-explorer?q=%24key%20%3D%20key(0x07d6db82132e81dfa737615bcb1f17ad730ef25511c020c2ae52449bd70ef419)",
+     "txHash": "0x1d02d91379b570814fb4746c4915c56f9727ad840f4ce79b739411e5e91e4339"
+    },
+    {
+     "entityKey": "0x629d18c6907542b824b639692ab57455f333436a3582067633ebac2508b61e54",
+     "judgeId": "judge_e9c669c4",
+     "judgeName": "Marcus Lee",
+     "status": "scored",
+     "overall": "50.17",
+     "headline": "The mint is a mock that returns a fake token id.",
+     "explorer": "https://rabdi.explorer.arkiv.network/entity-explorer?q=%24key%20%3D%20key(0x629d18c6907542b824b639692ab57455f333436a3582067633ebac2508b61e54)",
+     "txHash": "0x62772f31c23d38db755208d9f0f45c84432242c941568aa72b648e930b3e1c47"
+    },
+    {
+     "entityKey": "0xb66b754ee087ae8f233f7413493ffb58ca5288fd5bf5c2997fda92a53e38c3a8",
+     "judgeId": "judge_c876a259",
+     "judgeName": "Ana Okafor",
+     "status": "scored",
+     "overall": "59.04",
+     "headline": "Nice idea; no ticketing partner and no real mint.",
+     "explorer": "https://rabdi.explorer.arkiv.network/entity-explorer?q=%24key%20%3D%20key(0xb66b754ee087ae8f233f7413493ffb58ca5288fd5bf5c2997fda92a53e38c3a8)",
+     "txHash": "0x891962f6fa7d4dd38cc9c34968fbd47225cb6403639c33c8f6d2cfa9adb36de7"
+    }
+   ],
+   "swarm": null,
+   "zg": {
+    "dossier": "0xd3ccd787cc8dc450755a8afd2896b1b9ef0311de4e73b2744a2533cc9c1266c5",
+    "review": "0xf950b3535f6984bbc458010a3a7ee2ffed63b1ef5b7e302c480722d9bb5f4738",
+    "liveTest": "0xf2879543f59cd940025c300377b12f5ed6273b98ffdff2246850f4a1e8d3c47a"
+   }
+  }
+ }
+}

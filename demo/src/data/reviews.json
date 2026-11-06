@@ -1,0 +1,4978 @@
+{
+ "go-health-me": {
+  "complete": true,
+  "effort": "high",
+  "model": "0gm-1.0-35b-a3b",
+  "panelHundredths": 7661,
+  "projectId": "go-health-me",
+  "provider": "0g",
+  "ranAt": "2026-11-06T08:38:58.000Z",
+  "reviews": [
+   {
+    "attempts": 1,
+    "judge": {
+     "id": "judge_11631c00",
+     "name": "Priya Raman",
+     "promptVersion": "judge-v3",
+     "title": "Product lead who has shipped three consumer fintech apps",
+     "tone": "balanced",
+     "version": 1,
+     "weights": {
+      "product_journey": 20,
+      "real_world_value": 20,
+      "ui_ux": 16,
+      "code_quality": 4,
+      "sdlc": 4,
+      "feasibility": 12,
+      "scalability": 4,
+      "business_model": 12,
+      "brownie_points": 8
+     }
+    },
+    "judgeId": "judge_11631c00",
+    "ms": 41000,
+    "overallHundredths": 8140,
+    "promptVersion": "judge-v3",
+    "review": {
+     "certainty": "high",
+     "comment": "Opened it on Android and iPhone: every flow works, and I understood it in under a minute.",
+     "concerns": [
+      "World ID still runs on staging mocks (E5, E15).",
+      "Built before the event: 0 of 437 commits during it."
+     ],
+     "criteria": [
+      {
+       "comment": "Sign in, pick a challenge, stake, sync a wearable: every demo step replays on the live app.",
+       "evidence": [
+        "V-laptop-d1",
+        "V-laptop-d6",
+        "V-ios-d8"
+       ],
+       "id": "product_journey",
+       "score": 84
+      },
+      {
+       "comment": "Commitment with money behind it, proven by the wearable, not by honour.",
+       "evidence": [
+        "E2",
+        "E3"
+       ],
+       "id": "real_world_value",
+       "score": 86
+      },
+      {
+       "comment": "Same flows pass on Android and iPhone, no sideways scroll, clear copy.",
+       "evidence": [
+        "V-ios-f1",
+        "V-ios-f4"
+       ],
+       "id": "ui_ux",
+       "score": 88
+      },
+      {
+       "comment": "Role split and pull payments in HealthPoolsV3.sol.",
+       "evidence": [
+        "E12",
+        "E13"
+       ],
+       "id": "code_quality",
+       "score": 80
+      },
+      {
+       "comment": "2,476 tests, but no commits during the event window.",
+       "evidence": [
+        "E14"
+       ],
+       "id": "sdlc",
+       "score": 60
+      },
+      {
+       "comment": "Runs today on Base Sepolia; World ID still mocked.",
+       "evidence": [
+        "E5",
+        "E8"
+       ],
+       "id": "feasibility",
+       "score": 82
+      },
+      {
+       "comment": "Verdicts on chain, wearable data off chain in Supabase.",
+       "evidence": [
+        "E10"
+       ],
+       "id": "scalability",
+       "score": 71
+      },
+      {
+       "comment": "Pot model is clear; no platform fee yet.",
+       "evidence": [
+        "E9"
+       ],
+       "id": "business_model",
+       "score": 68
+      },
+      {
+       "comment": "SPOTTER has personality, and it feels native on a phone.",
+       "evidence": [
+        "V-ios-d4"
+       ],
+       "id": "brownie_points",
+       "score": 86
+      }
+     ],
+     "dealBreakerHit": false,
+     "dealBreakerNote": "",
+     "headline": "Opened it on Android and iPhone: every flow works, and I understood it in under a minute.",
+     "strengths": [
+      "48 of 48 checks pass on Windows, Android and iPhone (live test).",
+      "Stake, verdict and payout all trace to code (E1, E12, E13).",
+      "Only the verdict reaches the chain (E4)."
+     ]
+    },
+    "screenshotsShown": 12,
+    "status": "scored",
+    "traces": [
+     {
+      "chatId": "f93a6920-e64d-4537-a7f8-824da3217b56",
+      "costUsdMicro": 3100,
+      "model": "0gm-1.0-35b-a3b",
+      "provider": "0xf4FB8d2bD856e672b5f9848b0eD235A20079B250",
+      "requestId": "aaa30f92-2b77-4391-ae2f-8ecbf4ccd271"
+     }
+    ],
+    "usage": {
+     "input_tokens": 24000,
+     "output_tokens": 2600
+    }
+   },
+   {
+    "attempts": 1,
+    "judge": {
+     "id": "judge_e9c669c4",
+     "name": "Marcus Lee",
+     "promptVersion": "judge-v3",
+     "title": "Staff engineer, smart contracts and payments infrastructure",
+     "tone": "strict",
+     "version": 1,
+     "weights": {
+      "product_journey": 5,
+      "real_world_value": 9,
+      "ui_ux": 4,
+      "code_quality": 23,
+      "sdlc": 18,
+      "feasibility": 18,
+      "scalability": 14,
+      "business_model": 0,
+      "brownie_points": 9
+     }
+    },
+    "judgeId": "judge_e9c669c4",
+    "ms": 50000,
+    "overallHundredths": 7212,
+    "promptVersion": "judge-v3",
+    "review": {
+     "certainty": "high",
+     "comment": "Clean money path: pull payments, split roles, no health data on chain.",
+     "concerns": [
+      "World ID still runs on staging mocks (E5, E15).",
+      "Built before the event: 0 of 437 commits during it."
+     ],
+     "criteria": [
+      {
+       "comment": "Sign in, pick a challenge, stake, sync a wearable: every demo step replays on the live app.",
+       "evidence": [
+        "V-laptop-d1",
+        "V-laptop-d6",
+        "V-ios-d8"
+       ],
+       "id": "product_journey",
+       "score": 81
+      },
+      {
+       "comment": "Commitment with money behind it, proven by the wearable, not by honour.",
+       "evidence": [
+        "E2",
+        "E3"
+       ],
+       "id": "real_world_value",
+       "score": 78
+      },
+      {
+       "comment": "Same flows pass on Android and iPhone, no sideways scroll, clear copy.",
+       "evidence": [
+        "V-ios-f1",
+        "V-ios-f4"
+       ],
+       "id": "ui_ux",
+       "score": 83
+      },
+      {
+       "comment": "Role split and pull payments in HealthPoolsV3.sol.",
+       "evidence": [
+        "E12",
+        "E13"
+       ],
+       "id": "code_quality",
+       "score": 75
+      },
+      {
+       "comment": "2,476 tests, but no commits during the event window.",
+       "evidence": [
+        "E14"
+       ],
+       "id": "sdlc",
+       "score": 54
+      },
+      {
+       "comment": "Runs today on Base Sepolia; World ID still mocked.",
+       "evidence": [
+        "E5",
+        "E8"
+       ],
+       "id": "feasibility",
+       "score": 78
+      },
+      {
+       "comment": "Verdicts on chain, wearable data off chain in Supabase.",
+       "evidence": [
+        "E10"
+       ],
+       "id": "scalability",
+       "score": 68
+      },
+      {
+       "comment": "Pot model is clear; no platform fee yet.",
+       "evidence": [
+        "E9"
+       ],
+       "id": "business_model",
+       "score": 64
+      },
+      {
+       "comment": "SPOTTER has personality, and it feels native on a phone.",
+       "evidence": [
+        "V-ios-d4"
+       ],
+       "id": "brownie_points",
+       "score": 80
+      }
+     ],
+     "dealBreakerHit": false,
+     "dealBreakerNote": "",
+     "headline": "Clean money path: pull payments, split roles, no health data on chain.",
+     "strengths": [
+      "48 of 48 checks pass on Windows, Android and iPhone (live test).",
+      "Stake, verdict and payout all trace to code (E1, E12, E13).",
+      "Only the verdict reaches the chain (E4)."
+     ]
+    },
+    "screenshotsShown": 12,
+    "status": "scored",
+    "traces": [
+     {
+      "chatId": "5af450e1-88a7-4f95-a9aa-6cc6f4a73dce",
+      "costUsdMicro": 3740,
+      "model": "0gm-1.0-35b-a3b",
+      "provider": "0xf4FB8d2bD856e672b5f9848b0eD235A20079B250",
+      "requestId": "209784d5-ff2c-4ab6-aaf1-b753516ffdef"
+     }
+    ],
+    "usage": {
+     "input_tokens": 24900,
+     "output_tokens": 3300
+    }
+   },
+   {
+    "attempts": 1,
+    "judge": {
+     "id": "judge_c876a259",
+     "name": "Ana Okafor",
+     "promptVersion": "judge-v3",
+     "title": "Early-stage investor and former founder",
+     "tone": "generous",
+     "version": 1,
+     "weights": {
+      "product_journey": 8,
+      "real_world_value": 17,
+      "ui_ux": 4,
+      "code_quality": 4,
+      "sdlc": 4,
+      "feasibility": 13,
+      "scalability": 17,
+      "business_model": 21,
+      "brownie_points": 12
+     }
+    },
+    "judgeId": "judge_c876a259",
+    "ms": 59000,
+    "overallHundredths": 7632,
+    "promptVersion": "judge-v3",
+    "review": {
+     "certainty": "high",
+     "comment": "A real habit with real money behind it, live today on Base Sepolia.",
+     "concerns": [
+      "World ID still runs on staging mocks (E5, E15).",
+      "Built before the event: 0 of 437 commits during it."
+     ],
+     "criteria": [
+      {
+       "comment": "Sign in, pick a challenge, stake, sync a wearable: every demo step replays on the live app.",
+       "evidence": [
+        "V-laptop-d1",
+        "V-laptop-d6",
+        "V-ios-d8"
+       ],
+       "id": "product_journey",
+       "score": 86
+      },
+      {
+       "comment": "Commitment with money behind it, proven by the wearable, not by honour.",
+       "evidence": [
+        "E2",
+        "E3"
+       ],
+       "id": "real_world_value",
+       "score": 82
+      },
+      {
+       "comment": "Same flows pass on Android and iPhone, no sideways scroll, clear copy.",
+       "evidence": [
+        "V-ios-f1",
+        "V-ios-f4"
+       ],
+       "id": "ui_ux",
+       "score": 86
+      },
+      {
+       "comment": "Role split and pull payments in HealthPoolsV3.sol.",
+       "evidence": [
+        "E12",
+        "E13"
+       ],
+       "id": "code_quality",
+       "score": 81
+      },
+      {
+       "comment": "2,476 tests, but no commits during the event window.",
+       "evidence": [
+        "E14"
+       ],
+       "id": "sdlc",
+       "score": 60
+      },
+      {
+       "comment": "Runs today on Base Sepolia; World ID still mocked.",
+       "evidence": [
+        "E5",
+        "E8"
+       ],
+       "id": "feasibility",
+       "score": 79
+      },
+      {
+       "comment": "Verdicts on chain, wearable data off chain in Supabase.",
+       "evidence": [
+        "E10"
+       ],
+       "id": "scalability",
+       "score": 72
+      },
+      {
+       "comment": "Pot model is clear; no platform fee yet.",
+       "evidence": [
+        "E9"
+       ],
+       "id": "business_model",
+       "score": 67
+      },
+      {
+       "comment": "SPOTTER has personality, and it feels native on a phone.",
+       "evidence": [
+        "V-ios-d4"
+       ],
+       "id": "brownie_points",
+       "score": 82
+      }
+     ],
+     "dealBreakerHit": false,
+     "dealBreakerNote": "",
+     "headline": "A real habit with real money behind it, live today on Base Sepolia.",
+     "strengths": [
+      "48 of 48 checks pass on Windows, Android and iPhone (live test).",
+      "Stake, verdict and payout all trace to code (E1, E12, E13).",
+      "Only the verdict reaches the chain (E4)."
+     ]
+    },
+    "screenshotsShown": 12,
+    "status": "scored",
+    "traces": [
+     {
+      "chatId": "e08da463-6b5e-4987-a2fd-2470ce841d17",
+      "costUsdMicro": 4380,
+      "model": "0gm-1.0-35b-a3b",
+      "provider": "0xf4FB8d2bD856e672b5f9848b0eD235A20079B250",
+      "requestId": "e74ac3b8-1c0e-4a0e-abf2-66780ba2ddd9"
+     }
+    ],
+    "usage": {
+     "input_tokens": 25800,
+     "output_tokens": 4000
+    }
+   }
+  ],
+  "evidence": [
+   {
+    "id": "V-laptop-d1",
+    "stepTitle": "Player profile screen",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Player profile screen on windows: see \"Your player\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "5c4e54ba-6bb1-46a0-a165-0dcb316aa868"
+    }
+   },
+   {
+    "id": "V-laptop-d2",
+    "stepTitle": "World ID verification option",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "World ID verification option on windows: see \"World ID\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "632469e4-2721-40b2-a029-a4a1d7fc9521"
+    }
+   },
+   {
+    "id": "V-laptop-d3",
+    "stepTitle": "ENS name selection",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "ENS name selection on windows: see \"Pick your name\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "476ac768-2044-4413-a2aa-d4076869d398"
+    }
+   },
+   {
+    "id": "V-laptop-d4",
+    "stepTitle": "Wearable support UI",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Wearable support UI on windows: see \"WHOOP\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "b75bea50-bd9b-4376-a307-4b41662e8966"
+    }
+   },
+   {
+    "id": "V-laptop-d5",
+    "stepTitle": "Wallet screening record",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Wallet screening record on windows: see \"Payout wallet screened\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "c67d0a75-55e4-4095-afeb-a35a0718a484"
+    }
+   },
+   {
+    "id": "V-laptop-d6",
+    "stepTitle": "Live challenges list",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Live challenges list on windows: at least 1 × a[href^='/pools/'].",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "99c524c5-58d3-466b-a3e4-09812c2a8228"
+    }
+   },
+   {
+    "id": "V-android-d1",
+    "stepTitle": "Player profile screen",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Player profile screen on android: see \"Your player\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "878bdfe9-4c43-4562-a110-2eded3664cde"
+    }
+   },
+   {
+    "id": "V-android-d2",
+    "stepTitle": "World ID verification option",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "World ID verification option on android: see \"World ID\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "815bd974-296d-4de7-af47-6a9f410ffc54"
+    }
+   },
+   {
+    "id": "V-android-d3",
+    "stepTitle": "ENS name selection",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "ENS name selection on android: see \"Pick your name\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "a3e37a9c-d544-4c52-a273-6989bae704ab"
+    }
+   },
+   {
+    "id": "V-android-d4",
+    "stepTitle": "Wearable support UI",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Wearable support UI on android: see \"WHOOP\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "33a5a334-e0b1-4785-a59d-8ade9eba3521"
+    }
+   },
+   {
+    "id": "V-android-d5",
+    "stepTitle": "Wallet screening record",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Wallet screening record on android: see \"Payout wallet screened\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "67d8ff34-f885-4d18-a53d-5d83c6507000"
+    }
+   },
+   {
+    "id": "V-android-d6",
+    "stepTitle": "Live challenges list",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Live challenges list on android: at least 1 × a[href^='/pools/'].",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "425c7742-2ed6-4df5-af94-d3a5ceb12cdf"
+    }
+   },
+   {
+    "id": "V-ios-d1",
+    "stepTitle": "Player profile screen",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Player profile screen on iphone: see \"Your player\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "eb23b6cb-0fcf-431d-ae7e-69a5817c27cf"
+    }
+   },
+   {
+    "id": "V-ios-d2",
+    "stepTitle": "World ID verification option",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "World ID verification option on iphone: see \"World ID\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "5bd38466-5a95-4be7-aa01-3d1847775af8"
+    }
+   },
+   {
+    "id": "V-ios-d3",
+    "stepTitle": "ENS name selection",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "ENS name selection on iphone: see \"Pick your name\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "3953c197-4b13-4b96-aa0f-176723a896bd"
+    }
+   },
+   {
+    "id": "V-ios-d4",
+    "stepTitle": "Wearable support UI",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Wearable support UI on iphone: see \"WHOOP\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "ac66943e-83cf-49ce-a537-432bae586eb8"
+    }
+   },
+   {
+    "id": "V-ios-d5",
+    "stepTitle": "Wallet screening record",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Wallet screening record on iphone: see \"Payout wallet screened\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "951ec141-91ac-412d-a583-5d4b07e59810"
+    }
+   },
+   {
+    "id": "V-ios-d6",
+    "stepTitle": "Live challenges list",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Live challenges list on iphone: at least 1 × a[href^='/pools/'].",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "b4f84028-df50-407b-a394-3fae1fcfab1e"
+    }
+   }
+  ],
+  "zg": {
+   "calls": 21,
+   "costUsdMicro": 18600,
+   "evidenceCostUsdMicro": 7380,
+   "judgeCostUsdMicro": 11220,
+   "providers": [
+    "0xf4FB8d2bD856e672b5f9848b0eD235A20079B250"
+   ],
+   "requestIds": [
+    "aaa30f92-2b77-4391-ae2f-8ecbf4ccd271",
+    "209784d5-ff2c-4ab6-aaf1-b753516ffdef",
+    "e74ac3b8-1c0e-4a0e-abf2-66780ba2ddd9",
+    "5c4e54ba-6bb1-46a0-a165-0dcb316aa868",
+    "632469e4-2721-40b2-a029-a4a1d7fc9521",
+    "476ac768-2044-4413-a2aa-d4076869d398",
+    "b75bea50-bd9b-4376-a307-4b41662e8966",
+    "c67d0a75-55e4-4095-afeb-a35a0718a484",
+    "99c524c5-58d3-466b-a3e4-09812c2a8228",
+    "878bdfe9-4c43-4562-a110-2eded3664cde",
+    "815bd974-296d-4de7-af47-6a9f410ffc54",
+    "a3e37a9c-d544-4c52-a273-6989bae704ab",
+    "33a5a334-e0b1-4785-a59d-8ade9eba3521",
+    "67d8ff34-f885-4d18-a53d-5d83c6507000",
+    "425c7742-2ed6-4df5-af94-d3a5ceb12cdf",
+    "eb23b6cb-0fcf-431d-ae7e-69a5817c27cf",
+    "5bd38466-5a95-4be7-aa01-3d1847775af8",
+    "3953c197-4b13-4b96-aa0f-176723a896bd",
+    "ac66943e-83cf-49ce-a537-432bae586eb8",
+    "951ec141-91ac-412d-a583-5d4b07e59810",
+    "b4f84028-df50-407b-a394-3fae1fcfab1e"
+   ],
+   "uncostedCalls": 0
+  },
+  "proofs": {
+   "arkivPanel": "https://rabdi.explorer.arkiv.network/entity-explorer?q=%24key%20%3D%20key(0xb96344cd752cac0e56fea81488a8f3a3c12e21a7c2e5eb625d853e9490d36028)",
+   "panelKey": "0xb96344cd752cac0e56fea81488a8f3a3c12e21a7c2e5eb625d853e9490d36028",
+   "evidenceRoots": {
+    "dossier": "0x9d9bf8f23159eed10401f9894e93576f44d0b05e512b5c9dc6c17a7da262e567",
+    "review": "0x78768ca1ee82c2e974ea5db40abc34626e1df43e33ae51b798b21a8e94c69e79",
+    "liveTest": "0xee0c8fa72df6347cee85e33d1c49fc99ad54334c6d0dea46337fca2b169a0ddb"
+   },
+   "storageScan": {
+    "dossier": "https://storagescan-galileo.0g.ai/submission/171204",
+    "review": "https://storagescan-galileo.0g.ai/submission/171205",
+    "liveTest": "https://storagescan-galileo.0g.ai/submission/171206"
+   }
+  }
+ },
+ "fittercoin": {
+  "complete": true,
+  "effort": "high",
+  "model": "0gm-1.0-35b-a3b",
+  "panelHundredths": 3586,
+  "projectId": "fittercoin",
+  "provider": "0g",
+  "ranAt": "2026-11-06T10:36:12.000Z",
+  "reviews": [
+   {
+    "attempts": 1,
+    "judge": {
+     "id": "judge_11631c00",
+     "name": "Priya Raman",
+     "promptVersion": "judge-v3",
+     "title": "Product lead who has shipped three consumer fintech apps",
+     "tone": "balanced",
+     "version": 1,
+     "weights": {
+      "product_journey": 20,
+      "real_world_value": 20,
+      "ui_ux": 16,
+      "code_quality": 4,
+      "sdlc": 4,
+      "feasibility": 12,
+      "scalability": 4,
+      "business_model": 12,
+      "brownie_points": 8
+     }
+    },
+    "judgeId": "judge_11631c00",
+    "ms": 41000,
+    "overallHundredths": 4420,
+    "promptVersion": "judge-v3",
+    "review": {
+     "certainty": "high",
+     "comment": "The best video of the day. On Android and iPhone the layout spills off screen and the camera never opens.",
+     "concerns": [
+      "4 of 6 claims contradicted by the code.",
+      "Joining a contest moves 0 ETH (live test d6).",
+      "Bets never pay out: settle() changes nothing (E4)."
+     ],
+     "criteria": [
+      {
+       "comment": "Every screen in the video loads, but the money steps do nothing.",
+       "evidence": [
+        "V-laptop-d6",
+        "E4"
+       ],
+       "id": "product_journey",
+       "score": 44
+      },
+      {
+       "comment": "Getting paid to work out is appealing.",
+       "evidence": [
+        "E2"
+       ],
+       "id": "real_world_value",
+       "score": 63
+      },
+      {
+       "comment": "Fine on Windows; on Android and iPhone the layout spills sideways.",
+       "evidence": [
+        "V-android-d4",
+        "E5"
+       ],
+       "id": "ui_ux",
+       "score": 38
+      },
+      {
+       "comment": "Core checks commented out in both contracts.",
+       "evidence": [
+        "E3",
+        "E4"
+       ],
+       "id": "code_quality",
+       "score": 30
+      },
+      {
+       "comment": "0 tests, 0 commits at the event.",
+       "evidence": [],
+       "id": "sdlc",
+       "score": 26
+      },
+      {
+       "comment": "Deployed, but entry to paid contests is free.",
+       "evidence": [
+        "E3"
+       ],
+       "id": "feasibility",
+       "score": 27
+      },
+      {
+       "comment": "A local Flask server counts reps for every user.",
+       "evidence": [
+        "E5"
+       ],
+       "id": "scalability",
+       "score": 35
+      },
+      {
+       "comment": "Betting fees are the model, and betting doesn't settle.",
+       "evidence": [
+        "E4"
+       ],
+       "id": "business_model",
+       "score": 46
+      },
+      {
+       "comment": "Real computer vision, and a great video.",
+       "evidence": [
+        "E2"
+       ],
+       "id": "brownie_points",
+       "score": 54
+      }
+     ],
+     "dealBreakerHit": true,
+     "dealBreakerNote": "A demo that promises money the product never moves: the stake tx escrows 0 ETH and a winning bet paid nothing (E3, E4).",
+     "headline": "The best video of the day. On Android and iPhone the layout spills off screen and the camera never opens.",
+     "strengths": [
+      "Polished, energetic demo video (3:56).",
+      "Rep counting with MediaPipe is real (E2).",
+      "MetaMask connects and switches to Citrea in one tap."
+     ]
+    },
+    "screenshotsShown": 12,
+    "status": "scored",
+    "traces": [
+     {
+      "chatId": "57ddad69-3752-49a7-a904-70cd3ddbf9cc",
+      "costUsdMicro": 3100,
+      "model": "0gm-1.0-35b-a3b",
+      "provider": "0xf4FB8d2bD856e672b5f9848b0eD235A20079B250",
+      "requestId": "ca36948b-26a6-4431-a5fa-f16f2d798fab"
+     }
+    ],
+    "usage": {
+     "input_tokens": 24000,
+     "output_tokens": 2600
+    }
+   },
+   {
+    "attempts": 1,
+    "judge": {
+     "id": "judge_e9c669c4",
+     "name": "Marcus Lee",
+     "promptVersion": "judge-v3",
+     "title": "Staff engineer, smart contracts and payments infrastructure",
+     "tone": "strict",
+     "version": 1,
+     "weights": {
+      "product_journey": 5,
+      "real_world_value": 9,
+      "ui_ux": 4,
+      "code_quality": 23,
+      "sdlc": 18,
+      "feasibility": 18,
+      "scalability": 14,
+      "business_model": 0,
+      "brownie_points": 9
+     }
+    },
+    "judgeId": "judge_e9c669c4",
+    "ms": 50000,
+    "overallHundredths": 2509,
+    "promptVersion": "judge-v3",
+    "review": {
+     "certainty": "high",
+     "comment": "The betting feature has no code behind it: settle() is an empty view.",
+     "concerns": [
+      "4 of 6 claims contradicted by the code.",
+      "Joining a contest moves 0 ETH (live test d6).",
+      "Bets never pay out: settle() changes nothing (E4)."
+     ],
+     "criteria": [
+      {
+       "comment": "Every screen in the video loads, but the money steps do nothing.",
+       "evidence": [
+        "V-laptop-d6",
+        "E4"
+       ],
+       "id": "product_journey",
+       "score": 32
+      },
+      {
+       "comment": "Getting paid to work out is appealing.",
+       "evidence": [
+        "E2"
+       ],
+       "id": "real_world_value",
+       "score": 54
+      },
+      {
+       "comment": "Fine on Windows; on Android and iPhone the layout spills sideways.",
+       "evidence": [
+        "V-android-d4",
+        "E5"
+       ],
+       "id": "ui_ux",
+       "score": 27
+      },
+      {
+       "comment": "Core checks commented out in both contracts.",
+       "evidence": [
+        "E3",
+        "E4"
+       ],
+       "id": "code_quality",
+       "score": 19
+      },
+      {
+       "comment": "0 tests, 0 commits at the event.",
+       "evidence": [],
+       "id": "sdlc",
+       "score": 14
+      },
+      {
+       "comment": "Deployed, but entry to paid contests is free.",
+       "evidence": [
+        "E3"
+       ],
+       "id": "feasibility",
+       "score": 16
+      },
+      {
+       "comment": "A local Flask server counts reps for every user.",
+       "evidence": [
+        "E5"
+       ],
+       "id": "scalability",
+       "score": 26
+      },
+      {
+       "comment": "Betting fees are the model, and betting doesn't settle.",
+       "evidence": [
+        "E4"
+       ],
+       "id": "business_model",
+       "score": 34
+      },
+      {
+       "comment": "Real computer vision, and a great video.",
+       "evidence": [
+        "E2"
+       ],
+       "id": "brownie_points",
+       "score": 46
+      }
+     ],
+     "dealBreakerHit": false,
+     "dealBreakerNote": "",
+     "headline": "The betting feature has no code behind it: settle() is an empty view.",
+     "strengths": [
+      "Polished, energetic demo video (3:56).",
+      "Rep counting with MediaPipe is real (E2).",
+      "MetaMask connects and switches to Citrea in one tap."
+     ]
+    },
+    "screenshotsShown": 12,
+    "status": "scored",
+    "traces": [
+     {
+      "chatId": "ed659cd6-829c-4da5-af4e-2ab389bc9804",
+      "costUsdMicro": 3740,
+      "model": "0gm-1.0-35b-a3b",
+      "provider": "0xf4FB8d2bD856e672b5f9848b0eD235A20079B250",
+      "requestId": "e4ca233a-ce57-45e9-ac1c-22804824d5b7"
+     }
+    ],
+    "usage": {
+     "input_tokens": 24900,
+     "output_tokens": 3300
+    }
+   },
+   {
+    "attempts": 1,
+    "judge": {
+     "id": "judge_c876a259",
+     "name": "Ana Okafor",
+     "promptVersion": "judge-v3",
+     "title": "Early-stage investor and former founder",
+     "tone": "generous",
+     "version": 1,
+     "weights": {
+      "product_journey": 8,
+      "real_world_value": 17,
+      "ui_ux": 4,
+      "code_quality": 4,
+      "sdlc": 4,
+      "feasibility": 13,
+      "scalability": 17,
+      "business_model": 21,
+      "brownie_points": 12
+     }
+    },
+    "judgeId": "judge_c876a259",
+    "ms": 59000,
+    "overallHundredths": 3829,
+    "promptVersion": "judge-v3",
+    "review": {
+     "certainty": "high",
+     "comment": "A pitch, not a product yet: entry is free and no bet has ever paid out.",
+     "concerns": [
+      "4 of 6 claims contradicted by the code.",
+      "Joining a contest moves 0 ETH (live test d6).",
+      "Bets never pay out: settle() changes nothing (E4)."
+     ],
+     "criteria": [
+      {
+       "comment": "Every screen in the video loads, but the money steps do nothing.",
+       "evidence": [
+        "V-laptop-d6",
+        "E4"
+       ],
+       "id": "product_journey",
+       "score": 38
+      },
+      {
+       "comment": "Getting paid to work out is appealing.",
+       "evidence": [
+        "E2"
+       ],
+       "id": "real_world_value",
+       "score": 58
+      },
+      {
+       "comment": "Fine on Windows; on Android and iPhone the layout spills sideways.",
+       "evidence": [
+        "V-android-d4",
+        "E5"
+       ],
+       "id": "ui_ux",
+       "score": 33
+      },
+      {
+       "comment": "Core checks commented out in both contracts.",
+       "evidence": [
+        "E3",
+        "E4"
+       ],
+       "id": "code_quality",
+       "score": 25
+      },
+      {
+       "comment": "0 tests, 0 commits at the event.",
+       "evidence": [],
+       "id": "sdlc",
+       "score": 23
+      },
+      {
+       "comment": "Deployed, but entry to paid contests is free.",
+       "evidence": [
+        "E3"
+       ],
+       "id": "feasibility",
+       "score": 22
+      },
+      {
+       "comment": "A local Flask server counts reps for every user.",
+       "evidence": [
+        "E5"
+       ],
+       "id": "scalability",
+       "score": 30
+      },
+      {
+       "comment": "Betting fees are the model, and betting doesn't settle.",
+       "evidence": [
+        "E4"
+       ],
+       "id": "business_model",
+       "score": 39
+      },
+      {
+       "comment": "Real computer vision, and a great video.",
+       "evidence": [
+        "E2"
+       ],
+       "id": "brownie_points",
+       "score": 50
+      }
+     ],
+     "dealBreakerHit": false,
+     "dealBreakerNote": "",
+     "headline": "A pitch, not a product yet: entry is free and no bet has ever paid out.",
+     "strengths": [
+      "Polished, energetic demo video (3:56).",
+      "Rep counting with MediaPipe is real (E2).",
+      "MetaMask connects and switches to Citrea in one tap."
+     ]
+    },
+    "screenshotsShown": 12,
+    "status": "scored",
+    "traces": [
+     {
+      "chatId": "7f107af8-ef44-4b37-ad77-ccf22c92885e",
+      "costUsdMicro": 4380,
+      "model": "0gm-1.0-35b-a3b",
+      "provider": "0xf4FB8d2bD856e672b5f9848b0eD235A20079B250",
+      "requestId": "592e9e74-5a4f-4ea1-af3c-e82d64afd46c"
+     }
+    ],
+    "usage": {
+     "input_tokens": 25800,
+     "output_tokens": 4000
+    }
+   }
+  ],
+  "evidence": [
+   {
+    "id": "V-laptop-d1",
+    "stepTitle": "Landing page",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Landing page on windows: see \"It pays to get fit\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "43035c6c-968e-4ee9-a66c-5d31b3a55ad9"
+    }
+   },
+   {
+    "id": "V-laptop-d2",
+    "stepTitle": "Sign in with Self",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Sign in with Self on windows: Self QR code shown.",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "ccd9018d-7904-4a14-a4b4-cea53160d52b"
+    }
+   },
+   {
+    "id": "V-laptop-d3",
+    "stepTitle": "Profile: fitness level and goal",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Profile: fitness level and goal on windows: see \"Verify your details\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "54758df0-98b7-40d5-affc-0a75cd0aefac"
+    }
+   },
+   {
+    "id": "V-laptop-d4",
+    "stepTitle": "AI personalised challenges",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "AI personalised challenges on windows: 4 challenges, identical for every profile.",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "5d97a3a5-a97e-4dda-a222-47c16b9f5367"
+    }
+   },
+   {
+    "id": "V-laptop-d5",
+    "stepTitle": "Connect MetaMask",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Connect MetaMask on windows: test wallet connected, switched to Citrea testnet.",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "e4c22a35-6c7a-4090-a76c-05c41aa6b29c"
+    }
+   },
+   {
+    "id": "V-laptop-d6",
+    "stepTitle": "Join a contest: pay the stake",
+    "observation": {
+     "matchesStep": "no",
+     "seen": "Join a contest: pay the stake: tx confirmed, but 0 ETH escrowed: entry is free.",
+     "problems": [
+      "tx confirmed, but 0 ETH escrowed: entry is free"
+     ]
+    },
+    "trace": {
+     "requestId": "49634278-8842-4ae2-a7f7-274be32c5f89"
+    }
+   },
+   {
+    "id": "V-android-d1",
+    "stepTitle": "Landing page",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Landing page on android: see \"It pays to get fit\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "170e2785-aab7-402b-a451-749db252639c"
+    }
+   },
+   {
+    "id": "V-android-d2",
+    "stepTitle": "Sign in with Self",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Sign in with Self on android: Self QR code shown.",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "92abe085-2f27-4211-a28e-51a1877018d0"
+    }
+   },
+   {
+    "id": "V-android-d3",
+    "stepTitle": "Profile: fitness level and goal",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Profile: fitness level and goal on android: see \"Verify your details\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "94ef0c64-5483-4123-af22-df0681c5b534"
+    }
+   },
+   {
+    "id": "V-android-d4",
+    "stepTitle": "AI personalised challenges",
+    "observation": {
+     "matchesStep": "no",
+     "seen": "AI personalised challenges: challenge cards cut off, page scrolls sideways.",
+     "problems": [
+      "challenge cards cut off, page scrolls sideways"
+     ]
+    },
+    "trace": {
+     "requestId": "07ad121f-670c-4901-a815-0b28eadca499"
+    }
+   },
+   {
+    "id": "V-android-d5",
+    "stepTitle": "Connect MetaMask",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Connect MetaMask on android: test wallet connected, switched to Citrea testnet.",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "cc09a627-a489-4211-a9b4-067074d70fd5"
+    }
+   },
+   {
+    "id": "V-android-d6",
+    "stepTitle": "Join a contest: pay the stake",
+    "observation": {
+     "matchesStep": "no",
+     "seen": "Join a contest: pay the stake: tx confirmed, but 0 ETH escrowed: entry is free.",
+     "problems": [
+      "tx confirmed, but 0 ETH escrowed: entry is free"
+     ]
+    },
+    "trace": {
+     "requestId": "9c572ac1-22fb-4d73-ac15-6371ebeb86a8"
+    }
+   },
+   {
+    "id": "V-ios-d1",
+    "stepTitle": "Landing page",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Landing page on iphone: see \"It pays to get fit\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "def503a8-4109-4b24-aea1-f67ef9812e99"
+    }
+   },
+   {
+    "id": "V-ios-d2",
+    "stepTitle": "Sign in with Self",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Sign in with Self on iphone: Self QR code shown.",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "3bb96036-004d-4e29-a34f-3632b9949ccd"
+    }
+   },
+   {
+    "id": "V-ios-d3",
+    "stepTitle": "Profile: fitness level and goal",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Profile: fitness level and goal on iphone: see \"Verify your details\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "85be32a1-2b40-4b9f-a513-efb0c20d1ba3"
+    }
+   },
+   {
+    "id": "V-ios-d4",
+    "stepTitle": "AI personalised challenges",
+    "observation": {
+     "matchesStep": "no",
+     "seen": "AI personalised challenges: challenge cards cut off, page scrolls sideways.",
+     "problems": [
+      "challenge cards cut off, page scrolls sideways"
+     ]
+    },
+    "trace": {
+     "requestId": "4bdffe96-a55f-431e-ad0c-5e71dff1aef1"
+    }
+   },
+   {
+    "id": "V-ios-d5",
+    "stepTitle": "Connect MetaMask",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Connect MetaMask on iphone: test wallet connected, switched to Citrea testnet.",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "69a942c7-3e75-4dab-ae77-4c0bf65423aa"
+    }
+   },
+   {
+    "id": "V-ios-d6",
+    "stepTitle": "Join a contest: pay the stake",
+    "observation": {
+     "matchesStep": "no",
+     "seen": "Join a contest: pay the stake: tx confirmed, but 0 ETH escrowed: entry is free.",
+     "problems": [
+      "tx confirmed, but 0 ETH escrowed: entry is free"
+     ]
+    },
+    "trace": {
+     "requestId": "350d99a3-888e-4457-aa84-f16468c76364"
+    }
+   }
+  ],
+  "zg": {
+   "calls": 21,
+   "costUsdMicro": 18600,
+   "evidenceCostUsdMicro": 7380,
+   "judgeCostUsdMicro": 11220,
+   "providers": [
+    "0xf4FB8d2bD856e672b5f9848b0eD235A20079B250"
+   ],
+   "requestIds": [
+    "ca36948b-26a6-4431-a5fa-f16f2d798fab",
+    "e4ca233a-ce57-45e9-ac1c-22804824d5b7",
+    "592e9e74-5a4f-4ea1-af3c-e82d64afd46c",
+    "43035c6c-968e-4ee9-a66c-5d31b3a55ad9",
+    "ccd9018d-7904-4a14-a4b4-cea53160d52b",
+    "54758df0-98b7-40d5-affc-0a75cd0aefac",
+    "5d97a3a5-a97e-4dda-a222-47c16b9f5367",
+    "e4c22a35-6c7a-4090-a76c-05c41aa6b29c",
+    "49634278-8842-4ae2-a7f7-274be32c5f89",
+    "170e2785-aab7-402b-a451-749db252639c",
+    "92abe085-2f27-4211-a28e-51a1877018d0",
+    "94ef0c64-5483-4123-af22-df0681c5b534",
+    "07ad121f-670c-4901-a815-0b28eadca499",
+    "cc09a627-a489-4211-a9b4-067074d70fd5",
+    "9c572ac1-22fb-4d73-ac15-6371ebeb86a8",
+    "def503a8-4109-4b24-aea1-f67ef9812e99",
+    "3bb96036-004d-4e29-a34f-3632b9949ccd",
+    "85be32a1-2b40-4b9f-a513-efb0c20d1ba3",
+    "4bdffe96-a55f-431e-ad0c-5e71dff1aef1",
+    "69a942c7-3e75-4dab-ae77-4c0bf65423aa",
+    "350d99a3-888e-4457-aa84-f16468c76364"
+   ],
+   "uncostedCalls": 0
+  },
+  "proofs": {
+   "arkivPanel": "https://rabdi.explorer.arkiv.network/entity-explorer?q=%24key%20%3D%20key(0x2a6698f485ff3b49a378bcb54d3ebbdc38b8b979ec5b091947e4ce1d93552fa6)",
+   "panelKey": "0x2a6698f485ff3b49a378bcb54d3ebbdc38b8b979ec5b091947e4ce1d93552fa6",
+   "evidenceRoots": {
+    "dossier": "0x9a2a484b25a71b8316eb216665a2c9a28d6ca30e982e3a2bc6f260020e423203",
+    "review": "0xd7ad60f8def7e6e59b3f2dae6f49f0396d3a32a704fb54c72e2c493bdaee5c5f",
+    "liveTest": "0x9d1b9847db1815156f951da5aa5ea4220bb0ec41210de15ca0d433a0cee90940"
+   },
+   "storageScan": {
+    "dossier": "https://storagescan-galileo.0g.ai/submission/171242",
+    "review": "https://storagescan-galileo.0g.ai/submission/171243",
+    "liveTest": "https://storagescan-galileo.0g.ai/submission/171244"
+   }
+  }
+ },
+ "mozark-app-studio": {
+  "complete": true,
+  "effort": "high",
+  "model": "0gm-1.0-35b-a3b",
+  "panelHundredths": 7842,
+  "projectId": "mozark-app-studio",
+  "provider": "0g",
+  "ranAt": "2026-11-06T11:40:32.000Z",
+  "reviews": [
+   {
+    "attempts": 1,
+    "judge": {
+     "id": "judge_11631c00",
+     "name": "Priya Raman",
+     "promptVersion": "judge-v3",
+     "title": "Product lead who has shipped three consumer fintech apps",
+     "tone": "balanced",
+     "version": 1,
+     "weights": {
+      "product_journey": 20,
+      "real_world_value": 20,
+      "ui_ux": 16,
+      "code_quality": 4,
+      "sdlc": 4,
+      "feasibility": 12,
+      "scalability": 4,
+      "business_model": 12,
+      "brownie_points": 8
+     }
+    },
+    "judgeId": "judge_11631c00",
+    "ms": 41000,
+    "overallHundredths": 7548,
+    "promptVersion": "judge-v3",
+    "review": {
+     "certainty": "high",
+     "comment": "A real product for a real pain. The public flows work; the rest is behind sign-in.",
+     "concerns": [
+      "The test library sits behind sign-in.",
+      "API tests use mock tokens (E7)."
+     ],
+     "criteria": [
+      {
+       "comment": "Clear pitch; the core library needs an account.",
+       "evidence": [
+        "E1"
+       ],
+       "id": "product_journey",
+       "score": 73
+      },
+      {
+       "comment": "Every app team fights flaky UI tests.",
+       "evidence": [
+        "E3"
+       ],
+       "id": "real_world_value",
+       "score": 81
+      },
+      {
+       "comment": "Clean sign-in on both devices.",
+       "evidence": [
+        "V-laptop-f1"
+       ],
+       "id": "ui_ux",
+       "score": 70
+      },
+      {
+       "comment": "Fallback chain and vision detection, both tested.",
+       "evidence": [
+        "E3",
+        "E4"
+       ],
+       "id": "code_quality",
+       "score": 79
+      },
+      {
+       "comment": "1,232 tests, CI, 49 commits at the event.",
+       "evidence": [],
+       "id": "sdlc",
+       "score": 78
+      },
+      {
+       "comment": "Runs on real devices today.",
+       "evidence": [
+        "E2"
+       ],
+       "id": "feasibility",
+       "score": 75
+      },
+      {
+       "comment": "Device farm is the limit, by design.",
+       "evidence": [
+        "E2"
+       ],
+       "id": "scalability",
+       "score": 71
+      },
+      {
+       "comment": "Seat pricing for QA teams.",
+       "evidence": [],
+       "id": "business_model",
+       "score": 76
+      },
+      {
+       "comment": "It tested every project in this arena.",
+       "evidence": [],
+       "id": "brownie_points",
+       "score": 78
+      }
+     ],
+     "dealBreakerHit": false,
+     "dealBreakerNote": "",
+     "headline": "A real product for a real pain. The public flows work; the rest is behind sign-in.",
+     "strengths": [
+      "1,232 Python tests in the repo.",
+      "49 commits during the event.",
+      "Self-healing locators are real (E3)."
+     ]
+    },
+    "screenshotsShown": 6,
+    "status": "scored",
+    "traces": [
+     {
+      "chatId": "8b46f787-0b9d-449c-a073-6c4257efb6c3",
+      "costUsdMicro": 3100,
+      "model": "0gm-1.0-35b-a3b",
+      "provider": "0xf4FB8d2bD856e672b5f9848b0eD235A20079B250",
+      "requestId": "05300612-7de6-4e42-a7b4-92e9be860955"
+     }
+    ],
+    "usage": {
+     "input_tokens": 24000,
+     "output_tokens": 2600
+    }
+   },
+   {
+    "attempts": 1,
+    "judge": {
+     "id": "judge_e9c669c4",
+     "name": "Marcus Lee",
+     "promptVersion": "judge-v3",
+     "title": "Staff engineer, smart contracts and payments infrastructure",
+     "tone": "strict",
+     "version": 1,
+     "weights": {
+      "product_journey": 5,
+      "real_world_value": 9,
+      "ui_ux": 4,
+      "code_quality": 23,
+      "sdlc": 18,
+      "feasibility": 18,
+      "scalability": 14,
+      "business_model": 0,
+      "brownie_points": 9
+     }
+    },
+    "judgeId": "judge_e9c669c4",
+    "ms": 50000,
+    "overallHundredths": 8053,
+    "promptVersion": "judge-v3",
+    "review": {
+     "certainty": "high",
+     "comment": "1,232 tests and 49 commits at the event. It practices what it sells.",
+     "concerns": [
+      "The test library sits behind sign-in.",
+      "API tests use mock tokens (E7)."
+     ],
+     "criteria": [
+      {
+       "comment": "Clear pitch; the core library needs an account.",
+       "evidence": [
+        "E1"
+       ],
+       "id": "product_journey",
+       "score": 78
+      },
+      {
+       "comment": "Every app team fights flaky UI tests.",
+       "evidence": [
+        "E3"
+       ],
+       "id": "real_world_value",
+       "score": 85
+      },
+      {
+       "comment": "Clean sign-in on both devices.",
+       "evidence": [
+        "V-laptop-f1"
+       ],
+       "id": "ui_ux",
+       "score": 73
+      },
+      {
+       "comment": "Fallback chain and vision detection, both tested.",
+       "evidence": [
+        "E3",
+        "E4"
+       ],
+       "id": "code_quality",
+       "score": 84
+      },
+      {
+       "comment": "1,232 tests, CI, 49 commits at the event.",
+       "evidence": [],
+       "id": "sdlc",
+       "score": 80
+      },
+      {
+       "comment": "Runs on real devices today.",
+       "evidence": [
+        "E2"
+       ],
+       "id": "feasibility",
+       "score": 77
+      },
+      {
+       "comment": "Device farm is the limit, by design.",
+       "evidence": [
+        "E2"
+       ],
+       "id": "scalability",
+       "score": 78
+      },
+      {
+       "comment": "Seat pricing for QA teams.",
+       "evidence": [],
+       "id": "business_model",
+       "score": 81
+      },
+      {
+       "comment": "It tested every project in this arena.",
+       "evidence": [],
+       "id": "brownie_points",
+       "score": 84
+      }
+     ],
+     "dealBreakerHit": false,
+     "dealBreakerNote": "",
+     "headline": "1,232 tests and 49 commits at the event. It practices what it sells.",
+     "strengths": [
+      "1,232 Python tests in the repo.",
+      "49 commits during the event.",
+      "Self-healing locators are real (E3)."
+     ]
+    },
+    "screenshotsShown": 6,
+    "status": "scored",
+    "traces": [
+     {
+      "chatId": "a3ec2651-b536-4bed-a52c-a88f5700f3b0",
+      "costUsdMicro": 3740,
+      "model": "0gm-1.0-35b-a3b",
+      "provider": "0xf4FB8d2bD856e672b5f9848b0eD235A20079B250",
+      "requestId": "1cbff5c5-3fdb-4be8-af7d-8fe36cafd1cf"
+     }
+    ],
+    "usage": {
+     "input_tokens": 24900,
+     "output_tokens": 3300
+    }
+   },
+   {
+    "attempts": 1,
+    "judge": {
+     "id": "judge_c876a259",
+     "name": "Ana Okafor",
+     "promptVersion": "judge-v3",
+     "title": "Early-stage investor and former founder",
+     "tone": "generous",
+     "version": 1,
+     "weights": {
+      "product_journey": 8,
+      "real_world_value": 17,
+      "ui_ux": 4,
+      "code_quality": 4,
+      "sdlc": 4,
+      "feasibility": 13,
+      "scalability": 17,
+      "business_model": 21,
+      "brownie_points": 12
+     }
+    },
+    "judgeId": "judge_c876a259",
+    "ms": 59000,
+    "overallHundredths": 7926,
+    "promptVersion": "judge-v3",
+    "review": {
+     "certainty": "high",
+     "comment": "Teams pay for testing today. This is a business.",
+     "concerns": [
+      "The test library sits behind sign-in.",
+      "API tests use mock tokens (E7)."
+     ],
+     "criteria": [
+      {
+       "comment": "Clear pitch; the core library needs an account.",
+       "evidence": [
+        "E1"
+       ],
+       "id": "product_journey",
+       "score": 77
+      },
+      {
+       "comment": "Every app team fights flaky UI tests.",
+       "evidence": [
+        "E3"
+       ],
+       "id": "real_world_value",
+       "score": 85
+      },
+      {
+       "comment": "Clean sign-in on both devices.",
+       "evidence": [
+        "V-laptop-f1"
+       ],
+       "id": "ui_ux",
+       "score": 72
+      },
+      {
+       "comment": "Fallback chain and vision detection, both tested.",
+       "evidence": [
+        "E3",
+        "E4"
+       ],
+       "id": "code_quality",
+       "score": 83
+      },
+      {
+       "comment": "1,232 tests, CI, 49 commits at the event.",
+       "evidence": [],
+       "id": "sdlc",
+       "score": 80
+      },
+      {
+       "comment": "Runs on real devices today.",
+       "evidence": [
+        "E2"
+       ],
+       "id": "feasibility",
+       "score": 77
+      },
+      {
+       "comment": "Device farm is the limit, by design.",
+       "evidence": [
+        "E2"
+       ],
+       "id": "scalability",
+       "score": 75
+      },
+      {
+       "comment": "Seat pricing for QA teams.",
+       "evidence": [],
+       "id": "business_model",
+       "score": 81
+      },
+      {
+       "comment": "It tested every project in this arena.",
+       "evidence": [],
+       "id": "brownie_points",
+       "score": 79
+      }
+     ],
+     "dealBreakerHit": false,
+     "dealBreakerNote": "",
+     "headline": "Teams pay for testing today. This is a business.",
+     "strengths": [
+      "1,232 Python tests in the repo.",
+      "49 commits during the event.",
+      "Self-healing locators are real (E3)."
+     ]
+    },
+    "screenshotsShown": 6,
+    "status": "scored",
+    "traces": [
+     {
+      "chatId": "2b2861bd-e0f6-430f-aa0f-9731195fc703",
+      "costUsdMicro": 4380,
+      "model": "0gm-1.0-35b-a3b",
+      "provider": "0xf4FB8d2bD856e672b5f9848b0eD235A20079B250",
+      "requestId": "d9f9ae36-7519-4675-a8d5-5a5546050979"
+     }
+    ],
+    "usage": {
+     "input_tokens": 25800,
+     "output_tokens": 4000
+    }
+   }
+  ],
+  "evidence": [
+   {
+    "id": "V-laptop-d1",
+    "stepTitle": "Sign-in page loads",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Sign-in page loads on windows: see \"Sign in\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "f5e6e87d-f0c8-4365-a1d7-4bdf602c620b"
+    }
+   },
+   {
+    "id": "V-laptop-f1",
+    "stepTitle": "Public access redirects to sign-in",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Public access redirects to sign-in on windows: redirects to /login.",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "5908f930-3e56-4622-a68a-17cabd9a8b5e"
+    }
+   },
+   {
+    "id": "V-laptop-f2",
+    "stepTitle": "Sign-up link",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Sign-up link on windows: see \"Sign up\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "4eb9ad25-9e3c-4349-a603-68227145d6c2"
+    }
+   },
+   {
+    "id": "V-android-d1",
+    "stepTitle": "Sign-in page loads",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Sign-in page loads on android: see \"Sign in\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "132daa69-694f-4e8e-a259-1c27fb331808"
+    }
+   },
+   {
+    "id": "V-android-f1",
+    "stepTitle": "Public access redirects to sign-in",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Public access redirects to sign-in on android: redirects to /login.",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "073dfec9-f10a-4b2c-a9cf-3b29e1380ecb"
+    }
+   },
+   {
+    "id": "V-android-f2",
+    "stepTitle": "Sign-up link",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Sign-up link on android: see \"Sign up\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "a6e9caa5-ecd2-41f9-a388-5b8202635863"
+    }
+   },
+   {
+    "id": "V-ios-d1",
+    "stepTitle": "Sign-in page loads",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Sign-in page loads on iphone: see \"Sign in\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "c3b37b17-ee56-4765-a066-606c0e751f9b"
+    }
+   },
+   {
+    "id": "V-ios-f1",
+    "stepTitle": "Public access redirects to sign-in",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Public access redirects to sign-in on iphone: redirects to /login.",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "630a3848-a5e5-4e9b-a893-0e3bcdb5a7f6"
+    }
+   },
+   {
+    "id": "V-ios-f2",
+    "stepTitle": "Sign-up link",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Sign-up link on iphone: see \"Sign up\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "c35fee79-c13e-48b6-aca6-254f43965d71"
+    }
+   }
+  ],
+  "zg": {
+   "calls": 12,
+   "costUsdMicro": 14910,
+   "evidenceCostUsdMicro": 3690,
+   "judgeCostUsdMicro": 11220,
+   "providers": [
+    "0xf4FB8d2bD856e672b5f9848b0eD235A20079B250"
+   ],
+   "requestIds": [
+    "05300612-7de6-4e42-a7b4-92e9be860955",
+    "1cbff5c5-3fdb-4be8-af7d-8fe36cafd1cf",
+    "d9f9ae36-7519-4675-a8d5-5a5546050979",
+    "f5e6e87d-f0c8-4365-a1d7-4bdf602c620b",
+    "5908f930-3e56-4622-a68a-17cabd9a8b5e",
+    "4eb9ad25-9e3c-4349-a603-68227145d6c2",
+    "132daa69-694f-4e8e-a259-1c27fb331808",
+    "073dfec9-f10a-4b2c-a9cf-3b29e1380ecb",
+    "a6e9caa5-ecd2-41f9-a388-5b8202635863",
+    "c3b37b17-ee56-4765-a066-606c0e751f9b",
+    "630a3848-a5e5-4e9b-a893-0e3bcdb5a7f6",
+    "c35fee79-c13e-48b6-aca6-254f43965d71"
+   ],
+   "uncostedCalls": 0
+  },
+  "proofs": {
+   "arkivPanel": "https://rabdi.explorer.arkiv.network/entity-explorer?q=%24key%20%3D%20key(0x83701cc6f520e68d4a223474fd89d1c941fb4d32fdd5df3fe9b3b0773b163fff)",
+   "panelKey": "0x83701cc6f520e68d4a223474fd89d1c941fb4d32fdd5df3fe9b3b0773b163fff",
+   "evidenceRoots": {
+    "dossier": "0x620fe3c9ac7460c562ce05545965b9d4dd38f20aa307b46447eca4e320435302",
+    "review": "0xd12bd366779f6772e5ea851b7f094eb3c78de74d046dcc404a5ad8098f565ca9",
+    "liveTest": "0x0df0668e21ababbf9e8c8813a9ae0383edb1557a7e70871db4f89d81ccbe682d"
+   },
+   "storageScan": {
+    "dossier": "https://storagescan-galileo.0g.ai/submission/171272",
+    "review": "https://storagescan-galileo.0g.ai/submission/171273",
+    "liveTest": "https://storagescan-galileo.0g.ai/submission/171274"
+   }
+  }
+ },
+ "qagent": {
+  "complete": true,
+  "effort": "high",
+  "model": "0gm-1.0-35b-a3b",
+  "panelHundredths": 4905,
+  "projectId": "qagent",
+  "provider": "0g",
+  "ranAt": "2026-11-06T12:48:39.000Z",
+  "reviews": [
+   {
+    "attempts": 1,
+    "judge": {
+     "id": "judge_11631c00",
+     "name": "Priya Raman",
+     "promptVersion": "judge-v3",
+     "title": "Product lead who has shipped three consumer fintech apps",
+     "tone": "balanced",
+     "version": 1,
+     "weights": {
+      "product_journey": 20,
+      "real_world_value": 20,
+      "ui_ux": 16,
+      "code_quality": 4,
+      "sdlc": 4,
+      "feasibility": 12,
+      "scalability": 4,
+      "business_model": 12,
+      "brownie_points": 8
+     }
+    },
+    "judgeId": "judge_11631c00",
+    "ms": 41000,
+    "overallHundredths": 5612,
+    "promptVersion": "judge-v3",
+    "review": {
+     "certainty": "high",
+     "comment": "Great pitch. The dashboard in the video is a 404 on the live site.",
+     "concerns": [
+      "0 tests in a testing product.",
+      "The explorer returns canned findings (E2)."
+     ],
+     "criteria": [
+      {
+       "comment": "Landing works; connect and dashboard don't.",
+       "evidence": [
+        "E2"
+       ],
+       "id": "product_journey",
+       "score": 52
+      },
+      {
+       "comment": "Everyone wants fewer bugs in production.",
+       "evidence": [],
+       "id": "real_world_value",
+       "score": 73
+      },
+      {
+       "comment": "Polished landing page.",
+       "evidence": [],
+       "id": "ui_ux",
+       "score": 63
+      },
+      {
+       "comment": "Canned results where the agent should be.",
+       "evidence": [
+        "E2"
+       ],
+       "id": "code_quality",
+       "score": 33
+      },
+      {
+       "comment": "0 tests.",
+       "evidence": [
+        "E5"
+       ],
+       "id": "sdlc",
+       "score": 33
+      },
+      {
+       "comment": "Core agent loop isn't built.",
+       "evidence": [
+        "E2"
+       ],
+       "id": "feasibility",
+       "score": 41
+      },
+      {
+       "comment": "Preview per PR gets expensive.",
+       "evidence": [],
+       "id": "scalability",
+       "score": 51
+      },
+      {
+       "comment": "Per-repo pricing is plausible.",
+       "evidence": [],
+       "id": "business_model",
+       "score": 62
+      },
+      {
+       "comment": "Strong storytelling.",
+       "evidence": [],
+       "id": "brownie_points",
+       "score": 50
+      }
+     ],
+     "dealBreakerHit": false,
+     "dealBreakerNote": "",
+     "headline": "Great pitch. The dashboard in the video is a 404 on the live site.",
+     "strengths": [
+      "Clear, sharp pitch.",
+      "GitHub webhook and issue filing work (E1, E3)."
+     ]
+    },
+    "screenshotsShown": 5,
+    "status": "scored",
+    "traces": [
+     {
+      "chatId": "a4d0fc05-27f6-4153-acd2-1540c9d1589a",
+      "costUsdMicro": 3100,
+      "model": "0gm-1.0-35b-a3b",
+      "provider": "0xf4FB8d2bD856e672b5f9848b0eD235A20079B250",
+      "requestId": "809164f1-6776-4417-a46b-16c312205862"
+     }
+    ],
+    "usage": {
+     "input_tokens": 24000,
+     "output_tokens": 2600
+    }
+   },
+   {
+    "attempts": 1,
+    "judge": {
+     "id": "judge_e9c669c4",
+     "name": "Marcus Lee",
+     "promptVersion": "judge-v3",
+     "title": "Staff engineer, smart contracts and payments infrastructure",
+     "tone": "strict",
+     "version": 1,
+     "weights": {
+      "product_journey": 5,
+      "real_world_value": 9,
+      "ui_ux": 4,
+      "code_quality": 23,
+      "sdlc": 18,
+      "feasibility": 18,
+      "scalability": 14,
+      "business_model": 0,
+      "brownie_points": 9
+     }
+    },
+    "judgeId": "judge_e9c669c4",
+    "ms": 50000,
+    "overallHundredths": 3658,
+    "promptVersion": "judge-v3",
+    "review": {
+     "certainty": "high",
+     "comment": "You sell testing and ship zero tests.",
+     "concerns": [
+      "0 tests in a testing product.",
+      "The explorer returns canned findings (E2)."
+     ],
+     "criteria": [
+      {
+       "comment": "Landing works; connect and dashboard don't.",
+       "evidence": [
+        "E2"
+       ],
+       "id": "product_journey",
+       "score": 45
+      },
+      {
+       "comment": "Everyone wants fewer bugs in production.",
+       "evidence": [],
+       "id": "real_world_value",
+       "score": 66
+      },
+      {
+       "comment": "Polished landing page.",
+       "evidence": [],
+       "id": "ui_ux",
+       "score": 59
+      },
+      {
+       "comment": "Canned results where the agent should be.",
+       "evidence": [
+        "E2"
+       ],
+       "id": "code_quality",
+       "score": 28
+      },
+      {
+       "comment": "0 tests.",
+       "evidence": [
+        "E5"
+       ],
+       "id": "sdlc",
+       "score": 26
+      },
+      {
+       "comment": "Core agent loop isn't built.",
+       "evidence": [
+        "E2"
+       ],
+       "id": "feasibility",
+       "score": 33
+      },
+      {
+       "comment": "Preview per PR gets expensive.",
+       "evidence": [],
+       "id": "scalability",
+       "score": 39
+      },
+      {
+       "comment": "Per-repo pricing is plausible.",
+       "evidence": [],
+       "id": "business_model",
+       "score": 54
+      },
+      {
+       "comment": "Strong storytelling.",
+       "evidence": [],
+       "id": "brownie_points",
+       "score": 39
+      }
+     ],
+     "dealBreakerHit": false,
+     "dealBreakerNote": "",
+     "headline": "You sell testing and ship zero tests.",
+     "strengths": [
+      "Clear, sharp pitch.",
+      "GitHub webhook and issue filing work (E1, E3)."
+     ]
+    },
+    "screenshotsShown": 5,
+    "status": "scored",
+    "traces": [
+     {
+      "chatId": "56e0c197-7955-4294-acf5-6edcf1651ca2",
+      "costUsdMicro": 3740,
+      "model": "0gm-1.0-35b-a3b",
+      "provider": "0xf4FB8d2bD856e672b5f9848b0eD235A20079B250",
+      "requestId": "95c8143f-7a1e-4a9e-af7c-ed8d810b263e"
+     }
+    ],
+    "usage": {
+     "input_tokens": 24900,
+     "output_tokens": 3300
+    }
+   },
+   {
+    "attempts": 1,
+    "judge": {
+     "id": "judge_c876a259",
+     "name": "Ana Okafor",
+     "promptVersion": "judge-v3",
+     "title": "Early-stage investor and former founder",
+     "tone": "generous",
+     "version": 1,
+     "weights": {
+      "product_journey": 8,
+      "real_world_value": 17,
+      "ui_ux": 4,
+      "code_quality": 4,
+      "sdlc": 4,
+      "feasibility": 13,
+      "scalability": 17,
+      "business_model": 21,
+      "brownie_points": 12
+     }
+    },
+    "judgeId": "judge_c876a259",
+    "ms": 59000,
+    "overallHundredths": 5445,
+    "promptVersion": "judge-v3",
+    "review": {
+     "certainty": "high",
+     "comment": "Big market, but the agent returns canned findings.",
+     "concerns": [
+      "0 tests in a testing product.",
+      "The explorer returns canned findings (E2)."
+     ],
+     "criteria": [
+      {
+       "comment": "Landing works; connect and dashboard don't.",
+       "evidence": [
+        "E2"
+       ],
+       "id": "product_journey",
+       "score": 54
+      },
+      {
+       "comment": "Everyone wants fewer bugs in production.",
+       "evidence": [],
+       "id": "real_world_value",
+       "score": 74
+      },
+      {
+       "comment": "Polished landing page.",
+       "evidence": [],
+       "id": "ui_ux",
+       "score": 65
+      },
+      {
+       "comment": "Canned results where the agent should be.",
+       "evidence": [
+        "E2"
+       ],
+       "id": "code_quality",
+       "score": 33
+      },
+      {
+       "comment": "0 tests.",
+       "evidence": [
+        "E5"
+       ],
+       "id": "sdlc",
+       "score": 32
+      },
+      {
+       "comment": "Core agent loop isn't built.",
+       "evidence": [
+        "E2"
+       ],
+       "id": "feasibility",
+       "score": 44
+      },
+      {
+       "comment": "Preview per PR gets expensive.",
+       "evidence": [],
+       "id": "scalability",
+       "score": 46
+      },
+      {
+       "comment": "Per-repo pricing is plausible.",
+       "evidence": [],
+       "id": "business_model",
+       "score": 61
+      },
+      {
+       "comment": "Strong storytelling.",
+       "evidence": [],
+       "id": "brownie_points",
+       "score": 50
+      }
+     ],
+     "dealBreakerHit": false,
+     "dealBreakerNote": "",
+     "headline": "Big market, but the agent returns canned findings.",
+     "strengths": [
+      "Clear, sharp pitch.",
+      "GitHub webhook and issue filing work (E1, E3)."
+     ]
+    },
+    "screenshotsShown": 5,
+    "status": "scored",
+    "traces": [
+     {
+      "chatId": "5846f6ce-5d87-416a-a3f9-1a48982a2010",
+      "costUsdMicro": 4380,
+      "model": "0gm-1.0-35b-a3b",
+      "provider": "0xf4FB8d2bD856e672b5f9848b0eD235A20079B250",
+      "requestId": "ed741528-8df2-4913-a58a-e79253031c12"
+     }
+    ],
+    "usage": {
+     "input_tokens": 25800,
+     "output_tokens": 4000
+    }
+   }
+  ],
+  "evidence": [
+   {
+    "id": "V-laptop-d1",
+    "stepTitle": "Landing page",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Landing page on windows: see \"Ship without bugs\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "19888e2c-9f78-479c-a848-e2f5b7de1896"
+    }
+   },
+   {
+    "id": "V-laptop-d2",
+    "stepTitle": "Connect GitHub",
+    "observation": {
+     "matchesStep": "no",
+     "seen": "Connect GitHub: button does nothing.",
+     "problems": [
+      "button does nothing"
+     ]
+    },
+    "trace": {
+     "requestId": "c4d84f18-540b-48cb-a2eb-695811f89c04"
+    }
+   },
+   {
+    "id": "V-laptop-d3",
+    "stepTitle": "Findings dashboard",
+    "observation": {
+     "matchesStep": "no",
+     "seen": "Findings dashboard: 404 /dashboard.",
+     "problems": [
+      "404 /dashboard"
+     ]
+    },
+    "trace": {
+     "requestId": "f90461e9-40e6-4b4b-a9a6-dc3dbcebdf6c"
+    }
+   },
+   {
+    "id": "V-laptop-f1",
+    "stepTitle": "Pricing",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Pricing on windows: see \"Pricing\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "20289759-7f45-4055-ac2e-3babd843b5d1"
+    }
+   },
+   {
+    "id": "V-laptop-f2",
+    "stepTitle": "Sample report",
+    "observation": {
+     "matchesStep": "no",
+     "seen": "Sample report: 500 /api/report.",
+     "problems": [
+      "500 /api/report"
+     ]
+    },
+    "trace": {
+     "requestId": "6d81380b-238d-4415-ac72-0e744c1eef66"
+    }
+   },
+   {
+    "id": "V-android-d1",
+    "stepTitle": "Landing page",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Landing page on android: see \"Ship without bugs\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "6ac180d9-318f-4eb8-a847-af98f56bf64b"
+    }
+   },
+   {
+    "id": "V-android-d2",
+    "stepTitle": "Connect GitHub",
+    "observation": {
+     "matchesStep": "no",
+     "seen": "Connect GitHub: button does nothing.",
+     "problems": [
+      "button does nothing"
+     ]
+    },
+    "trace": {
+     "requestId": "ceb59f91-a62f-4b71-a8c9-5549dde8c33d"
+    }
+   },
+   {
+    "id": "V-android-d3",
+    "stepTitle": "Findings dashboard",
+    "observation": {
+     "matchesStep": "no",
+     "seen": "Findings dashboard: 404 /dashboard.",
+     "problems": [
+      "404 /dashboard"
+     ]
+    },
+    "trace": {
+     "requestId": "4eb360e9-efaf-4aa5-abc8-2afbec6b1ab0"
+    }
+   },
+   {
+    "id": "V-android-f1",
+    "stepTitle": "Pricing",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Pricing on android: see \"Pricing\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "995b35a0-6ffb-434a-ae2c-8ca3772ac50f"
+    }
+   },
+   {
+    "id": "V-android-f2",
+    "stepTitle": "Sample report",
+    "observation": {
+     "matchesStep": "no",
+     "seen": "Sample report: 500 /api/report.",
+     "problems": [
+      "500 /api/report"
+     ]
+    },
+    "trace": {
+     "requestId": "31b9b786-21b3-49fa-a98b-786d6cfacadb"
+    }
+   },
+   {
+    "id": "V-ios-d1",
+    "stepTitle": "Landing page",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Landing page on iphone: see \"Ship without bugs\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "bf304d6a-310f-4f89-a420-1fc3e6848cfa"
+    }
+   },
+   {
+    "id": "V-ios-d2",
+    "stepTitle": "Connect GitHub",
+    "observation": {
+     "matchesStep": "no",
+     "seen": "Connect GitHub: button does nothing.",
+     "problems": [
+      "button does nothing"
+     ]
+    },
+    "trace": {
+     "requestId": "3dfd1112-4328-4f73-a2d6-5b54a59e2f40"
+    }
+   },
+   {
+    "id": "V-ios-d3",
+    "stepTitle": "Findings dashboard",
+    "observation": {
+     "matchesStep": "no",
+     "seen": "Findings dashboard: 404 /dashboard.",
+     "problems": [
+      "404 /dashboard"
+     ]
+    },
+    "trace": {
+     "requestId": "6127ab78-75a8-4ed5-aa1d-0537c0c09f9d"
+    }
+   },
+   {
+    "id": "V-ios-f1",
+    "stepTitle": "Pricing",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Pricing on iphone: see \"Pricing\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "63eba3bd-6ef3-4a0b-a74a-6507261da21d"
+    }
+   },
+   {
+    "id": "V-ios-f2",
+    "stepTitle": "Sample report",
+    "observation": {
+     "matchesStep": "no",
+     "seen": "Sample report: 500 /api/report.",
+     "problems": [
+      "500 /api/report"
+     ]
+    },
+    "trace": {
+     "requestId": "831356fc-a4cd-4d7e-a2d8-7f3e735c8cb3"
+    }
+   }
+  ],
+  "zg": {
+   "calls": 18,
+   "costUsdMicro": 17370,
+   "evidenceCostUsdMicro": 6150,
+   "judgeCostUsdMicro": 11220,
+   "providers": [
+    "0xf4FB8d2bD856e672b5f9848b0eD235A20079B250"
+   ],
+   "requestIds": [
+    "809164f1-6776-4417-a46b-16c312205862",
+    "95c8143f-7a1e-4a9e-af7c-ed8d810b263e",
+    "ed741528-8df2-4913-a58a-e79253031c12",
+    "19888e2c-9f78-479c-a848-e2f5b7de1896",
+    "c4d84f18-540b-48cb-a2eb-695811f89c04",
+    "f90461e9-40e6-4b4b-a9a6-dc3dbcebdf6c",
+    "20289759-7f45-4055-ac2e-3babd843b5d1",
+    "6d81380b-238d-4415-ac72-0e744c1eef66",
+    "6ac180d9-318f-4eb8-a847-af98f56bf64b",
+    "ceb59f91-a62f-4b71-a8c9-5549dde8c33d",
+    "4eb360e9-efaf-4aa5-abc8-2afbec6b1ab0",
+    "995b35a0-6ffb-434a-ae2c-8ca3772ac50f",
+    "31b9b786-21b3-49fa-a98b-786d6cfacadb",
+    "bf304d6a-310f-4f89-a420-1fc3e6848cfa",
+    "3dfd1112-4328-4f73-a2d6-5b54a59e2f40",
+    "6127ab78-75a8-4ed5-aa1d-0537c0c09f9d",
+    "63eba3bd-6ef3-4a0b-a74a-6507261da21d",
+    "831356fc-a4cd-4d7e-a2d8-7f3e735c8cb3"
+   ],
+   "uncostedCalls": 0
+  },
+  "proofs": {
+   "arkivPanel": "https://rabdi.explorer.arkiv.network/entity-explorer?q=%24key%20%3D%20key(0xebf139a81429caa0578e14ede66f4fe72e451b1ccf546d6e91f2cdb9fe9bb17b)",
+   "panelKey": "0xebf139a81429caa0578e14ede66f4fe72e451b1ccf546d6e91f2cdb9fe9bb17b",
+   "evidenceRoots": {
+    "dossier": "0x8c6cebf9640317f753bb5952d3005d27f9d2e626497451bf0285c9dda6c69b21",
+    "review": "0x7ea58d5e2b8780cdcfc8df5524871c6be1cc851ea1ecf70a4b1d2007c774204e",
+    "liveTest": "0x44116a62ef49ff3182702d1cb707ef8a8f2291f4ef48218e550c10cee6c73073"
+   },
+   "storageScan": {
+    "dossier": "https://storagescan-galileo.0g.ai/submission/171280",
+    "review": "https://storagescan-galileo.0g.ai/submission/171281",
+    "liveTest": "https://storagescan-galileo.0g.ai/submission/171282"
+   }
+  }
+ },
+ "vaultline": {
+  "complete": true,
+  "effort": "high",
+  "model": "0gm-1.0-35b-a3b",
+  "panelHundredths": 6486,
+  "projectId": "vaultline",
+  "provider": "0g",
+  "ranAt": "2026-11-06T13:07:36.000Z",
+  "reviews": [
+   {
+    "attempts": 1,
+    "judge": {
+     "id": "judge_11631c00",
+     "name": "Priya Raman",
+     "promptVersion": "judge-v3",
+     "title": "Product lead who has shipped three consumer fintech apps",
+     "tone": "balanced",
+     "version": 1,
+     "weights": {
+      "product_journey": 20,
+      "real_world_value": 20,
+      "ui_ux": 16,
+      "code_quality": 4,
+      "sdlc": 4,
+      "feasibility": 12,
+      "scalability": 4,
+      "business_model": 12,
+      "brownie_points": 8
+     }
+    },
+    "judgeId": "judge_11631c00",
+    "ms": 41000,
+    "overallHundredths": 5464,
+    "promptVersion": "judge-v3",
+    "review": {
+     "certainty": "high",
+     "comment": "The demo breaks at deposit. I never saw a stream run.",
+     "concerns": [
+      "Deposit fails on the live app (502).",
+      "Front end points at an old contract (E5)."
+     ],
+     "criteria": [
+      {
+       "comment": "The core flow fails at its first money step.",
+       "evidence": [
+        "E5"
+       ],
+       "id": "product_journey",
+       "score": 40
+      },
+      {
+       "comment": "DAOs need payroll that can't be rugged.",
+       "evidence": [
+        "E2"
+       ],
+       "id": "real_world_value",
+       "score": 64
+      },
+      {
+       "comment": "Clean, but blank after the deposit error.",
+       "evidence": [],
+       "id": "ui_ux",
+       "score": 48
+      },
+      {
+       "comment": "Invariant tests, careful storage.",
+       "evidence": [
+        "E3",
+        "E4"
+       ],
+       "id": "code_quality",
+       "score": 85
+      },
+      {
+       "comment": "212 tests, 88 commits at the event.",
+       "evidence": [
+        "E3"
+       ],
+       "id": "sdlc",
+       "score": 84
+      },
+      {
+       "comment": "One wrong address from working.",
+       "evidence": [
+        "E5"
+       ],
+       "id": "feasibility",
+       "score": 50
+      },
+      {
+       "comment": "Per-stream accrual scales fine.",
+       "evidence": [
+        "E1"
+       ],
+       "id": "scalability",
+       "score": 68
+      },
+      {
+       "comment": "Fee on streamed volume, not stated.",
+       "evidence": [],
+       "id": "business_model",
+       "score": 49
+      },
+      {
+       "comment": "Invariants are a delight.",
+       "evidence": [
+        "E3"
+       ],
+       "id": "brownie_points",
+       "score": 60
+      }
+     ],
+     "dealBreakerHit": false,
+     "dealBreakerNote": "",
+     "headline": "The demo breaks at deposit. I never saw a stream run.",
+     "strengths": [
+      "212 Foundry tests, 5 invariants.",
+      "Clawback provably can't touch earned pay (E2)."
+     ]
+    },
+    "screenshotsShown": 5,
+    "status": "scored",
+    "traces": [
+     {
+      "chatId": "3192a423-425d-4085-a14b-d23bad6f3153",
+      "costUsdMicro": 3100,
+      "model": "0gm-1.0-35b-a3b",
+      "provider": "0xf4FB8d2bD856e672b5f9848b0eD235A20079B250",
+      "requestId": "035adaae-92c1-4991-a9ff-b14982642243"
+     }
+    ],
+    "usage": {
+     "input_tokens": 24000,
+     "output_tokens": 2600
+    }
+   },
+   {
+    "attempts": 1,
+    "judge": {
+     "id": "judge_e9c669c4",
+     "name": "Marcus Lee",
+     "promptVersion": "judge-v3",
+     "title": "Staff engineer, smart contracts and payments infrastructure",
+     "tone": "strict",
+     "version": 1,
+     "weights": {
+      "product_journey": 5,
+      "real_world_value": 9,
+      "ui_ux": 4,
+      "code_quality": 23,
+      "sdlc": 18,
+      "feasibility": 18,
+      "scalability": 14,
+      "business_model": 0,
+      "brownie_points": 9
+     }
+    },
+    "judgeId": "judge_e9c669c4",
+    "ms": 50000,
+    "overallHundredths": 7802,
+    "promptVersion": "judge-v3",
+    "review": {
+     "certainty": "high",
+     "comment": "Best contracts of the event: invariant-tested and tight.",
+     "concerns": [
+      "Deposit fails on the live app (502).",
+      "Front end points at an old contract (E5)."
+     ],
+     "criteria": [
+      {
+       "comment": "The core flow fails at its first money step.",
+       "evidence": [
+        "E5"
+       ],
+       "id": "product_journey",
+       "score": 51
+      },
+      {
+       "comment": "DAOs need payroll that can't be rugged.",
+       "evidence": [
+        "E2"
+       ],
+       "id": "real_world_value",
+       "score": 73
+      },
+      {
+       "comment": "Clean, but blank after the deposit error.",
+       "evidence": [],
+       "id": "ui_ux",
+       "score": 55
+      },
+      {
+       "comment": "Invariant tests, careful storage.",
+       "evidence": [
+        "E3",
+        "E4"
+       ],
+       "id": "code_quality",
+       "score": 95
+      },
+      {
+       "comment": "212 tests, 88 commits at the event.",
+       "evidence": [
+        "E3"
+       ],
+       "id": "sdlc",
+       "score": 92
+      },
+      {
+       "comment": "One wrong address from working.",
+       "evidence": [
+        "E5"
+       ],
+       "id": "feasibility",
+       "score": 63
+      },
+      {
+       "comment": "Per-stream accrual scales fine.",
+       "evidence": [
+        "E1"
+       ],
+       "id": "scalability",
+       "score": 78
+      },
+      {
+       "comment": "Fee on streamed volume, not stated.",
+       "evidence": [],
+       "id": "business_model",
+       "score": 57
+      },
+      {
+       "comment": "Invariants are a delight.",
+       "evidence": [
+        "E3"
+       ],
+       "id": "brownie_points",
+       "score": 67
+      }
+     ],
+     "dealBreakerHit": false,
+     "dealBreakerNote": "",
+     "headline": "Best contracts of the event: invariant-tested and tight.",
+     "strengths": [
+      "212 Foundry tests, 5 invariants.",
+      "Clawback provably can't touch earned pay (E2)."
+     ]
+    },
+    "screenshotsShown": 5,
+    "status": "scored",
+    "traces": [
+     {
+      "chatId": "203008eb-2315-4bca-a05f-228b8bc47d74",
+      "costUsdMicro": 3740,
+      "model": "0gm-1.0-35b-a3b",
+      "provider": "0xf4FB8d2bD856e672b5f9848b0eD235A20079B250",
+      "requestId": "3f5b8baf-bf3f-4af0-a7fe-674dae093195"
+     }
+    ],
+    "usage": {
+     "input_tokens": 24900,
+     "output_tokens": 3300
+    }
+   },
+   {
+    "attempts": 1,
+    "judge": {
+     "id": "judge_c876a259",
+     "name": "Ana Okafor",
+     "promptVersion": "judge-v3",
+     "title": "Early-stage investor and former founder",
+     "tone": "generous",
+     "version": 1,
+     "weights": {
+      "product_journey": 8,
+      "real_world_value": 17,
+      "ui_ux": 4,
+      "code_quality": 4,
+      "sdlc": 4,
+      "feasibility": 13,
+      "scalability": 17,
+      "business_model": 21,
+      "brownie_points": 12
+     }
+    },
+    "judgeId": "judge_c876a259",
+    "ms": 59000,
+    "overallHundredths": 6191,
+    "promptVersion": "judge-v3",
+    "review": {
+     "certainty": "high",
+     "comment": "Great engine, but users can't get money in.",
+     "concerns": [
+      "Deposit fails on the live app (502).",
+      "Front end points at an old contract (E5)."
+     ],
+     "criteria": [
+      {
+       "comment": "The core flow fails at its first money step.",
+       "evidence": [
+        "E5"
+       ],
+       "id": "product_journey",
+       "score": 48
+      },
+      {
+       "comment": "DAOs need payroll that can't be rugged.",
+       "evidence": [
+        "E2"
+       ],
+       "id": "real_world_value",
+       "score": 67
+      },
+      {
+       "comment": "Clean, but blank after the deposit error.",
+       "evidence": [],
+       "id": "ui_ux",
+       "score": 50
+      },
+      {
+       "comment": "Invariant tests, careful storage.",
+       "evidence": [
+        "E3",
+        "E4"
+       ],
+       "id": "code_quality",
+       "score": 89
+      },
+      {
+       "comment": "212 tests, 88 commits at the event.",
+       "evidence": [
+        "E3"
+       ],
+       "id": "sdlc",
+       "score": 86
+      },
+      {
+       "comment": "One wrong address from working.",
+       "evidence": [
+        "E5"
+       ],
+       "id": "feasibility",
+       "score": 54
+      },
+      {
+       "comment": "Per-stream accrual scales fine.",
+       "evidence": [
+        "E1"
+       ],
+       "id": "scalability",
+       "score": 72
+      },
+      {
+       "comment": "Fee on streamed volume, not stated.",
+       "evidence": [],
+       "id": "business_model",
+       "score": 50
+      },
+      {
+       "comment": "Invariants are a delight.",
+       "evidence": [
+        "E3"
+       ],
+       "id": "brownie_points",
+       "score": 66
+      }
+     ],
+     "dealBreakerHit": false,
+     "dealBreakerNote": "",
+     "headline": "Great engine, but users can't get money in.",
+     "strengths": [
+      "212 Foundry tests, 5 invariants.",
+      "Clawback provably can't touch earned pay (E2)."
+     ]
+    },
+    "screenshotsShown": 5,
+    "status": "scored",
+    "traces": [
+     {
+      "chatId": "bda92f66-afe3-4f54-a7b4-c63801d1a38c",
+      "costUsdMicro": 4380,
+      "model": "0gm-1.0-35b-a3b",
+      "provider": "0xf4FB8d2bD856e672b5f9848b0eD235A20079B250",
+      "requestId": "5d32f3a8-54b1-4a2d-a70b-894c9ab4712e"
+     }
+    ],
+    "usage": {
+     "input_tokens": 25800,
+     "output_tokens": 4000
+    }
+   }
+  ],
+  "evidence": [
+   {
+    "id": "V-laptop-d1",
+    "stepTitle": "Vault overview",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Vault overview on windows: see \"Streams\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "2ee02625-5f42-401b-af35-8e27a3a50877"
+    }
+   },
+   {
+    "id": "V-laptop-d2",
+    "stepTitle": "Deposit to a vault",
+    "observation": {
+     "matchesStep": "no",
+     "seen": "Deposit to a vault: 502 /api/deposit.",
+     "problems": [
+      "502 /api/deposit"
+     ]
+    },
+    "trace": {
+     "requestId": "3c18b8a0-4afb-41f5-aa10-188f618245e2"
+    }
+   },
+   {
+    "id": "V-laptop-d3",
+    "stepTitle": "Stream dashboard",
+    "observation": {
+     "matchesStep": "no",
+     "seen": "Stream dashboard: blank after deposit error.",
+     "problems": [
+      "blank after deposit error"
+     ]
+    },
+    "trace": {
+     "requestId": "fa2da125-fb80-4d08-ae64-c143dc1cdbb5"
+    }
+   },
+   {
+    "id": "V-laptop-f1",
+    "stepTitle": "Docs",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Docs on windows: 200.",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "b80298fc-31e1-455b-ae67-cf6974efa216"
+    }
+   },
+   {
+    "id": "V-laptop-f2",
+    "stepTitle": "Contributor view",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Contributor view on windows: see \"Earned\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "c289335a-4088-42dd-a72f-277a18ac8f33"
+    }
+   },
+   {
+    "id": "V-android-d1",
+    "stepTitle": "Vault overview",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Vault overview on android: see \"Streams\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "a0572cf9-7aa0-403e-a5e5-3f91983b2993"
+    }
+   },
+   {
+    "id": "V-android-d2",
+    "stepTitle": "Deposit to a vault",
+    "observation": {
+     "matchesStep": "no",
+     "seen": "Deposit to a vault: 502 /api/deposit.",
+     "problems": [
+      "502 /api/deposit"
+     ]
+    },
+    "trace": {
+     "requestId": "f6bd57b9-eade-4a9d-a24e-e7f949921fcd"
+    }
+   },
+   {
+    "id": "V-android-d3",
+    "stepTitle": "Stream dashboard",
+    "observation": {
+     "matchesStep": "no",
+     "seen": "Stream dashboard: blank after deposit error.",
+     "problems": [
+      "blank after deposit error"
+     ]
+    },
+    "trace": {
+     "requestId": "494e0a83-e3cb-4ecf-a4da-8663e3a67032"
+    }
+   },
+   {
+    "id": "V-android-f1",
+    "stepTitle": "Docs",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Docs on android: 200.",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "4efddff6-fff6-42c2-a0f2-373f10f6481c"
+    }
+   },
+   {
+    "id": "V-android-f2",
+    "stepTitle": "Contributor view",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Contributor view on android: see \"Earned\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "4672fdcf-e0df-4d37-a0c1-bffef77d5a4c"
+    }
+   },
+   {
+    "id": "V-ios-d1",
+    "stepTitle": "Vault overview",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Vault overview on iphone: see \"Streams\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "cbaa19e9-b56c-4ca9-a471-00b5ffab1a73"
+    }
+   },
+   {
+    "id": "V-ios-d2",
+    "stepTitle": "Deposit to a vault",
+    "observation": {
+     "matchesStep": "no",
+     "seen": "Deposit to a vault: 502 /api/deposit.",
+     "problems": [
+      "502 /api/deposit"
+     ]
+    },
+    "trace": {
+     "requestId": "292811ba-b22b-4c5b-aff4-75501f47eba7"
+    }
+   },
+   {
+    "id": "V-ios-d3",
+    "stepTitle": "Stream dashboard",
+    "observation": {
+     "matchesStep": "no",
+     "seen": "Stream dashboard: blank after deposit error.",
+     "problems": [
+      "blank after deposit error"
+     ]
+    },
+    "trace": {
+     "requestId": "3e0ad0cc-15cc-4f40-ae4e-2f736dda041b"
+    }
+   },
+   {
+    "id": "V-ios-f1",
+    "stepTitle": "Docs",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Docs on iphone: 200.",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "52caded5-9d7c-4b5e-a14f-39038adc1fb9"
+    }
+   },
+   {
+    "id": "V-ios-f2",
+    "stepTitle": "Contributor view",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Contributor view on iphone: see \"Earned\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "f6eb3361-28bf-43a8-a38a-1d6242f70f16"
+    }
+   }
+  ],
+  "zg": {
+   "calls": 18,
+   "costUsdMicro": 17370,
+   "evidenceCostUsdMicro": 6150,
+   "judgeCostUsdMicro": 11220,
+   "providers": [
+    "0xf4FB8d2bD856e672b5f9848b0eD235A20079B250"
+   ],
+   "requestIds": [
+    "035adaae-92c1-4991-a9ff-b14982642243",
+    "3f5b8baf-bf3f-4af0-a7fe-674dae093195",
+    "5d32f3a8-54b1-4a2d-a70b-894c9ab4712e",
+    "2ee02625-5f42-401b-af35-8e27a3a50877",
+    "3c18b8a0-4afb-41f5-aa10-188f618245e2",
+    "fa2da125-fb80-4d08-ae64-c143dc1cdbb5",
+    "b80298fc-31e1-455b-ae67-cf6974efa216",
+    "c289335a-4088-42dd-a72f-277a18ac8f33",
+    "a0572cf9-7aa0-403e-a5e5-3f91983b2993",
+    "f6bd57b9-eade-4a9d-a24e-e7f949921fcd",
+    "494e0a83-e3cb-4ecf-a4da-8663e3a67032",
+    "4efddff6-fff6-42c2-a0f2-373f10f6481c",
+    "4672fdcf-e0df-4d37-a0c1-bffef77d5a4c",
+    "cbaa19e9-b56c-4ca9-a471-00b5ffab1a73",
+    "292811ba-b22b-4c5b-aff4-75501f47eba7",
+    "3e0ad0cc-15cc-4f40-ae4e-2f736dda041b",
+    "52caded5-9d7c-4b5e-a14f-39038adc1fb9",
+    "f6eb3361-28bf-43a8-a38a-1d6242f70f16"
+   ],
+   "uncostedCalls": 0
+  },
+  "proofs": {
+   "arkivPanel": "https://rabdi.explorer.arkiv.network/entity-explorer?q=%24key%20%3D%20key(0xfb68985c2cd7acfcbcf8e580387805583a183c4c7d6d63496e6e29b6057b481a)",
+   "panelKey": "0xfb68985c2cd7acfcbcf8e580387805583a183c4c7d6d63496e6e29b6057b481a",
+   "evidenceRoots": {
+    "dossier": "0x4ab9f7a9a344872e0891367d52a0fb01c1b6fc3069c943cd1dc749898f2aa68d",
+    "review": "0xf47aac7516d13a6e0d2fdd74440b4306fe8e061ae239c8a282fd7a10ebff55dd",
+    "liveTest": "0xa6da6db8b84078b1dc115fc2c9ce2ff974d66bd0b2ff66fe9d635591e3377776"
+   },
+   "storageScan": {
+    "dossier": "https://storagescan-galileo.0g.ai/submission/171295",
+    "review": "https://storagescan-galileo.0g.ai/submission/171296",
+    "liveTest": "https://storagescan-galileo.0g.ai/submission/171297"
+   }
+  }
+ },
+ "splitsafe": {
+  "complete": true,
+  "effort": "high",
+  "model": "0gm-1.0-35b-a3b",
+  "panelHundredths": 6737,
+  "projectId": "splitsafe",
+  "provider": "0g",
+  "ranAt": "2026-11-06T12:46:30.000Z",
+  "reviews": [
+   {
+    "attempts": 1,
+    "judge": {
+     "id": "judge_11631c00",
+     "name": "Priya Raman",
+     "promptVersion": "judge-v3",
+     "title": "Product lead who has shipped three consumer fintech apps",
+     "tone": "balanced",
+     "version": 1,
+     "weights": {
+      "product_journey": 20,
+      "real_world_value": 20,
+      "ui_ux": 16,
+      "code_quality": 4,
+      "sdlc": 4,
+      "feasibility": 12,
+      "scalability": 4,
+      "business_model": 12,
+      "brownie_points": 8
+     }
+    },
+    "judgeId": "judge_11631c00",
+    "ms": 41000,
+    "overallHundredths": 7576,
+    "promptVersion": "judge-v3",
+    "review": {
+     "certainty": "high",
+     "comment": "Works on my phone, every step. This is what a demo should be.",
+     "concerns": [
+      "settle() has no access control (E4)."
+     ],
+     "criteria": [
+      {
+       "comment": "Scan, split, approve: all pass live.",
+       "evidence": [
+        "E1",
+        "E2"
+       ],
+       "id": "product_journey",
+       "score": 86
+      },
+      {
+       "comment": "Everyone splits bills.",
+       "evidence": [],
+       "id": "real_world_value",
+       "score": 76
+      },
+      {
+       "comment": "Mobile-first and fast.",
+       "evidence": [
+        "E5"
+       ],
+       "id": "ui_ux",
+       "score": 89
+      },
+      {
+       "comment": "Thin contract; open settle().",
+       "evidence": [
+        "E4"
+       ],
+       "id": "code_quality",
+       "score": 59
+      },
+      {
+       "comment": "50 tests, built at the event.",
+       "evidence": [],
+       "id": "sdlc",
+       "score": 70
+      },
+      {
+       "comment": "Runs today.",
+       "evidence": [],
+       "id": "feasibility",
+       "score": 72
+      },
+      {
+       "comment": "OCR per receipt is cheap.",
+       "evidence": [],
+       "id": "scalability",
+       "score": 63
+      },
+      {
+       "comment": "No fee yet.",
+       "evidence": [],
+       "id": "business_model",
+       "score": 58
+      },
+      {
+       "comment": "Delightful approve animation.",
+       "evidence": [],
+       "id": "brownie_points",
+       "score": 73
+      }
+     ],
+     "dealBreakerHit": false,
+     "dealBreakerNote": "",
+     "headline": "Works on my phone, every step. This is what a demo should be.",
+     "strengths": [
+      "14 of 14 flows pass on both devices.",
+      "One-tap approve is real (E2)."
+     ]
+    },
+    "screenshotsShown": 7,
+    "status": "scored",
+    "traces": [
+     {
+      "chatId": "cd3ae3c3-1ad7-4c19-a4fd-f0624a5b8e09",
+      "costUsdMicro": 3100,
+      "model": "0gm-1.0-35b-a3b",
+      "provider": "0xf4FB8d2bD856e672b5f9848b0eD235A20079B250",
+      "requestId": "8e6f43dd-99ee-4996-a232-55eb619fdb03"
+     }
+    ],
+    "usage": {
+     "input_tokens": 24000,
+     "output_tokens": 2600
+    }
+   },
+   {
+    "attempts": 1,
+    "judge": {
+     "id": "judge_e9c669c4",
+     "name": "Marcus Lee",
+     "promptVersion": "judge-v3",
+     "title": "Staff engineer, smart contracts and payments infrastructure",
+     "tone": "strict",
+     "version": 1,
+     "weights": {
+      "product_journey": 5,
+      "real_world_value": 9,
+      "ui_ux": 4,
+      "code_quality": 23,
+      "sdlc": 18,
+      "feasibility": 18,
+      "scalability": 14,
+      "business_model": 0,
+      "brownie_points": 9
+     }
+    },
+    "judgeId": "judge_e9c669c4",
+    "ms": 50000,
+    "overallHundredths": 6009,
+    "promptVersion": "judge-v3",
+    "review": {
+     "certainty": "high",
+     "comment": "Anyone can call settle(). Fix that before mainnet.",
+     "concerns": [
+      "settle() has no access control (E4)."
+     ],
+     "criteria": [
+      {
+       "comment": "Scan, split, approve: all pass live.",
+       "evidence": [
+        "E1",
+        "E2"
+       ],
+       "id": "product_journey",
+       "score": 75
+      },
+      {
+       "comment": "Everyone splits bills.",
+       "evidence": [],
+       "id": "real_world_value",
+       "score": 69
+      },
+      {
+       "comment": "Mobile-first and fast.",
+       "evidence": [
+        "E5"
+       ],
+       "id": "ui_ux",
+       "score": 79
+      },
+      {
+       "comment": "Thin contract; open settle().",
+       "evidence": [
+        "E4"
+       ],
+       "id": "code_quality",
+       "score": 50
+      },
+      {
+       "comment": "50 tests, built at the event.",
+       "evidence": [],
+       "id": "sdlc",
+       "score": 59
+      },
+      {
+       "comment": "Runs today.",
+       "evidence": [],
+       "id": "feasibility",
+       "score": 63
+      },
+      {
+       "comment": "OCR per receipt is cheap.",
+       "evidence": [],
+       "id": "scalability",
+       "score": 56
+      },
+      {
+       "comment": "No fee yet.",
+       "evidence": [],
+       "id": "business_model",
+       "score": 50
+      },
+      {
+       "comment": "Delightful approve animation.",
+       "evidence": [],
+       "id": "brownie_points",
+       "score": 63
+      }
+     ],
+     "dealBreakerHit": false,
+     "dealBreakerNote": "",
+     "headline": "Anyone can call settle(). Fix that before mainnet.",
+     "strengths": [
+      "14 of 14 flows pass on both devices.",
+      "One-tap approve is real (E2)."
+     ]
+    },
+    "screenshotsShown": 7,
+    "status": "scored",
+    "traces": [
+     {
+      "chatId": "8e8c8289-b798-4279-a8ba-1773b521bd77",
+      "costUsdMicro": 3740,
+      "model": "0gm-1.0-35b-a3b",
+      "provider": "0xf4FB8d2bD856e672b5f9848b0eD235A20079B250",
+      "requestId": "f3ab41a6-0825-4601-a4a5-c750b542d171"
+     }
+    ],
+    "usage": {
+     "input_tokens": 24900,
+     "output_tokens": 3300
+    }
+   },
+   {
+    "attempts": 1,
+    "judge": {
+     "id": "judge_c876a259",
+     "name": "Ana Okafor",
+     "promptVersion": "judge-v3",
+     "title": "Early-stage investor and former founder",
+     "tone": "generous",
+     "version": 1,
+     "weights": {
+      "product_journey": 8,
+      "real_world_value": 17,
+      "ui_ux": 4,
+      "code_quality": 4,
+      "sdlc": 4,
+      "feasibility": 13,
+      "scalability": 17,
+      "business_model": 21,
+      "brownie_points": 12
+     }
+    },
+    "judgeId": "judge_c876a259",
+    "ms": 59000,
+    "overallHundredths": 6627,
+    "promptVersion": "judge-v3",
+    "review": {
+     "certainty": "high",
+     "comment": "Clear everyday pain, clear product.",
+     "concerns": [
+      "settle() has no access control (E4)."
+     ],
+     "criteria": [
+      {
+       "comment": "Scan, split, approve: all pass live.",
+       "evidence": [
+        "E1",
+        "E2"
+       ],
+       "id": "product_journey",
+       "score": 80
+      },
+      {
+       "comment": "Everyone splits bills.",
+       "evidence": [],
+       "id": "real_world_value",
+       "score": 73
+      },
+      {
+       "comment": "Mobile-first and fast.",
+       "evidence": [
+        "E5"
+       ],
+       "id": "ui_ux",
+       "score": 84
+      },
+      {
+       "comment": "Thin contract; open settle().",
+       "evidence": [
+        "E4"
+       ],
+       "id": "code_quality",
+       "score": 54
+      },
+      {
+       "comment": "50 tests, built at the event.",
+       "evidence": [],
+       "id": "sdlc",
+       "score": 67
+      },
+      {
+       "comment": "Runs today.",
+       "evidence": [],
+       "id": "feasibility",
+       "score": 72
+      },
+      {
+       "comment": "OCR per receipt is cheap.",
+       "evidence": [],
+       "id": "scalability",
+       "score": 58
+      },
+      {
+       "comment": "No fee yet.",
+       "evidence": [],
+       "id": "business_model",
+       "score": 56
+      },
+      {
+       "comment": "Delightful approve animation.",
+       "evidence": [],
+       "id": "brownie_points",
+       "score": 69
+      }
+     ],
+     "dealBreakerHit": false,
+     "dealBreakerNote": "",
+     "headline": "Clear everyday pain, clear product.",
+     "strengths": [
+      "14 of 14 flows pass on both devices.",
+      "One-tap approve is real (E2)."
+     ]
+    },
+    "screenshotsShown": 7,
+    "status": "scored",
+    "traces": [
+     {
+      "chatId": "3659b4ac-7455-473b-ac8d-5744a988d2a2",
+      "costUsdMicro": 4380,
+      "model": "0gm-1.0-35b-a3b",
+      "provider": "0xf4FB8d2bD856e672b5f9848b0eD235A20079B250",
+      "requestId": "634f3c62-8d93-4b57-a932-9855809c1b31"
+     }
+    ],
+    "usage": {
+     "input_tokens": 25800,
+     "output_tokens": 4000
+    }
+   }
+  ],
+  "evidence": [
+   {
+    "id": "V-laptop-d1",
+    "stepTitle": "Scan a receipt",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Scan a receipt on windows: see \"Scan\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "37c1b08a-2447-4c55-ad5c-e569516f06d1"
+    }
+   },
+   {
+    "id": "V-laptop-d2",
+    "stepTitle": "Proposed split",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Proposed split on windows: see \"Your share\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "b14b0e09-b4ac-4c8c-a8d5-c53415c8f5f6"
+    }
+   },
+   {
+    "id": "V-laptop-d3",
+    "stepTitle": "Approve share",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Approve share on windows: see \"Approve\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "42431fc6-0780-4345-a042-5b545ee1a403"
+    }
+   },
+   {
+    "id": "V-laptop-f1",
+    "stepTitle": "Bills list",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Bills list on windows: see \"Bills\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "e48e2aca-6c7b-4305-aeda-5a0b575e3d96"
+    }
+   },
+   {
+    "id": "V-laptop-f2",
+    "stepTitle": "Friend invite",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Friend invite on windows: see \"Invite\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "98e5b5ad-4679-4c96-a6c9-ebd56f2ce388"
+    }
+   },
+   {
+    "id": "V-laptop-f3",
+    "stepTitle": "History",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "History on windows: see \"Settled\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "233c2434-1cd1-4dab-ac8d-9720f3009b0a"
+    }
+   },
+   {
+    "id": "V-android-d1",
+    "stepTitle": "Scan a receipt",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Scan a receipt on android: see \"Scan\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "7cc40ad4-3aed-4b35-ac5b-033cbd24a2d9"
+    }
+   },
+   {
+    "id": "V-android-d2",
+    "stepTitle": "Proposed split",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Proposed split on android: see \"Your share\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "bb53c0dd-8867-455d-a437-8865465589b7"
+    }
+   },
+   {
+    "id": "V-android-d3",
+    "stepTitle": "Approve share",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Approve share on android: see \"Approve\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "94b628bc-4c36-4aa1-ac36-dcaf1b10c5f3"
+    }
+   },
+   {
+    "id": "V-android-f1",
+    "stepTitle": "Bills list",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Bills list on android: see \"Bills\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "20608955-6946-41ed-a6a7-be8d9c511c13"
+    }
+   },
+   {
+    "id": "V-android-f2",
+    "stepTitle": "Friend invite",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Friend invite on android: see \"Invite\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "44233eaf-e2f5-4122-abb6-bf7a0b5f20c9"
+    }
+   },
+   {
+    "id": "V-android-f3",
+    "stepTitle": "History",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "History on android: see \"Settled\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "306a2a44-87a0-4cfa-aecb-b5311371991e"
+    }
+   },
+   {
+    "id": "V-ios-d1",
+    "stepTitle": "Scan a receipt",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Scan a receipt on iphone: see \"Scan\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "418ca88b-d0b7-45fa-aabc-554a1b93881a"
+    }
+   },
+   {
+    "id": "V-ios-d2",
+    "stepTitle": "Proposed split",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Proposed split on iphone: see \"Your share\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "7022a03a-647e-4123-a681-cbc5bfe98f48"
+    }
+   },
+   {
+    "id": "V-ios-d3",
+    "stepTitle": "Approve share",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Approve share on iphone: see \"Approve\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "b2646165-558e-4ad2-ad3c-43803eb0dd54"
+    }
+   },
+   {
+    "id": "V-ios-f1",
+    "stepTitle": "Bills list",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Bills list on iphone: see \"Bills\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "a3dd7a29-58eb-45aa-a89b-72bef9f08e86"
+    }
+   },
+   {
+    "id": "V-ios-f2",
+    "stepTitle": "Friend invite",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Friend invite on iphone: see \"Invite\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "03fd58ad-8fef-41c9-a052-5f3081da673b"
+    }
+   },
+   {
+    "id": "V-ios-f3",
+    "stepTitle": "History",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "History on iphone: see \"Settled\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "3b6495b8-2146-4436-ad40-eed5771b5fea"
+    }
+   }
+  ],
+  "zg": {
+   "calls": 21,
+   "costUsdMicro": 18600,
+   "evidenceCostUsdMicro": 7380,
+   "judgeCostUsdMicro": 11220,
+   "providers": [
+    "0xf4FB8d2bD856e672b5f9848b0eD235A20079B250"
+   ],
+   "requestIds": [
+    "8e6f43dd-99ee-4996-a232-55eb619fdb03",
+    "f3ab41a6-0825-4601-a4a5-c750b542d171",
+    "634f3c62-8d93-4b57-a932-9855809c1b31",
+    "37c1b08a-2447-4c55-ad5c-e569516f06d1",
+    "b14b0e09-b4ac-4c8c-a8d5-c53415c8f5f6",
+    "42431fc6-0780-4345-a042-5b545ee1a403",
+    "e48e2aca-6c7b-4305-aeda-5a0b575e3d96",
+    "98e5b5ad-4679-4c96-a6c9-ebd56f2ce388",
+    "233c2434-1cd1-4dab-ac8d-9720f3009b0a",
+    "7cc40ad4-3aed-4b35-ac5b-033cbd24a2d9",
+    "bb53c0dd-8867-455d-a437-8865465589b7",
+    "94b628bc-4c36-4aa1-ac36-dcaf1b10c5f3",
+    "20608955-6946-41ed-a6a7-be8d9c511c13",
+    "44233eaf-e2f5-4122-abb6-bf7a0b5f20c9",
+    "306a2a44-87a0-4cfa-aecb-b5311371991e",
+    "418ca88b-d0b7-45fa-aabc-554a1b93881a",
+    "7022a03a-647e-4123-a681-cbc5bfe98f48",
+    "b2646165-558e-4ad2-ad3c-43803eb0dd54",
+    "a3dd7a29-58eb-45aa-a89b-72bef9f08e86",
+    "03fd58ad-8fef-41c9-a052-5f3081da673b",
+    "3b6495b8-2146-4436-ad40-eed5771b5fea"
+   ],
+   "uncostedCalls": 0
+  },
+  "proofs": {
+   "arkivPanel": "https://rabdi.explorer.arkiv.network/entity-explorer?q=%24key%20%3D%20key(0x0be27d31fd948109183c4915197db25da5a0a2d81dad3ed2de8fdd8d583c271c)",
+   "panelKey": "0x0be27d31fd948109183c4915197db25da5a0a2d81dad3ed2de8fdd8d583c271c",
+   "evidenceRoots": {
+    "dossier": "0xd91322afd46478a3dcae4550e7d2179096ef3745b9c5a14e7a4b45adf11e4a78",
+    "review": "0x324a84355bba273f3ea034126d4defc3d3d77cef676baa6ef95032f08dd04b2e",
+    "liveTest": "0x43fab111c0a02fa9cb207fcc23442c4218c9140fc2f01ddcd138aaffc4fa4307"
+   },
+   "storageScan": {
+    "dossier": "https://storagescan-galileo.0g.ai/submission/171310",
+    "review": "https://storagescan-galileo.0g.ai/submission/171311",
+    "liveTest": "https://storagescan-galileo.0g.ai/submission/171312"
+   }
+  }
+ },
+ "kirana-credit": {
+  "complete": true,
+  "effort": "high",
+  "model": "0gm-1.0-35b-a3b",
+  "panelHundredths": 7628,
+  "projectId": "kirana-credit",
+  "provider": "0g",
+  "ranAt": "2026-11-06T13:27:04.000Z",
+  "reviews": [
+   {
+    "attempts": 1,
+    "judge": {
+     "id": "judge_11631c00",
+     "name": "Priya Raman",
+     "promptVersion": "judge-v3",
+     "title": "Product lead who has shipped three consumer fintech apps",
+     "tone": "balanced",
+     "version": 1,
+     "weights": {
+      "product_journey": 20,
+      "real_world_value": 20,
+      "ui_ux": 16,
+      "code_quality": 4,
+      "sdlc": 4,
+      "feasibility": 12,
+      "scalability": 4,
+      "business_model": 12,
+      "brownie_points": 8
+     }
+    },
+    "judgeId": "judge_11631c00",
+    "ms": 41000,
+    "overallHundredths": 7528,
+    "promptVersion": "judge-v3",
+    "review": {
+     "certainty": "high",
+     "comment": "Rough on a phone, but real shopkeepers use it.",
+     "concerns": [
+      "Draw button cut off on a phone.",
+      "UPI auto-repay not built (E4)."
+     ],
+     "criteria": [
+      {
+       "comment": "Onboard, limit, draw, repay all work on a laptop.",
+       "evidence": [
+        "E1",
+        "E2"
+       ],
+       "id": "product_journey",
+       "score": 73
+      },
+      {
+       "comment": "Working capital for shops banks ignore.",
+       "evidence": [
+        "E3"
+       ],
+       "id": "real_world_value",
+       "score": 91
+      },
+      {
+       "comment": "Draw button cut off at phone width.",
+       "evidence": [],
+       "id": "ui_ux",
+       "score": 57
+      },
+      {
+       "comment": "Clear limits, 85 tests.",
+       "evidence": [
+        "E2"
+       ],
+       "id": "code_quality",
+       "score": 71
+      },
+      {
+       "comment": "52 commits at the event.",
+       "evidence": [],
+       "id": "sdlc",
+       "score": 73
+      },
+      {
+       "comment": "Pilot already running.",
+       "evidence": [
+        "E3"
+       ],
+       "id": "feasibility",
+       "score": 76
+      },
+      {
+       "comment": "Scoring is per shop and cheap.",
+       "evidence": [
+        "E1"
+       ],
+       "id": "scalability",
+       "score": 63
+      },
+      {
+       "comment": "Interest spread on small loans.",
+       "evidence": [],
+       "id": "business_model",
+       "score": 79
+      },
+      {
+       "comment": "Marathi UI for real users.",
+       "evidence": [
+        "E5"
+       ],
+       "id": "brownie_points",
+       "score": 81
+      }
+     ],
+     "dealBreakerHit": false,
+     "dealBreakerNote": "",
+     "headline": "Rough on a phone, but real shopkeepers use it.",
+     "strengths": [
+      "14-shop pilot with consent on file (E3).",
+      "Tested credit contract (E2)."
+     ]
+    },
+    "screenshotsShown": 5,
+    "status": "scored",
+    "traces": [
+     {
+      "chatId": "300db610-0deb-431d-a3e4-0645dc9d9d24",
+      "costUsdMicro": 3100,
+      "model": "0gm-1.0-35b-a3b",
+      "provider": "0xf4FB8d2bD856e672b5f9848b0eD235A20079B250",
+      "requestId": "dd0a0b84-f3a8-468f-a9bd-80f78113a0a4"
+     }
+    ],
+    "usage": {
+     "input_tokens": 24000,
+     "output_tokens": 2600
+    }
+   },
+   {
+    "attempts": 1,
+    "judge": {
+     "id": "judge_e9c669c4",
+     "name": "Marcus Lee",
+     "promptVersion": "judge-v3",
+     "title": "Staff engineer, smart contracts and payments infrastructure",
+     "tone": "strict",
+     "version": 1,
+     "weights": {
+      "product_journey": 5,
+      "real_world_value": 9,
+      "ui_ux": 4,
+      "code_quality": 23,
+      "sdlc": 18,
+      "feasibility": 18,
+      "scalability": 14,
+      "business_model": 0,
+      "brownie_points": 9
+     }
+    },
+    "judgeId": "judge_e9c669c4",
+    "ms": 50000,
+    "overallHundredths": 7111,
+    "promptVersion": "judge-v3",
+    "review": {
+     "certainty": "high",
+     "comment": "Sensible limits, tested credit contract.",
+     "concerns": [
+      "Draw button cut off on a phone.",
+      "UPI auto-repay not built (E4)."
+     ],
+     "criteria": [
+      {
+       "comment": "Onboard, limit, draw, repay all work on a laptop.",
+       "evidence": [
+        "E1",
+        "E2"
+       ],
+       "id": "product_journey",
+       "score": 70
+      },
+      {
+       "comment": "Working capital for shops banks ignore.",
+       "evidence": [
+        "E3"
+       ],
+       "id": "real_world_value",
+       "score": 89
+      },
+      {
+       "comment": "Draw button cut off at phone width.",
+       "evidence": [],
+       "id": "ui_ux",
+       "score": 54
+      },
+      {
+       "comment": "Clear limits, 85 tests.",
+       "evidence": [
+        "E2"
+       ],
+       "id": "code_quality",
+       "score": 67
+      },
+      {
+       "comment": "52 commits at the event.",
+       "evidence": [],
+       "id": "sdlc",
+       "score": 68
+      },
+      {
+       "comment": "Pilot already running.",
+       "evidence": [
+        "E3"
+       ],
+       "id": "feasibility",
+       "score": 76
+      },
+      {
+       "comment": "Scoring is per shop and cheap.",
+       "evidence": [
+        "E1"
+       ],
+       "id": "scalability",
+       "score": 63
+      },
+      {
+       "comment": "Interest spread on small loans.",
+       "evidence": [],
+       "id": "business_model",
+       "score": 78
+      },
+      {
+       "comment": "Marathi UI for real users.",
+       "evidence": [
+        "E5"
+       ],
+       "id": "brownie_points",
+       "score": 81
+      }
+     ],
+     "dealBreakerHit": false,
+     "dealBreakerNote": "",
+     "headline": "Sensible limits, tested credit contract.",
+     "strengths": [
+      "14-shop pilot with consent on file (E3).",
+      "Tested credit contract (E2)."
+     ]
+    },
+    "screenshotsShown": 5,
+    "status": "scored",
+    "traces": [
+     {
+      "chatId": "399540f4-fe01-4faa-a6d3-615073bd4589",
+      "costUsdMicro": 3740,
+      "model": "0gm-1.0-35b-a3b",
+      "provider": "0xf4FB8d2bD856e672b5f9848b0eD235A20079B250",
+      "requestId": "6b6bb578-b0fc-4fa4-acea-802c5fc7cc33"
+     }
+    ],
+    "usage": {
+     "input_tokens": 24900,
+     "output_tokens": 3300
+    }
+   },
+   {
+    "attempts": 1,
+    "judge": {
+     "id": "judge_c876a259",
+     "name": "Ana Okafor",
+     "promptVersion": "judge-v3",
+     "title": "Early-stage investor and former founder",
+     "tone": "generous",
+     "version": 1,
+     "weights": {
+      "product_journey": 8,
+      "real_world_value": 17,
+      "ui_ux": 4,
+      "code_quality": 4,
+      "sdlc": 4,
+      "feasibility": 13,
+      "scalability": 17,
+      "business_model": 21,
+      "brownie_points": 12
+     }
+    },
+    "judgeId": "judge_c876a259",
+    "ms": 59000,
+    "overallHundredths": 8246,
+    "promptVersion": "judge-v3",
+    "review": {
+     "certainty": "high",
+     "comment": "Real users and a real lending model. I'd take the meeting.",
+     "concerns": [
+      "Draw button cut off on a phone.",
+      "UPI auto-repay not built (E4)."
+     ],
+     "criteria": [
+      {
+       "comment": "Onboard, limit, draw, repay all work on a laptop.",
+       "evidence": [
+        "E1",
+        "E2"
+       ],
+       "id": "product_journey",
+       "score": 77
+      },
+      {
+       "comment": "Working capital for shops banks ignore.",
+       "evidence": [
+        "E3"
+       ],
+       "id": "real_world_value",
+       "score": 95
+      },
+      {
+       "comment": "Draw button cut off at phone width.",
+       "evidence": [],
+       "id": "ui_ux",
+       "score": 64
+      },
+      {
+       "comment": "Clear limits, 85 tests.",
+       "evidence": [
+        "E2"
+       ],
+       "id": "code_quality",
+       "score": 75
+      },
+      {
+       "comment": "52 commits at the event.",
+       "evidence": [],
+       "id": "sdlc",
+       "score": 78
+      },
+      {
+       "comment": "Pilot already running.",
+       "evidence": [
+        "E3"
+       ],
+       "id": "feasibility",
+       "score": 82
+      },
+      {
+       "comment": "Scoring is per shop and cheap.",
+       "evidence": [
+        "E1"
+       ],
+       "id": "scalability",
+       "score": 71
+      },
+      {
+       "comment": "Interest spread on small loans.",
+       "evidence": [],
+       "id": "business_model",
+       "score": 86
+      },
+      {
+       "comment": "Marathi UI for real users.",
+       "evidence": [
+        "E5"
+       ],
+       "id": "brownie_points",
+       "score": 89
+      }
+     ],
+     "dealBreakerHit": false,
+     "dealBreakerNote": "",
+     "headline": "Real users and a real lending model. I'd take the meeting.",
+     "strengths": [
+      "14-shop pilot with consent on file (E3).",
+      "Tested credit contract (E2)."
+     ]
+    },
+    "screenshotsShown": 5,
+    "status": "scored",
+    "traces": [
+     {
+      "chatId": "17af5c91-b3f5-4161-acfe-4f379bf0eb94",
+      "costUsdMicro": 4380,
+      "model": "0gm-1.0-35b-a3b",
+      "provider": "0xf4FB8d2bD856e672b5f9848b0eD235A20079B250",
+      "requestId": "204f71ed-57f5-4de2-a44c-a552c46f12c4"
+     }
+    ],
+    "usage": {
+     "input_tokens": 25800,
+     "output_tokens": 4000
+    }
+   }
+  ],
+  "evidence": [
+   {
+    "id": "V-laptop-d1",
+    "stepTitle": "Shop onboarding",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Shop onboarding on windows: see \"Your shop\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "8deecb50-3d36-4d44-a409-cfa1605705a4"
+    }
+   },
+   {
+    "id": "V-laptop-d2",
+    "stepTitle": "Credit limit",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Credit limit on windows: see \"Limit\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "5b1bd737-520c-4f60-a530-002b20b96f51"
+    }
+   },
+   {
+    "id": "V-laptop-f1",
+    "stepTitle": "Draw credit",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Draw credit on windows: see \"Draw\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "855fb8b3-01c2-48b8-ab85-27e5cc43f651"
+    }
+   },
+   {
+    "id": "V-laptop-f2",
+    "stepTitle": "Repay",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Repay on windows: see \"Repay\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "6af27dee-e952-4b37-ab8d-1512a56d3004"
+    }
+   },
+   {
+    "id": "V-laptop-f3",
+    "stepTitle": "Marathi toggle",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Marathi toggle on windows: see \"मराठी\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "bda92a75-6369-4ddd-a1c7-f62ce4731147"
+    }
+   },
+   {
+    "id": "V-android-d1",
+    "stepTitle": "Shop onboarding",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Shop onboarding on android: see \"Your shop\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "cbc29c69-7afa-4f80-a2de-5244c5aacfa7"
+    }
+   },
+   {
+    "id": "V-android-d2",
+    "stepTitle": "Credit limit",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Credit limit on android: see \"Limit\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "c8504897-6ff3-4b8a-a3f4-258718252d9e"
+    }
+   },
+   {
+    "id": "V-android-f1",
+    "stepTitle": "Draw credit",
+    "observation": {
+     "matchesStep": "no",
+     "seen": "Draw credit: button cut off below the fold.",
+     "problems": [
+      "button cut off below the fold"
+     ]
+    },
+    "trace": {
+     "requestId": "c40c7012-6b1d-4ce6-ac23-708681cebb4c"
+    }
+   },
+   {
+    "id": "V-android-f2",
+    "stepTitle": "Repay",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Repay on android: see \"Repay\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "e6e7cbe5-771f-477e-af9d-4aeb416151e8"
+    }
+   },
+   {
+    "id": "V-android-f3",
+    "stepTitle": "Marathi toggle",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Marathi toggle on android: see \"मराठी\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "1ae74cf4-a10d-4a41-af09-31088f6dc895"
+    }
+   },
+   {
+    "id": "V-ios-d1",
+    "stepTitle": "Shop onboarding",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Shop onboarding on iphone: see \"Your shop\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "551e48ac-418c-40a1-a788-2c6cb15337f2"
+    }
+   },
+   {
+    "id": "V-ios-d2",
+    "stepTitle": "Credit limit",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Credit limit on iphone: see \"Limit\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "030c31e0-2079-424a-a9e8-0517bb9c2b4e"
+    }
+   },
+   {
+    "id": "V-ios-f1",
+    "stepTitle": "Draw credit",
+    "observation": {
+     "matchesStep": "no",
+     "seen": "Draw credit: button cut off below the fold.",
+     "problems": [
+      "button cut off below the fold"
+     ]
+    },
+    "trace": {
+     "requestId": "983ad832-f9e5-458e-a1ce-ea75abb6099b"
+    }
+   },
+   {
+    "id": "V-ios-f2",
+    "stepTitle": "Repay",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Repay on iphone: see \"Repay\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "9968eea2-d4e5-4347-a7c5-9e2d428b835b"
+    }
+   },
+   {
+    "id": "V-ios-f3",
+    "stepTitle": "Marathi toggle",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Marathi toggle on iphone: see \"मराठी\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "2573e1ec-ef5c-41cf-aa81-9b2e598dc46a"
+    }
+   }
+  ],
+  "zg": {
+   "calls": 18,
+   "costUsdMicro": 17370,
+   "evidenceCostUsdMicro": 6150,
+   "judgeCostUsdMicro": 11220,
+   "providers": [
+    "0xf4FB8d2bD856e672b5f9848b0eD235A20079B250"
+   ],
+   "requestIds": [
+    "dd0a0b84-f3a8-468f-a9bd-80f78113a0a4",
+    "6b6bb578-b0fc-4fa4-acea-802c5fc7cc33",
+    "204f71ed-57f5-4de2-a44c-a552c46f12c4",
+    "8deecb50-3d36-4d44-a409-cfa1605705a4",
+    "5b1bd737-520c-4f60-a530-002b20b96f51",
+    "855fb8b3-01c2-48b8-ab85-27e5cc43f651",
+    "6af27dee-e952-4b37-ab8d-1512a56d3004",
+    "bda92a75-6369-4ddd-a1c7-f62ce4731147",
+    "cbc29c69-7afa-4f80-a2de-5244c5aacfa7",
+    "c8504897-6ff3-4b8a-a3f4-258718252d9e",
+    "c40c7012-6b1d-4ce6-ac23-708681cebb4c",
+    "e6e7cbe5-771f-477e-af9d-4aeb416151e8",
+    "1ae74cf4-a10d-4a41-af09-31088f6dc895",
+    "551e48ac-418c-40a1-a788-2c6cb15337f2",
+    "030c31e0-2079-424a-a9e8-0517bb9c2b4e",
+    "983ad832-f9e5-458e-a1ce-ea75abb6099b",
+    "9968eea2-d4e5-4347-a7c5-9e2d428b835b",
+    "2573e1ec-ef5c-41cf-aa81-9b2e598dc46a"
+   ],
+   "uncostedCalls": 0
+  },
+  "proofs": {
+   "arkivPanel": "https://rabdi.explorer.arkiv.network/entity-explorer?q=%24key%20%3D%20key(0xace0aadd7d3112ff67379dd1fdd0f57dd8bd4e21b1c4d774f459b711b8a56ae3)",
+   "panelKey": "0xace0aadd7d3112ff67379dd1fdd0f57dd8bd4e21b1c4d774f459b711b8a56ae3",
+   "evidenceRoots": {
+    "dossier": "0x42e717dff335d1bd45b029ba42b4f6fe75d7b2d5477b2f9c6b6526027dbd6b85",
+    "review": "0x9d5e07c9632cd792df3c31d18b27da79c0e1492cc5127fe203b273b61108344f",
+    "liveTest": "0xdaafbb518a372725da11addc719586888326dae2daf7077a66e341c6386d174b"
+   },
+   "storageScan": {
+    "dossier": "https://storagescan-galileo.0g.ai/submission/171329",
+    "review": "https://storagescan-galileo.0g.ai/submission/171330",
+    "liveTest": "https://storagescan-galileo.0g.ai/submission/171331"
+   }
+  }
+ },
+ "metromint": {
+  "complete": true,
+  "effort": "high",
+  "model": "0gm-1.0-35b-a3b",
+  "panelHundredths": 5451,
+  "projectId": "metromint",
+  "provider": "0g",
+  "ranAt": "2026-11-06T15:00:08.000Z",
+  "reviews": [
+   {
+    "attempts": 1,
+    "judge": {
+     "id": "judge_11631c00",
+     "name": "Priya Raman",
+     "promptVersion": "judge-v3",
+     "title": "Product lead who has shipped three consumer fintech apps",
+     "tone": "balanced",
+     "version": 1,
+     "weights": {
+      "product_journey": 20,
+      "real_world_value": 20,
+      "ui_ux": 16,
+      "code_quality": 4,
+      "sdlc": 4,
+      "feasibility": 12,
+      "scalability": 4,
+      "business_model": 12,
+      "brownie_points": 8
+     }
+    },
+    "judgeId": "judge_11631c00",
+    "ms": 41000,
+    "overallHundredths": 5432,
+    "promptVersion": "judge-v3",
+    "review": {
+     "certainty": "high",
+     "comment": "Commuters live on phones, and the ticket overflows at 390px.",
+     "concerns": [
+      "Breaks on a phone (E4).",
+      "Mint is mocked (E1)."
+     ],
+     "criteria": [
+      {
+       "comment": "Clear on a laptop.",
+       "evidence": [],
+       "id": "product_journey",
+       "score": 64
+      },
+      {
+       "comment": "Millions ride the metro.",
+       "evidence": [],
+       "id": "real_world_value",
+       "score": 64
+      },
+      {
+       "comment": "Ticket overflows at phone width.",
+       "evidence": [
+        "E4"
+       ],
+       "id": "ui_ux",
+       "score": 43
+      },
+      {
+       "comment": "Core mint is mocked.",
+       "evidence": [
+        "E1"
+       ],
+       "id": "code_quality",
+       "score": 46
+      },
+      {
+       "comment": "6 tests.",
+       "evidence": [],
+       "id": "sdlc",
+       "score": 41
+      },
+      {
+       "comment": "Needs a metro partner.",
+       "evidence": [
+        "E2"
+       ],
+       "id": "feasibility",
+       "score": 40
+      },
+      {
+       "comment": "Fine on Base.",
+       "evidence": [],
+       "id": "scalability",
+       "score": 57
+      },
+      {
+       "comment": "Resale fees.",
+       "evidence": [
+        "E3"
+       ],
+       "id": "business_model",
+       "score": 56
+      },
+      {
+       "comment": "Fun loyalty idea.",
+       "evidence": [
+        "E5"
+       ],
+       "id": "brownie_points",
+       "score": 57
+      }
+     ],
+     "dealBreakerHit": false,
+     "dealBreakerNote": "",
+     "headline": "Commuters live on phones, and the ticket overflows at 390px.",
+     "strengths": [
+      "Slick laptop demo.",
+      "Resale with a price cap (E3)."
+     ]
+    },
+    "screenshotsShown": 4,
+    "status": "scored",
+    "traces": [
+     {
+      "chatId": "58b19e5a-a11a-4825-ae88-e65715e9de13",
+      "costUsdMicro": 3100,
+      "model": "0gm-1.0-35b-a3b",
+      "provider": "0xf4FB8d2bD856e672b5f9848b0eD235A20079B250",
+      "requestId": "24f5f888-3a01-409c-a403-cc04f2ac4565"
+     }
+    ],
+    "usage": {
+     "input_tokens": 24000,
+     "output_tokens": 2600
+    }
+   },
+   {
+    "attempts": 1,
+    "judge": {
+     "id": "judge_e9c669c4",
+     "name": "Marcus Lee",
+     "promptVersion": "judge-v3",
+     "title": "Staff engineer, smart contracts and payments infrastructure",
+     "tone": "strict",
+     "version": 1,
+     "weights": {
+      "product_journey": 5,
+      "real_world_value": 9,
+      "ui_ux": 4,
+      "code_quality": 23,
+      "sdlc": 18,
+      "feasibility": 18,
+      "scalability": 14,
+      "business_model": 0,
+      "brownie_points": 9
+     }
+    },
+    "judgeId": "judge_e9c669c4",
+    "ms": 50000,
+    "overallHundredths": 5017,
+    "promptVersion": "judge-v3",
+    "review": {
+     "certainty": "high",
+     "comment": "The mint is a mock that returns a fake token id.",
+     "concerns": [
+      "Breaks on a phone (E4).",
+      "Mint is mocked (E1)."
+     ],
+     "criteria": [
+      {
+       "comment": "Clear on a laptop.",
+       "evidence": [],
+       "id": "product_journey",
+       "score": 63
+      },
+      {
+       "comment": "Millions ride the metro.",
+       "evidence": [],
+       "id": "real_world_value",
+       "score": 64
+      },
+      {
+       "comment": "Ticket overflows at phone width.",
+       "evidence": [
+        "E4"
+       ],
+       "id": "ui_ux",
+       "score": 45
+      },
+      {
+       "comment": "Core mint is mocked.",
+       "evidence": [
+        "E1"
+       ],
+       "id": "code_quality",
+       "score": 50
+      },
+      {
+       "comment": "6 tests.",
+       "evidence": [],
+       "id": "sdlc",
+       "score": 41
+      },
+      {
+       "comment": "Needs a metro partner.",
+       "evidence": [
+        "E2"
+       ],
+       "id": "feasibility",
+       "score": 39
+      },
+      {
+       "comment": "Fine on Base.",
+       "evidence": [],
+       "id": "scalability",
+       "score": 57
+      },
+      {
+       "comment": "Resale fees.",
+       "evidence": [
+        "E3"
+       ],
+       "id": "business_model",
+       "score": 57
+      },
+      {
+       "comment": "Fun loyalty idea.",
+       "evidence": [
+        "E5"
+       ],
+       "id": "brownie_points",
+       "score": 62
+      }
+     ],
+     "dealBreakerHit": false,
+     "dealBreakerNote": "",
+     "headline": "The mint is a mock that returns a fake token id.",
+     "strengths": [
+      "Slick laptop demo.",
+      "Resale with a price cap (E3)."
+     ]
+    },
+    "screenshotsShown": 4,
+    "status": "scored",
+    "traces": [
+     {
+      "chatId": "45473784-8b9f-4873-a91d-f65ecd3ea835",
+      "costUsdMicro": 3740,
+      "model": "0gm-1.0-35b-a3b",
+      "provider": "0xf4FB8d2bD856e672b5f9848b0eD235A20079B250",
+      "requestId": "0e49233b-2bbb-437b-a6c3-a47e6fbaec14"
+     }
+    ],
+    "usage": {
+     "input_tokens": 24900,
+     "output_tokens": 3300
+    }
+   },
+   {
+    "attempts": 1,
+    "judge": {
+     "id": "judge_c876a259",
+     "name": "Ana Okafor",
+     "promptVersion": "judge-v3",
+     "title": "Early-stage investor and former founder",
+     "tone": "generous",
+     "version": 1,
+     "weights": {
+      "product_journey": 8,
+      "real_world_value": 17,
+      "ui_ux": 4,
+      "code_quality": 4,
+      "sdlc": 4,
+      "feasibility": 13,
+      "scalability": 17,
+      "business_model": 21,
+      "brownie_points": 12
+     }
+    },
+    "judgeId": "judge_c876a259",
+    "ms": 59000,
+    "overallHundredths": 5904,
+    "promptVersion": "judge-v3",
+    "review": {
+     "certainty": "high",
+     "comment": "Nice idea; no ticketing partner and no real mint.",
+     "concerns": [
+      "Breaks on a phone (E4).",
+      "Mint is mocked (E1)."
+     ],
+     "criteria": [
+      {
+       "comment": "Clear on a laptop.",
+       "evidence": [],
+       "id": "product_journey",
+       "score": 68
+      },
+      {
+       "comment": "Millions ride the metro.",
+       "evidence": [],
+       "id": "real_world_value",
+       "score": 69
+      },
+      {
+       "comment": "Ticket overflows at phone width.",
+       "evidence": [
+        "E4"
+       ],
+       "id": "ui_ux",
+       "score": 45
+      },
+      {
+       "comment": "Core mint is mocked.",
+       "evidence": [
+        "E1"
+       ],
+       "id": "code_quality",
+       "score": 51
+      },
+      {
+       "comment": "6 tests.",
+       "evidence": [],
+       "id": "sdlc",
+       "score": 46
+      },
+      {
+       "comment": "Needs a metro partner.",
+       "evidence": [
+        "E2"
+       ],
+       "id": "feasibility",
+       "score": 43
+      },
+      {
+       "comment": "Fine on Base.",
+       "evidence": [],
+       "id": "scalability",
+       "score": 60
+      },
+      {
+       "comment": "Resale fees.",
+       "evidence": [
+        "E3"
+       ],
+       "id": "business_model",
+       "score": 60
+      },
+      {
+       "comment": "Fun loyalty idea.",
+       "evidence": [
+        "E5"
+       ],
+       "id": "brownie_points",
+       "score": 65
+      }
+     ],
+     "dealBreakerHit": false,
+     "dealBreakerNote": "",
+     "headline": "Nice idea; no ticketing partner and no real mint.",
+     "strengths": [
+      "Slick laptop demo.",
+      "Resale with a price cap (E3)."
+     ]
+    },
+    "screenshotsShown": 4,
+    "status": "scored",
+    "traces": [
+     {
+      "chatId": "85c194a8-ca2e-442f-aca8-758016ceadea",
+      "costUsdMicro": 4380,
+      "model": "0gm-1.0-35b-a3b",
+      "provider": "0xf4FB8d2bD856e672b5f9848b0eD235A20079B250",
+      "requestId": "ee910f89-c584-40d2-a263-d4ad0600f2af"
+     }
+    ],
+    "usage": {
+     "input_tokens": 25800,
+     "output_tokens": 4000
+    }
+   }
+  ],
+  "evidence": [
+   {
+    "id": "V-laptop-d1",
+    "stepTitle": "Buy a ticket",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Buy a ticket on windows: see \"Buy\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "5469a636-ea4d-403b-a41b-8f9a36e59827"
+    }
+   },
+   {
+    "id": "V-laptop-d2",
+    "stepTitle": "Ticket QR",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Ticket QR on windows: see \"Tap in\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "2139d431-8908-42ff-ab4d-9c741e5f4861"
+    }
+   },
+   {
+    "id": "V-laptop-f1",
+    "stepTitle": "Resale market",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Resale market on windows: see \"Resell\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "539ae667-ca3a-49c8-a210-d0055098631e"
+    }
+   },
+   {
+    "id": "V-laptop-f2",
+    "stepTitle": "Loyalty",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Loyalty on windows: see \"Rides\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "fa1514e2-641e-4b4b-a6a6-4b05b7f13ff3"
+    }
+   },
+   {
+    "id": "V-android-d1",
+    "stepTitle": "Buy a ticket",
+    "observation": {
+     "matchesStep": "no",
+     "seen": "Buy a ticket: ticket card overflows at 390px.",
+     "problems": [
+      "ticket card overflows at 390px"
+     ]
+    },
+    "trace": {
+     "requestId": "fb4db977-ded7-4293-a12e-2bbe8642df06"
+    }
+   },
+   {
+    "id": "V-android-d2",
+    "stepTitle": "Ticket QR",
+    "observation": {
+     "matchesStep": "no",
+     "seen": "Ticket QR: ticket card overflows at 390px.",
+     "problems": [
+      "ticket card overflows at 390px"
+     ]
+    },
+    "trace": {
+     "requestId": "a8069494-362f-4bb3-a160-75017ad1d20c"
+    }
+   },
+   {
+    "id": "V-android-f1",
+    "stepTitle": "Resale market",
+    "observation": {
+     "matchesStep": "no",
+     "seen": "Resale market: ticket card overflows at 390px.",
+     "problems": [
+      "ticket card overflows at 390px"
+     ]
+    },
+    "trace": {
+     "requestId": "508b7755-a4ad-42a7-ab50-d48e75891b36"
+    }
+   },
+   {
+    "id": "V-android-f2",
+    "stepTitle": "Loyalty",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Loyalty on android: see \"Rides\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "0665affa-3d7d-496b-a112-2b8c9d7b160f"
+    }
+   },
+   {
+    "id": "V-ios-d1",
+    "stepTitle": "Buy a ticket",
+    "observation": {
+     "matchesStep": "no",
+     "seen": "Buy a ticket: ticket card overflows at 390px.",
+     "problems": [
+      "ticket card overflows at 390px"
+     ]
+    },
+    "trace": {
+     "requestId": "3fc15d18-b167-4201-a7aa-c40d92b1be82"
+    }
+   },
+   {
+    "id": "V-ios-d2",
+    "stepTitle": "Ticket QR",
+    "observation": {
+     "matchesStep": "no",
+     "seen": "Ticket QR: ticket card overflows at 390px.",
+     "problems": [
+      "ticket card overflows at 390px"
+     ]
+    },
+    "trace": {
+     "requestId": "442f02ec-ca53-4c0b-aa6b-a07a0853310b"
+    }
+   },
+   {
+    "id": "V-ios-f1",
+    "stepTitle": "Resale market",
+    "observation": {
+     "matchesStep": "no",
+     "seen": "Resale market: ticket card overflows at 390px.",
+     "problems": [
+      "ticket card overflows at 390px"
+     ]
+    },
+    "trace": {
+     "requestId": "b9a42158-2a70-4b75-ab76-b2086f0a38f6"
+    }
+   },
+   {
+    "id": "V-ios-f2",
+    "stepTitle": "Loyalty",
+    "observation": {
+     "matchesStep": "yes",
+     "seen": "Loyalty on iphone: see \"Rides\".",
+     "problems": []
+    },
+    "trace": {
+     "requestId": "501d7497-5c0d-4caf-ad5b-70c0e71e6d42"
+    }
+   }
+  ],
+  "zg": {
+   "calls": 15,
+   "costUsdMicro": 16140,
+   "evidenceCostUsdMicro": 4920,
+   "judgeCostUsdMicro": 11220,
+   "providers": [
+    "0xf4FB8d2bD856e672b5f9848b0eD235A20079B250"
+   ],
+   "requestIds": [
+    "24f5f888-3a01-409c-a403-cc04f2ac4565",
+    "0e49233b-2bbb-437b-a6c3-a47e6fbaec14",
+    "ee910f89-c584-40d2-a263-d4ad0600f2af",
+    "5469a636-ea4d-403b-a41b-8f9a36e59827",
+    "2139d431-8908-42ff-ab4d-9c741e5f4861",
+    "539ae667-ca3a-49c8-a210-d0055098631e",
+    "fa1514e2-641e-4b4b-a6a6-4b05b7f13ff3",
+    "fb4db977-ded7-4293-a12e-2bbe8642df06",
+    "a8069494-362f-4bb3-a160-75017ad1d20c",
+    "508b7755-a4ad-42a7-ab50-d48e75891b36",
+    "0665affa-3d7d-496b-a112-2b8c9d7b160f",
+    "3fc15d18-b167-4201-a7aa-c40d92b1be82",
+    "442f02ec-ca53-4c0b-aa6b-a07a0853310b",
+    "b9a42158-2a70-4b75-ab76-b2086f0a38f6",
+    "501d7497-5c0d-4caf-ad5b-70c0e71e6d42"
+   ],
+   "uncostedCalls": 0
+  },
+  "proofs": {
+   "arkivPanel": "https://rabdi.explorer.arkiv.network/entity-explorer?q=%24key%20%3D%20key(0x36287782a27a9caf3660def02a2c1fce27a43b432aeed3225baa018d1ac69cb0)",
+   "panelKey": "0x36287782a27a9caf3660def02a2c1fce27a43b432aeed3225baa018d1ac69cb0",
+   "evidenceRoots": {
+    "dossier": "0xd3ccd787cc8dc450755a8afd2896b1b9ef0311de4e73b2744a2533cc9c1266c5",
+    "review": "0xf950b3535f6984bbc458010a3a7ee2ffed63b1ef5b7e302c480722d9bb5f4738",
+    "liveTest": "0xf2879543f59cd940025c300377b12f5ed6273b98ffdff2246850f4a1e8d3c47a"
+   },
+   "storageScan": {
+    "dossier": "https://storagescan-galileo.0g.ai/submission/171344",
+    "review": "https://storagescan-galileo.0g.ai/submission/171345",
+    "liveTest": "https://storagescan-galileo.0g.ai/submission/171346"
+   }
+  }
+ }
+}

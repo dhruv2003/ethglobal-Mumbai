@@ -1,0 +1,19 @@
+{
+ "network": {
+  "name": "Base Sepolia",
+  "chainId": 84532,
+  "symbol": "ETH",
+  "explorerUrl": "https://sepolia.basescan.org"
+ },
+ "token": {
+  "name": "FilterCoin",
+  "symbol": "FILTER",
+  "decimals": 18,
+  "rate": "10000"
+ },
+ "demoWallet": {
+  "address": "0x5a975d80af9a264af912538c77e40a7f9d6e2884",
+  "eth": "0.05",
+  "filter": "250"
+ }
+}

@@ -1,0 +1,3446 @@
+{
+ "go-health-me": {
+  "project": "go-health-me",
+  "target": "https://www.gohealthme.app",
+  "ranAt": "2026-11-06T08:36:59.000Z",
+  "runner": "Mozark device cloud: Windows 11, Pixel 8, iPhone 15",
+  "mode": "Demo replay + major flows + health. Never pays, stakes, signs in, connects a wallet or submits.",
+  "runs": [
+   {
+    "device": "laptop",
+    "label": "Windows",
+    "viewport": {
+     "width": 1440,
+     "height": 900
+    },
+    "startedAt": "2026-11-06T08:10:25.000Z",
+    "phases": [
+     {
+      "id": "demo",
+      "title": "Demo replay",
+      "about": "Screens shown in the demo video, checked on the live app.",
+      "steps": [
+       {
+        "id": "d1",
+        "title": "Player profile screen",
+        "demoAt": "0:33",
+        "why": "Proves the player profile setup screen exists as claimed.",
+        "at": 7.9,
+        "status": "passed",
+        "detail": "see \"Your player\"",
+        "ms": 2988,
+        "screenshot": "laptop/smoke-laptop-d1.jpg"
+       },
+       {
+        "id": "d2",
+        "title": "World ID verification option",
+        "demoAt": "0:40",
+        "why": "Proves World ID is integrated into the player setup.",
+        "at": 11,
+        "status": "passed",
+        "detail": "see \"World ID\"",
+        "ms": 2431,
+        "screenshot": "laptop/smoke-laptop-d2.jpg"
+       },
+       {
+        "id": "d3",
+        "title": "ENS name selection",
+        "demoAt": "0:56",
+        "why": "Proves users can select an ENS name for their profile.",
+        "at": 13.7,
+        "status": "passed",
+        "detail": "see \"Pick your name\"",
+        "ms": 2378,
+        "screenshot": "laptop/smoke-laptop-d3.jpg"
+       },
+       {
+        "id": "d4",
+        "title": "Wearable support UI",
+        "demoAt": "1:08",
+        "why": "Proves the wearable filter options are visible.",
+        "at": 16.2,
+        "status": "passed",
+        "detail": "see \"WHOOP\"",
+        "ms": 2929,
+        "screenshot": "laptop/smoke-laptop-d4.jpg"
+       },
+       {
+        "id": "d5",
+        "title": "Wallet screening record",
+        "demoAt": "1:22",
+        "why": "Proves the interceptor screening step is documented.",
+        "at": 19.3,
+        "status": "passed",
+        "detail": "see \"Payout wallet screened\"",
+        "ms": 3601,
+        "screenshot": "laptop/smoke-laptop-d5.jpg"
+       },
+       {
+        "id": "d6",
+        "title": "Live challenges list",
+        "demoAt": "1:45",
+        "why": "Proves the challenge list page contains entries.",
+        "at": 23,
+        "status": "passed",
+        "detail": "at least 1 × a[href^='/pools/']",
+        "ms": 2866,
+        "screenshot": "laptop/smoke-laptop-d6.jpg"
+       },
+       {
+        "id": "d7",
+        "title": "Challenge creation page",
+        "demoAt": "1:51",
+        "why": "Proves the page to create a new challenge is accessible.",
+        "at": 26,
+        "status": "passed",
+        "detail": "see \"Start a challenge\"",
+        "ms": 8828,
+        "screenshot": "laptop/smoke-laptop-d7.jpg"
+       },
+       {
+        "id": "d8",
+        "title": "Sleep challenge goal",
+        "demoAt": "2:00",
+        "why": "Proves sleep-related goals are available for selection.",
+        "at": 35,
+        "status": "passed",
+        "detail": "see \"Sleep at least 7 hours\"",
+        "ms": 8874,
+        "screenshot": "laptop/smoke-laptop-d8.jpg"
+       }
+      ]
+     },
+     {
+      "id": "features",
+      "title": "Major flows",
+      "about": "The app's main features, used without an account.",
+      "steps": [
+       {
+        "id": "f1",
+        "title": "Challenges listing",
+        "demoAt": null,
+        "why": "Proves the main challenges page loads with the correct header.",
+        "at": 44.1,
+        "status": "passed",
+        "detail": "see \"Challenges\"",
+        "ms": 2850,
+        "screenshot": "laptop/smoke-laptop-f1.jpg"
+       },
+       {
+        "id": "f2",
+        "title": "Wearable filter tabs",
+        "demoAt": null,
+        "why": "Proves users can filter challenges by wearable brand.",
+        "at": 47.1,
+        "status": "passed",
+        "detail": "see \"WHOOP\"",
+        "ms": 2669,
+        "screenshot": "laptop/smoke-laptop-f2.jpg"
+       },
+       {
+        "id": "f3",
+        "title": "Challenge creation interface",
+        "demoAt": null,
+        "why": "Proves the interface to create a new challenge is available.",
+        "at": 50,
+        "status": "passed",
+        "detail": "see \"Start a challenge\"",
+        "ms": 8936,
+        "screenshot": "laptop/smoke-laptop-f3.jpg"
+       },
+       {
+        "id": "f4",
+        "title": "Health goal selection",
+        "demoAt": null,
+        "why": "Proves specific health goals like sleep are selectable.",
+        "at": 59.1,
+        "status": "passed",
+        "detail": "see \"Sleep at least 7 hours\"",
+        "ms": 8818,
+        "screenshot": "laptop/smoke-laptop-f4.jpg"
+       },
+       {
+        "id": "f5",
+        "title": "Player profile page",
+        "demoAt": null,
+        "why": "Proves the player profile setup page is accessible.",
+        "at": 68.1,
+        "status": "passed",
+        "detail": "see \"Your player\"",
+        "ms": 2520,
+        "screenshot": "laptop/smoke-laptop-f5.jpg"
+       },
+       {
+        "id": "f6",
+        "title": "Wallet authentication",
+        "demoAt": null,
+        "why": "Proves Base wallet sign-in is offered.",
+        "at": 71,
+        "status": "passed",
+        "detail": "see \"Sign in with Base\"",
+        "ms": 2719,
+        "screenshot": "laptop/smoke-laptop-f6.jpg"
+       },
+       {
+        "id": "f7",
+        "title": "Public transaction history",
+        "demoAt": null,
+        "why": "Proves the history page is viewable.",
+        "at": 73.9,
+        "status": "passed",
+        "detail": "see \"History\"",
+        "ms": 2545,
+        "screenshot": "laptop/smoke-laptop-f7.jpg"
+       },
+       {
+        "id": "f8",
+        "title": "Testnet beta status",
+        "demoAt": null,
+        "why": "Proves the site identifies itself as using test money.",
+        "at": 76.6,
+        "status": "passed",
+        "detail": "see \"Test USDC\"",
+        "ms": 6759,
+        "screenshot": "laptop/smoke-laptop-f8.jpg"
+       }
+      ]
+     }
+    ],
+    "browserVersion": "Chrome 131",
+    "home": {
+     "url": "https://www.gohealthme.app/",
+     "status": 200,
+     "wallMs": 7805,
+     "title": "GoHealthMe: stake on your health goal, get paid in USDC",
+     "h1": "Put money on yourself.",
+     "loadMs": 525,
+     "horizontalScroll": false,
+     "viewportMeta": true,
+     "brokenImages": 0
+    },
+    "video": {
+     "file": "laptop/video.mp4",
+     "seconds": 84.7,
+     "frames": 626
+    },
+    "durationMs": 91620,
+    "consoleErrors": [],
+    "failedRequests": [],
+    "cancelledRequests": [],
+    "outcome": {
+     "status": "passed",
+     "reasons": []
+    },
+    "os": "windows",
+    "model": "Windows 11 laptop",
+    "browser": "Chrome 131"
+   },
+   {
+    "device": "android",
+    "label": "Android",
+    "viewport": {
+     "width": 412,
+     "height": 915
+    },
+    "startedAt": "2026-11-06T08:10:29.000Z",
+    "phases": [
+     {
+      "id": "demo",
+      "title": "Demo replay",
+      "about": "Screens shown in the demo video, checked on the live app.",
+      "steps": [
+       {
+        "id": "d1",
+        "title": "Player profile screen",
+        "demoAt": "0:33",
+        "why": "Proves the player profile setup screen exists as claimed.",
+        "at": 8.9,
+        "status": "passed",
+        "detail": "see \"Your player\"",
+        "ms": 3520,
+        "screenshot": "phone/smoke-phone-d1.jpg"
+       },
+       {
+        "id": "d2",
+        "title": "World ID verification option",
+        "demoAt": "0:40",
+        "why": "Proves World ID is integrated into the player setup.",
+        "at": 12.3,
+        "status": "passed",
+        "detail": "see \"World ID\"",
+        "ms": 2982,
+        "screenshot": "phone/smoke-phone-d2.jpg"
+       },
+       {
+        "id": "d3",
+        "title": "ENS name selection",
+        "demoAt": "0:56",
+        "why": "Proves users can select an ENS name for their profile.",
+        "at": 15,
+        "status": "passed",
+        "detail": "see \"Pick your name\"",
+        "ms": 2893,
+        "screenshot": "phone/smoke-phone-d3.jpg"
+       },
+       {
+        "id": "d4",
+        "title": "Wearable support UI",
+        "demoAt": "1:08",
+        "why": "Proves the wearable filter options are visible.",
+        "at": 17.7,
+        "status": "passed",
+        "detail": "see \"WHOOP\"",
+        "ms": 3621,
+        "screenshot": "phone/smoke-phone-d4.jpg"
+       },
+       {
+        "id": "d5",
+        "title": "Wallet screening record",
+        "demoAt": "1:22",
+        "why": "Proves the interceptor screening step is documented.",
+        "at": 21.2,
+        "status": "passed",
+        "detail": "see \"Payout wallet screened\"",
+        "ms": 3284,
+        "screenshot": "phone/smoke-phone-d5.jpg"
+       },
+       {
+        "id": "d6",
+        "title": "Live challenges list",
+        "demoAt": "1:45",
+        "why": "Proves the challenge list page contains entries.",
+        "at": 24.3,
+        "status": "passed",
+        "detail": "at least 1 × a[href^='/pools/']",
+        "ms": 3405,
+        "screenshot": "phone/smoke-phone-d6.jpg"
+       },
+       {
+        "id": "d7",
+        "title": "Challenge creation page",
+        "demoAt": "1:51",
+        "why": "Proves the page to create a new challenge is accessible.",
+        "at": 27.3,
+        "status": "passed",
+        "detail": "see \"Start a challenge\"",
+        "ms": 10873,
+        "screenshot": "phone/smoke-phone-d7.jpg"
+       },
+       {
+        "id": "d8",
+        "title": "Sleep challenge goal",
+        "demoAt": "2:00",
+        "why": "Proves sleep-related goals are available for selection.",
+        "at": 36.6,
+        "status": "passed",
+        "detail": "see \"Sleep at least 7 hours\"",
+        "ms": 10758,
+        "screenshot": "phone/smoke-phone-d8.jpg"
+       }
+      ]
+     },
+     {
+      "id": "features",
+      "title": "Major flows",
+      "about": "The app's main features, used without an account.",
+      "steps": [
+       {
+        "id": "f1",
+        "title": "Challenges listing",
+        "demoAt": null,
+        "why": "Proves the main challenges page loads with the correct header.",
+        "at": 45.6,
+        "status": "passed",
+        "detail": "see \"Challenges\"",
+        "ms": 3642,
+        "screenshot": "phone/smoke-phone-f1.jpg"
+       },
+       {
+        "id": "f2",
+        "title": "Wearable filter tabs",
+        "demoAt": null,
+        "why": "Proves users can filter challenges by wearable brand.",
+        "at": 49,
+        "status": "passed",
+        "detail": "see \"WHOOP\"",
+        "ms": 4013,
+        "screenshot": "phone/smoke-phone-f2.jpg"
+       },
+       {
+        "id": "f3",
+        "title": "Challenge creation interface",
+        "demoAt": null,
+        "why": "Proves the interface to create a new challenge is available.",
+        "at": 52.5,
+        "status": "passed",
+        "detail": "see \"Start a challenge\"",
+        "ms": 10896,
+        "screenshot": "phone/smoke-phone-f3.jpg"
+       },
+       {
+        "id": "f4",
+        "title": "Health goal selection",
+        "demoAt": null,
+        "why": "Proves specific health goals like sleep are selectable.",
+        "at": 61.7,
+        "status": "passed",
+        "detail": "see \"Sleep at least 7 hours\"",
+        "ms": 10804,
+        "screenshot": "phone/smoke-phone-f4.jpg"
+       },
+       {
+        "id": "f5",
+        "title": "Player profile page",
+        "demoAt": null,
+        "why": "Proves the player profile setup page is accessible.",
+        "at": 71,
+        "status": "passed",
+        "detail": "see \"Your player\"",
+        "ms": 3809,
+        "screenshot": "phone/smoke-phone-f5.jpg"
+       },
+       {
+        "id": "f6",
+        "title": "Wallet authentication",
+        "demoAt": null,
+        "why": "Proves Base wallet sign-in is offered.",
+        "at": 74.7,
+        "status": "passed",
+        "detail": "see \"Sign in with Base\"",
+        "ms": 2939,
+        "screenshot": "phone/smoke-phone-f6.jpg"
+       },
+       {
+        "id": "f7",
+        "title": "Public transaction history",
+        "demoAt": null,
+        "why": "Proves the history page is viewable.",
+        "at": 77.5,
+        "status": "passed",
+        "detail": "see \"History\"",
+        "ms": 3101,
+        "screenshot": "phone/smoke-phone-f7.jpg"
+       },
+       {
+        "id": "f8",
+        "title": "Testnet beta status",
+        "demoAt": null,
+        "why": "Proves the site identifies itself as using test money.",
+        "at": 80.3,
+        "status": "passed",
+        "detail": "see \"Test USDC\"",
+        "ms": 8728,
+        "screenshot": "phone/smoke-phone-f8.jpg"
+       }
+      ]
+     }
+    ],
+    "browserVersion": "Chrome 131",
+    "home": {
+     "url": "https://www.gohealthme.app/",
+     "status": 200,
+     "wallMs": 8723,
+     "title": "GoHealthMe: stake on your health goal, get paid in USDC",
+     "h1": "Put money on yourself.",
+     "loadMs": 519,
+     "horizontalScroll": false,
+     "viewportMeta": true,
+     "brokenImages": 0
+    },
+    "video": {
+     "file": "phone/video.mp4",
+     "seconds": 88.8,
+     "frames": 899
+    },
+    "durationMs": 115761,
+    "consoleErrors": [],
+    "failedRequests": [],
+    "cancelledRequests": [],
+    "outcome": {
+     "status": "passed",
+     "reasons": []
+    },
+    "os": "android",
+    "model": "Pixel 8",
+    "browser": "Chrome 131"
+   },
+   {
+    "device": "ios",
+    "label": "iPhone",
+    "viewport": {
+     "width": 393,
+     "height": 852
+    },
+    "startedAt": "2026-11-06T08:10:33.000Z",
+    "phases": [
+     {
+      "id": "demo",
+      "title": "Demo replay",
+      "about": "Screens shown in the demo video, checked on the live app.",
+      "steps": [
+       {
+        "id": "d1",
+        "title": "Player profile screen",
+        "demoAt": "0:33",
+        "why": "Proves the player profile setup screen exists as claimed.",
+        "at": 8.9,
+        "status": "passed",
+        "detail": "see \"Your player\"",
+        "ms": 3866,
+        "screenshot": "phone/smoke-phone-d1.jpg"
+       },
+       {
+        "id": "d2",
+        "title": "World ID verification option",
+        "demoAt": "0:40",
+        "why": "Proves World ID is integrated into the player setup.",
+        "at": 12.3,
+        "status": "passed",
+        "detail": "see \"World ID\"",
+        "ms": 3275,
+        "screenshot": "phone/smoke-phone-d2.jpg"
+       },
+       {
+        "id": "d3",
+        "title": "ENS name selection",
+        "demoAt": "0:56",
+        "why": "Proves users can select an ENS name for their profile.",
+        "at": 15,
+        "status": "passed",
+        "detail": "see \"Pick your name\"",
+        "ms": 3177,
+        "screenshot": "phone/smoke-phone-d3.jpg"
+       },
+       {
+        "id": "d4",
+        "title": "Wearable support UI",
+        "demoAt": "1:08",
+        "why": "Proves the wearable filter options are visible.",
+        "at": 17.7,
+        "status": "passed",
+        "detail": "see \"WHOOP\"",
+        "ms": 3977,
+        "screenshot": "phone/smoke-phone-d4.jpg"
+       },
+       {
+        "id": "d5",
+        "title": "Wallet screening record",
+        "demoAt": "1:22",
+        "why": "Proves the interceptor screening step is documented.",
+        "at": 21.2,
+        "status": "passed",
+        "detail": "see \"Payout wallet screened\"",
+        "ms": 3607,
+        "screenshot": "phone/smoke-phone-d5.jpg"
+       },
+       {
+        "id": "d6",
+        "title": "Live challenges list",
+        "demoAt": "1:45",
+        "why": "Proves the challenge list page contains entries.",
+        "at": 24.3,
+        "status": "passed",
+        "detail": "at least 1 × a[href^='/pools/']",
+        "ms": 3740,
+        "screenshot": "phone/smoke-phone-d6.jpg"
+       },
+       {
+        "id": "d7",
+        "title": "Challenge creation page",
+        "demoAt": "1:51",
+        "why": "Proves the page to create a new challenge is accessible.",
+        "at": 27.3,
+        "status": "passed",
+        "detail": "see \"Start a challenge\"",
+        "ms": 11942,
+        "screenshot": "phone/smoke-phone-d7.jpg"
+       },
+       {
+        "id": "d8",
+        "title": "Sleep challenge goal",
+        "demoAt": "2:00",
+        "why": "Proves sleep-related goals are available for selection.",
+        "at": 36.6,
+        "status": "passed",
+        "detail": "see \"Sleep at least 7 hours\"",
+        "ms": 11816,
+        "screenshot": "phone/smoke-phone-d8.jpg"
+       }
+      ]
+     },
+     {
+      "id": "features",
+      "title": "Major flows",
+      "about": "The app's main features, used without an account.",
+      "steps": [
+       {
+        "id": "f1",
+        "title": "Challenges listing",
+        "demoAt": null,
+        "why": "Proves the main challenges page loads with the correct header.",
+        "at": 45.6,
+        "status": "passed",
+        "detail": "see \"Challenges\"",
+        "ms": 4000,
+        "screenshot": "phone/smoke-phone-f1.jpg"
+       },
+       {
+        "id": "f2",
+        "title": "Wearable filter tabs",
+        "demoAt": null,
+        "why": "Proves users can filter challenges by wearable brand.",
+        "at": 49,
+        "status": "passed",
+        "detail": "see \"WHOOP\"",
+        "ms": 4407,
+        "screenshot": "phone/smoke-phone-f2.jpg"
+       },
+       {
+        "id": "f3",
+        "title": "Challenge creation interface",
+        "demoAt": null,
+        "why": "Proves the interface to create a new challenge is available.",
+        "at": 52.5,
+        "status": "passed",
+        "detail": "see \"Start a challenge\"",
+        "ms": 11968,
+        "screenshot": "phone/smoke-phone-f3.jpg"
+       },
+       {
+        "id": "f4",
+        "title": "Health goal selection",
+        "demoAt": null,
+        "why": "Proves specific health goals like sleep are selectable.",
+        "at": 61.7,
+        "status": "passed",
+        "detail": "see \"Sleep at least 7 hours\"",
+        "ms": 11867,
+        "screenshot": "phone/smoke-phone-f4.jpg"
+       },
+       {
+        "id": "f5",
+        "title": "Player profile page",
+        "demoAt": null,
+        "why": "Proves the player profile setup page is accessible.",
+        "at": 71,
+        "status": "passed",
+        "detail": "see \"Your player\"",
+        "ms": 4183,
+        "screenshot": "phone/smoke-phone-f5.jpg"
+       },
+       {
+        "id": "f6",
+        "title": "Wallet authentication",
+        "demoAt": null,
+        "why": "Proves Base wallet sign-in is offered.",
+        "at": 74.7,
+        "status": "passed",
+        "detail": "see \"Sign in with Base\"",
+        "ms": 3228,
+        "screenshot": "phone/smoke-phone-f6.jpg"
+       },
+       {
+        "id": "f7",
+        "title": "Public transaction history",
+        "demoAt": null,
+        "why": "Proves the history page is viewable.",
+        "at": 77.5,
+        "status": "passed",
+        "detail": "see \"History\"",
+        "ms": 3406,
+        "screenshot": "phone/smoke-phone-f7.jpg"
+       },
+       {
+        "id": "f8",
+        "title": "Testnet beta status",
+        "demoAt": null,
+        "why": "Proves the site identifies itself as using test money.",
+        "at": 80.3,
+        "status": "passed",
+        "detail": "see \"Test USDC\"",
+        "ms": 9586,
+        "screenshot": "phone/smoke-phone-f8.jpg"
+       }
+      ]
+     }
+    ],
+    "browserVersion": "Safari 18",
+    "home": {
+     "url": "https://www.gohealthme.app/",
+     "status": 200,
+     "wallMs": 8723,
+     "title": "GoHealthMe: stake on your health goal, get paid in USDC",
+     "h1": "Put money on yourself.",
+     "loadMs": 519,
+     "horizontalScroll": false,
+     "viewportMeta": true,
+     "brokenImages": 0
+    },
+    "video": {
+     "file": "phone/video.mp4",
+     "seconds": 88.8,
+     "frames": 899
+    },
+    "durationMs": 127147,
+    "consoleErrors": [],
+    "failedRequests": [],
+    "cancelledRequests": [],
+    "outcome": {
+     "status": "passed",
+     "reasons": []
+    },
+    "os": "ios",
+    "model": "iPhone 15",
+    "browser": "Safari 18"
+   }
+  ]
+ },
+ "fittercoin": {
+  "project": "fittercoin",
+  "target": "https://fittercoin.vercel.app",
+  "ranAt": "2026-11-06T10:34:14.000Z",
+  "runner": "Mozark device cloud: Windows 11, Pixel 8, iPhone 15",
+  "mode": "Demo replay + major flows + health, with a throwaway MetaMask wallet on testnet. Never uses real funds or signs in.",
+  "wallet": {
+   "name": "MetaMask",
+   "account": "Test wallet 1",
+   "address": "0x7a3E…91c4",
+   "network": "Citrea Testnet",
+   "note": ""
+  },
+  "runs": [
+   {
+    "device": "laptop",
+    "label": "Windows",
+    "os": "windows",
+    "model": "Windows 11 laptop",
+    "browser": "Chrome 131",
+    "viewport": {
+     "width": 1440,
+     "height": 900
+    },
+    "startedAt": "2026-11-06T10:08:47.000Z",
+    "browserVersion": "Chrome 131",
+    "home": {
+     "url": "https://fittercoin.vercel.app/",
+     "status": 200,
+     "wallMs": 4200,
+     "title": "FitterCoin",
+     "h1": "FitterCoin",
+     "loadMs": 610,
+     "horizontalScroll": false,
+     "viewportMeta": true,
+     "brokenImages": 0
+    },
+    "video": {
+     "file": "laptop/video.mp4",
+     "seconds": 111
+    },
+    "chrome": true,
+    "durationMs": 111000,
+    "consoleErrors": [],
+    "failedRequests": [],
+    "cancelledRequests": [],
+    "outcome": {
+     "status": "failed",
+     "reasons": [
+      "2 step(s) broken"
+     ]
+    },
+    "phases": [
+     {
+      "id": "demo",
+      "title": "Demo replay",
+      "about": "Screens shown in the demo video, checked on the live app.",
+      "steps": [
+       {
+        "id": "d1",
+        "title": "Landing page",
+        "demoAt": "0:02",
+        "why": "Checks \"Landing page\" works on the live app.",
+        "at": 3,
+        "status": "passed",
+        "detail": "see \"It pays to get fit\"",
+        "ms": 3600,
+        "screenshot": "laptop/fc-laptop-d1.jpg"
+       },
+       {
+        "id": "d2",
+        "title": "Sign in with Self",
+        "demoAt": "0:26",
+        "why": "Checks \"Sign in with Self\" works on the live app.",
+        "at": 10,
+        "status": "passed",
+        "detail": "Self QR code shown",
+        "ms": 2400,
+        "screenshot": "laptop/fc-laptop-d2.jpg"
+       },
+       {
+        "id": "d3",
+        "title": "Profile: fitness level and goal",
+        "demoAt": "0:40",
+        "why": "Checks \"Profile: fitness level and goal\" works on the live app.",
+        "at": 17,
+        "status": "passed",
+        "detail": "see \"Verify your details\"",
+        "ms": 2700,
+        "screenshot": "laptop/fc-laptop-d3.jpg"
+       },
+       {
+        "id": "d4",
+        "title": "AI personalised challenges",
+        "demoAt": "0:50",
+        "why": "Checks \"AI personalised challenges\" works on the live app.",
+        "at": 23,
+        "status": "passed",
+        "detail": "4 challenges, identical for every profile",
+        "ms": 3000,
+        "screenshot": "laptop/fc-laptop-d4.jpg"
+       },
+       {
+        "id": "d5",
+        "title": "Connect MetaMask",
+        "demoAt": "1:20",
+        "why": "Checks \"Connect MetaMask\" works on the live app.",
+        "at": 29,
+        "status": "passed",
+        "detail": "test wallet connected, switched to Citrea testnet",
+        "ms": 3300,
+        "screenshot": "laptop/fc-laptop-d5.jpg",
+        "wallet": {
+         "name": "MetaMask",
+         "account": "Test wallet 1",
+         "address": "0x7a3E…91c4",
+         "network": "Citrea Testnet",
+         "note": "",
+         "type": "connect",
+         "site": "fittercoin.vercel.app"
+        }
+       },
+       {
+        "id": "d6",
+        "title": "Join a contest: pay the stake",
+        "demoAt": "1:28",
+        "why": "Checks \"Join a contest: pay the stake\" works on the live app.",
+        "at": 38,
+        "status": "failed",
+        "detail": "tx confirmed, but 0 ETH escrowed: entry is free",
+        "ms": 3600,
+        "screenshot": "laptop/fc-laptop-d6.jpg",
+        "wallet": {
+         "name": "MetaMask",
+         "account": "Test wallet 1",
+         "address": "0x7a3E…91c4",
+         "network": "Citrea Testnet",
+         "note": "",
+         "type": "tx",
+         "action": "joinContest(3)",
+         "value": "0.00000001 ETH",
+         "fee": "0.000021 ETH",
+         "result": "Confirmed · 0 ETH moved",
+         "site": "fittercoin.vercel.app"
+        }
+       },
+       {
+        "id": "d7",
+        "title": "Camera counts reps",
+        "demoAt": "1:44",
+        "why": "Checks \"Camera counts reps\" works on the live app.",
+        "at": 58,
+        "status": "passed",
+        "detail": "7 squats counted on the test feed",
+        "ms": 2400,
+        "screenshot": "laptop/fc-laptop-d7.jpg"
+       },
+       {
+        "id": "d8",
+        "title": "Contest results",
+        "demoAt": "2:25",
+        "why": "Checks \"Contest results\" works on the live app.",
+        "at": 70,
+        "status": "passed",
+        "detail": "see \"Contest ended\"",
+        "ms": 2700,
+        "screenshot": "laptop/fc-laptop-d8.jpg"
+       }
+      ]
+     },
+     {
+      "id": "features",
+      "title": "Major flows",
+      "about": "The app's main features, with a MetaMask test wallet on testnet.",
+      "steps": [
+       {
+        "id": "f1",
+        "title": "Public live contests",
+        "demoAt": null,
+        "why": "Checks \"Public live contests\" works on the live app.",
+        "at": 78,
+        "status": "passed",
+        "detail": "see \"Live contests\"",
+        "ms": 3600,
+        "screenshot": "laptop/fc-laptop-f1.jpg"
+       },
+       {
+        "id": "f2",
+        "title": "Betting arena",
+        "demoAt": null,
+        "why": "Checks \"Betting arena\" works on the live app.",
+        "at": 86,
+        "status": "passed",
+        "detail": "see \"Contest betting arena\"",
+        "ms": 2400,
+        "screenshot": "laptop/fc-laptop-f2.jpg"
+       },
+       {
+        "id": "f3",
+        "title": "Place a spectator bet",
+        "demoAt": null,
+        "why": "Checks \"Place a spectator bet\" works on the live app.",
+        "at": 95,
+        "status": "passed",
+        "detail": "bet tx signed in MetaMask",
+        "ms": 2700,
+        "screenshot": "laptop/fc-laptop-f3.jpg",
+        "wallet": {
+         "name": "MetaMask",
+         "account": "Test wallet 1",
+         "address": "0x7a3E…91c4",
+         "network": "Citrea Testnet",
+         "note": "",
+         "type": "tx",
+         "action": "placeBet(1, 2)",
+         "value": "0.01 ETH",
+         "fee": "0.000034 ETH",
+         "result": "Confirmed",
+         "site": "fittercoin.vercel.app"
+        }
+       },
+       {
+        "id": "f4",
+        "title": "Winning bet pays out",
+        "demoAt": null,
+        "why": "Checks \"Winning bet pays out\" works on the live app.",
+        "at": 104,
+        "status": "failed",
+        "detail": "contest ended, 0 ETH paid: settle() is a view",
+        "ms": 3000,
+        "screenshot": "laptop/fc-laptop-f4.jpg"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "device": "android",
+    "label": "Android",
+    "os": "android",
+    "model": "Pixel 8",
+    "browser": "Chrome 131",
+    "viewport": {
+     "width": 412,
+     "height": 915
+    },
+    "startedAt": "2026-11-06T10:08:47.000Z",
+    "browserVersion": "Chrome 131",
+    "home": {
+     "url": "https://fittercoin.vercel.app/",
+     "status": 200,
+     "wallMs": 5124,
+     "title": "FitterCoin",
+     "h1": "FitterCoin",
+     "loadMs": 744,
+     "horizontalScroll": true,
+     "viewportMeta": true,
+     "brokenImages": 0
+    },
+    "video": {
+     "file": "phone/video.mp4",
+     "seconds": 111
+    },
+    "chrome": true,
+    "durationMs": 135420,
+    "consoleErrors": [],
+    "failedRequests": [],
+    "cancelledRequests": [],
+    "outcome": {
+     "status": "failed",
+     "reasons": [
+      "5 step(s) broken"
+     ]
+    },
+    "phases": [
+     {
+      "id": "demo",
+      "title": "Demo replay",
+      "about": "Screens shown in the demo video, checked on the live app.",
+      "steps": [
+       {
+        "id": "d1",
+        "title": "Landing page",
+        "demoAt": "0:02",
+        "why": "Checks \"Landing page\" works on the live app.",
+        "at": 3,
+        "status": "passed",
+        "detail": "see \"It pays to get fit\"",
+        "ms": 4392,
+        "screenshot": "phone/fc-phone-d1.jpg"
+       },
+       {
+        "id": "d2",
+        "title": "Sign in with Self",
+        "demoAt": "0:26",
+        "why": "Checks \"Sign in with Self\" works on the live app.",
+        "at": 10,
+        "status": "passed",
+        "detail": "Self QR code shown",
+        "ms": 2928,
+        "screenshot": "phone/fc-phone-d2.jpg"
+       },
+       {
+        "id": "d3",
+        "title": "Profile: fitness level and goal",
+        "demoAt": "0:40",
+        "why": "Checks \"Profile: fitness level and goal\" works on the live app.",
+        "at": 17,
+        "status": "passed",
+        "detail": "see \"Verify your details\"",
+        "ms": 3294,
+        "screenshot": "phone/fc-phone-d3.jpg"
+       },
+       {
+        "id": "d4",
+        "title": "AI personalised challenges",
+        "demoAt": "0:50",
+        "why": "Checks \"AI personalised challenges\" works on the live app.",
+        "at": 23,
+        "status": "failed",
+        "detail": "challenge cards cut off, page scrolls sideways",
+        "ms": 3660,
+        "screenshot": "phone/fc-phone-d4.jpg"
+       },
+       {
+        "id": "d5",
+        "title": "Connect MetaMask",
+        "demoAt": "1:20",
+        "why": "Checks \"Connect MetaMask\" works on the live app.",
+        "at": 29,
+        "status": "passed",
+        "detail": "test wallet connected, switched to Citrea testnet",
+        "ms": 4026,
+        "screenshot": "phone/fc-phone-d5.jpg",
+        "wallet": {
+         "name": "MetaMask",
+         "account": "Test wallet 1",
+         "address": "0x7a3E…91c4",
+         "network": "Citrea Testnet",
+         "note": "",
+         "type": "connect",
+         "site": "fittercoin.vercel.app"
+        }
+       },
+       {
+        "id": "d6",
+        "title": "Join a contest: pay the stake",
+        "demoAt": "1:28",
+        "why": "Checks \"Join a contest: pay the stake\" works on the live app.",
+        "at": 38,
+        "status": "failed",
+        "detail": "tx confirmed, but 0 ETH escrowed: entry is free",
+        "ms": 4392,
+        "screenshot": "phone/fc-phone-d6.jpg",
+        "wallet": {
+         "name": "MetaMask",
+         "account": "Test wallet 1",
+         "address": "0x7a3E…91c4",
+         "network": "Citrea Testnet",
+         "note": "",
+         "type": "tx",
+         "action": "joinContest(3)",
+         "value": "0.00000001 ETH",
+         "fee": "0.000021 ETH",
+         "result": "Confirmed · 0 ETH moved",
+         "site": "fittercoin.vercel.app"
+        }
+       },
+       {
+        "id": "d7",
+        "title": "Camera counts reps",
+        "demoAt": "1:44",
+        "why": "Checks \"Camera counts reps\" works on the live app.",
+        "at": 58,
+        "status": "failed",
+        "detail": "camera opens localhost:5001, unreachable from a phone",
+        "ms": 2928,
+        "screenshot": "phone/fc-phone-d7.jpg"
+       },
+       {
+        "id": "d8",
+        "title": "Contest results",
+        "demoAt": "2:25",
+        "why": "Checks \"Contest results\" works on the live app.",
+        "at": 70,
+        "status": "passed",
+        "detail": "see \"Contest ended\"",
+        "ms": 3294,
+        "screenshot": "phone/fc-phone-d8.jpg"
+       }
+      ]
+     },
+     {
+      "id": "features",
+      "title": "Major flows",
+      "about": "The app's main features, with a MetaMask test wallet on testnet.",
+      "steps": [
+       {
+        "id": "f1",
+        "title": "Public live contests",
+        "demoAt": null,
+        "why": "Checks \"Public live contests\" works on the live app.",
+        "at": 78,
+        "status": "failed",
+        "detail": "sidebar covers the contest list",
+        "ms": 4392,
+        "screenshot": "phone/fc-phone-f1.jpg"
+       },
+       {
+        "id": "f2",
+        "title": "Betting arena",
+        "demoAt": null,
+        "why": "Checks \"Betting arena\" works on the live app.",
+        "at": 86,
+        "status": "passed",
+        "detail": "see \"Contest betting arena\"",
+        "ms": 2928,
+        "screenshot": "phone/fc-phone-f2.jpg"
+       },
+       {
+        "id": "f3",
+        "title": "Place a spectator bet",
+        "demoAt": null,
+        "why": "Checks \"Place a spectator bet\" works on the live app.",
+        "at": 95,
+        "status": "passed",
+        "detail": "bet tx signed in MetaMask",
+        "ms": 3294,
+        "screenshot": "phone/fc-phone-f3.jpg",
+        "wallet": {
+         "name": "MetaMask",
+         "account": "Test wallet 1",
+         "address": "0x7a3E…91c4",
+         "network": "Citrea Testnet",
+         "note": "",
+         "type": "tx",
+         "action": "placeBet(1, 2)",
+         "value": "0.01 ETH",
+         "fee": "0.000034 ETH",
+         "result": "Confirmed",
+         "site": "fittercoin.vercel.app"
+        }
+       },
+       {
+        "id": "f4",
+        "title": "Winning bet pays out",
+        "demoAt": null,
+        "why": "Checks \"Winning bet pays out\" works on the live app.",
+        "at": 104,
+        "status": "failed",
+        "detail": "contest ended, 0 ETH paid: settle() is a view",
+        "ms": 3660,
+        "screenshot": "phone/fc-phone-f4.jpg"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "device": "ios",
+    "label": "iPhone",
+    "os": "ios",
+    "model": "iPhone 15",
+    "browser": "Safari 18",
+    "viewport": {
+     "width": 393,
+     "height": 852
+    },
+    "startedAt": "2026-11-06T10:08:47.000Z",
+    "browserVersion": "Safari 18",
+    "home": {
+     "url": "https://fittercoin.vercel.app/",
+     "status": 200,
+     "wallMs": 5628,
+     "title": "FitterCoin",
+     "h1": "FitterCoin",
+     "loadMs": 817,
+     "horizontalScroll": true,
+     "viewportMeta": true,
+     "brokenImages": 0
+    },
+    "video": {
+     "file": "phone/video.mp4",
+     "seconds": 111
+    },
+    "chrome": true,
+    "durationMs": 148740,
+    "consoleErrors": [],
+    "failedRequests": [],
+    "cancelledRequests": [],
+    "outcome": {
+     "status": "failed",
+     "reasons": [
+      "5 step(s) broken"
+     ]
+    },
+    "phases": [
+     {
+      "id": "demo",
+      "title": "Demo replay",
+      "about": "Screens shown in the demo video, checked on the live app.",
+      "steps": [
+       {
+        "id": "d1",
+        "title": "Landing page",
+        "demoAt": "0:02",
+        "why": "Checks \"Landing page\" works on the live app.",
+        "at": 3,
+        "status": "passed",
+        "detail": "see \"It pays to get fit\"",
+        "ms": 4824,
+        "screenshot": "phone/fc-phone-d1.jpg"
+       },
+       {
+        "id": "d2",
+        "title": "Sign in with Self",
+        "demoAt": "0:26",
+        "why": "Checks \"Sign in with Self\" works on the live app.",
+        "at": 10,
+        "status": "passed",
+        "detail": "Self QR code shown",
+        "ms": 3216,
+        "screenshot": "phone/fc-phone-d2.jpg"
+       },
+       {
+        "id": "d3",
+        "title": "Profile: fitness level and goal",
+        "demoAt": "0:40",
+        "why": "Checks \"Profile: fitness level and goal\" works on the live app.",
+        "at": 17,
+        "status": "passed",
+        "detail": "see \"Verify your details\"",
+        "ms": 3618,
+        "screenshot": "phone/fc-phone-d3.jpg"
+       },
+       {
+        "id": "d4",
+        "title": "AI personalised challenges",
+        "demoAt": "0:50",
+        "why": "Checks \"AI personalised challenges\" works on the live app.",
+        "at": 23,
+        "status": "failed",
+        "detail": "challenge cards cut off, page scrolls sideways",
+        "ms": 4020,
+        "screenshot": "phone/fc-phone-d4.jpg"
+       },
+       {
+        "id": "d5",
+        "title": "Connect MetaMask",
+        "demoAt": "1:20",
+        "why": "Checks \"Connect MetaMask\" works on the live app.",
+        "at": 29,
+        "status": "passed",
+        "detail": "test wallet connected, switched to Citrea testnet",
+        "ms": 4422,
+        "screenshot": "phone/fc-phone-d5.jpg",
+        "wallet": {
+         "name": "MetaMask",
+         "account": "Test wallet 1",
+         "address": "0x7a3E…91c4",
+         "network": "Citrea Testnet",
+         "note": "",
+         "type": "connect",
+         "site": "fittercoin.vercel.app"
+        }
+       },
+       {
+        "id": "d6",
+        "title": "Join a contest: pay the stake",
+        "demoAt": "1:28",
+        "why": "Checks \"Join a contest: pay the stake\" works on the live app.",
+        "at": 38,
+        "status": "failed",
+        "detail": "tx confirmed, but 0 ETH escrowed: entry is free",
+        "ms": 4824,
+        "screenshot": "phone/fc-phone-d6.jpg",
+        "wallet": {
+         "name": "MetaMask",
+         "account": "Test wallet 1",
+         "address": "0x7a3E…91c4",
+         "network": "Citrea Testnet",
+         "note": "",
+         "type": "tx",
+         "action": "joinContest(3)",
+         "value": "0.00000001 ETH",
+         "fee": "0.000021 ETH",
+         "result": "Confirmed · 0 ETH moved",
+         "site": "fittercoin.vercel.app"
+        }
+       },
+       {
+        "id": "d7",
+        "title": "Camera counts reps",
+        "demoAt": "1:44",
+        "why": "Checks \"Camera counts reps\" works on the live app.",
+        "at": 58,
+        "status": "failed",
+        "detail": "camera opens localhost:5001, unreachable from a phone",
+        "ms": 3216,
+        "screenshot": "phone/fc-phone-d7.jpg"
+       },
+       {
+        "id": "d8",
+        "title": "Contest results",
+        "demoAt": "2:25",
+        "why": "Checks \"Contest results\" works on the live app.",
+        "at": 70,
+        "status": "passed",
+        "detail": "see \"Contest ended\"",
+        "ms": 3618,
+        "screenshot": "phone/fc-phone-d8.jpg"
+       }
+      ]
+     },
+     {
+      "id": "features",
+      "title": "Major flows",
+      "about": "The app's main features, with a MetaMask test wallet on testnet.",
+      "steps": [
+       {
+        "id": "f1",
+        "title": "Public live contests",
+        "demoAt": null,
+        "why": "Checks \"Public live contests\" works on the live app.",
+        "at": 78,
+        "status": "failed",
+        "detail": "sidebar covers the contest list",
+        "ms": 4824,
+        "screenshot": "phone/fc-phone-f1.jpg"
+       },
+       {
+        "id": "f2",
+        "title": "Betting arena",
+        "demoAt": null,
+        "why": "Checks \"Betting arena\" works on the live app.",
+        "at": 86,
+        "status": "passed",
+        "detail": "see \"Contest betting arena\"",
+        "ms": 3216,
+        "screenshot": "phone/fc-phone-f2.jpg"
+       },
+       {
+        "id": "f3",
+        "title": "Place a spectator bet",
+        "demoAt": null,
+        "why": "Checks \"Place a spectator bet\" works on the live app.",
+        "at": 95,
+        "status": "passed",
+        "detail": "bet tx signed in MetaMask",
+        "ms": 3618,
+        "screenshot": "phone/fc-phone-f3.jpg",
+        "wallet": {
+         "name": "MetaMask",
+         "account": "Test wallet 1",
+         "address": "0x7a3E…91c4",
+         "network": "Citrea Testnet",
+         "note": "",
+         "type": "tx",
+         "action": "placeBet(1, 2)",
+         "value": "0.01 ETH",
+         "fee": "0.000034 ETH",
+         "result": "Confirmed",
+         "site": "fittercoin.vercel.app"
+        }
+       },
+       {
+        "id": "f4",
+        "title": "Winning bet pays out",
+        "demoAt": null,
+        "why": "Checks \"Winning bet pays out\" works on the live app.",
+        "at": 104,
+        "status": "failed",
+        "detail": "contest ended, 0 ETH paid: settle() is a view",
+        "ms": 4020,
+        "screenshot": "phone/fc-phone-f4.jpg"
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "mozark-app-studio": {
+  "project": "mozark-app-studio",
+  "target": "https://app-studio.mozark.ai",
+  "ranAt": "2026-11-06T11:38:27.000Z",
+  "runner": "Mozark device cloud: Windows 11, Pixel 8, iPhone 15",
+  "mode": "Demo replay + major flows + health. Never pays, stakes, signs in, connects a wallet or submits.",
+  "wallet": null,
+  "runs": [
+   {
+    "device": "laptop",
+    "label": "Windows",
+    "os": "windows",
+    "model": "Windows 11 laptop",
+    "browser": "Chrome 131",
+    "viewport": {
+     "width": 1440,
+     "height": 900
+    },
+    "startedAt": "2026-11-06T11:22:49.000Z",
+    "browserVersion": "Chrome 131",
+    "home": {
+     "url": "https://app-studio.mozark.ai/",
+     "status": 200,
+     "wallMs": 4200,
+     "title": "Mozark App Studio",
+     "h1": "Mozark App Studio",
+     "loadMs": 610,
+     "horizontalScroll": false,
+     "viewportMeta": true,
+     "brokenImages": 0
+    },
+    "video": null,
+    "chrome": false,
+    "durationMs": 55000,
+    "consoleErrors": [],
+    "failedRequests": [],
+    "cancelledRequests": [],
+    "outcome": {
+     "status": "passed",
+     "reasons": []
+    },
+    "phases": [
+     {
+      "id": "demo",
+      "title": "Demo replay",
+      "about": "Screens shown in the demo video, checked on the live app.",
+      "steps": [
+       {
+        "id": "d1",
+        "title": "Sign-in page loads",
+        "demoAt": "0:04",
+        "why": "Checks \"Sign-in page loads\" works on the live app.",
+        "at": 11,
+        "status": "passed",
+        "detail": "see \"Sign in\"",
+        "ms": 3600,
+        "screenshot": "laptop/smoke-laptop-f1.jpg"
+       },
+       {
+        "id": "d2",
+        "title": "Test library behind sign-in",
+        "demoAt": "0:21",
+        "why": "Checks \"Test library behind sign-in\" works on the live app.",
+        "at": 19,
+        "status": "blocked",
+        "detail": "needs an account",
+        "ms": 2400,
+        "screenshot": null
+       }
+      ]
+     },
+     {
+      "id": "features",
+      "title": "Major flows",
+      "about": "The app's main features, used without an account.",
+      "steps": [
+       {
+        "id": "f1",
+        "title": "Public access redirects to sign-in",
+        "demoAt": null,
+        "why": "Checks \"Public access redirects to sign-in\" works on the live app.",
+        "at": 26,
+        "status": "passed",
+        "detail": "redirects to /login",
+        "ms": 3600,
+        "screenshot": "laptop/smoke-laptop-f1.jpg"
+       },
+       {
+        "id": "f2",
+        "title": "Sign-up link",
+        "demoAt": null,
+        "why": "Checks \"Sign-up link\" works on the live app.",
+        "at": 34,
+        "status": "passed",
+        "detail": "see \"Sign up\"",
+        "ms": 2400,
+        "screenshot": "laptop/smoke-laptop-f2.jpg"
+       },
+       {
+        "id": "f3",
+        "title": "Docs link opens",
+        "demoAt": null,
+        "why": "Checks \"Docs link opens\" works on the live app.",
+        "at": 43,
+        "status": "passed",
+        "detail": "200",
+        "ms": 2700,
+        "screenshot": null
+       },
+       {
+        "id": "f4",
+        "title": "Pricing page",
+        "demoAt": null,
+        "why": "Checks \"Pricing page\" works on the live app.",
+        "at": 49,
+        "status": "passed",
+        "detail": "see \"Plans\"",
+        "ms": 3000,
+        "screenshot": null
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "device": "android",
+    "label": "Android",
+    "os": "android",
+    "model": "Pixel 8",
+    "browser": "Chrome 131",
+    "viewport": {
+     "width": 412,
+     "height": 915
+    },
+    "startedAt": "2026-11-06T11:22:49.000Z",
+    "browserVersion": "Chrome 131",
+    "home": {
+     "url": "https://app-studio.mozark.ai/",
+     "status": 200,
+     "wallMs": 5124,
+     "title": "Mozark App Studio",
+     "h1": "Mozark App Studio",
+     "loadMs": 744,
+     "horizontalScroll": false,
+     "viewportMeta": true,
+     "brokenImages": 0
+    },
+    "video": null,
+    "chrome": false,
+    "durationMs": 67100,
+    "consoleErrors": [],
+    "failedRequests": [],
+    "cancelledRequests": [],
+    "outcome": {
+     "status": "passed",
+     "reasons": []
+    },
+    "phases": [
+     {
+      "id": "demo",
+      "title": "Demo replay",
+      "about": "Screens shown in the demo video, checked on the live app.",
+      "steps": [
+       {
+        "id": "d1",
+        "title": "Sign-in page loads",
+        "demoAt": "0:04",
+        "why": "Checks \"Sign-in page loads\" works on the live app.",
+        "at": 11,
+        "status": "passed",
+        "detail": "see \"Sign in\"",
+        "ms": 4392,
+        "screenshot": "phone/smoke-phone-f1.jpg"
+       },
+       {
+        "id": "d2",
+        "title": "Test library behind sign-in",
+        "demoAt": "0:21",
+        "why": "Checks \"Test library behind sign-in\" works on the live app.",
+        "at": 19,
+        "status": "blocked",
+        "detail": "needs an account",
+        "ms": 2928,
+        "screenshot": null
+       }
+      ]
+     },
+     {
+      "id": "features",
+      "title": "Major flows",
+      "about": "The app's main features, used without an account.",
+      "steps": [
+       {
+        "id": "f1",
+        "title": "Public access redirects to sign-in",
+        "demoAt": null,
+        "why": "Checks \"Public access redirects to sign-in\" works on the live app.",
+        "at": 26,
+        "status": "passed",
+        "detail": "redirects to /login",
+        "ms": 4392,
+        "screenshot": "phone/smoke-phone-f1.jpg"
+       },
+       {
+        "id": "f2",
+        "title": "Sign-up link",
+        "demoAt": null,
+        "why": "Checks \"Sign-up link\" works on the live app.",
+        "at": 34,
+        "status": "passed",
+        "detail": "see \"Sign up\"",
+        "ms": 2928,
+        "screenshot": "phone/smoke-phone-f2.jpg"
+       },
+       {
+        "id": "f3",
+        "title": "Docs link opens",
+        "demoAt": null,
+        "why": "Checks \"Docs link opens\" works on the live app.",
+        "at": 43,
+        "status": "passed",
+        "detail": "200",
+        "ms": 3294,
+        "screenshot": null
+       },
+       {
+        "id": "f4",
+        "title": "Pricing page",
+        "demoAt": null,
+        "why": "Checks \"Pricing page\" works on the live app.",
+        "at": 49,
+        "status": "passed",
+        "detail": "see \"Plans\"",
+        "ms": 3660,
+        "screenshot": null
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "device": "ios",
+    "label": "iPhone",
+    "os": "ios",
+    "model": "iPhone 15",
+    "browser": "Safari 18",
+    "viewport": {
+     "width": 393,
+     "height": 852
+    },
+    "startedAt": "2026-11-06T11:22:49.000Z",
+    "browserVersion": "Safari 18",
+    "home": {
+     "url": "https://app-studio.mozark.ai/",
+     "status": 200,
+     "wallMs": 5628,
+     "title": "Mozark App Studio",
+     "h1": "Mozark App Studio",
+     "loadMs": 817,
+     "horizontalScroll": false,
+     "viewportMeta": true,
+     "brokenImages": 0
+    },
+    "video": null,
+    "chrome": false,
+    "durationMs": 73700,
+    "consoleErrors": [],
+    "failedRequests": [],
+    "cancelledRequests": [],
+    "outcome": {
+     "status": "passed",
+     "reasons": []
+    },
+    "phases": [
+     {
+      "id": "demo",
+      "title": "Demo replay",
+      "about": "Screens shown in the demo video, checked on the live app.",
+      "steps": [
+       {
+        "id": "d1",
+        "title": "Sign-in page loads",
+        "demoAt": "0:04",
+        "why": "Checks \"Sign-in page loads\" works on the live app.",
+        "at": 11,
+        "status": "passed",
+        "detail": "see \"Sign in\"",
+        "ms": 4824,
+        "screenshot": "phone/smoke-phone-f1.jpg"
+       },
+       {
+        "id": "d2",
+        "title": "Test library behind sign-in",
+        "demoAt": "0:21",
+        "why": "Checks \"Test library behind sign-in\" works on the live app.",
+        "at": 19,
+        "status": "blocked",
+        "detail": "needs an account",
+        "ms": 3216,
+        "screenshot": null
+       }
+      ]
+     },
+     {
+      "id": "features",
+      "title": "Major flows",
+      "about": "The app's main features, used without an account.",
+      "steps": [
+       {
+        "id": "f1",
+        "title": "Public access redirects to sign-in",
+        "demoAt": null,
+        "why": "Checks \"Public access redirects to sign-in\" works on the live app.",
+        "at": 26,
+        "status": "passed",
+        "detail": "redirects to /login",
+        "ms": 4824,
+        "screenshot": "phone/smoke-phone-f1.jpg"
+       },
+       {
+        "id": "f2",
+        "title": "Sign-up link",
+        "demoAt": null,
+        "why": "Checks \"Sign-up link\" works on the live app.",
+        "at": 34,
+        "status": "passed",
+        "detail": "see \"Sign up\"",
+        "ms": 3216,
+        "screenshot": "phone/smoke-phone-f2.jpg"
+       },
+       {
+        "id": "f3",
+        "title": "Docs link opens",
+        "demoAt": null,
+        "why": "Checks \"Docs link opens\" works on the live app.",
+        "at": 43,
+        "status": "passed",
+        "detail": "200",
+        "ms": 3618,
+        "screenshot": null
+       },
+       {
+        "id": "f4",
+        "title": "Pricing page",
+        "demoAt": null,
+        "why": "Checks \"Pricing page\" works on the live app.",
+        "at": 49,
+        "status": "passed",
+        "detail": "see \"Plans\"",
+        "ms": 4020,
+        "screenshot": null
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "qagent": {
+  "project": "qagent",
+  "target": "https://qagent-demo.vercel.app",
+  "ranAt": "2026-11-06T12:46:46.000Z",
+  "runner": "Mozark device cloud: Windows 11, Pixel 8, iPhone 15",
+  "mode": "Demo replay + major flows + health. Never pays, stakes, signs in, connects a wallet or submits.",
+  "wallet": null,
+  "runs": [
+   {
+    "device": "laptop",
+    "label": "Windows",
+    "os": "windows",
+    "model": "Windows 11 laptop",
+    "browser": "Chrome 131",
+    "viewport": {
+     "width": 1440,
+     "height": 900
+    },
+    "startedAt": "2026-11-06T12:31:11.000Z",
+    "browserVersion": "Chrome 131",
+    "home": {
+     "url": "https://qagent-demo.vercel.app/",
+     "status": 200,
+     "wallMs": 4200,
+     "title": "QAgent",
+     "h1": "QAgent",
+     "loadMs": 610,
+     "horizontalScroll": false,
+     "viewportMeta": true,
+     "brokenImages": 0
+    },
+    "video": null,
+    "chrome": false,
+    "durationMs": 49000,
+    "consoleErrors": [],
+    "failedRequests": [
+     {
+      "url": "https://qagent-demo.vercel.app/api/report",
+      "status": 500
+     }
+    ],
+    "cancelledRequests": [],
+    "outcome": {
+     "status": "failed",
+     "reasons": [
+      "3 step(s) broken"
+     ]
+    },
+    "phases": [
+     {
+      "id": "demo",
+      "title": "Demo replay",
+      "about": "Screens shown in the demo video, checked on the live app.",
+      "steps": [
+       {
+        "id": "d1",
+        "title": "Landing page",
+        "demoAt": "0:03",
+        "why": "Checks \"Landing page\" works on the live app.",
+        "at": 11,
+        "status": "passed",
+        "detail": "see \"Ship without bugs\"",
+        "ms": 3600,
+        "screenshot": "laptop/d1.svg"
+       },
+       {
+        "id": "d2",
+        "title": "Connect GitHub",
+        "demoAt": "0:19",
+        "why": "Checks \"Connect GitHub\" works on the live app.",
+        "at": 19,
+        "status": "failed",
+        "detail": "button does nothing",
+        "ms": 2400,
+        "screenshot": "laptop/d2.svg"
+       },
+       {
+        "id": "d3",
+        "title": "Findings dashboard",
+        "demoAt": "0:41",
+        "why": "Checks \"Findings dashboard\" works on the live app.",
+        "at": 28,
+        "status": "missing",
+        "detail": "404 /dashboard",
+        "ms": 2700,
+        "screenshot": "laptop/d3.svg"
+       }
+      ]
+     },
+     {
+      "id": "features",
+      "title": "Major flows",
+      "about": "The app's main features, used without an account.",
+      "steps": [
+       {
+        "id": "f1",
+        "title": "Pricing",
+        "demoAt": null,
+        "why": "Checks \"Pricing\" works on the live app.",
+        "at": 35,
+        "status": "passed",
+        "detail": "see \"Pricing\"",
+        "ms": 3600,
+        "screenshot": "laptop/f1.svg"
+       },
+       {
+        "id": "f2",
+        "title": "Sample report",
+        "demoAt": null,
+        "why": "Checks \"Sample report\" works on the live app.",
+        "at": 43,
+        "status": "failed",
+        "detail": "500 /api/report",
+        "ms": 2400,
+        "screenshot": "laptop/f2.svg"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "device": "android",
+    "label": "Android",
+    "os": "android",
+    "model": "Pixel 8",
+    "browser": "Chrome 131",
+    "viewport": {
+     "width": 412,
+     "height": 915
+    },
+    "startedAt": "2026-11-06T12:31:11.000Z",
+    "browserVersion": "Chrome 131",
+    "home": {
+     "url": "https://qagent-demo.vercel.app/",
+     "status": 200,
+     "wallMs": 5124,
+     "title": "QAgent",
+     "h1": "QAgent",
+     "loadMs": 744,
+     "horizontalScroll": false,
+     "viewportMeta": true,
+     "brokenImages": 0
+    },
+    "video": null,
+    "chrome": false,
+    "durationMs": 59780,
+    "consoleErrors": [],
+    "failedRequests": [
+     {
+      "url": "https://qagent-demo.vercel.app/api/report",
+      "status": 500
+     }
+    ],
+    "cancelledRequests": [],
+    "outcome": {
+     "status": "failed",
+     "reasons": [
+      "3 step(s) broken"
+     ]
+    },
+    "phases": [
+     {
+      "id": "demo",
+      "title": "Demo replay",
+      "about": "Screens shown in the demo video, checked on the live app.",
+      "steps": [
+       {
+        "id": "d1",
+        "title": "Landing page",
+        "demoAt": "0:03",
+        "why": "Checks \"Landing page\" works on the live app.",
+        "at": 11,
+        "status": "passed",
+        "detail": "see \"Ship without bugs\"",
+        "ms": 4392,
+        "screenshot": "phone/d1.svg"
+       },
+       {
+        "id": "d2",
+        "title": "Connect GitHub",
+        "demoAt": "0:19",
+        "why": "Checks \"Connect GitHub\" works on the live app.",
+        "at": 19,
+        "status": "failed",
+        "detail": "button does nothing",
+        "ms": 2928,
+        "screenshot": "phone/d2.svg"
+       },
+       {
+        "id": "d3",
+        "title": "Findings dashboard",
+        "demoAt": "0:41",
+        "why": "Checks \"Findings dashboard\" works on the live app.",
+        "at": 28,
+        "status": "missing",
+        "detail": "404 /dashboard",
+        "ms": 3294,
+        "screenshot": "phone/d3.svg"
+       }
+      ]
+     },
+     {
+      "id": "features",
+      "title": "Major flows",
+      "about": "The app's main features, used without an account.",
+      "steps": [
+       {
+        "id": "f1",
+        "title": "Pricing",
+        "demoAt": null,
+        "why": "Checks \"Pricing\" works on the live app.",
+        "at": 35,
+        "status": "passed",
+        "detail": "see \"Pricing\"",
+        "ms": 4392,
+        "screenshot": "phone/f1.svg"
+       },
+       {
+        "id": "f2",
+        "title": "Sample report",
+        "demoAt": null,
+        "why": "Checks \"Sample report\" works on the live app.",
+        "at": 43,
+        "status": "failed",
+        "detail": "500 /api/report",
+        "ms": 2928,
+        "screenshot": "phone/f2.svg"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "device": "ios",
+    "label": "iPhone",
+    "os": "ios",
+    "model": "iPhone 15",
+    "browser": "Safari 18",
+    "viewport": {
+     "width": 393,
+     "height": 852
+    },
+    "startedAt": "2026-11-06T12:31:11.000Z",
+    "browserVersion": "Safari 18",
+    "home": {
+     "url": "https://qagent-demo.vercel.app/",
+     "status": 200,
+     "wallMs": 5628,
+     "title": "QAgent",
+     "h1": "QAgent",
+     "loadMs": 817,
+     "horizontalScroll": false,
+     "viewportMeta": true,
+     "brokenImages": 0
+    },
+    "video": null,
+    "chrome": false,
+    "durationMs": 65660,
+    "consoleErrors": [],
+    "failedRequests": [
+     {
+      "url": "https://qagent-demo.vercel.app/api/report",
+      "status": 500
+     }
+    ],
+    "cancelledRequests": [],
+    "outcome": {
+     "status": "failed",
+     "reasons": [
+      "3 step(s) broken"
+     ]
+    },
+    "phases": [
+     {
+      "id": "demo",
+      "title": "Demo replay",
+      "about": "Screens shown in the demo video, checked on the live app.",
+      "steps": [
+       {
+        "id": "d1",
+        "title": "Landing page",
+        "demoAt": "0:03",
+        "why": "Checks \"Landing page\" works on the live app.",
+        "at": 11,
+        "status": "passed",
+        "detail": "see \"Ship without bugs\"",
+        "ms": 4824,
+        "screenshot": "phone/d1.svg"
+       },
+       {
+        "id": "d2",
+        "title": "Connect GitHub",
+        "demoAt": "0:19",
+        "why": "Checks \"Connect GitHub\" works on the live app.",
+        "at": 19,
+        "status": "failed",
+        "detail": "button does nothing",
+        "ms": 3216,
+        "screenshot": "phone/d2.svg"
+       },
+       {
+        "id": "d3",
+        "title": "Findings dashboard",
+        "demoAt": "0:41",
+        "why": "Checks \"Findings dashboard\" works on the live app.",
+        "at": 28,
+        "status": "missing",
+        "detail": "404 /dashboard",
+        "ms": 3618,
+        "screenshot": "phone/d3.svg"
+       }
+      ]
+     },
+     {
+      "id": "features",
+      "title": "Major flows",
+      "about": "The app's main features, used without an account.",
+      "steps": [
+       {
+        "id": "f1",
+        "title": "Pricing",
+        "demoAt": null,
+        "why": "Checks \"Pricing\" works on the live app.",
+        "at": 35,
+        "status": "passed",
+        "detail": "see \"Pricing\"",
+        "ms": 4824,
+        "screenshot": "phone/f1.svg"
+       },
+       {
+        "id": "f2",
+        "title": "Sample report",
+        "demoAt": null,
+        "why": "Checks \"Sample report\" works on the live app.",
+        "at": 43,
+        "status": "failed",
+        "detail": "500 /api/report",
+        "ms": 3216,
+        "screenshot": "phone/f2.svg"
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "vaultline": {
+  "project": "vaultline",
+  "target": "https://vaultline.xyz",
+  "ranAt": "2026-11-06T13:05:19.000Z",
+  "runner": "Mozark device cloud: Windows 11, Pixel 8, iPhone 15",
+  "mode": "Demo replay + major flows + health. Never pays, stakes, signs in, connects a wallet or submits.",
+  "wallet": null,
+  "runs": [
+   {
+    "device": "laptop",
+    "label": "Windows",
+    "os": "windows",
+    "model": "Windows 11 laptop",
+    "browser": "Chrome 131",
+    "viewport": {
+     "width": 1440,
+     "height": 900
+    },
+    "startedAt": "2026-11-06T12:50:30.000Z",
+    "browserVersion": "Chrome 131",
+    "home": {
+     "url": "https://vaultline.xyz/",
+     "status": 200,
+     "wallMs": 4200,
+     "title": "Vaultline",
+     "h1": "Vaultline",
+     "loadMs": 610,
+     "horizontalScroll": false,
+     "viewportMeta": true,
+     "brokenImages": 0
+    },
+    "video": null,
+    "chrome": false,
+    "durationMs": 49000,
+    "consoleErrors": [],
+    "failedRequests": [
+     {
+      "url": "https://vaultline.xyz/api/deposit",
+      "status": 502
+     }
+    ],
+    "cancelledRequests": [],
+    "outcome": {
+     "status": "failed",
+     "reasons": [
+      "2 step(s) broken"
+     ]
+    },
+    "phases": [
+     {
+      "id": "demo",
+      "title": "Demo replay",
+      "about": "Screens shown in the demo video, checked on the live app.",
+      "steps": [
+       {
+        "id": "d1",
+        "title": "Vault overview",
+        "demoAt": "0:08",
+        "why": "Checks \"Vault overview\" works on the live app.",
+        "at": 11,
+        "status": "passed",
+        "detail": "see \"Streams\"",
+        "ms": 3600,
+        "screenshot": "laptop/d1.svg"
+       },
+       {
+        "id": "d2",
+        "title": "Deposit to a vault",
+        "demoAt": "0:34",
+        "why": "Checks \"Deposit to a vault\" works on the live app.",
+        "at": 19,
+        "status": "failed",
+        "detail": "502 /api/deposit",
+        "ms": 2400,
+        "screenshot": "laptop/d2.svg"
+       },
+       {
+        "id": "d3",
+        "title": "Stream dashboard",
+        "demoAt": "1:02",
+        "why": "Checks \"Stream dashboard\" works on the live app.",
+        "at": 28,
+        "status": "failed",
+        "detail": "blank after deposit error",
+        "ms": 2700,
+        "screenshot": "laptop/d3.svg"
+       }
+      ]
+     },
+     {
+      "id": "features",
+      "title": "Major flows",
+      "about": "The app's main features, used without an account.",
+      "steps": [
+       {
+        "id": "f1",
+        "title": "Docs",
+        "demoAt": null,
+        "why": "Checks \"Docs\" works on the live app.",
+        "at": 35,
+        "status": "passed",
+        "detail": "200",
+        "ms": 3600,
+        "screenshot": "laptop/f1.svg"
+       },
+       {
+        "id": "f2",
+        "title": "Contributor view",
+        "demoAt": null,
+        "why": "Checks \"Contributor view\" works on the live app.",
+        "at": 43,
+        "status": "passed",
+        "detail": "see \"Earned\"",
+        "ms": 2400,
+        "screenshot": "laptop/f2.svg"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "device": "android",
+    "label": "Android",
+    "os": "android",
+    "model": "Pixel 8",
+    "browser": "Chrome 131",
+    "viewport": {
+     "width": 412,
+     "height": 915
+    },
+    "startedAt": "2026-11-06T12:50:30.000Z",
+    "browserVersion": "Chrome 131",
+    "home": {
+     "url": "https://vaultline.xyz/",
+     "status": 200,
+     "wallMs": 5124,
+     "title": "Vaultline",
+     "h1": "Vaultline",
+     "loadMs": 744,
+     "horizontalScroll": false,
+     "viewportMeta": true,
+     "brokenImages": 0
+    },
+    "video": null,
+    "chrome": false,
+    "durationMs": 59780,
+    "consoleErrors": [],
+    "failedRequests": [
+     {
+      "url": "https://vaultline.xyz/api/deposit",
+      "status": 502
+     }
+    ],
+    "cancelledRequests": [],
+    "outcome": {
+     "status": "failed",
+     "reasons": [
+      "2 step(s) broken"
+     ]
+    },
+    "phases": [
+     {
+      "id": "demo",
+      "title": "Demo replay",
+      "about": "Screens shown in the demo video, checked on the live app.",
+      "steps": [
+       {
+        "id": "d1",
+        "title": "Vault overview",
+        "demoAt": "0:08",
+        "why": "Checks \"Vault overview\" works on the live app.",
+        "at": 11,
+        "status": "passed",
+        "detail": "see \"Streams\"",
+        "ms": 4392,
+        "screenshot": "phone/d1.svg"
+       },
+       {
+        "id": "d2",
+        "title": "Deposit to a vault",
+        "demoAt": "0:34",
+        "why": "Checks \"Deposit to a vault\" works on the live app.",
+        "at": 19,
+        "status": "failed",
+        "detail": "502 /api/deposit",
+        "ms": 2928,
+        "screenshot": "phone/d2.svg"
+       },
+       {
+        "id": "d3",
+        "title": "Stream dashboard",
+        "demoAt": "1:02",
+        "why": "Checks \"Stream dashboard\" works on the live app.",
+        "at": 28,
+        "status": "failed",
+        "detail": "blank after deposit error",
+        "ms": 3294,
+        "screenshot": "phone/d3.svg"
+       }
+      ]
+     },
+     {
+      "id": "features",
+      "title": "Major flows",
+      "about": "The app's main features, used without an account.",
+      "steps": [
+       {
+        "id": "f1",
+        "title": "Docs",
+        "demoAt": null,
+        "why": "Checks \"Docs\" works on the live app.",
+        "at": 35,
+        "status": "passed",
+        "detail": "200",
+        "ms": 4392,
+        "screenshot": "phone/f1.svg"
+       },
+       {
+        "id": "f2",
+        "title": "Contributor view",
+        "demoAt": null,
+        "why": "Checks \"Contributor view\" works on the live app.",
+        "at": 43,
+        "status": "passed",
+        "detail": "see \"Earned\"",
+        "ms": 2928,
+        "screenshot": "phone/f2.svg"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "device": "ios",
+    "label": "iPhone",
+    "os": "ios",
+    "model": "iPhone 15",
+    "browser": "Safari 18",
+    "viewport": {
+     "width": 393,
+     "height": 852
+    },
+    "startedAt": "2026-11-06T12:50:30.000Z",
+    "browserVersion": "Safari 18",
+    "home": {
+     "url": "https://vaultline.xyz/",
+     "status": 200,
+     "wallMs": 5628,
+     "title": "Vaultline",
+     "h1": "Vaultline",
+     "loadMs": 817,
+     "horizontalScroll": false,
+     "viewportMeta": true,
+     "brokenImages": 0
+    },
+    "video": null,
+    "chrome": false,
+    "durationMs": 65660,
+    "consoleErrors": [],
+    "failedRequests": [
+     {
+      "url": "https://vaultline.xyz/api/deposit",
+      "status": 502
+     }
+    ],
+    "cancelledRequests": [],
+    "outcome": {
+     "status": "failed",
+     "reasons": [
+      "2 step(s) broken"
+     ]
+    },
+    "phases": [
+     {
+      "id": "demo",
+      "title": "Demo replay",
+      "about": "Screens shown in the demo video, checked on the live app.",
+      "steps": [
+       {
+        "id": "d1",
+        "title": "Vault overview",
+        "demoAt": "0:08",
+        "why": "Checks \"Vault overview\" works on the live app.",
+        "at": 11,
+        "status": "passed",
+        "detail": "see \"Streams\"",
+        "ms": 4824,
+        "screenshot": "phone/d1.svg"
+       },
+       {
+        "id": "d2",
+        "title": "Deposit to a vault",
+        "demoAt": "0:34",
+        "why": "Checks \"Deposit to a vault\" works on the live app.",
+        "at": 19,
+        "status": "failed",
+        "detail": "502 /api/deposit",
+        "ms": 3216,
+        "screenshot": "phone/d2.svg"
+       },
+       {
+        "id": "d3",
+        "title": "Stream dashboard",
+        "demoAt": "1:02",
+        "why": "Checks \"Stream dashboard\" works on the live app.",
+        "at": 28,
+        "status": "failed",
+        "detail": "blank after deposit error",
+        "ms": 3618,
+        "screenshot": "phone/d3.svg"
+       }
+      ]
+     },
+     {
+      "id": "features",
+      "title": "Major flows",
+      "about": "The app's main features, used without an account.",
+      "steps": [
+       {
+        "id": "f1",
+        "title": "Docs",
+        "demoAt": null,
+        "why": "Checks \"Docs\" works on the live app.",
+        "at": 35,
+        "status": "passed",
+        "detail": "200",
+        "ms": 4824,
+        "screenshot": "phone/f1.svg"
+       },
+       {
+        "id": "f2",
+        "title": "Contributor view",
+        "demoAt": null,
+        "why": "Checks \"Contributor view\" works on the live app.",
+        "at": 43,
+        "status": "passed",
+        "detail": "see \"Earned\"",
+        "ms": 3216,
+        "screenshot": "phone/f2.svg"
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "splitsafe": {
+  "project": "splitsafe",
+  "target": "https://splitsafe.app",
+  "ranAt": "2026-11-06T12:44:22.000Z",
+  "runner": "Mozark device cloud: Windows 11, Pixel 8, iPhone 15",
+  "mode": "Demo replay + major flows + health. Never pays, stakes, signs in, connects a wallet or submits.",
+  "wallet": null,
+  "runs": [
+   {
+    "device": "laptop",
+    "label": "Windows",
+    "os": "windows",
+    "model": "Windows 11 laptop",
+    "browser": "Chrome 131",
+    "viewport": {
+     "width": 1440,
+     "height": 900
+    },
+    "startedAt": "2026-11-06T12:27:02.000Z",
+    "browserVersion": "Chrome 131",
+    "home": {
+     "url": "https://splitsafe.app/",
+     "status": 200,
+     "wallMs": 4200,
+     "title": "SplitSafe",
+     "h1": "SplitSafe",
+     "loadMs": 610,
+     "horizontalScroll": false,
+     "viewportMeta": true,
+     "brokenImages": 0
+    },
+    "video": null,
+    "chrome": false,
+    "durationMs": 64000,
+    "consoleErrors": [],
+    "failedRequests": [],
+    "cancelledRequests": [],
+    "outcome": {
+     "status": "passed",
+     "reasons": []
+    },
+    "phases": [
+     {
+      "id": "demo",
+      "title": "Demo replay",
+      "about": "Screens shown in the demo video, checked on the live app.",
+      "steps": [
+       {
+        "id": "d1",
+        "title": "Scan a receipt",
+        "demoAt": "0:06",
+        "why": "Checks \"Scan a receipt\" works on the live app.",
+        "at": 11,
+        "status": "passed",
+        "detail": "see \"Scan\"",
+        "ms": 3600,
+        "screenshot": "laptop/d1.svg"
+       },
+       {
+        "id": "d2",
+        "title": "Proposed split",
+        "demoAt": "0:22",
+        "why": "Checks \"Proposed split\" works on the live app.",
+        "at": 19,
+        "status": "passed",
+        "detail": "see \"Your share\"",
+        "ms": 2400,
+        "screenshot": "laptop/d2.svg"
+       },
+       {
+        "id": "d3",
+        "title": "Approve share",
+        "demoAt": "0:40",
+        "why": "Checks \"Approve share\" works on the live app.",
+        "at": 28,
+        "status": "passed",
+        "detail": "see \"Approve\"",
+        "ms": 2700,
+        "screenshot": "laptop/d3.svg"
+       }
+      ]
+     },
+     {
+      "id": "features",
+      "title": "Major flows",
+      "about": "The app's main features, used without an account.",
+      "steps": [
+       {
+        "id": "f1",
+        "title": "Bills list",
+        "demoAt": null,
+        "why": "Checks \"Bills list\" works on the live app.",
+        "at": 35,
+        "status": "passed",
+        "detail": "see \"Bills\"",
+        "ms": 3600,
+        "screenshot": "laptop/f1.svg"
+       },
+       {
+        "id": "f2",
+        "title": "Friend invite",
+        "demoAt": null,
+        "why": "Checks \"Friend invite\" works on the live app.",
+        "at": 43,
+        "status": "passed",
+        "detail": "see \"Invite\"",
+        "ms": 2400,
+        "screenshot": "laptop/f2.svg"
+       },
+       {
+        "id": "f3",
+        "title": "History",
+        "demoAt": null,
+        "why": "Checks \"History\" works on the live app.",
+        "at": 52,
+        "status": "passed",
+        "detail": "see \"Settled\"",
+        "ms": 2700,
+        "screenshot": "laptop/f3.svg"
+       },
+       {
+        "id": "f4",
+        "title": "Settings",
+        "demoAt": null,
+        "why": "Checks \"Settings\" works on the live app.",
+        "at": 58,
+        "status": "passed",
+        "detail": "see \"Currency\"",
+        "ms": 3000,
+        "screenshot": "laptop/f4.svg"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "device": "android",
+    "label": "Android",
+    "os": "android",
+    "model": "Pixel 8",
+    "browser": "Chrome 131",
+    "viewport": {
+     "width": 412,
+     "height": 915
+    },
+    "startedAt": "2026-11-06T12:27:02.000Z",
+    "browserVersion": "Chrome 131",
+    "home": {
+     "url": "https://splitsafe.app/",
+     "status": 200,
+     "wallMs": 5124,
+     "title": "SplitSafe",
+     "h1": "SplitSafe",
+     "loadMs": 744,
+     "horizontalScroll": false,
+     "viewportMeta": true,
+     "brokenImages": 0
+    },
+    "video": null,
+    "chrome": false,
+    "durationMs": 78080,
+    "consoleErrors": [],
+    "failedRequests": [],
+    "cancelledRequests": [],
+    "outcome": {
+     "status": "passed",
+     "reasons": []
+    },
+    "phases": [
+     {
+      "id": "demo",
+      "title": "Demo replay",
+      "about": "Screens shown in the demo video, checked on the live app.",
+      "steps": [
+       {
+        "id": "d1",
+        "title": "Scan a receipt",
+        "demoAt": "0:06",
+        "why": "Checks \"Scan a receipt\" works on the live app.",
+        "at": 11,
+        "status": "passed",
+        "detail": "see \"Scan\"",
+        "ms": 4392,
+        "screenshot": "phone/d1.svg"
+       },
+       {
+        "id": "d2",
+        "title": "Proposed split",
+        "demoAt": "0:22",
+        "why": "Checks \"Proposed split\" works on the live app.",
+        "at": 19,
+        "status": "passed",
+        "detail": "see \"Your share\"",
+        "ms": 2928,
+        "screenshot": "phone/d2.svg"
+       },
+       {
+        "id": "d3",
+        "title": "Approve share",
+        "demoAt": "0:40",
+        "why": "Checks \"Approve share\" works on the live app.",
+        "at": 28,
+        "status": "passed",
+        "detail": "see \"Approve\"",
+        "ms": 3294,
+        "screenshot": "phone/d3.svg"
+       }
+      ]
+     },
+     {
+      "id": "features",
+      "title": "Major flows",
+      "about": "The app's main features, used without an account.",
+      "steps": [
+       {
+        "id": "f1",
+        "title": "Bills list",
+        "demoAt": null,
+        "why": "Checks \"Bills list\" works on the live app.",
+        "at": 35,
+        "status": "passed",
+        "detail": "see \"Bills\"",
+        "ms": 4392,
+        "screenshot": "phone/f1.svg"
+       },
+       {
+        "id": "f2",
+        "title": "Friend invite",
+        "demoAt": null,
+        "why": "Checks \"Friend invite\" works on the live app.",
+        "at": 43,
+        "status": "passed",
+        "detail": "see \"Invite\"",
+        "ms": 2928,
+        "screenshot": "phone/f2.svg"
+       },
+       {
+        "id": "f3",
+        "title": "History",
+        "demoAt": null,
+        "why": "Checks \"History\" works on the live app.",
+        "at": 52,
+        "status": "passed",
+        "detail": "see \"Settled\"",
+        "ms": 3294,
+        "screenshot": "phone/f3.svg"
+       },
+       {
+        "id": "f4",
+        "title": "Settings",
+        "demoAt": null,
+        "why": "Checks \"Settings\" works on the live app.",
+        "at": 58,
+        "status": "passed",
+        "detail": "see \"Currency\"",
+        "ms": 3660,
+        "screenshot": "phone/f4.svg"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "device": "ios",
+    "label": "iPhone",
+    "os": "ios",
+    "model": "iPhone 15",
+    "browser": "Safari 18",
+    "viewport": {
+     "width": 393,
+     "height": 852
+    },
+    "startedAt": "2026-11-06T12:27:02.000Z",
+    "browserVersion": "Safari 18",
+    "home": {
+     "url": "https://splitsafe.app/",
+     "status": 200,
+     "wallMs": 5628,
+     "title": "SplitSafe",
+     "h1": "SplitSafe",
+     "loadMs": 817,
+     "horizontalScroll": false,
+     "viewportMeta": true,
+     "brokenImages": 0
+    },
+    "video": null,
+    "chrome": false,
+    "durationMs": 85760,
+    "consoleErrors": [],
+    "failedRequests": [],
+    "cancelledRequests": [],
+    "outcome": {
+     "status": "passed",
+     "reasons": []
+    },
+    "phases": [
+     {
+      "id": "demo",
+      "title": "Demo replay",
+      "about": "Screens shown in the demo video, checked on the live app.",
+      "steps": [
+       {
+        "id": "d1",
+        "title": "Scan a receipt",
+        "demoAt": "0:06",
+        "why": "Checks \"Scan a receipt\" works on the live app.",
+        "at": 11,
+        "status": "passed",
+        "detail": "see \"Scan\"",
+        "ms": 4824,
+        "screenshot": "phone/d1.svg"
+       },
+       {
+        "id": "d2",
+        "title": "Proposed split",
+        "demoAt": "0:22",
+        "why": "Checks \"Proposed split\" works on the live app.",
+        "at": 19,
+        "status": "passed",
+        "detail": "see \"Your share\"",
+        "ms": 3216,
+        "screenshot": "phone/d2.svg"
+       },
+       {
+        "id": "d3",
+        "title": "Approve share",
+        "demoAt": "0:40",
+        "why": "Checks \"Approve share\" works on the live app.",
+        "at": 28,
+        "status": "passed",
+        "detail": "see \"Approve\"",
+        "ms": 3618,
+        "screenshot": "phone/d3.svg"
+       }
+      ]
+     },
+     {
+      "id": "features",
+      "title": "Major flows",
+      "about": "The app's main features, used without an account.",
+      "steps": [
+       {
+        "id": "f1",
+        "title": "Bills list",
+        "demoAt": null,
+        "why": "Checks \"Bills list\" works on the live app.",
+        "at": 35,
+        "status": "passed",
+        "detail": "see \"Bills\"",
+        "ms": 4824,
+        "screenshot": "phone/f1.svg"
+       },
+       {
+        "id": "f2",
+        "title": "Friend invite",
+        "demoAt": null,
+        "why": "Checks \"Friend invite\" works on the live app.",
+        "at": 43,
+        "status": "passed",
+        "detail": "see \"Invite\"",
+        "ms": 3216,
+        "screenshot": "phone/f2.svg"
+       },
+       {
+        "id": "f3",
+        "title": "History",
+        "demoAt": null,
+        "why": "Checks \"History\" works on the live app.",
+        "at": 52,
+        "status": "passed",
+        "detail": "see \"Settled\"",
+        "ms": 3618,
+        "screenshot": "phone/f3.svg"
+       },
+       {
+        "id": "f4",
+        "title": "Settings",
+        "demoAt": null,
+        "why": "Checks \"Settings\" works on the live app.",
+        "at": 58,
+        "status": "passed",
+        "detail": "see \"Currency\"",
+        "ms": 4020,
+        "screenshot": "phone/f4.svg"
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "kirana-credit": {
+  "project": "kirana-credit",
+  "target": "https://kirana.credit",
+  "ranAt": "2026-11-06T13:24:48.000Z",
+  "runner": "Mozark device cloud: Windows 11, Pixel 8, iPhone 15",
+  "mode": "Demo replay + major flows + health. Never pays, stakes, signs in, connects a wallet or submits.",
+  "wallet": null,
+  "runs": [
+   {
+    "device": "laptop",
+    "label": "Windows",
+    "os": "windows",
+    "model": "Windows 11 laptop",
+    "browser": "Chrome 131",
+    "viewport": {
+     "width": 1440,
+     "height": 900
+    },
+    "startedAt": "2026-11-06T13:09:44.000Z",
+    "browserVersion": "Chrome 131",
+    "home": {
+     "url": "https://kirana.credit/",
+     "status": 200,
+     "wallMs": 4200,
+     "title": "Kirana Credit",
+     "h1": "Kirana Credit",
+     "loadMs": 610,
+     "horizontalScroll": false,
+     "viewportMeta": true,
+     "brokenImages": 0
+    },
+    "video": null,
+    "chrome": false,
+    "durationMs": 49000,
+    "consoleErrors": [],
+    "failedRequests": [],
+    "cancelledRequests": [],
+    "outcome": {
+     "status": "passed",
+     "reasons": []
+    },
+    "phases": [
+     {
+      "id": "demo",
+      "title": "Demo replay",
+      "about": "Screens shown in the demo video, checked on the live app.",
+      "steps": [
+       {
+        "id": "d1",
+        "title": "Shop onboarding",
+        "demoAt": "0:10",
+        "why": "Checks \"Shop onboarding\" works on the live app.",
+        "at": 11,
+        "status": "passed",
+        "detail": "see \"Your shop\"",
+        "ms": 3600,
+        "screenshot": "laptop/d1.svg"
+       },
+       {
+        "id": "d2",
+        "title": "Credit limit",
+        "demoAt": "0:31",
+        "why": "Checks \"Credit limit\" works on the live app.",
+        "at": 19,
+        "status": "passed",
+        "detail": "see \"Limit\"",
+        "ms": 2400,
+        "screenshot": "laptop/d2.svg"
+       }
+      ]
+     },
+     {
+      "id": "features",
+      "title": "Major flows",
+      "about": "The app's main features, used without an account.",
+      "steps": [
+       {
+        "id": "f1",
+        "title": "Draw credit",
+        "demoAt": null,
+        "why": "Checks \"Draw credit\" works on the live app.",
+        "at": 26,
+        "status": "passed",
+        "detail": "see \"Draw\"",
+        "ms": 3600,
+        "screenshot": "laptop/f1.svg"
+       },
+       {
+        "id": "f2",
+        "title": "Repay",
+        "demoAt": null,
+        "why": "Checks \"Repay\" works on the live app.",
+        "at": 34,
+        "status": "passed",
+        "detail": "see \"Repay\"",
+        "ms": 2400,
+        "screenshot": "laptop/f2.svg"
+       },
+       {
+        "id": "f3",
+        "title": "Marathi toggle",
+        "demoAt": null,
+        "why": "Checks \"Marathi toggle\" works on the live app.",
+        "at": 43,
+        "status": "passed",
+        "detail": "see \"मराठी\"",
+        "ms": 2700,
+        "screenshot": "laptop/f3.svg"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "device": "android",
+    "label": "Android",
+    "os": "android",
+    "model": "Pixel 8",
+    "browser": "Chrome 131",
+    "viewport": {
+     "width": 412,
+     "height": 915
+    },
+    "startedAt": "2026-11-06T13:09:44.000Z",
+    "browserVersion": "Chrome 131",
+    "home": {
+     "url": "https://kirana.credit/",
+     "status": 200,
+     "wallMs": 5124,
+     "title": "Kirana Credit",
+     "h1": "Kirana Credit",
+     "loadMs": 744,
+     "horizontalScroll": false,
+     "viewportMeta": true,
+     "brokenImages": 0
+    },
+    "video": null,
+    "chrome": false,
+    "durationMs": 59780,
+    "consoleErrors": [],
+    "failedRequests": [],
+    "cancelledRequests": [],
+    "outcome": {
+     "status": "failed",
+     "reasons": [
+      "1 step(s) broken"
+     ]
+    },
+    "phases": [
+     {
+      "id": "demo",
+      "title": "Demo replay",
+      "about": "Screens shown in the demo video, checked on the live app.",
+      "steps": [
+       {
+        "id": "d1",
+        "title": "Shop onboarding",
+        "demoAt": "0:10",
+        "why": "Checks \"Shop onboarding\" works on the live app.",
+        "at": 11,
+        "status": "passed",
+        "detail": "see \"Your shop\"",
+        "ms": 4392,
+        "screenshot": "phone/d1.svg"
+       },
+       {
+        "id": "d2",
+        "title": "Credit limit",
+        "demoAt": "0:31",
+        "why": "Checks \"Credit limit\" works on the live app.",
+        "at": 19,
+        "status": "passed",
+        "detail": "see \"Limit\"",
+        "ms": 2928,
+        "screenshot": "phone/d2.svg"
+       }
+      ]
+     },
+     {
+      "id": "features",
+      "title": "Major flows",
+      "about": "The app's main features, used without an account.",
+      "steps": [
+       {
+        "id": "f1",
+        "title": "Draw credit",
+        "demoAt": null,
+        "why": "Checks \"Draw credit\" works on the live app.",
+        "at": 26,
+        "status": "failed",
+        "detail": "button cut off below the fold",
+        "ms": 4392,
+        "screenshot": "phone/f1.svg"
+       },
+       {
+        "id": "f2",
+        "title": "Repay",
+        "demoAt": null,
+        "why": "Checks \"Repay\" works on the live app.",
+        "at": 34,
+        "status": "passed",
+        "detail": "see \"Repay\"",
+        "ms": 2928,
+        "screenshot": "phone/f2.svg"
+       },
+       {
+        "id": "f3",
+        "title": "Marathi toggle",
+        "demoAt": null,
+        "why": "Checks \"Marathi toggle\" works on the live app.",
+        "at": 43,
+        "status": "passed",
+        "detail": "see \"मराठी\"",
+        "ms": 3294,
+        "screenshot": "phone/f3.svg"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "device": "ios",
+    "label": "iPhone",
+    "os": "ios",
+    "model": "iPhone 15",
+    "browser": "Safari 18",
+    "viewport": {
+     "width": 393,
+     "height": 852
+    },
+    "startedAt": "2026-11-06T13:09:44.000Z",
+    "browserVersion": "Safari 18",
+    "home": {
+     "url": "https://kirana.credit/",
+     "status": 200,
+     "wallMs": 5628,
+     "title": "Kirana Credit",
+     "h1": "Kirana Credit",
+     "loadMs": 817,
+     "horizontalScroll": false,
+     "viewportMeta": true,
+     "brokenImages": 0
+    },
+    "video": null,
+    "chrome": false,
+    "durationMs": 65660,
+    "consoleErrors": [],
+    "failedRequests": [],
+    "cancelledRequests": [],
+    "outcome": {
+     "status": "failed",
+     "reasons": [
+      "1 step(s) broken"
+     ]
+    },
+    "phases": [
+     {
+      "id": "demo",
+      "title": "Demo replay",
+      "about": "Screens shown in the demo video, checked on the live app.",
+      "steps": [
+       {
+        "id": "d1",
+        "title": "Shop onboarding",
+        "demoAt": "0:10",
+        "why": "Checks \"Shop onboarding\" works on the live app.",
+        "at": 11,
+        "status": "passed",
+        "detail": "see \"Your shop\"",
+        "ms": 4824,
+        "screenshot": "phone/d1.svg"
+       },
+       {
+        "id": "d2",
+        "title": "Credit limit",
+        "demoAt": "0:31",
+        "why": "Checks \"Credit limit\" works on the live app.",
+        "at": 19,
+        "status": "passed",
+        "detail": "see \"Limit\"",
+        "ms": 3216,
+        "screenshot": "phone/d2.svg"
+       }
+      ]
+     },
+     {
+      "id": "features",
+      "title": "Major flows",
+      "about": "The app's main features, used without an account.",
+      "steps": [
+       {
+        "id": "f1",
+        "title": "Draw credit",
+        "demoAt": null,
+        "why": "Checks \"Draw credit\" works on the live app.",
+        "at": 26,
+        "status": "failed",
+        "detail": "button cut off below the fold",
+        "ms": 4824,
+        "screenshot": "phone/f1.svg"
+       },
+       {
+        "id": "f2",
+        "title": "Repay",
+        "demoAt": null,
+        "why": "Checks \"Repay\" works on the live app.",
+        "at": 34,
+        "status": "passed",
+        "detail": "see \"Repay\"",
+        "ms": 3216,
+        "screenshot": "phone/f2.svg"
+       },
+       {
+        "id": "f3",
+        "title": "Marathi toggle",
+        "demoAt": null,
+        "why": "Checks \"Marathi toggle\" works on the live app.",
+        "at": 43,
+        "status": "passed",
+        "detail": "see \"मराठी\"",
+        "ms": 3618,
+        "screenshot": "phone/f3.svg"
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "metromint": {
+  "project": "metromint",
+  "target": "https://metromint.app",
+  "ranAt": "2026-11-06T14:58:07.000Z",
+  "runner": "Mozark device cloud: Windows 11, Pixel 8, iPhone 15",
+  "mode": "Demo replay + major flows + health. Never pays, stakes, signs in, connects a wallet or submits.",
+  "wallet": null,
+  "runs": [
+   {
+    "device": "laptop",
+    "label": "Windows",
+    "os": "windows",
+    "model": "Windows 11 laptop",
+    "browser": "Chrome 131",
+    "viewport": {
+     "width": 1440,
+     "height": 900
+    },
+    "startedAt": "2026-11-06T14:43:20.000Z",
+    "browserVersion": "Chrome 131",
+    "home": {
+     "url": "https://metromint.app/",
+     "status": 200,
+     "wallMs": 4200,
+     "title": "MetroMint",
+     "h1": "MetroMint",
+     "loadMs": 610,
+     "horizontalScroll": false,
+     "viewportMeta": true,
+     "brokenImages": 0
+    },
+    "video": null,
+    "chrome": false,
+    "durationMs": 40000,
+    "consoleErrors": [],
+    "failedRequests": [],
+    "cancelledRequests": [],
+    "outcome": {
+     "status": "passed",
+     "reasons": []
+    },
+    "phases": [
+     {
+      "id": "demo",
+      "title": "Demo replay",
+      "about": "Screens shown in the demo video, checked on the live app.",
+      "steps": [
+       {
+        "id": "d1",
+        "title": "Buy a ticket",
+        "demoAt": "0:05",
+        "why": "Checks \"Buy a ticket\" works on the live app.",
+        "at": 11,
+        "status": "passed",
+        "detail": "see \"Buy\"",
+        "ms": 3600,
+        "screenshot": "laptop/d1.svg"
+       },
+       {
+        "id": "d2",
+        "title": "Ticket QR",
+        "demoAt": "0:20",
+        "why": "Checks \"Ticket QR\" works on the live app.",
+        "at": 19,
+        "status": "passed",
+        "detail": "see \"Tap in\"",
+        "ms": 2400,
+        "screenshot": "laptop/d2.svg"
+       }
+      ]
+     },
+     {
+      "id": "features",
+      "title": "Major flows",
+      "about": "The app's main features, used without an account.",
+      "steps": [
+       {
+        "id": "f1",
+        "title": "Resale market",
+        "demoAt": null,
+        "why": "Checks \"Resale market\" works on the live app.",
+        "at": 26,
+        "status": "passed",
+        "detail": "see \"Resell\"",
+        "ms": 3600,
+        "screenshot": "laptop/f1.svg"
+       },
+       {
+        "id": "f2",
+        "title": "Loyalty",
+        "demoAt": null,
+        "why": "Checks \"Loyalty\" works on the live app.",
+        "at": 34,
+        "status": "passed",
+        "detail": "see \"Rides\"",
+        "ms": 2400,
+        "screenshot": "laptop/f2.svg"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "device": "android",
+    "label": "Android",
+    "os": "android",
+    "model": "Pixel 8",
+    "browser": "Chrome 131",
+    "viewport": {
+     "width": 412,
+     "height": 915
+    },
+    "startedAt": "2026-11-06T14:43:20.000Z",
+    "browserVersion": "Chrome 131",
+    "home": {
+     "url": "https://metromint.app/",
+     "status": 200,
+     "wallMs": 5124,
+     "title": "MetroMint",
+     "h1": "MetroMint",
+     "loadMs": 744,
+     "horizontalScroll": true,
+     "viewportMeta": true,
+     "brokenImages": 0
+    },
+    "video": null,
+    "chrome": false,
+    "durationMs": 48800,
+    "consoleErrors": [],
+    "failedRequests": [],
+    "cancelledRequests": [],
+    "outcome": {
+     "status": "failed",
+     "reasons": [
+      "3 step(s) broken"
+     ]
+    },
+    "phases": [
+     {
+      "id": "demo",
+      "title": "Demo replay",
+      "about": "Screens shown in the demo video, checked on the live app.",
+      "steps": [
+       {
+        "id": "d1",
+        "title": "Buy a ticket",
+        "demoAt": "0:05",
+        "why": "Checks \"Buy a ticket\" works on the live app.",
+        "at": 11,
+        "status": "failed",
+        "detail": "ticket card overflows at 390px",
+        "ms": 4392,
+        "screenshot": "phone/d1.svg"
+       },
+       {
+        "id": "d2",
+        "title": "Ticket QR",
+        "demoAt": "0:20",
+        "why": "Checks \"Ticket QR\" works on the live app.",
+        "at": 19,
+        "status": "failed",
+        "detail": "ticket card overflows at 390px",
+        "ms": 2928,
+        "screenshot": "phone/d2.svg"
+       }
+      ]
+     },
+     {
+      "id": "features",
+      "title": "Major flows",
+      "about": "The app's main features, used without an account.",
+      "steps": [
+       {
+        "id": "f1",
+        "title": "Resale market",
+        "demoAt": null,
+        "why": "Checks \"Resale market\" works on the live app.",
+        "at": 26,
+        "status": "failed",
+        "detail": "ticket card overflows at 390px",
+        "ms": 4392,
+        "screenshot": "phone/f1.svg"
+       },
+       {
+        "id": "f2",
+        "title": "Loyalty",
+        "demoAt": null,
+        "why": "Checks \"Loyalty\" works on the live app.",
+        "at": 34,
+        "status": "passed",
+        "detail": "see \"Rides\"",
+        "ms": 2928,
+        "screenshot": "phone/f2.svg"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "device": "ios",
+    "label": "iPhone",
+    "os": "ios",
+    "model": "iPhone 15",
+    "browser": "Safari 18",
+    "viewport": {
+     "width": 393,
+     "height": 852
+    },
+    "startedAt": "2026-11-06T14:43:20.000Z",
+    "browserVersion": "Safari 18",
+    "home": {
+     "url": "https://metromint.app/",
+     "status": 200,
+     "wallMs": 5628,
+     "title": "MetroMint",
+     "h1": "MetroMint",
+     "loadMs": 817,
+     "horizontalScroll": true,
+     "viewportMeta": true,
+     "brokenImages": 0
+    },
+    "video": null,
+    "chrome": false,
+    "durationMs": 53600,
+    "consoleErrors": [],
+    "failedRequests": [],
+    "cancelledRequests": [],
+    "outcome": {
+     "status": "failed",
+     "reasons": [
+      "3 step(s) broken"
+     ]
+    },
+    "phases": [
+     {
+      "id": "demo",
+      "title": "Demo replay",
+      "about": "Screens shown in the demo video, checked on the live app.",
+      "steps": [
+       {
+        "id": "d1",
+        "title": "Buy a ticket",
+        "demoAt": "0:05",
+        "why": "Checks \"Buy a ticket\" works on the live app.",
+        "at": 11,
+        "status": "failed",
+        "detail": "ticket card overflows at 390px",
+        "ms": 4824,
+        "screenshot": "phone/d1.svg"
+       },
+       {
+        "id": "d2",
+        "title": "Ticket QR",
+        "demoAt": "0:20",
+        "why": "Checks \"Ticket QR\" works on the live app.",
+        "at": 19,
+        "status": "failed",
+        "detail": "ticket card overflows at 390px",
+        "ms": 3216,
+        "screenshot": "phone/d2.svg"
+       }
+      ]
+     },
+     {
+      "id": "features",
+      "title": "Major flows",
+      "about": "The app's main features, used without an account.",
+      "steps": [
+       {
+        "id": "f1",
+        "title": "Resale market",
+        "demoAt": null,
+        "why": "Checks \"Resale market\" works on the live app.",
+        "at": 26,
+        "status": "failed",
+        "detail": "ticket card overflows at 390px",
+        "ms": 4824,
+        "screenshot": "phone/f1.svg"
+       },
+       {
+        "id": "f2",
+        "title": "Loyalty",
+        "demoAt": null,
+        "why": "Checks \"Loyalty\" works on the live app.",
+        "at": 34,
+        "status": "passed",
+        "detail": "see \"Rides\"",
+        "ms": 3216,
+        "screenshot": "phone/f2.svg"
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

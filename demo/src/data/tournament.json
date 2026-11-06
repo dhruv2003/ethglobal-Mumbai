@@ -1,0 +1,224 @@
+{
+ "id": 1,
+ "title": "ETHGlobal Mumbai · Main bracket",
+ "track": "Open",
+ "eventId": "ethglobal-mumbai",
+ "createdAt": "2026-11-06T13:00:00.000Z",
+ "scheduledStart": "2026-11-06T13:30:00.000Z",
+ "bettingCutoff": "2026-11-06T13:30:00.000Z",
+ "resolutionDeadline": "2026-11-09T18:00:00.000Z",
+ "configHash": "0x03980e7ff6c99aa98f459307c329f4e6d8c4a4f543c201174e1a8d99385ff1db",
+ "seed": "0x81e4ba3bc2097d85ac4734eb3ad794fd4a2980b2e0b22569418e60e5550b4c32",
+ "bracketHash": "0x866c916352ff384f38575ba98e53d0de7331efdf9f0a608891e6635d17e59039",
+ "organizer": "0x10df2920e1dc0d5d071a0dd6c4c1a06ab7b16c44",
+ "publisher": "0x429C0C8C8cDBf6b24D02075D808088983988B515",
+ "reviewer": "0xc0e3fed43e80b8d34d020877ec27621997845d99",
+ "platformRecipient": "0x31eee2055acaf6983fd637386d42b81d6156091c",
+ "minBet": "1",
+ "maxBet": "1000",
+ "capacity": 8,
+ "matching": {
+  "manual": false,
+  "algorithmVersion": "similarity-v2",
+  "seed": "ethglobal-mumbai",
+  "embeddingModel": "0g-embed-small",
+  "firstRound": [
+   [
+    0,
+    1
+   ],
+   [
+    2,
+    3
+   ],
+   [
+    4,
+    5
+   ],
+   [
+    6,
+    7
+   ]
+  ]
+ },
+ "projects": [
+  {
+   "index": 0,
+   "submissionId": "go-health-me",
+   "name": "Go Health Me",
+   "pitch": "Put money on your own sleep or workouts. Your wearable proves it, SPOTTER pays the players who hit.",
+   "tracks": [
+    "defi",
+    "0g",
+    "arkiv",
+    "ens",
+    "world",
+    "base"
+   ],
+   "team": "Meowteam6",
+   "ownerWallet": "0x070731e0901b79a8ad0f1105bf127b9ec4aa0f83",
+   "rewardWallet": "0x070731e0901b79a8ad0f1105bf127b9ec4aa0f83",
+   "fighterSeed": "6aa4f8449826"
+  },
+  {
+   "index": 1,
+   "submissionId": "fittercoin",
+   "name": "FitterCoin",
+   "pitch": "Bet on yourself. Get paid in crypto for real workouts.",
+   "tracks": [
+    "defi",
+    "0g",
+    "arkiv",
+    "ens",
+    "self",
+    "citrea"
+   ],
+   "team": "FitterCoin",
+   "ownerWallet": "0x41735e7b6a99a195e3ce7261abc2df5863644357",
+   "rewardWallet": "0x41735e7b6a99a195e3ce7261abc2df5863644357",
+   "fighterSeed": "fc15946fd9ec"
+  },
+  {
+   "index": 2,
+   "submissionId": "mozark-app-studio",
+   "name": "Mozark App Studio",
+   "pitch": "No-code mobile testing on real devices. Describe what the user does; agents turn it into a test.",
+   "tracks": [
+    "ai-agents",
+    "infra",
+    "0g",
+    "arkiv"
+   ],
+   "team": "Mozark",
+   "ownerWallet": "0x8f8602b6401a88c30992878a8f7a54cab2ee730f",
+   "rewardWallet": "0x8f8602b6401a88c30992878a8f7a54cab2ee730f",
+   "fighterSeed": "5afa65bb38d7"
+  },
+  {
+   "index": 3,
+   "submissionId": "qagent",
+   "name": "QAgent",
+   "pitch": "An AI QA engineer that reads your PRs and files the bugs before users find them.",
+   "tracks": [
+    "ai-agents",
+    "0g"
+   ],
+   "team": "Null Pointers",
+   "ownerWallet": "0xb794b93979fc1c3c826eaed343b3131a9fbce50d",
+   "rewardWallet": "0xb794b93979fc1c3c826eaed343b3131a9fbce50d",
+   "fighterSeed": "d4256b42eb3e"
+  },
+  {
+   "index": 4,
+   "submissionId": "vaultline",
+   "name": "Vaultline",
+   "pitch": "Streaming payroll vaults for DAOs. Salaries drip every block, with clawback built in.",
+   "tracks": [
+    "defi",
+    "infra",
+    "base",
+    "ens"
+   ],
+   "team": "Merkle Mafia",
+   "ownerWallet": "0xc1eacdf7bc1b27fdae1bdc42495396c79ec062d6",
+   "rewardWallet": "0xc1eacdf7bc1b27fdae1bdc42495396c79ec062d6",
+   "fighterSeed": "975cd5a6be4c"
+  },
+  {
+   "index": 5,
+   "submissionId": "splitsafe",
+   "name": "SplitSafe",
+   "pitch": "Split any bill in USDC. Snap the receipt, everyone approves their share in one tap.",
+   "tracks": [
+    "defi",
+    "base",
+    "ens"
+   ],
+   "team": "Chai & Chain",
+   "ownerWallet": "0x0ab856d5b24ef7e8184511c0e15823cd931d0544",
+   "rewardWallet": "0x0ab856d5b24ef7e8184511c0e15823cd931d0544",
+   "fighterSeed": "841118b6f97a"
+  },
+  {
+   "index": 6,
+   "submissionId": "kirana-credit",
+   "name": "Kirana Credit",
+   "pitch": "Credit lines for Mumbai's corner shops, backed by their UPI sales and paid out in USDC.",
+   "tracks": [
+    "defi",
+    "base",
+    "arkiv"
+   ],
+   "team": "Dabbawala Labs",
+   "ownerWallet": "0x65050b6a1a1c0d460e583d54a3a925ab003d1968",
+   "rewardWallet": "0x65050b6a1a1c0d460e583d54a3a925ab003d1968",
+   "fighterSeed": "b3e27444c4ad"
+  },
+  {
+   "index": 7,
+   "submissionId": "metromint",
+   "name": "MetroMint",
+   "pitch": "Mumbai Metro tickets as NFTs. Tap in, earn rides, resell unused passes.",
+   "tracks": [
+    "infra",
+    "base"
+   ],
+   "team": "Local Train",
+   "ownerWallet": "0x0b4aff970c9c3be716f9cac8f59786c213ef3dd6",
+   "rewardWallet": "0x0b4aff970c9c3be716f9cac8f59786c213ef3dd6",
+   "fighterSeed": "cf424d0ccf28"
+  }
+ ],
+ "taglines": [
+  "Same pitch on stage. Only one works.",
+  "Two testing pitches. One has tests.",
+  "Best code in the room vs. the demo that works.",
+  "Real shopkeepers vs. a slick laptop demo."
+ ],
+ "matches": [
+  {
+   "index": 0,
+   "live": true,
+   "projectA": 0,
+   "projectB": 1,
+   "winner": 0,
+   "scoreA": 8013,
+   "scoreB": 3507,
+   "finishedAt": null,
+   "resultHash": "0xa32855a12d2366170e64d076985ad921f6d86af9898e85cbb8f11be748f7a993"
+  },
+  {
+   "index": 1,
+   "live": false,
+   "projectA": 2,
+   "projectB": 3,
+   "winner": 2,
+   "scoreA": 7867,
+   "scoreB": 4600,
+   "finishedAt": "2026-11-06T14:12:00.000Z",
+   "resultHash": "0xd852c977c018d74caddd05e2830916347324337e7ce54bd4079209debe48deb4"
+  },
+  {
+   "index": 2,
+   "live": false,
+   "projectA": 4,
+   "projectB": 5,
+   "winner": 5,
+   "scoreA": 6887,
+   "scoreB": 6987,
+   "finishedAt": "2026-11-06T14:46:00.000Z",
+   "resultHash": "0xc04ffd64039f3a461d7a5b57452b96572d2f96c572881e2f272b668b4b94a9f4"
+  },
+  {
+   "index": 3,
+   "live": true,
+   "projectA": 6,
+   "projectB": 7,
+   "winner": 6,
+   "scoreA": 7700,
+   "scoreB": 5413,
+   "finishedAt": null,
+   "resultHash": "0x5246e9908aeca39901c5ce8e3daabe9f403925d0a712493a3da1f898d1e6c5b2"
+  }
+ ]
+}

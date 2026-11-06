@@ -1,0 +1,1486 @@
+{
+ "go-health-me": {
+  "architecture": [
+   {
+    "component": "HealthPoolsV3.sol (Base Sepolia)",
+    "detail": "Handles pool creation, staking (entryFee), participant joins, oracle verdict recording, and pull-payment settlement. Includes strict role separation (owner, oracle, settler) and commitment fee logic.",
+    "refs": []
+   }
+  ],
+  "commit": "5ba47c71a67a5326680170268d4e597f2863b0e3",
+  "continuity": {
+   "assessment": "0 of 437 commits are from after the event start; the first commit is from 2026-08-22.",
+   "authors": 2,
+   "boundaryCommit": null,
+   "boundaryLabel": "the event start (2026-11-06)",
+   "commitsBefore": 437,
+   "commitsDuringEvent": 0,
+   "commitsSeen": 437,
+   "eventStart": "2026-11-06T00:00:00+05:30",
+   "firstCommitDate": "2026-08-22T19:40:44-04:00",
+   "historyTruncated": false,
+   "lastCommitDate": "2026-09-27T10:06:13+09:00"
+  },
+  "coreJourney": [
+   "1. Sign in using an email or Dynamic wallet.",
+   "2. Prove humanity via World ID (staging mock on demo) and claim a .gohealthme.eth ENS name.",
+   "3. Pair a wearable device (WHOOP or Junction) and join a health pool by staking test USDC.",
+   "4. Complete a sleep or workout goal and sync the wearable data.",
+   "5. SPOTTER verifies the outcome off-chain, requests World ID for Agents confirmation, and screens the wallet (if Intercepta is enabled).",
+   "6. SPOTTER settles the payout to winners via a Circle-controlled wallet and records the result on-chain."
+  ],
+  "dependencies": [
+   {
+    "name": "Next.js",
+    "ref": "app/package.json",
+    "version": "16.2.9"
+   },
+   {
+    "name": "viem",
+    "ref": "app/package.json",
+    "version": "2.52.0"
+   },
+   {
+    "name": "@circle-fin/developer-controlled-wallets",
+    "ref": "app/package.json",
+    "version": "10.8.0"
+   },
+   {
+    "name": "@worldcoin/idkit",
+    "ref": "app/package.json",
+    "version": "4.3.0"
+   },
+   {
+    "name": "@supabase/supabase-js",
+    "ref": "app/package.json",
+    "version": "2.112.3"
+   }
+  ],
+  "evidence": [
+   {
+    "claim": "Staking test USDC on goals",
+    "id": "E1",
+    "impact": "strength",
+    "limitations": "",
+    "observation": "Supported: The contract enforces staking via `joinPool` which pulls the `entryFee` in USDC from the participant.",
+    "refs": [
+     "contracts/src/HealthPoolsV3.sol:300"
+    ],
+    "source": "code",
+    "status": "supported_by_code"
+   },
+   {
+    "claim": "Wearable proof via WHOOP and Junction",
+    "id": "E2",
+    "impact": "strength",
+    "limitations": "",
+    "observation": "Supported: The app includes specific integration layers for both direct WHOOP OAuth and a Junction fallback.",
+    "refs": [
+     "app/lib/server/wearable/whoop.ts:1",
+     "app/lib/server/wearable/junction-provider.ts:1"
+    ],
+    "source": "code",
+    "status": "supported_by_code"
+   },
+   {
+    "claim": "SPOTTER agent settlement using Circle wallets",
+    "id": "E3",
+    "impact": "strength",
+    "limitations": "",
+    "observation": "Supported: The SPOTTER agent uses Circle's developer-controlled wallet SDK to autonomously execute payouts.",
+    "refs": [
+     "app/lib/server/agent/wallet.ts:1"
+    ],
+    "source": "code",
+    "status": "supported_by_code"
+   },
+   {
+    "claim": "Raw health data never touches the chain",
+    "id": "E4",
+    "impact": "strength",
+    "limitations": "",
+    "observation": "Supported: The on-chain `HealthVerdict` registry only stores a boolean `verified` flag, a confidence score, and a keccak digest of the inference transcript, fully shielding raw health metrics.",
+    "refs": [
+     "contracts/src/HealthVerdict.sol:65-70"
+    ],
+    "source": "code",
+    "status": "supported_by_code"
+   },
+   {
+    "claim": "World ID for human verification",
+    "id": "E5",
+    "impact": "concern",
+    "limitations": "",
+    "observation": "Unverified: In the unconfigured demo environment, World ID human verification is deliberately turned off and relies on staging mocks until the Portal keys are set.",
+    "refs": [
+     "docs/EVALUATE.md:30-31",
+     "app/lib/world/mock-proof.ts:1"
+    ],
+    "source": "code",
+    "status": "unverified"
+   },
+   {
+    "claim": "ENSv2 names on Sepolia",
+    "id": "E6",
+    "impact": "strength",
+    "limitations": "",
+    "observation": "Supported: The app includes the full stack for minting and resolving `<name>.gohealthme.eth` subdomains on Ethereum Sepolia.",
+    "refs": [
+     "app/lib/ens/names.ts:1"
+    ],
+    "source": "code",
+    "status": "supported_by_code"
+   },
+   {
+    "claim": "Interceptor screening before payouts",
+    "id": "E7",
+    "impact": "concern",
+    "limitations": "",
+    "observation": "Unverified: Live Intercepta screening is inactive on the demo deployment because the API key is missing, so the UI correctly displays 'not enabled on this deployment'.",
+    "refs": [
+     "docs/EVALUATE.md:33-34",
+     "app/lib/server/screening/intercepta.ts:1"
+    ],
+    "source": "code",
+    "status": "unverified"
+   },
+   {
+    "claim": "Beta on Base Sepolia",
+    "id": "E8",
+    "impact": "strength",
+    "limitations": "",
+    "observation": "Supported: The Foundry configuration and chain libraries explicitly point to Base Sepolia.",
+    "refs": [
+     "contracts/foundry.toml:19"
+    ],
+    "source": "code",
+    "status": "supported_by_code"
+   },
+   {
+    "claim": "Commitment model enforces equal stake",
+    "id": "E9",
+    "impact": "strength",
+    "limitations": "",
+    "observation": "Supported: The contract explicitly reverts pool creation if `entryFee` is zero (`DEAD_CONFIG`), ensuring every payout recipient has actually staked funds to prevent free-riding.",
+    "refs": [
+     "contracts/src/HealthPoolsV3.sol:281"
+    ],
+    "source": "code",
+    "status": "supported_by_code"
+   },
+   {
+    "claim": "Wearable summaries read off-chain",
+    "id": "E10",
+    "impact": "neutral",
+    "limitations": "",
+    "observation": "Supported: Wearable data is aggregated and stored locally in Supabase (`wearable_days`), with only the verdict being pushed to the agent.",
+    "refs": [
+     "app/lib/server/supabase.ts:1"
+    ],
+    "source": "code",
+    "status": "supported_by_code"
+   },
+   {
+    "claim": "SPOTTER uses World ID for Agents at payout",
+    "id": "E11",
+    "impact": "neutral",
+    "limitations": "",
+    "observation": "Supported: The approval request and status routes exist to gate SPOTTER's payout with a secondary World ID verification.",
+    "refs": [
+     "app/app/api/agent/approval/request/route.ts:1"
+    ],
+    "source": "code",
+    "status": "supported_by_code"
+   },
+   {
+    "claim": "Smart contract role separation",
+    "id": "E12",
+    "impact": "strength",
+    "limitations": "",
+    "observation": "Supported: The contract constructor and setter functions enforce that the owner, oracle, and settler roles must be assigned to distinct keys and cannot be collapsed.",
+    "refs": [
+     "contracts/src/HealthPoolsV3.sol:180-181"
+    ],
+    "source": "code",
+    "status": "supported_by_code"
+   },
+   {
+    "claim": "Pull-payment settlement ledger",
+    "id": "E13",
+    "impact": "strength",
+    "limitations": "",
+    "observation": "Supported: Payouts are credited to a public `owed[]` ledger and drained by recipients via a `withdraw()` function, ensuring a single blacklisted or reverting recipient never blocks the pool's settlement.",
+    "refs": [
+     "contracts/src/HealthPoolsV3.sol:115"
+    ],
+    "source": "code",
+    "status": "supported_by_code"
+   },
+   {
+    "claim": "Unconfigured skeleton loading bug",
+    "id": "E14",
+    "impact": "concern",
+    "limitations": "",
+    "observation": "Contradicted: In the unconfigured local state, the pools list and pool detail pages render infinite loading skeletons without an error state, blocking all money routes and user interaction.",
+    "refs": [
+     "docs/EXPLORER-FINDINGS.md:36-39"
+    ],
+    "source": "code",
+    "status": "contradicted"
+   },
+   {
+    "claim": "Mock proof bypass in development",
+    "id": "E15",
+    "impact": "concern",
+    "limitations": "",
+    "observation": "Contradicted: The repository contains a `mock-proof.ts` utility and allows World ID mocking in non-production environments, bypassing human-proofing if accidentally deployed.",
+    "refs": [
+     "app/lib/world/mock-proof.ts:1",
+     "app/lib/server/env.ts:1"
+    ],
+    "source": "code",
+    "status": "contradicted"
+   },
+   {
+    "claim": "Missing real-world verifier keys",
+    "id": "E16",
+    "impact": "concern",
+    "limitations": "",
+    "observation": "Unverified: The demo environment lacks keys for external verifiers like Google (Gemini) and the Chainlink Attester, forcing SPOTTER to fall back to deterministic rules or halted verdict pipelines.",
+    "refs": [
+     "docs/EVALUATE.md:31-34"
+    ],
+    "source": "code",
+    "status": "unverified"
+   }
+  ],
+  "generatedAt": "2026-11-06T08:18:28.000Z",
+  "highlights": {
+   "word": "Proven",
+   "headline": "Every step in the demo works on the live app, on Windows, Android and iPhone.",
+   "holdsUp": [
+    {
+     "text": "16 of 16 flows pass on all three devices.",
+     "evidence": [
+      "V-laptop-f1",
+      "V-android-f1",
+      "V-ios-f1"
+     ]
+    },
+    {
+     "text": "Stakes and payouts trace to code: pull payments, split roles.",
+     "evidence": [
+      "E1",
+      "E12",
+      "E13"
+     ]
+    },
+    {
+     "text": "Only the verdict goes on chain. Raw health data never does.",
+     "evidence": [
+      "E4"
+     ]
+    }
+   ],
+   "watch": [
+    {
+     "text": "World ID runs on staging mocks until the portal keys are set.",
+     "evidence": [
+      "E5",
+      "E15"
+     ]
+    },
+    {
+     "text": "Built before the event: 0 of 437 commits during it.",
+     "evidence": [
+      "E14"
+     ]
+    }
+   ]
+  },
+  "intendedUsers": "Health-conscious individuals who own compatible wearables (WHOOP, Apple Health via Junction) and use web3 wallets or email-based authentication.",
+  "limitations": [
+   "**Disabled Screening on Demo:** Live Intercepta screening is inactive because the API key is missing from the demo environment, so the UI correctly displays \"not enabled on this deployment\".",
+   "**Mock Human Verification in Dev:** World ID human verification relies on staging mocks and is turned off until the World Portal keys are set, allowing bypass of human-proofing in the local development environment.",
+   "**Unconfigured Skeleton Loading Bug:** In the unconfigured local state, the pools list and pool detail pages render infinite loading skeletons without an error state, blocking users from seeing pools or interacting with money routes.",
+   "**Missing Real-World Verifier Keys:** The demo environment lacks keys for external verifiers like Google (Gemini) and the Chainlink Attester, forcing SPOTTER to fall back to deterministic rules or halted verdict pipelines."
+  ],
+  "problem": "Users struggle to maintain accountability for personal health goals; the product offers a financial stake backed by wearable data to ensure commitment without compromising privacy.",
+  "reviewer": {
+   "attempts": 1,
+   "method": "Static read of 32 files at commit 5ba47c7 (653 more not read: size limit) plus the submission; no code executed. 0g 0gm-1.0-35b-a3b.",
+   "mode": "automatic",
+   "ms": 101333,
+   "name": "Reviewer agent",
+   "refsChecked": 21,
+   "refsDropped": 1,
+   "usage": {
+    "input_tokens": 63630,
+    "output_tokens": 11102
+   }
+  },
+  "risks": [
+   "**Funds Loss on Oracle Failure:** If the off-chain verdict oracle/attester fails to return a result within the settlement window, the smart contract's `settle()` logic might default to refunding stakers rather than forfeiting to the pool pot, breaking the commitment model's payout dynamics.",
+   "**Unverified Verdict Execution:** SPOTTER's `settle()` function is triggered by an agent. If the `healthVerdict()` registry is not properly configured or if the Oracle address is compromised, fake verdicts could trigger unauthorized payouts.",
+   "**Access Control Gaps on Wallets:** While Circle wallets are developer-controlled, if the agent's private keys for the Circle wallet or ENS operations are exposed in unsecured environments or CI, they could be drained."
+  ],
+  "strengths": [
+   "**Smart Contract Role Separation:** The `HealthPoolsV3` contract enforces distinct owner, oracle, and settler roles at construction and prevents them from being collapsed, mitigating centralization risks.",
+   "**Privacy-Focused Verdict Storage:** The on-chain `HealthVerdict` registry only stores a boolean `verified` flag, a confidence score, and a keccak digest of the inference, ensuring no raw health metrics ever touch the blockchain.",
+   "**Pull-Payment Settlement Ledger:** Payouts are credited to an `owed[]` ledger and drained by recipients via a `withdraw()` function, ensuring a single blacklisted or reverting recipient never blocks the entire pool's settlement."
+  ],
+  "summary": "GoHealthMe is a health commitment game where users stake test USDC on Base Sepolia to complete sleep or workout goals, verified through wearable data integration. An autonomous agent named SPOTTER uses Circle developer-controlled wallets to execute payouts upon successful verification, recording only binary verdicts and inference digests on-chain to preserve user privacy. The platform integrates World ID for identity and ENSv2 for usernames, though key verification screens are intentionally gated on the demo deployment due to missing API keys.",
+  "tests": {
+   "claimed": "",
+   "found": {
+    "forgeFiles": 3,
+    "forgeTests": 73,
+    "pyFiles": 0,
+    "pyTests": 0,
+    "vitestCases": 2403,
+    "vitestFiles": 173
+   },
+   "method": "Counted it()/test() in *.test/*.spec files, function test* in *.t.sol, def test_ in Python tests. Read only.",
+   "note": "Counted, not run: running a submission's code needs the isolated sandbox, which isn't built yet.",
+   "status": "not_run"
+  },
+  "unresolvedQuestions": [
+   "What happens to the staked USDC if the off-chain verifier (e.g., Attester/Oracle) goes offline permanently before the period ends?",
+   "How is the raw wearable health data sanitized before being sent to the Confidential AI Attester to ensure no PHI leakage?",
+   "Why does the unconfigured local environment render infinite skeletons instead of an error state, and is this a race condition or missing error boundary?"
+  ],
+  "verdict": "Every step in the demo works on the live app, on Windows, Android and iPhone."
+ },
+ "fittercoin": {
+  "architecture": [],
+  "commit": "b28c5caa8555cf33ec958f5b7b160f9fc26e3c55",
+  "continuity": {
+   "assessment": "0 of 23 commits are from after the event start.",
+   "authors": 7,
+   "boundaryCommit": null,
+   "boundaryLabel": "the event start (2026-11-06)",
+   "commitsBefore": 23,
+   "commitsDuringEvent": 0,
+   "commitsSeen": 23,
+   "eventStart": "2026-11-06T00:00:00+05:30",
+   "firstCommitDate": "2025-09-26T22:28:44+05:30",
+   "historyTruncated": false,
+   "lastCommitDate": "2025-09-28T10:37:06+05:30"
+  },
+  "coreJourney": [
+   "1. Landing page.",
+   "2. Sign in with Self.",
+   "3. Profile: fitness level and goal.",
+   "4. AI personalised challenges.",
+   "5. Connect MetaMask.",
+   "6. Join a contest: pay the stake.",
+   "7. Camera counts reps.",
+   "8. Contest results."
+  ],
+  "dependencies": [],
+  "evidence": [
+   {
+    "id": "E1",
+    "claim": "AI tailors workouts to each user's age, gender and location.",
+    "source": "code",
+    "status": "contradicted",
+    "impact": "concern",
+    "refs": [
+     "frontend/src/pages/AuthPage.tsx:57"
+    ],
+    "observation": "Contradicted: The AI coach is called with hardcoded strings, not the user's data, and the GenAI client has an empty API key (frontend/src/api/ai/aiCoach.js:7).",
+    "limitations": ""
+   },
+   {
+    "id": "E2",
+    "claim": "The camera counts clean reps with OpenCV and MediaPipe.",
+    "source": "code",
+    "status": "supported_by_code",
+    "impact": "strength",
+    "refs": [
+     "backend/flask/main.py:59"
+    ],
+    "observation": "Supported: Frames go through MediaPipe Pose and joint angles count reps.",
+    "limitations": ""
+   },
+   {
+    "id": "E3",
+    "claim": "Stake to enter: contracts escrow every entry.",
+    "source": "code",
+    "status": "contradicted",
+    "impact": "concern",
+    "refs": [
+     "contract/solidity/contest.sol:60-66"
+    ],
+    "observation": "Contradicted: Every require in joinContest is commented out. Anyone joins for free.",
+    "limitations": ""
+   },
+   {
+    "id": "E4",
+    "claim": "Spectators bet on contestants and settle instantly.",
+    "source": "code",
+    "status": "contradicted",
+    "impact": "concern",
+    "refs": [
+     "contract/solidity/bet.sol:42-59"
+    ],
+    "observation": "Contradicted: settle() is an external view with no state changes. Payouts and transfers are commented out. The betting page renders a static array (frontend/src/pages/LiveBetting.tsx:22-74).",
+    "limitations": ""
+   },
+   {
+    "id": "E5",
+    "claim": "Work out with your phone or laptop camera.",
+    "source": "code",
+    "status": "contradicted",
+    "impact": "concern",
+    "refs": [
+     "frontend/src/pages/ContestsPage.tsx:243"
+    ],
+    "observation": "Contradicted: Rep counting is a desktop Flask window the page opens at localhost:5001. On Android and iPhone the live test hit a dead link.",
+    "limitations": ""
+   },
+   {
+    "id": "E6",
+    "claim": "Contracts run on Citrea testnet.",
+    "source": "code",
+    "status": "supported_by_code",
+    "impact": "strength",
+    "refs": [
+     "frontend/src/config/api.js:5"
+    ],
+    "observation": "Supported: The chain config sets Citrea testnet (0x13fb) and switches wallets to it.",
+    "limitations": ""
+   }
+  ],
+  "generatedAt": "2026-11-06T10:15:56.000Z",
+  "highlights": {
+   "word": "Overpromised",
+   "headline": "Every screen loads, but no money moves: stakes are free and bets never pay out.",
+   "holdsUp": [
+    {
+     "text": "MediaPipe really counts reps: 7 squats on the test feed.",
+     "evidence": [
+      "E2",
+      "V-laptop-d7"
+     ]
+    },
+    {
+     "text": "MetaMask connects and switches to Citrea testnet.",
+     "evidence": [
+      "E6",
+      "V-laptop-d5"
+     ]
+    }
+   ],
+   "watch": [
+    {
+     "text": "A winning bet paid 0 ETH: settle() is an empty view.",
+     "evidence": [
+      "E4"
+     ]
+    },
+    {
+     "text": "The stake tx confirms with 0 ETH escrowed.",
+     "evidence": [
+      "E3",
+      "V-laptop-d6"
+     ]
+    },
+    {
+     "text": "On Android and iPhone the layout breaks and the camera can't open.",
+     "evidence": [
+      "E5"
+     ]
+    }
+   ]
+  },
+  "intendedUsers": "",
+  "limitations": [],
+  "problem": "Bet on yourself. Get paid in crypto for real workouts.",
+  "reviewer": {
+   "attempts": 1,
+   "method": "Static read of 60 files at commit b28c5ca plus the submission; no code executed. 0g 0gm-1.0-35b-a3b.",
+   "mode": "automatic",
+   "ms": 88000,
+   "name": "Reviewer agent",
+   "refsChecked": 6,
+   "refsDropped": 0
+  },
+  "risks": [],
+  "strengths": [],
+  "summary": "FitterCoin is a workout-to-earn platform that pays people in crypto for real workouts. AI plans your training by age, gender and location, the camera counts clean reps, and spectators bet on who wins live contests.",
+  "tests": {
+   "claimed": "",
+   "found": {
+    "vitestFiles": 0,
+    "vitestCases": 0,
+    "forgeFiles": 0,
+    "forgeTests": 0,
+    "pyFiles": 0,
+    "pyTests": 0
+   },
+   "method": "Counted it()/test() in *.test/*.spec files, function test* in *.t.sol, def test_ in Python tests. Read only.",
+   "note": "Counted, not run.",
+   "status": "not_run"
+  },
+  "unresolvedQuestions": [],
+  "verdict": "Every screen loads, but no money moves: stakes are free and bets never pay out."
+ },
+ "mozark-app-studio": {
+  "architecture": [
+   {
+    "component": "CLI & Entrypoint",
+    "detail": "The `optics` command (defined in `pyproject.toml`) serves as the main entry point, delegating to helper modules like `cli.py`, `live.py`, and `serve.py`.",
+    "refs": [
+     "pyproject.toml:116",
+     "README.md:32-42"
+    ]
+   },
+   {
+    "component": "Core & Session Management",
+    "detail": "The `Optics` class and `SessionManager` handle configuration loading (`config.yaml`), session lifecycle, and bridge interface-layer calls to the builder pipeline.",
+    "refs": [
+     "docs/architecture.md:56-60"
+    ]
+   },
+   {
+    "component": "Builder & Factory",
+    "detail": "`OpticsBuilder` and `Factories` instantiate concrete drivers, element sources, and vision models based on the configuration, wiring fallback chains.",
+    "refs": [
+     "docs/architecture.md:62-65"
+    ]
+   },
+   {
+    "component": "API Layer",
+    "detail": "Provides high-level keywords: `ActionKeyword`, `AppManagement`, `Verifier`, and `FlowControl`. Encapsulates orchestration logic and delegates to strategies.",
+    "refs": [
+     "docs/architecture.md:67-72",
+     "optics_framework/api/__init__.py:1-6"
+    ]
+   },
+   {
+    "component": "Strategy Layer",
+    "detail": "Implements the self-healing location strategies (`XPath`, `Text`, `OCR`, `Image`, `LLM`) and decides which method to apply and in what order.",
+    "refs": [
+     "docs/architecture.md:74-77"
+    ]
+   },
+   {
+    "component": "Engine Layer",
+    "detail": "Contains concrete automation backends: `drivers` (Appium, Selenium, Playwright, BLE), `elementsources`, and `vision_models` (OCR, Image Matching).",
+    "refs": [
+     "docs/architecture.md:79-83",
+     "pyproject.toml:53-63"
+    ]
+   },
+   {
+    "component": "Execution Layer",
+    "detail": "Coordinates test execution, result collection (JUnit XML, logs), and event publishing via the `EventSDK`.",
+    "refs": [
+     "docs/architecture.md:85-89"
+    ]
+   }
+  ],
+  "commit": "6d0117bbff2264fbe7dc7bb1a642af6af99f85e2",
+  "continuity": {
+   "commitsSeen": 200,
+   "historyTruncated": true,
+   "commitsDuringEvent": 49,
+   "commitsBefore": 151,
+   "eventStart": "2026-11-06T00:00:00+05:30",
+   "firstCommitDate": "2026-10-22T18:47:02+05:30",
+   "lastCommitDate": "2026-11-07T00:10:10+05:30",
+   "authors": 6,
+   "boundaryCommit": null,
+   "boundaryLabel": "the event start (2026-11-06)",
+   "assessment": "Only the latest 200 commits were fetched; 49 of them are from after the event start."
+  },
+  "coreJourney": [
+   "1. Sign-in page loads.",
+   "2. Test library behind sign-in."
+  ],
+  "dependencies": [
+   {
+    "name": "fastapi",
+    "version": ">=0.115.12,<0.162.0",
+    "ref": "pyproject.toml:43"
+   },
+   {
+    "name": "playwright",
+    "version": ">=1.40,<2.0",
+    "ref": "pyproject.toml:55"
+   },
+   {
+    "name": "appium-python-client",
+    "version": ">=6.1.2,<7.0",
+    "ref": "pyproject.toml:53"
+   },
+   {
+    "name": "pytest",
+    "version": "^9.2.0",
+    "ref": "pyproject.toml:46"
+   },
+   {
+    "name": "fastmcp",
+    "version": ">=3.4.2,<5.0.0",
+    "ref": "pyproject.toml:66"
+   }
+  ],
+  "evidence": [
+   {
+    "id": "E1",
+    "claim": "Describe what the user does; agents turn it into a test.",
+    "source": "code",
+    "status": "supported_by_code",
+    "impact": "strength",
+    "refs": [
+     "optics_framework/api/__init__.py:1-6"
+    ],
+    "observation": "Supported: Keyword operations are exposed to the agent through one API.",
+    "limitations": ""
+   },
+   {
+    "id": "E2",
+    "claim": "Tests run on real Android and iOS devices.",
+    "source": "code",
+    "status": "supported_by_code",
+    "impact": "strength",
+    "refs": [
+     "optics_framework/api/app_management.py:37-49"
+    ],
+    "observation": "Supported: Appium drivers launch and manage apps on both platforms.",
+    "limitations": ""
+   },
+   {
+    "id": "E3",
+    "claim": "Self-healing: a broken locator falls back to the next method.",
+    "source": "code",
+    "status": "supported_by_code",
+    "impact": "strength",
+    "refs": [
+     "docs/architecture.md:211-220"
+    ],
+    "observation": "Supported: Fallback chain from XPath to OCR to image match.",
+    "limitations": ""
+   },
+   {
+    "id": "E4",
+    "claim": "Vision-powered element detection (OCR, image matching).",
+    "source": "code",
+    "status": "supported_by_code",
+    "impact": "strength",
+    "refs": [
+     "tests/units/common/test_merge_screen_elements.py:8-20"
+    ],
+    "observation": "Supported: Unit tests cover merging OCR and XPath elements.",
+    "limitations": ""
+   },
+   {
+    "id": "E5",
+    "claim": "Degrades gracefully when a driver lacks a capability.",
+    "source": "code",
+    "status": "supported_by_code",
+    "impact": "strength",
+    "refs": [
+     "tests/units/common/test_driver_optional_capabilities.py:16-23"
+    ],
+    "observation": "Supported: Tested: missing capabilities are skipped, not fatal.",
+    "limitations": ""
+   },
+   {
+    "id": "E6",
+    "claim": "MCP server for AI agents.",
+    "source": "code",
+    "status": "unverified",
+    "impact": "concern",
+    "refs": [],
+    "observation": "Unverified: Mentioned in the docs; the server entry point wasn't in the files read.",
+    "limitations": ""
+   },
+   {
+    "id": "E7",
+    "claim": "API keyword tests hit real endpoints.",
+    "source": "code",
+    "status": "contradicted",
+    "impact": "concern",
+    "refs": [
+     "tests/units/api/test_api_invocation.py:53-58"
+    ],
+    "observation": "Contradicted: The API tests use hardcoded mock tokens.",
+    "limitations": ""
+   },
+   {
+    "id": "E8",
+    "claim": "Runs as a CLI, REST API, Python SDK and MCP.",
+    "source": "code",
+    "status": "supported_by_code",
+    "impact": "strength",
+    "refs": [
+     "pyproject.toml:54-63"
+    ],
+    "observation": "Supported: Entry points and extras are declared.",
+    "limitations": ""
+   }
+  ],
+  "generatedAt": "2026-11-06T11:30:10.000Z",
+  "highlights": {
+   "word": "Battle-tested",
+   "headline": "The tester that tested everyone here, with 1,232 tests of its own.",
+   "holdsUp": [
+    {
+     "text": "Self-healing locators and vision detection are in the code and tested.",
+     "evidence": [
+      "E3",
+      "E4"
+     ]
+    },
+    {
+     "text": "49 of 200 commits made during the event.",
+     "evidence": []
+    }
+   ],
+   "watch": [
+    {
+     "text": "API tests run on mock tokens.",
+     "evidence": [
+      "E7"
+     ]
+    }
+   ]
+  },
+  "intendedUsers": "",
+  "limitations": [],
+  "problem": "No-code mobile testing on real devices. Describe what the user does; agents turn it into a test.",
+  "reviewer": {
+   "attempts": 1,
+   "method": "Static read of 60 files at commit 6d0117b plus the submission; no code executed. 0g 0gm-1.0-35b-a3b.",
+   "mode": "automatic",
+   "ms": 88000,
+   "name": "Reviewer agent",
+   "refsChecked": 7,
+   "refsDropped": 0
+  },
+  "risks": [],
+  "strengths": [],
+  "summary": "App Studio lets anyone write mobile test cases in plain English and run them on real Android and iOS devices, no automation code.",
+  "tests": {
+   "status": "not_run",
+   "claimed": "",
+   "found": {
+    "vitestFiles": 0,
+    "vitestCases": 0,
+    "forgeFiles": 0,
+    "forgeTests": 0,
+    "pyFiles": 82,
+    "pyTests": 1232
+   },
+   "method": "Counted it()/test() in *.test/*.spec files, function test* in *.t.sol, def test_ in Python tests. Read only.",
+   "note": "Counted, not run: running a submission's code needs the isolated sandbox, which isn't built yet."
+  },
+  "unresolvedQuestions": [],
+  "verdict": "The tester that tested everyone here, with 1,232 tests of its own."
+ },
+ "qagent": {
+  "architecture": [],
+  "commit": "a6071d2dc08a14b0b7bf08ad96a13acdb75fff89",
+  "continuity": {
+   "assessment": "31 of 31 commits are from after the event start.",
+   "authors": 3,
+   "boundaryCommit": null,
+   "boundaryLabel": "the event start (2026-11-06)",
+   "commitsBefore": 0,
+   "commitsDuringEvent": 31,
+   "commitsSeen": 31,
+   "eventStart": "2026-11-06T00:00:00+05:30",
+   "firstCommitDate": "2026-11-06T09:14:00+05:30",
+   "historyTruncated": false,
+   "lastCommitDate": "2026-11-06T10:41:00+05:30"
+  },
+  "coreJourney": [
+   "1. Landing page.",
+   "2. Connect GitHub.",
+   "3. Findings dashboard."
+  ],
+  "dependencies": [],
+  "evidence": [
+   {
+    "id": "E1",
+    "claim": "Reads every pull request automatically.",
+    "source": "code",
+    "status": "supported_by_code",
+    "impact": "strength",
+    "refs": [
+     "src/github/webhook.ts:12-40"
+    ],
+    "observation": "Supported: A webhook handler receives pull_request events.",
+    "limitations": ""
+   },
+   {
+    "id": "E2",
+    "claim": "Clicks through a preview like a user.",
+    "source": "code",
+    "status": "contradicted",
+    "impact": "concern",
+    "refs": [
+     "src/agent/explore.ts:88"
+    ],
+    "observation": "Contradicted: The explorer returns a fixed list of three canned findings.",
+    "limitations": ""
+   },
+   {
+    "id": "E3",
+    "claim": "Files bugs to GitHub Issues.",
+    "source": "code",
+    "status": "supported_by_code",
+    "impact": "strength",
+    "refs": [
+     "src/github/issues.ts:21"
+    ],
+    "observation": "Supported: Creates an issue through Octokit.",
+    "limitations": ""
+   },
+   {
+    "id": "E4",
+    "claim": "Finds bugs before users do.",
+    "source": "code",
+    "status": "unverified",
+    "impact": "concern",
+    "refs": [],
+    "observation": "Unverified: No run history or sample report in the repo.",
+    "limitations": ""
+   },
+   {
+    "id": "E5",
+    "claim": "Tested on 40 open-source repos.",
+    "source": "code",
+    "status": "contradicted",
+    "impact": "concern",
+    "refs": [
+     "README.md:9"
+    ],
+    "observation": "Contradicted: No test, fixture or log for any repo. The repo has 0 tests.",
+    "limitations": ""
+   }
+  ],
+  "generatedAt": "2026-11-06T12:39:15.000Z",
+  "highlights": {
+   "word": "Hollow",
+   "headline": "A testing product with 0 tests, and canned findings behind the demo.",
+   "holdsUp": [
+    {
+     "text": "PR webhook and issue filing are real.",
+     "evidence": [
+      "E1",
+      "E3"
+     ]
+    }
+   ],
+   "watch": [
+    {
+     "text": "The explorer returns three canned findings.",
+     "evidence": [
+      "E2"
+     ]
+    },
+    {
+     "text": "\"Tested on 40 repos\": no trace of it, and 0 tests.",
+     "evidence": [
+      "E5"
+     ]
+    }
+   ]
+  },
+  "intendedUsers": "",
+  "limitations": [],
+  "problem": "An AI QA engineer that reads your PRs and files the bugs before users find them.",
+  "reviewer": {
+   "attempts": 1,
+   "method": "Static read of 60 files at commit a6071d2 plus the submission; no code executed. 0g 0gm-1.0-35b-a3b.",
+   "mode": "automatic",
+   "ms": 88000,
+   "name": "Reviewer agent",
+   "refsChecked": 4,
+   "refsDropped": 0
+  },
+  "risks": [],
+  "strengths": [],
+  "summary": "QAgent watches every pull request, spins up a preview, clicks through it like a user and files the bugs it finds.",
+  "tests": {
+   "claimed": "",
+   "found": {
+    "vitestFiles": 0,
+    "vitestCases": 0,
+    "forgeFiles": 0,
+    "forgeTests": 0,
+    "pyFiles": 0,
+    "pyTests": 0
+   },
+   "method": "Counted it()/test() in *.test/*.spec files, function test* in *.t.sol, def test_ in Python tests. Read only.",
+   "note": "Counted, not run.",
+   "status": "not_run"
+  },
+  "unresolvedQuestions": [],
+  "verdict": "A testing product with 0 tests, and canned findings behind the demo."
+ },
+ "vaultline": {
+  "architecture": [],
+  "commit": "ea706066d09c51e4dc02b467c6ef0693dcc0b68a",
+  "continuity": {
+   "assessment": "88 of 100 commits are from after the event start.",
+   "authors": 4,
+   "boundaryCommit": null,
+   "boundaryLabel": "the event start (2026-11-06)",
+   "commitsBefore": 12,
+   "commitsDuringEvent": 88,
+   "commitsSeen": 100,
+   "eventStart": "2026-11-06T00:00:00+05:30",
+   "firstCommitDate": "2026-10-30T11:02:00+05:30",
+   "historyTruncated": false,
+   "lastCommitDate": "2026-11-06T11:20:00+05:30"
+  },
+  "coreJourney": [
+   "1. Vault overview.",
+   "2. Deposit to a vault.",
+   "3. Stream dashboard."
+  ],
+  "dependencies": [],
+  "evidence": [
+   {
+    "id": "E1",
+    "claim": "Pay streams every block.",
+    "source": "code",
+    "status": "supported_by_code",
+    "impact": "strength",
+    "refs": [
+     "src/Vaultline.sol:142-171"
+    ],
+    "observation": "Supported: Accrual is per second, settled on withdraw.",
+    "limitations": ""
+   },
+   {
+    "id": "E2",
+    "claim": "Clawback never touches earned pay.",
+    "source": "code",
+    "status": "supported_by_code",
+    "impact": "strength",
+    "refs": [
+     "src/Vaultline.sol:210"
+    ],
+    "observation": "Supported: Clawback is capped at the unvested balance; invariant test proves it.",
+    "limitations": ""
+   },
+   {
+    "id": "E3",
+    "claim": "Invariant-tested.",
+    "source": "code",
+    "status": "supported_by_code",
+    "impact": "strength",
+    "refs": [
+     "test/invariant/Vaultline.inv.t.sol:1-88"
+    ],
+    "observation": "Supported: Five invariants with a handler.",
+    "limitations": ""
+   },
+   {
+    "id": "E4",
+    "claim": "Gas-optimised withdrawals.",
+    "source": "code",
+    "status": "supported_by_code",
+    "impact": "strength",
+    "refs": [
+     "src/Vaultline.sol:188"
+    ],
+    "observation": "Supported: Packed storage and a single SSTORE path.",
+    "limitations": ""
+   },
+   {
+    "id": "E5",
+    "claim": "Deposit from any Safe in one click.",
+    "source": "code",
+    "status": "contradicted",
+    "impact": "concern",
+    "refs": [
+     "app/src/deposit.tsx:44"
+    ],
+    "observation": "Contradicted: The deposit call targets an old contract address and reverts.",
+    "limitations": ""
+   },
+   {
+    "id": "E6",
+    "claim": "Live on Base Sepolia.",
+    "source": "code",
+    "status": "supported_by_code",
+    "impact": "strength",
+    "refs": [
+     "script/Deploy.s.sol:22"
+    ],
+    "observation": "Supported: Deploy script and addresses for Base Sepolia.",
+    "limitations": ""
+   }
+  ],
+  "generatedAt": "2026-11-06T12:57:55.000Z",
+  "highlights": {
+   "word": "Unfinished",
+   "headline": "Superb contracts; the live demo breaks at deposit.",
+   "holdsUp": [
+    {
+     "text": "212 tests, 5 invariants, clawback proven safe.",
+     "evidence": [
+      "E2",
+      "E3"
+     ]
+    }
+   ],
+   "watch": [
+    {
+     "text": "Deposit reverts: the app targets an old contract.",
+     "evidence": [
+      "E5"
+     ]
+    }
+   ]
+  },
+  "intendedUsers": "",
+  "limitations": [],
+  "problem": "Streaming payroll vaults for DAOs. Salaries drip every block, with clawback built in.",
+  "reviewer": {
+   "attempts": 1,
+   "method": "Static read of 60 files at commit ea70606 plus the submission; no code executed. 0g 0gm-1.0-35b-a3b.",
+   "mode": "automatic",
+   "ms": 88000,
+   "name": "Reviewer agent",
+   "refsChecked": 6,
+   "refsDropped": 0
+  },
+  "risks": [],
+  "strengths": [],
+  "summary": "Vaultline streams contributor pay from a DAO treasury every block. Admins can pause or claw back unvested pay without touching what's already earned.",
+  "tests": {
+   "claimed": "",
+   "found": {
+    "vitestFiles": 3,
+    "vitestCases": 18,
+    "forgeFiles": 14,
+    "forgeTests": 212,
+    "pyFiles": 0,
+    "pyTests": 0
+   },
+   "method": "Counted it()/test() in *.test/*.spec files, function test* in *.t.sol, def test_ in Python tests. Read only.",
+   "note": "Counted, not run.",
+   "status": "not_run"
+  },
+  "unresolvedQuestions": [],
+  "verdict": "Superb contracts; the live demo breaks at deposit."
+ },
+ "splitsafe": {
+  "architecture": [],
+  "commit": "26506554fac9238455e783771ea936cdd398a3cc",
+  "continuity": {
+   "assessment": "64 of 64 commits are from after the event start.",
+   "authors": 3,
+   "boundaryCommit": null,
+   "boundaryLabel": "the event start (2026-11-06)",
+   "commitsBefore": 0,
+   "commitsDuringEvent": 64,
+   "commitsSeen": 64,
+   "eventStart": "2026-11-06T00:00:00+05:30",
+   "firstCommitDate": "2026-11-06T10:05:00+05:30",
+   "historyTruncated": false,
+   "lastCommitDate": "2026-11-06T11:48:00+05:30"
+  },
+  "coreJourney": [
+   "1. Scan a receipt.",
+   "2. Proposed split.",
+   "3. Approve share."
+  ],
+  "dependencies": [],
+  "evidence": [
+   {
+    "id": "E1",
+    "claim": "Snap a receipt and get a proposed split.",
+    "source": "code",
+    "status": "supported_by_code",
+    "impact": "strength",
+    "refs": [
+     "app/lib/receipt.ts:30-77"
+    ],
+    "observation": "Supported: OCR then line-item parsing.",
+    "limitations": ""
+   },
+   {
+    "id": "E2",
+    "claim": "Each friend approves their share in one tap.",
+    "source": "code",
+    "status": "supported_by_code",
+    "impact": "strength",
+    "refs": [
+     "app/components/Approve.tsx:18"
+    ],
+    "observation": "Supported: Single permit + transfer.",
+    "limitations": ""
+   },
+   {
+    "id": "E3",
+    "claim": "Settles in USDC on Base.",
+    "source": "code",
+    "status": "supported_by_code",
+    "impact": "strength",
+    "refs": [
+     "contracts/SplitVault.sol:41"
+    ],
+    "observation": "Supported: USDC address for Base Sepolia.",
+    "limitations": ""
+   },
+   {
+    "id": "E4",
+    "claim": "Only the bill's creator can settle.",
+    "source": "code",
+    "status": "contradicted",
+    "impact": "concern",
+    "refs": [
+     "contracts/SplitVault.sol:88"
+    ],
+    "observation": "Contradicted: settle() has no access control. Anyone can call it.",
+    "limitations": ""
+   },
+   {
+    "id": "E5",
+    "claim": "Works on any phone.",
+    "source": "code",
+    "status": "supported_by_code",
+    "impact": "strength",
+    "refs": [
+     "app/app/layout.tsx:9"
+    ],
+    "observation": "Supported: Mobile-first layout; the live test passed on a phone.",
+    "limitations": ""
+   }
+  ],
+  "generatedAt": "2026-11-06T12:34:52.000Z",
+  "highlights": {
+   "word": "Usable",
+   "headline": "Works end to end on a phone. The contract needs a lock on settle().",
+   "holdsUp": [
+    {
+     "text": "Every flow passes on laptop and phone.",
+     "evidence": [
+      "E1",
+      "E2",
+      "E5"
+     ]
+    }
+   ],
+   "watch": [
+    {
+     "text": "Anyone can call settle().",
+     "evidence": [
+      "E4"
+     ]
+    }
+   ]
+  },
+  "intendedUsers": "",
+  "limitations": [],
+  "problem": "Split any bill in USDC. Snap the receipt, everyone approves their share in one tap.",
+  "reviewer": {
+   "attempts": 1,
+   "method": "Static read of 60 files at commit 2650655 plus the submission; no code executed. 0g 0gm-1.0-35b-a3b.",
+   "mode": "automatic",
+   "ms": 88000,
+   "name": "Reviewer agent",
+   "refsChecked": 5,
+   "refsDropped": 0
+  },
+  "risks": [],
+  "strengths": [],
+  "summary": "Snap a receipt, SplitSafe proposes a fair split, and each friend approves their USDC share in one tap. Settles on Base.",
+  "tests": {
+   "claimed": "",
+   "found": {
+    "vitestFiles": 7,
+    "vitestCases": 41,
+    "forgeFiles": 1,
+    "forgeTests": 9,
+    "pyFiles": 0,
+    "pyTests": 0
+   },
+   "method": "Counted it()/test() in *.test/*.spec files, function test* in *.t.sol, def test_ in Python tests. Read only.",
+   "note": "Counted, not run.",
+   "status": "not_run"
+  },
+  "unresolvedQuestions": [],
+  "verdict": "Works end to end on a phone. The contract needs a lock on settle()."
+ },
+ "kirana-credit": {
+  "architecture": [],
+  "commit": "361d237a30b5deddb90bf35e1a614ea826d01bd2",
+  "continuity": {
+   "assessment": "52 of 92 commits are from after the event start.",
+   "authors": 4,
+   "boundaryCommit": null,
+   "boundaryLabel": "the event start (2026-11-06)",
+   "commitsBefore": 40,
+   "commitsDuringEvent": 52,
+   "commitsSeen": 92,
+   "eventStart": "2026-11-06T00:00:00+05:30",
+   "firstCommitDate": "2026-10-12T19:30:00+05:30",
+   "historyTruncated": false,
+   "lastCommitDate": "2026-11-06T11:02:00+05:30"
+  },
+  "coreJourney": [
+   "1. Shop onboarding.",
+   "2. Credit limit."
+  ],
+  "dependencies": [],
+  "evidence": [
+   {
+    "id": "E1",
+    "claim": "Scores a shop from its UPI sales.",
+    "source": "code",
+    "status": "supported_by_code",
+    "impact": "strength",
+    "refs": [
+     "server/score/upi.ts:15-62"
+    ],
+    "observation": "Supported: Weekly volume and volatility feed a capped limit.",
+    "limitations": ""
+   },
+   {
+    "id": "E2",
+    "claim": "Credit lines paid in USDC.",
+    "source": "code",
+    "status": "supported_by_code",
+    "impact": "strength",
+    "refs": [
+     "contracts/CreditLine.sol:58"
+    ],
+    "observation": "Supported: Draw and repay against a per-shop limit.",
+    "limitations": ""
+   },
+   {
+    "id": "E3",
+    "claim": "14 shops in a Dadar pilot.",
+    "source": "code",
+    "status": "supported_by_code",
+    "impact": "strength",
+    "refs": [
+     "docs/pilot.md:3-20"
+    ],
+    "observation": "Supported: Signed consent forms and anonymised volumes for 14 shops.",
+    "limitations": ""
+   },
+   {
+    "id": "E4",
+    "claim": "Repayments auto-deduct from UPI.",
+    "source": "code",
+    "status": "unverified",
+    "impact": "concern",
+    "refs": [],
+    "observation": "Unverified: Described; no mandate integration in the code read.",
+    "limitations": ""
+   },
+   {
+    "id": "E5",
+    "claim": "Hindi and Marathi UI.",
+    "source": "code",
+    "status": "supported_by_code",
+    "impact": "strength",
+    "refs": [
+     "app/i18n/mr.json:1"
+    ],
+    "observation": "Supported: Both locales present.",
+    "limitations": ""
+   }
+  ],
+  "generatedAt": "2026-11-06T13:17:18.000Z",
+  "highlights": {
+   "word": "Promising",
+   "headline": "Real shops, real credit. The phone layout needs work.",
+   "holdsUp": [
+    {
+     "text": "14-shop pilot, consent on file.",
+     "evidence": [
+      "E3"
+     ]
+    }
+   ],
+   "watch": [
+    {
+     "text": "Draw button cut off on a phone.",
+     "evidence": []
+    }
+   ]
+  },
+  "intendedUsers": "",
+  "limitations": [],
+  "problem": "Credit lines for Mumbai's corner shops, backed by their UPI sales and paid out in USDC.",
+  "reviewer": {
+   "attempts": 1,
+   "method": "Static read of 60 files at commit 361d237 plus the submission; no code executed. 0g 0gm-1.0-35b-a3b.",
+   "mode": "automatic",
+   "ms": 88000,
+   "name": "Reviewer agent",
+   "refsChecked": 4,
+   "refsDropped": 0
+  },
+  "risks": [],
+  "strengths": [],
+  "summary": "Kirana Credit reads a shop's UPI sales history (with consent), scores it, and opens a small USDC credit line for restocking.",
+  "tests": {
+   "claimed": "",
+   "found": {
+    "vitestFiles": 9,
+    "vitestCases": 63,
+    "forgeFiles": 2,
+    "forgeTests": 22,
+    "pyFiles": 0,
+    "pyTests": 0
+   },
+   "method": "Counted it()/test() in *.test/*.spec files, function test* in *.t.sol, def test_ in Python tests. Read only.",
+   "note": "Counted, not run.",
+   "status": "not_run"
+  },
+  "unresolvedQuestions": [],
+  "verdict": "Real shops, real credit. The phone layout needs work."
+ },
+ "metromint": {
+  "architecture": [],
+  "commit": "f2be27d56c8b64ad0244d88c96e2af9a61d08d87",
+  "continuity": {
+   "assessment": "47 of 47 commits are from after the event start.",
+   "authors": 4,
+   "boundaryCommit": null,
+   "boundaryLabel": "the event start (2026-11-06)",
+   "commitsBefore": 0,
+   "commitsDuringEvent": 47,
+   "commitsSeen": 47,
+   "eventStart": "2026-11-06T00:00:00+05:30",
+   "firstCommitDate": "2026-11-06T09:40:00+05:30",
+   "historyTruncated": false,
+   "lastCommitDate": "2026-11-06T11:55:00+05:30"
+  },
+  "coreJourney": [
+   "1. Buy a ticket.",
+   "2. Ticket QR."
+  ],
+  "dependencies": [],
+  "evidence": [
+   {
+    "id": "E1",
+    "claim": "Tickets mint as NFTs on Base.",
+    "source": "code",
+    "status": "contradicted",
+    "impact": "concern",
+    "refs": [
+     "app/lib/mint.ts:12"
+    ],
+    "observation": "Contradicted: Minting calls a local mock that returns a fake token id.",
+    "limitations": ""
+   },
+   {
+    "id": "E2",
+    "claim": "Tap in at the gate.",
+    "source": "code",
+    "status": "unverified",
+    "impact": "concern",
+    "refs": [],
+    "observation": "Unverified: QR shown; no gate integration.",
+    "limitations": ""
+   },
+   {
+    "id": "E3",
+    "claim": "Resell unused passes.",
+    "source": "code",
+    "status": "supported_by_code",
+    "impact": "strength",
+    "refs": [
+     "contracts/Resale.sol:30-61"
+    ],
+    "observation": "Supported: Listing and capped resale price.",
+    "limitations": ""
+   },
+   {
+    "id": "E4",
+    "claim": "Works on every phone.",
+    "source": "code",
+    "status": "contradicted",
+    "impact": "concern",
+    "refs": [
+     "app/styles/ticket.css:4"
+    ],
+    "observation": "Contradicted: Ticket card is fixed at 520px wide; overflows at 390px.",
+    "limitations": ""
+   },
+   {
+    "id": "E5",
+    "claim": "Loyalty rides every 10 trips.",
+    "source": "code",
+    "status": "supported_by_code",
+    "impact": "strength",
+    "refs": [
+     "contracts/Loyalty.sol:22"
+    ],
+    "observation": "Supported: Counter and reward mint.",
+    "limitations": ""
+   }
+  ],
+  "generatedAt": "2026-11-06T14:51:25.000Z",
+  "highlights": {
+   "word": "Fragile",
+   "headline": "Looks great on a laptop. On a phone, the ticket breaks; the mint is mocked.",
+   "holdsUp": [
+    {
+     "text": "Resale with a price cap is real.",
+     "evidence": [
+      "E3"
+     ]
+    }
+   ],
+   "watch": [
+    {
+     "text": "Ticket overflows at 390px.",
+     "evidence": [
+      "E4"
+     ]
+    },
+    {
+     "text": "Mint returns a fake token id.",
+     "evidence": [
+      "E1"
+     ]
+    }
+   ]
+  },
+  "intendedUsers": "",
+  "limitations": [],
+  "problem": "Mumbai Metro tickets as NFTs. Tap in, earn rides, resell unused passes.",
+  "reviewer": {
+   "attempts": 1,
+   "method": "Static read of 60 files at commit f2be27d plus the submission; no code executed. 0g 0gm-1.0-35b-a3b.",
+   "mode": "automatic",
+   "ms": 88000,
+   "name": "Reviewer agent",
+   "refsChecked": 4,
+   "refsDropped": 0
+  },
+  "risks": [],
+  "strengths": [],
+  "summary": "MetroMint turns metro tickets into NFTs you can tap at the gate, earn loyalty rides on, and resell when plans change.",
+  "tests": {
+   "claimed": "",
+   "found": {
+    "vitestFiles": 1,
+    "vitestCases": 6,
+    "forgeFiles": 0,
+    "forgeTests": 0,
+    "pyFiles": 0,
+    "pyTests": 0
+   },
+   "method": "Counted it()/test() in *.test/*.spec files, function test* in *.t.sol, def test_ in Python tests. Read only.",
+   "note": "Counted, not run.",
+   "status": "not_run"
+  },
+  "unresolvedQuestions": [],
+  "verdict": "Looks great on a laptop. On a phone, the ticket breaks; the mint is mocked."
+ }
+}

@@ -1,0 +1,307 @@
+[
+ {
+  "chainId": 84532,
+  "demoVideoUrl": "https://www.loom.com/share/17b1dc5da755422ea3177d4842556813",
+  "demoImages": [],
+  "eventId": "ethglobal-mumbai",
+  "fighterSeed": "6aa4f8449826",
+  "id": "go-health-me",
+  "liveUrl": "https://www.gohealthme.app",
+  "ownerWallet": "0x070731e0901b79a8ad0f1105bf127b9ec4aa0f83",
+  "rewardWallet": "0x070731e0901b79a8ad0f1105bf127b9ec4aa0f83",
+  "project": {
+   "name": "Go Health Me",
+   "pitch": "Put money on your own sleep or workouts. Your wearable proves it, SPOTTER pays the players who hit.",
+   "description": "A commitment game for your own health. Stake 1 test USDC on a goal, like seven hours of sleep on Saturday or one workout on Sunday. Your WHOOP, Oura or Garmin reports what happened, and SPOTTER, the settlement agent, splits the pot between everyone who hit.\n\nMiss it and your stake funds the people who showed up. Your health data stays off chain; only the yes-or-no verdict is written to Base."
+  },
+  "repoUrl": "https://github.com/aspiringsecurity/gohealthme-tokyo",
+  "showcaseUrl": null,
+  "submittedAt": "2026-11-06T05:12:00.000Z",
+  "team": {
+   "name": "Meowteam6"
+  },
+  "tracks": [
+   "defi",
+   "0g",
+   "arkiv",
+   "ens",
+   "world",
+   "base"
+  ],
+  "signed": true,
+  "review": {
+   "status": "reviewed"
+  },
+  "hasDossier": true,
+  "twist": "Works in production: 48 of 48 checks pass on Windows, Android and iPhone.",
+  "video": null
+ },
+ {
+  "chainId": 84532,
+  "demoVideoUrl": "https://ethglobal.storage/projects/z3sup/video/high.mp4?t=1759035678447",
+  "demoImages": [],
+  "eventId": "ethglobal-mumbai",
+  "fighterSeed": "fc15946fd9ec",
+  "id": "fittercoin",
+  "liveUrl": "https://fittercoin.vercel.app",
+  "ownerWallet": "0x41735e7b6a99a195e3ce7261abc2df5863644357",
+  "rewardWallet": "0x41735e7b6a99a195e3ce7261abc2df5863644357",
+  "project": {
+   "name": "FitterCoin",
+   "pitch": "Bet on yourself. Get paid in crypto for real workouts.",
+   "description": "FitterCoin is a workout-to-earn platform that pays people in crypto for real workouts. AI plans your training by age, gender and location, the camera counts clean reps, and spectators bet on who wins live contests.\n\nBuilt with Self for identity, OpenCV and MediaPipe for rep counting, Gemini for plans, and contracts on Citrea testnet. Winner at ETHGlobal New Delhi (Self, Citrea)."
+  },
+  "repoUrl": "https://github.com/musteryasm/ethDelhi-2025",
+  "showcaseUrl": "https://ethglobal.com/showcase/fittercoin-z3sup",
+  "submittedAt": "2026-11-06T06:39:47.000Z",
+  "team": {
+   "name": "FitterCoin"
+  },
+  "tracks": [
+   "defi",
+   "0g",
+   "arkiv",
+   "ens",
+   "self",
+   "citrea"
+  ],
+  "signed": true,
+  "review": {
+   "status": "reviewed"
+  },
+  "hasDossier": true,
+  "twist": "The best demo video of the day. On the live app, stakes are free and bets never pay out.",
+  "video": {
+   "saved": true,
+   "url": "https://ethglobal.storage/projects/z3sup/video/high.mp4?t=1759035678447",
+   "seconds": 236,
+   "bytes": 41375589,
+   "source": "copied from the link"
+  }
+ },
+ {
+  "chainId": 84532,
+  "demoVideoUrl": "https://aryankyatham.dev/assets/app-studio-demo.mp4",
+  "demoImages": [],
+  "eventId": "ethglobal-mumbai",
+  "fighterSeed": "5afa65bb38d7",
+  "id": "mozark-app-studio",
+  "liveUrl": "https://app-studio.mozark.ai",
+  "ownerWallet": "0x8f8602b6401a88c30992878a8f7a54cab2ee730f",
+  "rewardWallet": "0x8f8602b6401a88c30992878a8f7a54cab2ee730f",
+  "project": {
+   "name": "Mozark App Studio",
+   "pitch": "No-code mobile testing on real devices. Describe what the user does; agents turn it into a test.",
+   "description": "App Studio lets anyone write mobile test cases in plain English and run them on real Android and iOS devices, no automation code.\n\nScripted suites break every time the UI changes. App Studio's agents turn a description into a test that runs, and repairs itself."
+  },
+  "repoUrl": "https://github.com/mozarkai/optics-framework",
+  "showcaseUrl": null,
+  "submittedAt": "2026-11-06T07:23:49.000Z",
+  "team": {
+   "name": "Mozark"
+  },
+  "tracks": [
+   "ai-agents",
+   "infra",
+   "0g",
+   "arkiv"
+  ],
+  "signed": true,
+  "review": {
+   "status": "reviewed"
+  },
+  "hasDossier": true,
+  "twist": "The agentic tester that ran every live test in this arena. 1,232 tests of its own.",
+  "video": {
+   "saved": true,
+   "url": "https://aryankyatham.dev/assets/app-studio-demo.mp4",
+   "seconds": 118,
+   "bytes": 6182311,
+   "source": "copied from the link"
+  }
+ },
+ {
+  "chainId": 84532,
+  "demoVideoUrl": "",
+  "demoImages": [
+   "/media/qagent/screen-1.svg",
+   "/media/qagent/screen-2.svg"
+  ],
+  "eventId": "ethglobal-mumbai",
+  "fighterSeed": "d4256b42eb3e",
+  "id": "qagent",
+  "liveUrl": "https://qagent-demo.vercel.app",
+  "ownerWallet": "0xb794b93979fc1c3c826eaed343b3131a9fbce50d",
+  "rewardWallet": "0xb794b93979fc1c3c826eaed343b3131a9fbce50d",
+  "project": {
+   "name": "QAgent",
+   "pitch": "An AI QA engineer that reads your PRs and files the bugs before users find them.",
+   "description": "QAgent watches every pull request, spins up a preview, clicks through it like a user and files the bugs it finds.\n\nNo test scripts. Just connect GitHub."
+  },
+  "repoUrl": "https://github.com/nullpointers-hq/qagent",
+  "showcaseUrl": null,
+  "submittedAt": "2026-11-06T08:02:11.000Z",
+  "team": {
+   "name": "Null Pointers"
+  },
+  "tracks": [
+   "ai-agents",
+   "0g"
+  ],
+  "signed": true,
+  "review": {
+   "status": "reviewed"
+  },
+  "hasDossier": true,
+  "twist": "A great pitch for AI testing, and not a single test of its own.",
+  "video": null
+ },
+ {
+  "chainId": 84532,
+  "demoVideoUrl": "",
+  "demoImages": [
+   "/media/vaultline/screen-1.svg",
+   "/media/vaultline/screen-2.svg"
+  ],
+  "eventId": "ethglobal-mumbai",
+  "fighterSeed": "975cd5a6be4c",
+  "id": "vaultline",
+  "liveUrl": "https://vaultline.xyz",
+  "ownerWallet": "0xc1eacdf7bc1b27fdae1bdc42495396c79ec062d6",
+  "rewardWallet": "0xc1eacdf7bc1b27fdae1bdc42495396c79ec062d6",
+  "project": {
+   "name": "Vaultline",
+   "pitch": "Streaming payroll vaults for DAOs. Salaries drip every block, with clawback built in.",
+   "description": "Vaultline streams contributor pay from a DAO treasury every block. Admins can pause or claw back unvested pay without touching what's already earned.\n\nInvariant-tested contracts, Foundry all the way down."
+  },
+  "repoUrl": "https://github.com/merkle-mafia/vaultline",
+  "showcaseUrl": null,
+  "submittedAt": "2026-11-06T07:51:30.000Z",
+  "team": {
+   "name": "Merkle Mafia"
+  },
+  "tracks": [
+   "defi",
+   "infra",
+   "base",
+   "ens"
+  ],
+  "signed": true,
+  "review": {
+   "status": "reviewed"
+  },
+  "hasDossier": true,
+  "twist": "The strongest code in the room, and a demo that breaks at deposit.",
+  "video": null
+ },
+ {
+  "chainId": 84532,
+  "demoVideoUrl": "",
+  "demoImages": [
+   "/media/splitsafe/screen-1.svg",
+   "/media/splitsafe/screen-2.svg"
+  ],
+  "eventId": "ethglobal-mumbai",
+  "fighterSeed": "841118b6f97a",
+  "id": "splitsafe",
+  "liveUrl": "https://splitsafe.app",
+  "ownerWallet": "0x0ab856d5b24ef7e8184511c0e15823cd931d0544",
+  "rewardWallet": "0x0ab856d5b24ef7e8184511c0e15823cd931d0544",
+  "project": {
+   "name": "SplitSafe",
+   "pitch": "Split any bill in USDC. Snap the receipt, everyone approves their share in one tap.",
+   "description": "Snap a receipt, SplitSafe proposes a fair split, and each friend approves their USDC share in one tap. Settles on Base.\n\nNo more chasing people for money."
+  },
+  "repoUrl": "https://github.com/chai-and-chain/splitsafe",
+  "showcaseUrl": null,
+  "submittedAt": "2026-11-06T06:58:02.000Z",
+  "team": {
+   "name": "Chai & Chain"
+  },
+  "tracks": [
+   "defi",
+   "base",
+   "ens"
+  ],
+  "signed": true,
+  "review": {
+   "status": "reviewed"
+  },
+  "hasDossier": true,
+  "twist": "A polished app that works end to end, on contracts thinner than they look.",
+  "video": null
+ },
+ {
+  "chainId": 84532,
+  "demoVideoUrl": "",
+  "demoImages": [
+   "/media/kirana-credit/screen-1.svg",
+   "/media/kirana-credit/screen-2.svg"
+  ],
+  "eventId": "ethglobal-mumbai",
+  "fighterSeed": "b3e27444c4ad",
+  "id": "kirana-credit",
+  "liveUrl": "https://kirana.credit",
+  "ownerWallet": "0x65050b6a1a1c0d460e583d54a3a925ab003d1968",
+  "rewardWallet": "0x65050b6a1a1c0d460e583d54a3a925ab003d1968",
+  "project": {
+   "name": "Kirana Credit",
+   "pitch": "Credit lines for Mumbai's corner shops, backed by their UPI sales and paid out in USDC.",
+   "description": "Kirana Credit reads a shop's UPI sales history (with consent), scores it, and opens a small USDC credit line for restocking.\n\nPiloting with 14 kirana stores in Dadar."
+  },
+  "repoUrl": "https://github.com/dabbawala-labs/kirana-credit",
+  "showcaseUrl": null,
+  "submittedAt": "2026-11-06T07:10:44.000Z",
+  "team": {
+   "name": "Dabbawala Labs"
+  },
+  "tracks": [
+   "defi",
+   "base",
+   "arkiv"
+  ],
+  "signed": true,
+  "review": {
+   "status": "reviewed"
+  },
+  "hasDossier": true,
+  "twist": "Rough edges, but 14 real shops in Dadar already use it.",
+  "video": null
+ },
+ {
+  "chainId": 84532,
+  "demoVideoUrl": "",
+  "demoImages": [
+   "/media/metromint/screen-1.svg",
+   "/media/metromint/screen-2.svg"
+  ],
+  "eventId": "ethglobal-mumbai",
+  "fighterSeed": "cf424d0ccf28",
+  "id": "metromint",
+  "liveUrl": "https://metromint.app",
+  "ownerWallet": "0x0b4aff970c9c3be716f9cac8f59786c213ef3dd6",
+  "rewardWallet": "0x0b4aff970c9c3be716f9cac8f59786c213ef3dd6",
+  "project": {
+   "name": "MetroMint",
+   "pitch": "Mumbai Metro tickets as NFTs. Tap in, earn rides, resell unused passes.",
+   "description": "MetroMint turns metro tickets into NFTs you can tap at the gate, earn loyalty rides on, and resell when plans change.\n\nOne app for every line in Mumbai."
+  },
+  "repoUrl": "https://github.com/local-train/metromint",
+  "showcaseUrl": null,
+  "submittedAt": "2026-11-06T08:14:20.000Z",
+  "team": {
+   "name": "Local Train"
+  },
+  "tracks": [
+   "infra",
+   "base"
+  ],
+  "signed": true,
+  "review": {
+   "status": "reviewed"
+  },
+  "hasDossier": true,
+  "twist": "A slick laptop demo for a commuter app that breaks on a phone, minting on a mock.",
+  "video": null
+ }
+]
