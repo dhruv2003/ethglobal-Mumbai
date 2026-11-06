@@ -116,47 +116,48 @@ export function FightersPage() {
     };
   }, []);
   const { loading, fighters, judges, cfg, error } = state;
+  const scored = fighters.some((f) => f.ens?.records?.["arena.score"] != null);
   return (
-    <div className="fighters">
-      <header className="fighters__head">
-        <h1 className="t-display m0">Fighters</h1>
-        <p className="t-body muted m0">Every project fights as its own pixel fighter. Their reputation (score, record, titles) lives on their ENS name, so it goes with the team and anyone can check it.</p>
+    <div className={`roster ${scored ? "" : "roster--unranked"}`}>
+      <header className="roster__head">
+        <span className="roster__eyebrow">Fight night roster</span>
+        <h1 className="roster__title m0">Fighters</h1>
+        <p className="roster__sub m0">Every project steps into the ring as its own fighter. Their record lives on their ENS name, so it travels with the team and anyone can check it.</p>
       </header>
-      {loading && (
-        <div className="fighters__grid" aria-busy="true">
-          {[0, 1, 2].map((i) => (
-            <div key={i} className="skeleton skeleton--seat" />
-          ))}
-        </div>
-      )}
-      {error && <p className="t-caption" role="alert">{error}</p>}
-      {!loading && !error && fighters.length === 0 && <p className="t-caption">No fighters yet. A project becomes one when it's submitted.</p>}
+
+      {loading && <p className="roster__note" aria-busy="true">Calling the fighters to the ring…</p>}
+      {error && <p className="roster__note" role="alert">{error}</p>}
+      {!loading && !error && fighters.length === 0 && <p className="roster__note">No fighters yet. A project becomes one when it's submitted.</p>}
+
       {fighters.length > 0 && (
-        <ol className="fighters__grid">
-          {fighters.map((f, i) => (
-            <FighterCard key={f.id} f={f} cfg={cfg} rank={i + 1} />
-          ))}
-        </ol>
+        <>
+          <ol className="roster__list">
+            {fighters.map((f, i) => (
+              <FighterRow key={f.id} f={f} cfg={cfg} rank={i + 1} scored={scored} />
+            ))}
+          </ol>
+        </>
       )}
+
       {judges.length > 0 && (
-        <section className="fighters__judges" aria-labelledby="judges-h">
-          <h2 id="judges-h" className="t-heading m0">AI judges</h2>
-          <ul className="judges-strip">
+        <section className="roster__judges" aria-labelledby="ringside-h">
+          <h2 id="ringside-h" className="roster__h2 m0">
+            Ringside judges
+          </h2>
+          <ul className="ringside">
             {judges.map((j) => {
               const label = j.records.name || j.name.replace(/^judge-/, "").replace(/\.[^.]+\.eth$/, "").replace(/-/g, " ");
               return (
-                <li key={j.id} className="judge-tile">
-                  <Ring compact className="judge-tile__ring">
-                    <PixelFighter project={{ seed: j.id, name: label, pitch: j.records.description ?? "", description: "", tracks: [] }} scale={4} label={`${label}, judge`} />
-                  </Ring>
-                  <div className="judge-tile__text">
-                    <span className="t-body-strong judge-tile__name">{label}</span>
-                    <span className="t-caption judge-tile__desc">{j.records.description || "AI judge: scores every project in its tournaments."}</span>
-                    {j.records["arena.model"] && <span className="chip chip--tag judge-tile__model">{j.records["arena.model"]}</span>}
-                    <a className="t-mono-caption" href={ensAppUrl(cfg, j.name)} target="_blank" rel="noopener noreferrer">
+                <li key={j.id} className="ringside__judge">
+                  <span className="ringside__face">
+                    <PixelFighter project={{ seed: j.id, name: label, pitch: j.records.description ?? "", description: "", tracks: [] }} scale={3} label={`${label}, judge`} />
+                  </span>
+                  <span className="ringside__text">
+                    <span className="ringside__name">{label}</span>
+                    <a className="ringside__ens" href={ensAppUrl(cfg, j.name)} target="_blank" rel="noopener noreferrer">
                       {j.name} ↗
                     </a>
-                  </div>
+                  </span>
                 </li>
               );
             })}
@@ -167,69 +168,63 @@ export function FightersPage() {
   );
 }
 
-function FighterCard({ f, cfg, rank }) {
+/** One fighter in the standings: rank, sprite under a spotlight, persona, gear, record. */
+function FighterRow({ f, cfg, rank, scored }) {
   const p = f.project;
   const r = f.ens?.records ?? {};
-  const name = p?.name || r.name || f.ens?.name;
+  const projectName = p?.name || r.name || f.ens?.name;
   const persona = p ? fighterTraitItems(p, trackNameOf) : [];
   const archetype = persona.find((x) => x.id === "archetype");
   const gear = persona.filter((x) => x.id !== "archetype");
-  const pitch = p?.pitch || r.description || "";
-  const blurb = (p?.description || "").split(/\n{2,}/)[0];
+  const score = r["arena.score"];
   return (
-    <li className="fcard2">
-      <Link to={`/projects/${encodeURIComponent(f.id)}`} className="fcard2__link" aria-label={`${name}: open the project`}>
-        {r["arena.score"] != null && <span className="fcard2__rank t-num">#{rank}</span>}
-        <Ring className="fcard2__ring">
-          <PixelFighter project={p ?? { seed: f.id, name, pitch, description: "", tracks: [] }} scale={6} className="fighter--enter" />
-        </Ring>
-        <div className="fcard2__body">
-          <div className="fcard2__title">
-            <h2 className="t-heading m0">{name}</h2>
-            {p?.teamName && <span className="t-caption">by {p.teamName}</span>}
-          </div>
-          {archetype && (
-            <p className="fcard2__persona m0">
-              <span className="fcard2__as">{archetype.label}</span>
-              <span className="t-caption"> · {archetype.why}</span>
-            </p>
-          )}
-          {pitch && <p className="fcard2__pitch m0">{pitch}</p>}
-          {blurb && blurb !== pitch && <p className="t-body muted fcard2__desc m0">{blurb}</p>}
+    <li className="frow">
+      <span className={`frow__rank ${scored && rank <= 3 ? `frow__rank--${rank}` : ""}`}>{scored && score != null ? rank : "–"}</span>
+      <Link to={`/projects/${encodeURIComponent(f.id)}`} className="frow__fighter" aria-label={`${archetype?.label ?? projectName}, fighting for ${projectName}`}>
+        <span className="frow__spot" aria-hidden="true">
+          <PixelFighter project={p ?? { seed: f.id, name: projectName, pitch: "", description: "", tracks: [] }} scale={4} />
+        </span>
+        <span className="frow__who">
+          <span className="frow__persona">{archetype?.label ?? projectName}</span>
+          <span className="frow__for">
+            fights for <strong>{projectName}</strong>
+            {p?.teamName ? ` · ${p.teamName}` : ""}
+          </span>
+          {archetype?.why && <span className="frow__tag">{archetype.why}</span>}
           {gear.length > 0 && (
-            <ul className="fcard2__gear" aria-label="Gear">
+            <span className="frow__gear">
               {gear.map((g) => (
-                <li key={g.id} className="chip chip--tag" title={g.why}>
+                <span key={g.id} className="frow__item" title={g.why}>
                   {g.label}
-                </li>
+                </span>
               ))}
-            </ul>
+            </span>
           )}
-        </div>
+        </span>
       </Link>
-      <footer className="fcard2__foot">
-        <dl className="fcard2__stats t-num">
+      <div className="frow__side">
+        <dl className="frow__stats">
           <div>
-            <dt className="t-caption">Score</dt>
-            <dd>{r["arena.score"] ?? "—"}</dd>
+            <dt>Score</dt>
+            <dd>{score ?? "—"}</dd>
           </div>
           <div>
-            <dt className="t-caption">Record</dt>
-            <dd>{r["arena.record"] ?? "—"}</dd>
+            <dt>Record</dt>
+            <dd>{r["arena.record"] ?? "0–0"}</dd>
           </div>
           <div>
-            <dt className="t-caption">Titles</dt>
+            <dt>Titles</dt>
             <dd>{r["arena.titles"] ?? "0"}</dd>
           </div>
         </dl>
         {f.ens && cfg ? (
-          <a className="fcard2__ens t-mono-caption" href={ensAppUrl(cfg, f.ens.name)} target="_blank" rel="noopener noreferrer">
+          <a className="frow__ens" href={ensAppUrl(cfg, f.ens.name)} target="_blank" rel="noopener noreferrer" title={f.ens.name}>
             {f.ens.name} ↗
           </a>
         ) : (
-          <span className="t-caption muted">ENS name on its way</span>
+          <span className="frow__ens frow__ens--none">ENS name on its way</span>
         )}
-      </footer>
+      </div>
     </li>
   );
 }
