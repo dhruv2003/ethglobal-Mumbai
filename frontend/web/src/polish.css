@@ -66,6 +66,37 @@ a.brand:hover .brand__token { transform: translateY(-14px) scale(1.25); }
 .wallet-on__addr { display: inline-flex; align-items: center; gap: var(--space-2); }
 .wallet-on__dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); box-shadow: 0 0 0 3px var(--success-soft); }
 
+/* Header menus: Manage in the nav, the wallet chip on the right */
+.menu { position: relative; display: inline-flex; }
+.menu__trigger { display: inline-flex; align-items: center; gap: var(--space-1); border: 0; cursor: pointer; }
+.menu__chevron { flex: none; position: relative; z-index: 1; transition: transform var(--dur-fast) var(--ease-standard); }
+.menu__trigger[aria-expanded="true"] .menu__chevron { transform: rotate(180deg); }
+.top__manage {
+  position: relative; isolation: isolate; background: none; color: var(--ink-secondary);
+  font: 600 15px/20px var(--font-sans); padding: var(--space-2) var(--space-3); border-radius: var(--radius-pill);
+  transition: color var(--dur-fast) var(--ease-standard);
+}
+.top__manage:hover { color: var(--ink); }
+.top__manage.is-lit { color: var(--on-action); }
+@media (max-width: 480px) {
+  .top__manage { padding: var(--space-1) var(--space-2); }
+}
+.menu__panel {
+  position: absolute; top: calc(100% + var(--space-2)); z-index: 10; min-width: 180px;
+  display: flex; flex-direction: column; gap: 2px; padding: var(--space-2);
+  background: var(--canvas); border: 1px solid var(--line); border-radius: var(--radius-md); box-shadow: var(--shadow-lift);
+}
+.menu__panel--start { left: 0; transform-origin: top left; }
+.menu__panel--end { right: 0; transform-origin: top right; }
+.menu__item, .top__nav a.menu__item {
+  display: block; width: 100%; padding: var(--space-2) var(--space-3); border: 0; border-radius: var(--radius-sm);
+  background: none; color: var(--ink); text-align: left; text-decoration: none; white-space: nowrap;
+  font: 600 14px/20px var(--font-sans); cursor: pointer;
+}
+.menu__item:hover, .top__nav a.menu__item:hover { background: var(--surface-sunken) !important; }
+.menu__item[aria-current="page"], .top__nav a.menu__item[aria-current="page"] { background: var(--surface-sunken) !important; }
+.menu__rule { height: 1px; margin: var(--space-1) 0; background: var(--line); }
+
 /* ---------- Buttons: detail ---------- */
 .btn { position: relative; overflow: hidden; isolation: isolate; }
 .btn--primary::after, .btn--oracle::after, .btn--crush::after { /* light sweep on hover */

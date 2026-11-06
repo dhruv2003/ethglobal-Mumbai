@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useOrganizer } from "../lib/organizer.js";
 import { AnimatePresence, motion, useMotionValueEvent, useScroll } from "motion/react";
 import { StatusPill } from "@ds/ui.jsx";
 import { EVENT } from "../config/event.js";
 import { Link } from "../lib/router.jsx";
 import { chainName, isMobile, metamaskDeepLink, shortAddress } from "../lib/wallet.js";
+import { toast } from "./Feedback.jsx";
 
 /** Chrome/Edge/Android fire beforeinstallprompt; iOS installs via Share > Add to Home Screen. */
 function useInstallPrompt() {
@@ -48,13 +49,61 @@ const NAV = [
   { to: "/tournaments", label: "Tournaments", on: (r) => r.name === "tournaments" || r.name === "tournament" || r.name === "event" || r.name === "form" || r.name === "matchFight" },
   { to: "/projects", label: "Projects", on: (r) => r.name === "projects" || r.name === "project" },
   { to: "/graph", label: "Graph", on: (r) => r.name === "graph" },
-  { to: "/wallet", label: "Wallet", on: (r) => r.name === "wallet" },
 ];
 const ORGANIZER_NAV = [
   { to: "/judge", label: "Judges", on: (r) => r.name === "judges" },
   { to: "/organizer", label: "Organizer", on: (r) => r.name === "organizer" },
-  { to: "/storage", label: "0G Storage", on: (r) => r.name === "storage" },
 ];
+const MANAGE = "manage";
+
+/** A button that opens a small panel. Closes on Escape, on a click outside, and when an item is chosen. */
+function Menu({ triggerClass, triggerProps, trigger, align = "start", children }) {
+  const [open, setOpen] = useState(false);
+  const root = useRef(null);
+  useEffect(() => {
+    if (!open) return undefined;
+    const onPointer = (e) => {
+      if (!root.current?.contains(e.target)) setOpen(false);
+    };
+    const onKey = (e) => {
+      if (e.key !== "Escape") return;
+      setOpen(false);
+      root.current?.querySelector("button")?.focus();
+    };
+    document.addEventListener("pointerdown", onPointer);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onPointer);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+  return (
+    <div className="menu" ref={root}>
+      <button type="button" className={`menu__trigger ${triggerClass}`} aria-expanded={open} onClick={() => setOpen((o) => !o)} {...triggerProps}>
+        {trigger}
+        <svg className="menu__chevron" viewBox="0 0 12 12" width="12" height="12" aria-hidden="true">
+          <path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            className={`menu__panel menu__panel--${align}`}
+            initial={{ opacity: 0, y: -6, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -4, scale: 0.98, transition: { duration: 0.1 } }}
+            transition={{ type: "spring", stiffness: 600, damping: 36 }}
+            onClick={(e) => {
+              if (e.target.closest("a, button")) setOpen(false);
+            }}
+          >
+            {children}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 
 export function Header({ wallet, route }) {
   const install = useInstallPrompt();
@@ -63,9 +112,18 @@ export function Header({ wallet, route }) {
   useMotionValueEvent(scrollY, "change", (y) => setScrolled(y > 8));
   const [hover, setHover] = useState(null);
   const { isOrganizer } = useOrganizer(wallet);
-  const links = isOrganizer ? [...NAV, ...ORGANIZER_NAV] : NAV;
-  const current = links.find((n) => n.on(route))?.to ?? null;
+  const manageOn = isOrganizer && ORGANIZER_NAV.some((n) => n.on(route));
+  const current = manageOn ? MANAGE : (NAV.find((n) => n.on(route))?.to ?? null);
   const pill = hover ?? current;
+  const pillFor = (key) =>
+    pill === key && (
+      <motion.span
+        layoutId="nav-pill"
+        className={`top__pill ${key === current ? "top__pill--current" : ""}`}
+        transition={{ type: "spring", stiffness: 500, damping: 38 }}
+        aria-hidden="true"
+      />
+    );
   return (
     <header className={`top ${scrolled ? "top--scrolled" : ""}`}>
       <div className="top__left">
@@ -76,19 +134,30 @@ export function Header({ wallet, route }) {
           </span>
         </Link>
         <nav className="top__nav" aria-label="Main" onPointerLeave={() => setHover(null)}>
-          {links.map((n) => (
+          {NAV.map((n) => (
             <Link key={n.to} to={n.to} className={pill === n.to && n.to === current ? "is-lit" : undefined} aria-current={n.to === current ? "page" : undefined} onPointerEnter={() => setHover(n.to)} onFocus={() => setHover(n.to)} onBlur={() => setHover(null)}>
-              {pill === n.to && (
-                <motion.span
-                  layoutId="nav-pill"
-                  className={`top__pill ${n.to === current ? "top__pill--current" : ""}`}
-                  transition={{ type: "spring", stiffness: 500, damping: 38 }}
-                  aria-hidden="true"
-                />
-              )}
+              {pillFor(n.to)}
               <span className="top__label">{n.label}</span>
             </Link>
           ))}
+          {isOrganizer && (
+            <Menu
+              triggerClass={`top__manage ${pill === MANAGE && manageOn ? "is-lit" : ""}`}
+              triggerProps={{ onPointerEnter: () => setHover(MANAGE), onFocus: () => setHover(MANAGE), onBlur: () => setHover(null) }}
+              trigger={
+                <>
+                  {pillFor(MANAGE)}
+                  <span className="top__label">Manage</span>
+                </>
+              }
+            >
+              {ORGANIZER_NAV.map((n) => (
+                <Link key={n.to} to={n.to} className="menu__item" aria-current={n.on(route) ? "page" : undefined}>
+                  {n.label}
+                </Link>
+              ))}
+            </Menu>
+          )}
         </nav>
       </div>
       <div className="top__right">
@@ -106,7 +175,7 @@ export function Header({ wallet, route }) {
             exit={{ opacity: 0, scale: 0.85, y: 6 }}
             transition={{ type: "spring", stiffness: 500, damping: 30 }}
           >
-            <WalletButton wallet={wallet} />
+            <WalletButton wallet={wallet} route={route} />
           </motion.div>
         </AnimatePresence>
       </div>
@@ -126,7 +195,16 @@ function NetworkStatus({ wallet }) {
   );
 }
 
-function WalletButton({ wallet }) {
+async function copyAddress(address) {
+  try {
+    await navigator.clipboard.writeText(address);
+    toast("Address copied.", { tone: "success" });
+  } catch {
+    toast("Couldn't copy the address.", { tone: "warning" });
+  }
+}
+
+function WalletButton({ wallet, route }) {
   if (wallet.status === "unavailable") {
     return isMobile() ? (
       <a className="btn btn--oracle btn--sm" href={metamaskDeepLink()}>
@@ -140,15 +218,31 @@ function WalletButton({ wallet }) {
   }
   if (wallet.status === "connected") {
     return (
-      <div className="wallet-on">
-        <span className="wallet-on__addr t-mono" title={wallet.address}>
-          <span className="wallet-on__dot" aria-hidden="true" />
-          {shortAddress(wallet.address)}
-        </span>
-        <button type="button" className="btn btn--ghost btn--sm" onClick={wallet.disconnect}>
+      <Menu
+        align="end"
+        triggerClass="wallet-on__addr t-mono"
+        triggerProps={{ title: wallet.address, "aria-label": `Wallet menu for ${shortAddress(wallet.address)}` }}
+        trigger={
+          <>
+            <span className="wallet-on__dot" aria-hidden="true" />
+            {shortAddress(wallet.address)}
+          </>
+        }
+      >
+        <Link to="/wallet" className="menu__item" aria-current={route.name === "wallet" ? "page" : undefined}>
+          Wallet
+        </Link>
+        <Link to="/wallet/transactions" className="menu__item" aria-current={route.name === "transactions" ? "page" : undefined}>
+          Transactions
+        </Link>
+        <span className="menu__rule" aria-hidden="true" />
+        <button type="button" className="menu__item" onClick={() => copyAddress(wallet.address)}>
+          Copy address
+        </button>
+        <button type="button" className="menu__item" onClick={wallet.disconnect}>
           Disconnect
         </button>
-      </div>
+      </Menu>
     );
   }
   return (

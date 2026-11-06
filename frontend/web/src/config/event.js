@@ -22,6 +22,8 @@ export const EVENT = {
     rpcUrl: env.VITE_RPC_URL || "https://sepolia.base.org",
     explorerUrl: env.VITE_EXPLORER_URL || "https://sepolia.basescan.org",
     symbol: env.VITE_NATIVE_SYMBOL || "ETH",
+    // Blockscout API behind /wallet/transactions. Empty on other chains until it's set for them.
+    historyApi: env.VITE_HISTORY_API || (Number(env.VITE_CHAIN_ID || 84532) === 84532 ? "https://base-sepolia.blockscout.com/api/v2" : ""),
   },
   maxTracks: 3,
 };

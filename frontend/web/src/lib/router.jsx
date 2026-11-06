@@ -23,6 +23,7 @@ export function matchRoute(path) {
   const p = path.replace(/\/+$/, "") || "/";
   if (p === "/submit") return { name: "tournaments", rewrite: "/tournaments" }; // you enter through a tournament
   if (p === "/wallet") return { name: "wallet" };
+  if (p === "/wallet/transactions") return { name: "transactions" };
   if (p === "/organizer") return { name: "organizer" };
   if (p === "/arena") return { name: "arena" };
   if (p === "/graph") return { name: "graph" };
