@@ -10,6 +10,8 @@
  * Docs: https://docs.0g.ai/developer-hub/building-on-0g/compute-network/router/quickstart
  */
 
+const tee = require("./tee");
+
 const BASE_URL = (process.env.ZG_BASE_URL || "https://router-api.0g.ai/v1").replace(/\/$/, "");
 const DEFAULT_TIMEOUT_MS = 30_000;
 
@@ -149,12 +151,16 @@ async function chat({ model, messages, temperature, maxTokens, json = false, too
 
   const { body, headers } = await request("/chat/completions", { json: payload, timeoutMs });
   const choice = body.choices?.[0] ?? {};
+  const trace = traceOf(body, headers, model);
+  // The Router doesn't report tee_verified for sealed providers: check the signature ourselves.
+  if (verifyTee && trace.teeVerified == null) Object.assign(trace, await tee.verifyChat(trace));
+  else if (trace.teeVerified != null) trace.teeCheck = "router";
   return {
     text: choice.message?.content ?? "",
     toolCalls: choice.message?.tool_calls ?? null,
     reasoning: choice.message?.reasoning_content ?? null,
     finishReason: choice.finish_reason ?? null,
-    trace: traceOf(body, headers, model),
+    trace,
   };
 }
 

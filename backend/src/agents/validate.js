@@ -82,6 +82,24 @@ function screenshot(o) {
   return p;
 }
 
+/** assessUi output for one project. imageIds: the IDs actually sent, so citations can't be invented. */
+const uiAssess = (imageIds) => (o) => {
+  const p = [];
+  if (!o || typeof o !== "object") return ["not an object"];
+  if (!isStr(o.screens)) p.push("missing screens");
+  if (!Array.isArray(o.strengths) || o.strengths.some((x) => !isStr(x))) p.push("strengths must be an array of sentences");
+  if (!Array.isArray(o.issues)) p.push("issues must be an array");
+  for (const i of Array.isArray(o.issues) ? o.issues : []) {
+    if (!isStr(i?.detail)) p.push("issues[].detail missing");
+    if (![1, 2, 3, 4, 5].includes(i?.severity)) p.push("issues[].severity must be 1-5");
+    const bad = (Array.isArray(i?.images) ? i.images : []).filter((id) => !imageIds.has(id));
+    if (bad.length) p.push(`issues cite unknown images ${bad.join(", ")}`);
+  }
+  if (!["yes", "partly", "no", "unclear"].includes(o.demoMatchesLive)) p.push("demoMatchesLive must be yes|partly|no|unclear");
+  if (!Number.isInteger(o.quality) || o.quality < 1 || o.quality > 10) p.push("quality must be an integer 1-10");
+  return p;
+};
+
 function guidance(o) {
   const p = [];
   if (!isStr(o?.guidance)) p.push("missing guidance");
@@ -90,4 +108,4 @@ function guidance(o) {
   return p;
 }
 
-module.exports = { words, fighter, question, turn, scorecard, screenshot, guidance };
+module.exports = { words, fighter, question, turn, scorecard, screenshot, uiAssess, guidance };

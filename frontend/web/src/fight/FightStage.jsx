@@ -172,7 +172,7 @@ export function captionFor(match, state, event) {
   if (!event) return { who: "", text: "" };
   const A = match.fighters.a.name, B = match.fighters.b.name;
   switch (event.type) {
-    case "intro": return { who: "Announcer", text: `${A} vs ${B}. Three judges, five rounds. Only the judges' scores decide the fight.` };
+    case "intro": return { who: "Announcer", text: `${A} vs ${B}. Three judges, six rounds. Only the judges' scores decide the fight.` };
     case "round_start": return { who: CRITERION_LABEL[event.round], text: `${CRITERION_LABEL[event.round]} round, worth ${WEIGHTS[event.round]}% of the score.` };
     case "ruling": {
       const r = state.rulings.find((x) => x.challengeId === event.challengeId);
