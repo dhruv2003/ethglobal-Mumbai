@@ -13,13 +13,31 @@ import { matchRoute, useCanonical, usePath } from "./lib/router.jsx";
 import { LandingPage, ProjectPage, ProjectsPage } from "./components/Projects.jsx";
 import { JudgesPage } from "./components/JudgesPage.jsx";
 import { FightDemo } from "./components/FightDemo.jsx";
+import { WalletPage } from "./components/WalletPage.jsx";
+import { OrganizerPage } from "./components/OrganizerPage.jsx";
+import { TournamentPage, TournamentsPage } from "./components/TournamentsPage.jsx";
+import { ArenaPage } from "./components/ArenaPage.jsx";
+import { MatchFightPage } from "./components/MatchFightPage.jsx";
 import { Footer } from "./components/Footer.jsx";
 import { Backdrop, ScrollProgress, easeOut } from "./components/fx.jsx";
 import { AnimatePresence, MotionConfig, motion } from "motion/react";
 
 const hhmm = () => new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
-const TITLES = { home: "The arena", form: "Submit a project", projects: "Projects", project: "Project", judges: "Judges", fight: "Fight demo" };
+const TITLES = {
+  home: "The arena",
+  form: "Submit a project",
+  projects: "Projects",
+  project: "Project",
+  judges: "Judges",
+  fight: "Fight demo",
+  wallet: "Wallet",
+  organizer: "Organizer",
+  tournaments: "Tournaments",
+  tournament: "Tournament",
+  arena: "Arena",
+  matchFight: "Fight",
+};
 
 export default function App() {
   const wallet = useWallet();
@@ -94,7 +112,7 @@ export default function App() {
 
   const ctx = { data, get, set, errors, touched, touch, showAll };
 
-  const pageClass = `page ${route.name === "form" ? "solo solo--form" : route.name === "fight" ? "solo solo--fight" : "solo solo--wide"}`;
+  const pageClass = `page ${route.name === "form" ? "solo solo--form" : route.name === "fight" ? "solo solo--fight" : route.name === "arena" ? "village-main" : route.name === "matchFight" || route.name === "tournament" ? "solo solo--arena" : "solo solo--wide"}`;
 
   return (
     <MotionConfig reducedMotion="user">
@@ -125,7 +143,7 @@ export default function App() {
         <AnimatePresence mode="wait" initial={false}>
           <motion.main
             id="main"
-            key={route.name + (route.id ?? "") + (record ? ":done" : "")}
+            key={route.name + (route.id ?? "") + (route.match ?? "") + (record ? ":done" : "")}
             className={pageClass}
             initial={{ opacity: 0, y: 14, filter: "blur(8px)" }}
             animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
@@ -138,6 +156,18 @@ export default function App() {
               <JudgesPage />
             ) : route.name === "fight" ? (
               <FightDemo />
+            ) : route.name === "wallet" ? (
+              <WalletPage wallet={wallet} />
+            ) : route.name === "organizer" ? (
+              <OrganizerPage wallet={wallet} />
+            ) : route.name === "tournaments" ? (
+              <TournamentsPage />
+            ) : route.name === "tournament" ? (
+              <TournamentPage id={route.id} wallet={wallet} />
+            ) : route.name === "arena" ? (
+              <ArenaPage />
+            ) : route.name === "matchFight" ? (
+              <MatchFightPage id={route.id} matchIndex={route.match} wallet={wallet} />
             ) : route.name === "projects" ? (
               <ProjectsPage />
             ) : route.name === "project" ? (
@@ -167,7 +197,7 @@ export default function App() {
             )}
           </motion.main>
         </AnimatePresence>
-        <Footer />
+        {route.name !== "arena" && <Footer />}
       </FormCtx.Provider>
     </MotionConfig>
   );

@@ -22,6 +22,14 @@ Needs Node 18+. MetaMask must be installed in the browser. On a phone without it
 | `/projects` | Dashboard: summary tiles, search, track filters (kept in the URL), fighter cards |
 | `/projects/:id` | One project. Toggle between **Team submission** (what they entered) and **Agent judge** (`?view=judge`, the reviewer's dossier) |
 | `/submit` | The form, with a live preview of your fighter |
+| `/wallet` | Connect MetaMask, buy and sell back FILTER, collect positions |
+| `/organizer` | Run a real tournament on chain: roles, create, freeze, open matches, publish scores |
+| `/tournaments` | On-chain tournaments, plus labelled sample ones |
+| `/tournaments/:id` | Bracket and the "who wins it all" pool |
+| `/arena` | Four aerial 8-bit rings per page (sample data) |
+| `/fights/:tournament/:match` | The fight player beside that match's betting pool. The fight is a demo recording |
+
+Chain and contract addresses come from `.env` (see `.env.example`). They default to the Base Sepolia test deployment.
 
 ## What the form does
 
@@ -42,6 +50,9 @@ Needs Node 18+. MetaMask must be installed in the browser. On a phone without it
 | `src/components/Projects.jsx` | Dashboard and project page |
 | `src/lib/projects.js` | `listProjects()`: **replace with GET /projects**; merges submissions with sample fixtures |
 | `src/lib/router.jsx` | Tiny History-API router |
+| `src/fight/sounds.js` | Every fight sound and music track, generated in the browser |
+| `src/fight/soundCues.js` | Which sound plays on which fight event |
+| `src/fight/useFightSound.js` | Plays them from the fight clock: random picks, mute, silent when paused |
 
 ## Design system
 

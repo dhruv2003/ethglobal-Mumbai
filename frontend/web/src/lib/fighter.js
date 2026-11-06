@@ -1,15 +1,16 @@
 /*
  * 8-bit fighter avatars. Pure functions: project -> traits -> pixel layers.
  *
- * The base is a 16x20 chibi. Each project customises it from its own data:
- *  - jacket colour  <- first sponsor track
+ * Twelve distinct 16x20 silhouettes, selected stably from project identity:
+ *  - costume trim  <- first sponsor track
  *  - gear (head / eye / hand slots) <- keywords in name, pitch and description
  *  - skin, hair colour, hair style  <- stable hash of the project id
  * Later, the agent service can return traits directly (PRD AGT-01); the
  * renderer only needs the traits object.
  *
- * Art colours live here, not in tokens.css: they are sprite palette, not UI.
+ * Art colours live here and in fighterRoster.js: sprite palettes, not UI.
  */
+import { FIGHTER_ROSTER, fighterStyle } from "./fighterRoster.js";
 
 // ---------- palette ----------
 const INK = "#17141f";
@@ -78,10 +79,14 @@ export function fighterTraits(project) {
     if (!gear[r.slot] && r.re.test(text)) gear[r.slot] = { id: r.id, label: r.label, why: r.why };
   }
   const track = project.tracks?.[0];
+  const style = fighterStyle(project.archetype ?? project.fighter?.archetype) ?? FIGHTER_ROSTER[h % FIGHTER_ROSTER.length];
   return {
     seed: h,
-    skin: SKINS[h % SKINS.length],
-    hair: HAIRS[(h >>> 3) % HAIRS.length],
+    archetype: style.id,
+    archetypeName: style.name,
+    archetypeDetail: style.detail,
+    skin: style.skin ?? SKINS[h % SKINS.length],
+    hair: style.hair ?? HAIRS[(h >>> 3) % HAIRS.length],
     hairStyle: HAIR_STYLES[(h >>> 7) % HAIR_STYLES.length],
     jacket: TRACK_COLORS[track] ?? NO_TRACK,
     jacketFrom: track ?? null,
@@ -137,7 +142,7 @@ function colorFor(key, t) {
     case "s": return shade(t.skin, 0.85);
     case "J": return t.jacket;
     case "j": return shade(t.jacket);
-    default: return FIXED[key];
+    default: return fighterStyle(t.archetype)?.palette[key] ?? FIXED[key];
   }
 }
 
@@ -170,6 +175,26 @@ function gridPixels(rows, yOffset = 0) {
   return out;
 }
 
+function bodyPixels(t) {
+  const style = fighterStyle(t.archetype);
+  if (style) return gridPixels(style.rows);
+  const base = [...gridPixels(HEADS[t.hairStyle]), ...gridPixels(FACE_AND_BODY, 5)];
+  return t.hairStyle === "long" ? [...base, ...LONG_SIDES] : base;
+}
+
+function eyePixels(t, closed = false) {
+  const style = fighterStyle(t.archetype);
+  if (style?.fixedEyes || t.gear.head?.id === "goggles" || t.gear.eye?.id === "shades") return [];
+  return (closed ? EYES_CLOSED : EYES_OPEN)
+    .filter(([x, y]) => !(t.gear.eye?.id === "cyber" && x >= 9) && (closed || !style?.shortEyes || y === 5))
+    .map(([x, y, k]) => [x, y + (style?.eyeOffset ?? 0) - (closed && style?.shortEyes ? 1 : 0), k]);
+}
+
+function gearPixels(t, id) {
+  const offset = fighterStyle(t.archetype)?.eyeOffset ?? 0;
+  return (GEAR_PIXELS[id] ?? []).map(([x, y, k]) => [x, y + (["cyber", "shades", "goggles"].includes(id) ? offset : 0), k]);
+}
+
 /**
  * Layers for the renderer:
  *  upper  - head, torso, hands, gear (bobs)
@@ -178,22 +203,20 @@ function gridPixels(rows, yOffset = 0) {
  *  glints - small twinkles
  */
 export function fighterLayers(t) {
-  const base = [...gridPixels(HEADS[t.hairStyle]), ...gridPixels(FACE_AND_BODY, 5)];
-  if (t.hairStyle === "long") base.push(...LONG_SIDES);
+  const base = bodyPixels(t);
   const upper = base.filter(([, y]) => y <= 14);
   const legs = base.filter(([, y]) => y >= 15);
-  const gear = Object.values(t.gear).flatMap((g) => GEAR_PIXELS[g.id] ?? []);
-  const hidesEyes = t.gear.head?.id === "goggles" || t.gear.eye?.id === "shades";
-  const cyber = t.gear.eye?.id === "cyber";
-  const eyes = (set) => (hidesEyes ? [] : set.filter(([x]) => !(cyber && x >= 9)));
-  const glints = Object.values(t.gear).flatMap((g) => GLINTS[g.id] ?? []);
+  const signature = fighterStyle(t.archetype)?.prop ?? [];
+  const gear = [...signature, ...Object.values(t.gear).flatMap((g) => gearPixels(t, g.id))];
+  const glints = Object.values(t.gear).flatMap((g) => (GLINTS[g.id] ?? [])
+    .map(([x, y, k]) => [x, y + (g.id === "cyber" ? fighterStyle(t.archetype)?.eyeOffset ?? 0 : 0), k]));
   return {
     upper: toRects(upper, t),
     gear: toRects(gear, t),
-    gearById: Object.fromEntries(Object.values(t.gear).map((g) => [g.id, toRects([...(GEAR_PIXELS[g.id] ?? [])], t)])),
+    gearById: { signature: toRects(signature, t), ...Object.fromEntries(Object.values(t.gear).map((g) => [g.id, toRects(gearPixels(t, g.id), t)])) },
     legs: toRects(legs, t),
-    eyesOpen: toRects(eyes(EYES_OPEN), t),
-    eyesClosed: toRects(eyes(EYES_CLOSED), t),
+    eyesOpen: toRects(eyePixels(t), t),
+    eyesClosed: toRects(eyePixels(t, true), t),
     glints: toRects(glints, t),
   };
 }
@@ -231,15 +254,15 @@ const POSE_SPEC = {
 /** Rects for one pose, ready for an SVG renderer (same shape as fighterLayers). */
 export function poseRects(t, pose = "idle") {
   const spec = POSE_SPEC[pose] ?? POSE_SPEC.idle;
-  const base = [...gridPixels(HEADS[t.hairStyle]), ...gridPixels(FACE_AND_BODY, 5)];
-  if (t.hairStyle === "long") base.push(...LONG_SIDES);
+  const base = bodyPixels(t);
   const ux = spec.ux ?? 0, uy = spec.uy ?? 0, bx = POSE_CELL.bodyX;
   const dropped = ([x, y]) => (spec.dropFront && y >= 12 && y <= 14 && x >= 12) || (spec.dropBack && y >= 12 && y <= 14 && x <= 3);
-  const hidesEyes = t.gear.head?.id === "goggles" || t.gear.eye?.id === "shades";
-  const cyber = t.gear.eye?.id === "cyber";
-  const eyes = hidesEyes ? [] : (spec.closed ? EYES_CLOSED : EYES_OPEN).filter(([x]) => !(cyber && x >= 9));
-  const gear = Object.values(t.gear).flatMap((g) => GEAR_PIXELS[g.id] ?? []).filter(([, y]) => !(spec.dropFront && y >= 15));
-  const upper = [...base.filter(([, y]) => y <= 14), ...(spec.extra ?? []), ...eyes, ...gear.filter(([, y]) => y <= 14)].filter((p) => !dropped(p));
+  const eyes = eyePixels(t, spec.closed);
+  const gear = Object.values(t.gear).flatMap((g) => gearPixels(t, g.id)).filter(([, y]) => !(spec.dropFront && y >= 15));
+  const propOffset = pose === "punch" ? [5, -2] : pose === "block" ? [-1, -4] : pose === "victory" ? [0, -6] : [0, 0];
+  const props = (fighterStyle(t.archetype)?.prop ?? []).map(([x, y, k]) => [x + propOffset[0], y + propOffset[1], k]);
+  // Remove the resting arm before adding its posed replacement.
+  const upper = [...base.filter((p) => p[1] <= 14 && !dropped(p)), ...(spec.extra ?? []), ...eyes, ...gear.filter(([, y]) => y <= 14), ...props];
   const legs = [...base.filter(([, y]) => y >= 15), ...gear.filter(([, y]) => y >= 15)];
   const px = [
     ...legs.map(([x, y, k]) => [x + bx, y, k]),

@@ -22,6 +22,7 @@ export function Footer() {
           <Link to="/submit">Submit</Link>
           <Link to="/judge">Judges</Link>
           <Link to="/fight-demo">Fight demo</Link>
+          <Link to="/organizer">Organizer</Link>
         </nav>
       </div>
     </footer>
