@@ -13,8 +13,18 @@
  *   GET    /api/projects/:id/reviews   latest panel review
  *   POST   /api/projects/:id/reviews   run the panel now   (organizer)
  *   POST   /api/projects/:id/reviews/public   anyone: re-judge a sample project on 0G (rate limited, capped per day)
+ *
+ *   0G Storage (every record above is also archived on 0G when ZG_STORAGE=1):
+ *   GET    /api/storage                       wallet, balance, head root hash, outbox counts
+ *   GET    /api/storage/status/:kind/:id      off | pending | stored | failed for one record
+ *   GET    /api/storage/records               the manifest: kind, id, root hash, tx hash, explorer links
+ *   GET    /api/storage/blob/:rootHash        one stored item, downloaded from 0G and checked (our root hashes only)
+ *   POST   /api/storage/verify/:kind/:id      re-download from 0G and compare with the local record
+ *   POST   /api/storage/flush                 retry failed uploads now   (organizer)
  */
 import crypto from "node:crypto";
+import fs from "node:fs";
+import path from "node:path";
 import express from "express";
 import { CRITERIA } from "./judges/criteria.mjs";
 import { MAX_JUDGES, validateForm } from "./judges/persona.mjs";
@@ -24,11 +34,15 @@ import zg from "./zg/client.js";
 import zgModels from "./zg/models.js";
 import { EXAMPLE_FORMS } from "./judges/seed.mjs";
 import { loadProject } from "./projects.mjs";
-import { judges, reviews, submissions } from "./store.mjs";
+import { DATA_DIR, judges, localValue, reviews, startArchive, submissions, voiceNotes, zgStatus } from "./store.mjs";
+import * as archive from "./zg/archive.mjs";
+import { downloadBytes, explorerLinks, storageConfig, walletInfo } from "./zg/storage.mjs";
 import { checkSubmissionSignature, rateLimit, requireOrganizer } from "./security.mjs";
 
 // Seed the example panel the first time only.
 if (!judges.list().length) judges.save(EXAMPLE_FORMS.map((f) => ({ ...validateForm(f).persona, example: true })));
+// Archive anything 0G doesn't have yet and resume uploads left by an earlier run (ZG_STORAGE=1 only).
+startArchive();
 
 const running = new Map(); // projectId -> Promise, so one project is never reviewed twice at once
 // projectId -> { startedAt, events, error? }: what the UI shows while a run is going (0G request IDs as they arrive)
@@ -90,6 +104,7 @@ router.get("/health", (req, res) => {
     keyName: PROVIDER === "0g" ? "ZG_API_KEY" : PROVIDER === "openai" ? "OPENAI_API_KEY" : "ANTHROPIC_API_KEY",
     model: MODEL,
     voiceNotes: hasCredentials("0g") ? { model: zgModels.MODELS.transcribe } : null,
+    storage: storageSummary(),
   });
 });
 
@@ -123,14 +138,23 @@ router.post("/judges/voice-note", requireOrganizer, rateLimit({ max: 30, windowM
   if (!Buffer.isBuffer(req.body) || req.body.length < 1000) return res.status(400).json({ error: "That recording is empty or too short." });
   try {
     const { text, trace } = await zg.transcribe({ audio: req.body, filename: `voice-note.${ext}`, mime, model: zgModels.MODELS.transcribe, verifyTee: true });
-    res.json({
+    const out = {
       text: text.trim(),
       model: trace.model,
       requestId: trace.requestId,
       provider: trace.provider,
       costUsdMicro: trace.costUsdMicro,
       teeVerified: trace.teeVerified === true ? true : trace.teeVerified === false ? false : null,
-    });
+    };
+    // Keep the transcript and its 0G trace (archived on 0G Storage). The audio is only
+    // uploaded AES-256 encrypted, and only when ZG_STORAGE_AES_KEY is set.
+    const id = crypto.randomUUID();
+    voiceNotes.save(
+      id,
+      { id, at: new Date().toISOString(), transcript: out.text, mime, audio: { sha256: crypto.createHash("sha256").update(req.body).digest("hex"), size: req.body.length }, trace: { model: out.model, requestId: out.requestId, provider: out.provider, costUsdMicro: out.costUsdMicro, teeVerified: out.teeVerified } },
+      { audio: req.body, mime },
+    );
+    res.json({ ...out, id, zgStorage: zgStatus("voice-note", id) });
   } catch (e) {
     const status = e.status === 402 ? 402 : e.code === "missing_api_key" ? 503 : 502;
     const error = e.status === 402 ? "0G balance empty: top up the account behind ZG_API_KEY, then try again." : `Transcription on 0G failed: ${e.message}`;
@@ -158,7 +182,11 @@ router.delete("/judges/:id", requireOrganizer, (req, res) => {
 /** Submissions as the public sees them: no signature material. */
 const publicSubmission = ({ auth, ...rest }) => ({ ...rest, signed: Boolean(auth?.signature) });
 
-router.get("/submissions", (req, res) => res.json(submissions.list().map(publicSubmission)));
+router.get("/submissions", (req, res) => res.json(submissions.list().map((s) => ({ ...publicSubmission(s), zgStorage: zgStatus("submission", s.id) }))));
+router.get("/submissions/:id/storage", (req, res) => {
+  if (!submissions.get(req.params.id)) return res.status(404).json({ error: "No such submission." });
+  res.json(zgStatus("submission", req.params.id));
+});
 
 router.post("/submissions", rateLimit({ max: 5, windowMs: 60 * 60 * 1000 }), async (req, res) => {
   const body = req.body ?? {};
@@ -175,12 +203,12 @@ router.post("/submissions", rateLimit({ max: 5, windowMs: 60 * 60 * 1000 }), asy
     review = "started";
     reviewNow(record.id).catch((e) => console.error(`[judges] review of ${record.id} failed: ${e.message}`));
   }
-  res.status(201).json({ ...publicSubmission(record), review });
+  res.status(201).json({ ...publicSubmission(record), review, zgStorage: zgStatus("submission", record.id) });
 });
 
 router.get("/projects/:id/reviews", (req, res) => {
   const r = reviews.get(req.params.id);
-  res.json({ running: running.has(req.params.id), progress: progress.get(req.params.id) ?? null, result: r });
+  res.json({ running: running.has(req.params.id), progress: progress.get(req.params.id) ?? null, result: r, zgStorage: r ? zgStatus("review", req.params.id) : null });
 });
 
 /*
@@ -218,8 +246,104 @@ router.post(
 
 router.post("/projects/:id/reviews", requireOrganizer, async (req, res) => {
   try {
-    res.json({ running: false, result: await reviewNow(req.params.id) });
+    res.json({ running: false, result: await reviewNow(req.params.id), zgStorage: zgStatus("review", req.params.id) });
   } catch (e) {
     res.status(e.status ?? 500).json({ error: e.message });
   }
 });
+
+// ---------- 0G Storage ----------
+
+function storageSummary() {
+  const cfg = storageConfig();
+  const head = archive.loadHead();
+  return {
+    enabled: cfg.enabled,
+    network: cfg.network,
+    chainId: cfg.chainId,
+    head: head ? { rootHash: head.rootHash, txHash: head.txHash, uploadedAt: head.uploadedAt, links: explorerLinks(head, cfg.network) } : null,
+    records: Object.keys(archive.loadManifest().records).length,
+    outbox: archive.counts(),
+    encryption: cfg.hasAesKey,
+  };
+}
+
+router.get("/storage", async (req, res) => {
+  const summary = storageSummary();
+  const wallet = summary.enabled ? await walletInfo() : null;
+  res.json({ ...summary, wallet });
+});
+
+router.get("/storage/status/:kind/:id", (req, res) => {
+  if (!/^[a-z-]{2,20}$/.test(req.params.kind) || req.params.id.length > 200) return res.status(400).json({ error: "Bad record name." });
+  res.json(zgStatus(req.params.kind, req.params.id));
+});
+
+router.get("/storage/records", (req, res) => {
+  const m = archive.loadManifest();
+  const net = storageConfig().network;
+  res.json({
+    network: m.network ?? net,
+    updatedAt: m.updatedAt,
+    head: archive.loadHead(),
+    records: Object.entries(m.records).map(([key, r]) => ({ key, ...r, links: explorerLinks(r, net) })),
+  });
+});
+
+const ROOT_RE = /^0x[0-9a-fA-F]{64}$/;
+const CACHE_DIR = path.join(DATA_DIR, "zg-cache");
+const EXT_TYPES = { json: "application/json", md: "text/markdown; charset=utf-8", html: "text/plain; charset=utf-8", jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", mp4: "video/mp4", vtt: "text/vtt", txt: "text/plain; charset=utf-8" };
+function contentTypeOf(rec) {
+  if (!rec?.file) return "application/json";
+  if (rec.encrypted) return "application/octet-stream";
+  if (rec.contentType) return rec.contentType;
+  return EXT_TYPES[String(rec.id).split(".").pop().toLowerCase()] ?? "application/octet-stream";
+}
+
+/* Serve one stored item. Only root hashes in our manifest, so this is not an open proxy to 0G. */
+router.get("/storage/blob/:rootHash", rateLimit({ max: 60, windowMs: 60 * 1000, message: "Too many downloads. Try again in a minute." }), async (req, res) => {
+  const root = req.params.rootHash.toLowerCase();
+  if (!ROOT_RE.test(root)) return res.status(404).json({ error: "Not a 0G root hash." });
+  const rec = archive.isKnownRoot(root);
+  if (!rec) return res.status(404).json({ error: "That root hash isn't one of this arena's records." });
+  const cached = path.join(CACHE_DIR, root);
+  try {
+    let bytes;
+    if (fs.existsSync(cached)) bytes = fs.readFileSync(cached);
+    else {
+      // The Merkle root of what we downloaded must equal the requested one (checked inside downloadBytes).
+      bytes = Buffer.from(await downloadBytes(root));
+      fs.mkdirSync(CACHE_DIR, { recursive: true });
+      fs.writeFileSync(`${cached}.tmp`, bytes);
+      fs.renameSync(`${cached}.tmp`, cached);
+    }
+    res.set("content-type", contentTypeOf(rec));
+    res.set("x-0g-root-hash", root);
+    res.set("cache-control", "public, max-age=31536000, immutable");
+    res.send(bytes);
+  } catch (e) {
+    res.status(e.code === "not_found" ? 404 : 502).json({ error: `0G Storage: ${e.message}`, code: e.code ?? null });
+  }
+});
+
+const FIXTURES_DIR = path.resolve(path.dirname(new URL(import.meta.url).pathname), "../fixtures");
+/** The local copy of an archived fixture file, for verify (never outside fixtures/). */
+function fixtureBytes(kind, id) {
+  if (kind !== "fixture-file") return undefined;
+  const full = path.resolve(FIXTURES_DIR, id);
+  if (!full.startsWith(FIXTURES_DIR + path.sep) || !fs.existsSync(full)) return undefined;
+  return fs.readFileSync(full);
+}
+
+/* Anyone can check a record against its 0G copy. */
+router.post("/storage/verify/:kind/:id", rateLimit({ max: 20, windowMs: 60 * 1000, message: "Too many checks. Try again in a minute." }), async (req, res) => {
+  const { kind, id } = req.params;
+  if (!/^[a-z-]{2,20}$/.test(kind) || String(id).length > 200) return res.status(400).json({ error: "Bad record name." });
+  try {
+    res.json(await archive.verifyRecord(kind, id, localValue(kind, id), { localBytes: fixtureBytes(kind, id) }));
+  } catch (e) {
+    res.status(e.code === "not_found" ? 404 : 502).json({ error: e.message, code: e.code ?? null });
+  }
+});
+
+router.post("/storage/flush", requireOrganizer, (req, res) => res.json(archive.flush()));
