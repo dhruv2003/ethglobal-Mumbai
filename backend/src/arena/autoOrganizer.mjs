@@ -18,6 +18,9 @@ export function pickField(entries) {
   return size ? ready.slice(0, size).map((s) => s.id) : [];
 }
 
+/** Order-independent identity of a set of submission IDs. */
+const fieldKey = (ids) => [...ids].sort().join();
+
 /** Brackets a tournament still needs: [{ track, field }]. Waits until the deadline and every review are done. */
 export function bracketsToCreate(event, entries, brackets, overall, now = Date.now()) {
   if (now < Date.parse(event.deadline) || entries.some((s) => s.reviewing)) return [];
@@ -29,8 +32,8 @@ export function bracketsToCreate(event, entries, brackets, overall, now = Date.n
     const field = pickField(inTrack);
     if (!field.length) continue;
     // The same projects in a bracket that already exists would just be the same fight again.
-    const key = [...field].sort().join();
-    const repeat = track.id === overall.id && (out.some((x) => [...x.field].sort().join() === key) || brackets.some((b) => b.eventId === event.id && b.projects?.map((p) => p.submissionId).sort().join() === key));
+    const key = fieldKey(field);
+    const repeat = track.id === overall.id && (out.some((x) => fieldKey(x.field) === key) || brackets.some((b) => b.eventId === event.id && fieldKey(b.projects?.map((p) => p.submissionId) ?? []) === key));
     if (!repeat) out.push({ track, field });
   }
   return out;

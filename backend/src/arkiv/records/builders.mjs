@@ -160,9 +160,9 @@ export function reviewRecord(project, result) {
   };
 }
 
-export const FILE_KINDS = ["demo-video", "demo-screenshot", "live-recording", "live-screenshot"];
+const FILE_KINDS = ["demo-video", "demo-screenshot", "live-recording", "live-screenshot"];
 const MIMES = { mp4: "video/mp4", mov: "video/quicktime", webm: "video/webm", jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", webp: "image/webp" };
-export const mimeOf = (name) => MIMES[String(name).split(".").pop().toLowerCase()] ?? "application/octet-stream";
+const mimeOf = (name) => MIMES[String(name).split(".").pop().toLowerCase()] ?? "application/octet-stream";
 
 /** file: one file's columns (the bytes are written with writeBlob). file = { kind, name, size, buffer? } */
 export function fileRecord(project, file) {

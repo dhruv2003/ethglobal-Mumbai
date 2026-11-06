@@ -11,9 +11,12 @@
  */
 import fs from "node:fs";
 import path from "node:path";
+import { readJSON } from "../datafiles.mjs";
 import { DATA_DIR, dossiers, judges, reviews, submissions } from "../store.mjs";
 
 const norm = (s) => String(s).trim().toLowerCase();
+/** The id inside a node id: "project:abc" -> "abc", "tech:viem" -> "viem". */
+const bare = (nodeId) => nodeId.slice(nodeId.indexOf(":") + 1);
 
 export function buildGraph({ projects = [], judgeList = [], reviewList = [], dossierList = [], tournaments = [], fights = [] }) {
   const nodes = new Map();
@@ -91,7 +94,7 @@ export function judgeLeniency(g) {
     .map((n) => {
       const mine = g.out(n.id, "SCORED").map((e) => e.score);
       const a = avg(mine);
-      return { judgeId: n.id.slice(6), name: n.name ?? null, avg: a, n: mine.length, vsPanel: a != null && panel != null ? Math.round((a - panel) * 100) / 100 : null };
+      return { judgeId: bare(n.id), name: n.name ?? null, avg: a, n: mine.length, vsPanel: a != null && panel != null ? Math.round((a - panel) * 100) / 100 : null };
     });
 }
 
@@ -105,7 +108,7 @@ export function similarProjects(g, projectId, limit = 5) {
       const theirs = features(n.id);
       const shared = [...mine].filter((x) => theirs.has(x));
       const union = new Set([...mine, ...theirs]).size;
-      return { projectId: n.id.slice(8), name: n.name ?? null, shared: shared.map((x) => x.split(":").slice(1).join(":")), similarity: union ? Math.round((shared.length / union) * 1000) / 1000 : 0 };
+      return { projectId: bare(n.id), name: n.name ?? null, shared: shared.map(bare), similarity: union ? Math.round((shared.length / union) * 1000) / 1000 : 0 };
     })
     .filter((x) => x.shared.length)
     .sort((a, b) => b.similarity - a.similarity)
@@ -119,18 +122,18 @@ export function explainProject(g, projectId) {
   if (!n) return null;
   const claims = g.out(pid, "CLAIMS");
   const count = (s) => claims.filter((c) => c.status === s).length;
-  const scores = g.into(pid, "SCORED").map((e) => ({ judgeId: e.from.slice(6), name: g.nodes.get(e.from)?.name ?? null, score: e.score }));
+  const scores = g.into(pid, "SCORED").map((e) => ({ judgeId: bare(e.from), name: g.nodes.get(e.from)?.name ?? null, score: e.score }));
   return {
     projectId,
     name: n.name ?? null,
-    tracks: g.out(pid, "IN_TRACK").map((e) => e.to.slice(6)),
-    tech: g.out(pid, "USES").map((e) => e.to.slice(5)),
+    tracks: g.out(pid, "IN_TRACK").map((e) => bare(e.to)),
+    tech: g.out(pid, "USES").map((e) => bare(e.to)),
     scores,
     panelAvg: avg(scores.map((s) => s.score)),
     claims: { supported: count("supported_by_code"), contradicted: count("contradicted"), unverified: count("unverified") },
     contradicted: claims.filter((c) => c.status === "contradicted").map((c) => g.nodes.get(c.to)?.text ?? null),
-    beat: g.out(pid, "BEAT").map((e) => e.to.slice(8)),
-    lostTo: g.into(pid, "BEAT").map((e) => e.from.slice(8)),
+    beat: g.out(pid, "BEAT").map((e) => bare(e.to)),
+    lostTo: g.into(pid, "BEAT").map((e) => bare(e.from)),
   };
 }
 
@@ -140,13 +143,15 @@ export function toJson(g) {
   return { nodes: [...g.nodes.values()].filter((n) => keep(n.id)), edges: g.edges.filter((e) => keep(e.to)) };
 }
 
+/** Every JSON record in a data folder. A missing folder is empty; an unreadable file is skipped, not the whole folder. */
 const readDir = (name) => {
   const d = path.join(DATA_DIR, name);
-  try {
-    return fs.readdirSync(d).filter((f) => f.endsWith(".json")).map((f) => JSON.parse(fs.readFileSync(path.join(d, f), "utf8")));
-  } catch {
-    return [];
-  }
+  if (!fs.existsSync(d)) return [];
+  return fs
+    .readdirSync(d)
+    .filter((f) => f.endsWith(".json"))
+    .map((f) => readJSON(f, null, d))
+    .filter(Boolean);
 };
 
 /** Builds the graph from backend/data. Cheap enough to rebuild per request at hackathon scale. */

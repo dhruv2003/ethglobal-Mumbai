@@ -14,9 +14,6 @@
  * publish uses the latest saved review (data/reviews/<id>.json).
  */
 import "dotenv/config";
-import fs from "node:fs";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { loadProject } from "../projects.mjs";
 import { reviews } from "../store.mjs";
 import { readLatest } from "./arkiv.mjs";
@@ -26,7 +23,6 @@ import { TYPES } from "./records/schemas.mjs";
 import { readRecord } from "./records/store.mjs";
 import { syncAll, syncFight, syncJudges, syncProject, syncTournament } from "./records/sync.mjs";
 
-const here = path.dirname(fileURLToPath(import.meta.url));
 const [cmd, ...rest] = process.argv.slice(2);
 const opt = (name, n = 1) => {
   const i = rest.indexOf(name);

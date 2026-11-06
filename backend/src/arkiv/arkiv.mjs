@@ -24,7 +24,7 @@ import { http } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { gatewayUrl } from "./swarm.mjs";
 
-export const EXPLORER = "https://rabdi.explorer.arkiv.network";
+const EXPLORER = "https://rabdi.explorer.arkiv.network";
 const TTL_DAYS = Number(process.env.ARKIV_TTL_DAYS || 120);
 const BLOCK_SECONDS = 2;
 
@@ -73,7 +73,7 @@ export function clip128(s) {
 }
 
 /** Explorer link that runs a query (the explorer's entity search takes the query language). */
-export const explorerQuery = (q) => `${EXPLORER}/entity-explorer?q=${encodeURIComponent(q)}`;
+const explorerQuery = (q) => `${EXPLORER}/entity-explorer?q=${encodeURIComponent(q)}`;
 export const explorerEntity = (k) => explorerQuery(`$key = key(${k})`);
 
 const chain = () => rabdi({ accessKey: process.env.ARKIV_ACCESS_KEY ?? "" });

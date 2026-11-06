@@ -17,7 +17,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { DATA_DIR } from "../src/datafiles.mjs";
 import * as archive from "../src/zg/archive.mjs";
-import { contentSha256, explorerLinks, fileLocations, merkleRoot, sdkDownloadToFile, sha256, storageConfig, walletInfo } from "../src/zg/storage.mjs";
+import { contentSha256, downloadJSON, explorerLinks, fileLocations, merkleRoot, sdkDownloadToFile, sha256, storageConfig, walletInfo } from "../src/zg/storage.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const FIXTURES = path.resolve(here, "../fixtures");
@@ -163,7 +163,6 @@ async function verify() {
   const head = archive.loadHead();
   if (head) {
     try {
-      const { downloadJSON } = await import("../src/zg/storage.mjs");
       const env = await downloadJSON(head.rootHash);
       const ok = env.kind === "manifest";
       console.log(`${ok ? "match" : "MISMATCH"}    manifest head ${short(head.rootHash)} (${Object.keys(env.data.records).length} records)`);

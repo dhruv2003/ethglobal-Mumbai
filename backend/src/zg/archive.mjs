@@ -26,7 +26,7 @@ import path from "node:path";
 import { DATA_DIR, readJSON, safeId, writeJSON } from "../datafiles.mjs";
 import { contentSha256, downloadBytes, downloadJSON, explorerLinks, storageConfig, uploadBytes, uploadFile, uploadJSON, ZgStorageError, sha256 } from "./storage.mjs";
 
-export const SCHEMA = "arena.v1";
+const SCHEMA = "arena.v1";
 const OUTBOX = "zg-outbox.json";
 const MANIFEST = "zg-manifest.json";
 const HEAD = "zg-head.json";
@@ -86,6 +86,16 @@ const emptyManifest = () => ({ network: storageConfig().network, updatedAt: null
 export const loadManifest = () => readJSON(MANIFEST, emptyManifest());
 export const loadHead = () => readJSON(HEAD, null);
 const keyOf = (kind, id) => `${kind}:${id}`;
+/** Waiting for, or in, an upload. */
+const inFlight = (i) => i.status === "pending" || i.status === "uploading";
+
+/** Append a new pending item to the outbox and save it. Call inside withLock. */
+function pushItem(ob, kind, id, fields = {}) {
+  const it = { seq: ++ob.seq, key: keyOf(kind, id), kind, id: String(id), ...fields, createdAt: new Date().toISOString(), status: "pending", attempts: 0, nextAttemptAt: 0 };
+  ob.items.push(it);
+  writeJSON(OUTBOX, ob);
+  return it;
+}
 
 // ---------- secrets never leave the server ----------
 
@@ -145,10 +155,7 @@ export function archive(kind, id, payload) {
     const key = keyOf(kind, id);
     if (latestSha(ob, key) === hash) return null;
     supersede(ob, key);
-    const it = { seq: ++ob.seq, key, kind, id: String(id), sha256: hash, payload, createdAt: new Date().toISOString(), status: "pending", attempts: 0, nextAttemptAt: 0 };
-    ob.items.push(it);
-    writeJSON(OUTBOX, ob);
-    return it;
+    return pushItem(ob, kind, id, { sha256: hash, payload });
   });
   if (item) kick();
   return item;
@@ -198,10 +205,7 @@ export function archiveFile(kind, id, file, { encrypt = false, contentType = nul
   const item = withLock(() => {
     const ob = loadOutbox();
     supersede(ob, key);
-    const it = { seq: ++ob.seq, key, kind, id: String(id), sha256: hash, size, file: filePath, spooled, encrypt, contentType, createdAt: new Date().toISOString(), status: "pending", attempts: 0, nextAttemptAt: 0 };
-    ob.items.push(it);
-    writeJSON(OUTBOX, ob);
-    return it;
+    return pushItem(ob, kind, id, { sha256: hash, size, file: filePath, spooled, encrypt, contentType });
   });
   kick();
   return item;
@@ -392,7 +396,7 @@ export function tick() {
 }
 
 /** Queue a manifest upload after the debounce window (at most one queued at a time). */
-export function scheduleManifest(delay = opts().manifestDebounceMs) {
+function scheduleManifest(delay = opts().manifestDebounceMs) {
   if (!enabled() || manifestTimer) return;
   manifestTimer = setTimeout(() => {
     manifestTimer = null;
@@ -405,10 +409,9 @@ function queueManifest() {
   const added = withLock(() => {
     const ob = loadOutbox();
     if (!ob.manifestDirty) return false;
-    if (ob.items.some((i) => i.kind === "manifest" && (i.status === "pending" || i.status === "uploading"))) return false;
+    if (ob.items.some((i) => i.kind === "manifest" && inFlight(i))) return false;
     if (!Object.keys(loadManifest().records).length) return false;
-    ob.items.push({ seq: ++ob.seq, key: "manifest:head", kind: "manifest", id: "head", createdAt: new Date().toISOString(), status: "pending", attempts: 0, nextAttemptAt: 0 });
-    writeJSON(OUTBOX, ob);
+    pushItem(ob, "manifest", "head");
     return true;
   });
   if (added) kick();
@@ -422,7 +425,7 @@ function queueManifest() {
 export async function drain({ timeoutMs = 10 * 60_000, manifest = true } = {}) {
   if (!enabled()) return counts();
   const until = Date.now() + timeoutMs;
-  const pendingLeft = () => loadOutbox().items.some((i) => i.status === "pending" || i.status === "uploading");
+  const pendingLeft = () => loadOutbox().items.some(inFlight);
   while (Date.now() < until) {
     await tick();
     if (!pendingLeft()) {
@@ -530,7 +533,7 @@ async function compare(rec, out, localValue, localBytes) {
 // ---------- restore ----------
 
 /** Where each restorable kind lives under data/. */
-export const RESTORE_KINDS = {
+const RESTORE_KINDS = {
   judges: () => "judges.json",
   review: (id) => `reviews/${safeId(id)}.json`,
   evidence: (id) => `evidence/${safeId(id)}.json`,
