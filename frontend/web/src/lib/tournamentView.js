@@ -1,10 +1,11 @@
 /* One shape for a tournament read from the chain, joined with its registered bracket. */
+import { cleanName } from "./names.js";
 import { matchMarket, MATCH_STATUS, TOURNAMENT_STATUS, WIN_SOURCE, bracketRounds, feeders, matchRound, roundName } from "./pools.js";
 
 /** A bracket slot: the registered project when the organizer saved the bracket, else a plain numbered slot. */
 export const chainProject = (id, index, meta) => {
   const p = meta?.projects?.[index];
-  return p ? { id: p.submissionId, slot: index, name: p.name, pitch: p.pitch, tracks: p.tracks, team: p.team, fighterSeed: p.fighterSeed, seed: p.fighterSeed ?? p.submissionId, registered: true } : { id: `chain-${id}-${index}`, slot: index, name: `Slot ${index + 1}`, pitch: "", tracks: [], registered: false };
+  return p ? { id: p.submissionId, slot: index, name: cleanName(p.name), pitch: p.pitch, tracks: p.tracks, team: p.team, fighterSeed: p.fighterSeed, seed: p.fighterSeed ?? p.submissionId, registered: true } : { id: `chain-${id}-${index}`, slot: index, name: `Slot ${index + 1}`, pitch: "", tracks: [], registered: false };
 };
 
 const WIN_WORD = { Score: "On score", Tiebreak: "On the tie-break", Organizer: "Organizer decision after two ties" };

@@ -228,7 +228,7 @@
 /* ---------- Wizard ---------- */
 .form.wiz { border: 0; box-shadow: none; padding: 0; background: none; gap: var(--space-4); }
 .wiz__anchor { scroll-margin-top: 96px; height: 0; }
-.wiz__stage { min-height: 420px; }
+.wiz__stage { min-width: 0; }
 
 /* stepper */
 .wsteps ol { display: flex; align-items: center; gap: 0; margin: 0; padding: 6px; list-style: none;
@@ -327,7 +327,7 @@ button.trackcard:hover { transform: translateY(-2px); box-shadow: var(--shadow-p
 .trackcard--on .trackcard__mark { background: var(--tone); }
 .trackcard--oracle.trackcard--on .trackcard__mark { color: #fff; }
 .trackcard--on .trackcard__state { color: var(--ink); }
-.trackcard--locked { background: var(--ink); color: var(--canvas); cursor: default; border-color: var(--ink); }
+.trackcard--locked { grid-template-columns: 36px minmax(0, 1fr); background: var(--ink); color: var(--canvas); cursor: default; border-color: var(--ink); }
 .trackcard--locked .trackcard__mark { background: var(--sunny); color: var(--ink); border-color: var(--canvas); }
 .trackcard--locked .trackcard__prize, .trackcard--locked .trackcard__state { color: color-mix(in srgb, var(--canvas) 70%, transparent); }
 
@@ -389,7 +389,7 @@ button.trackcard:hover { transform: translateY(-2px); box-shadow: var(--shadow-p
 
 /* the fighter card sits next to the step, not the header */
 .solo--form .submit-layout { gap: var(--space-5); }
-.solo--form .fightercard { top: 96px; }
+@media (min-width: 861px) { .solo--form .fightercard { top: 96px; } }
 
 @media (max-width: 1000px) {
   .wticket { grid-template-columns: minmax(0, 1fr); }
@@ -399,6 +399,10 @@ button.trackcard:hover { transform: translateY(-2px); box-shadow: var(--shadow-p
   .wafter li { padding-bottom: 0; flex: 1 1 180px; }
   .wafter li::after { display: none; }
 }
+@media (max-width: 860px) {
+  /* the form is the job on a phone; the fighter is the reward underneath */
+  .solo--form .fightercard { order: 1; }
+}
 @media (max-width: 640px) {
   .wticket__main { padding: var(--space-5) var(--space-4) var(--space-4); }
   .wticket__after { padding: var(--space-4); }
@@ -406,8 +410,7 @@ button.trackcard:hover { transform: translateY(-2px); box-shadow: var(--shadow-p
   .wmeta__v { font-size: 14px; }
   .wsteps__btn { padding: 8px 6px; gap: 0; }
   .wsteps__label, .wsteps__badge { display: none; }
-  .wsteps__btn--on { gap: 6px; padding: 8px 12px; }
-  .wsteps__btn--on .wsteps__label { display: inline; }
+  .wsteps__btn--on { padding: 8px 6px; }
   .wstep { padding: var(--space-5) var(--space-4); border-radius: var(--radius-lg); }
   .wstep__num { width: 42px; height: 42px; font-size: 20px; }
   .wsum__row { grid-template-columns: 1fr; gap: 0; }
@@ -415,7 +418,9 @@ button.trackcard:hover { transform: translateY(-2px); box-shadow: var(--shadow-p
   .wwallet .btn { grid-column: 1 / -1; }
   .wnav { border-radius: var(--radius-lg); bottom: var(--space-2); }
   .wnav__hide { display: none; }
-  .wnav__status { font-size: 12px; }
+  .wnav { gap: var(--space-2); padding: var(--space-2); }
+  .wnav__status, .wnav__status .t-caption, .wnav__status .field__error { font-size: 12px; line-height: 15px; }
+  .wnav .btn { padding-inline: 16px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .wticket__live { animation: none; }

@@ -1,14 +1,14 @@
-/* Plays a recorded fight: the ring, its controls and the latest lines said. Shared by the fight page and its full-screen view. */
+/* Plays a recorded fight: the ring, its controls, every hit with its reason, and the verdict. Shared by the fight page and its full-screen view. */
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { Card, StatusPill } from "@ds/ui.jsx";
 import { FightStage } from "../fight/FightStage.jsx";
 import { stateAt } from "../fight/reducer.js";
-import { CRITERION_LABEL, fmtHealth } from "../fight/score.js";
+import { CRITERIA, CRITERION_LABEL, RULING_OUTCOME, fmtHealth } from "../fight/score.js";
 import { useFightSound } from "../fight/useFightSound.js";
 import { eventDuration } from "../fight/choreo.js";
 import { useReel } from "../fight/usePlayback.js";
 import { prefersReducedMotion } from "../lib/motion.js";
+import { Link } from "../lib/router.jsx";
 
 const SAY = { pitch: "pitches", question: "asks", answer: "answers", challenge: "challenges", rebuttal: "replies", closing: "closes" };
 const INTRO = { seq: 1, ts: new Date(0).toISOString(), type: "intro" };
@@ -81,31 +81,146 @@ export function Player({ fightMatch, events, fight, theater = false, onResult })
     <div className="stack">
       <FightStage match={fightMatch} state={state} event={pb.event} ms={pb.ms} reduced={reduced} captions typing={pb.playing} />
       {controls}
-      <Card variant="surface" className="stack">
-        <div className="section-head">
-          <h2 className="t-heading m0">{state.round ? `${CRITERION_LABEL[state.round]} round` : "Opening pitches"}</h2>
-          <StatusPill tone="reward">Judged on 0G</StatusPill>
-        </div>
-        {lines.length ? (
-          <ol className="fight-lines">
-            <AnimatePresence initial={false} mode="popLayout">
+      <Hits fightMatch={fightMatch} state={state} />
+      {state.result ? (
+        <Verdict fightMatch={fightMatch} fight={fight} winner={state.result.winner} />
+      ) : (
+        lines.length > 0 && (
+          <details className="fight-talk">
+            <summary>What they said ({state.round ? `${CRITERION_LABEL[state.round]} round` : "opening pitches"})</summary>
+            <ol className="fight-lines">
               {lines.map((e) => (
-                <motion.li key={e.seq} layout initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }}>
+                <li key={e.seq}>
                   <span className="t-label">
                     {who(e)} {SAY[e.type]}
                   </span>
                   <span className="t-body">{e.text}</span>
-                </motion.li>
+                </li>
               ))}
-            </AnimatePresence>
-          </ol>
-        ) : (
-          <p className="t-body muted m0">Nothing said yet. Press play.</p>
-        )}
+            </ol>
+          </details>
+        )
+      )}
+      {proof?.requestId && (
         <p className="t-caption m0 t-mono">
-          {proof?.requestId ? `0G request ${proof.requestId}${proof.teeVerified ? " · TEE verified" : ""}` : `${fight.calls ?? "Many"} 0G calls · ${fight.fighters?.a?.fighterName ?? "A"} vs ${fight.fighters?.b?.fighterName ?? "B"}`}
+          0G request {proof.requestId}
+          {proof.teeVerified ? " · TEE verified" : ""}
         </p>
-      </Card>
+      )}
     </div>
+  );
+}
+
+const HIT_WORD = { hit: "Hit", graze: "Glancing hit", block: "Blocked", clash: "No clear call" };
+/** The project page holds the evidence a hit cites; slots without a project have none. */
+const evidenceHref = (p) => (p?.id && !String(p.id).startsWith("chain-") ? `/projects/${encodeURIComponent(p.id)}#evidence` : null);
+
+/** Every ruling so far, newest first: who hit whom, and the judges' one-line reason. */
+function Hits({ fightMatch, state }) {
+  const items = [
+    ...state.rulings.map((r) => ({ key: `r${r.seq}`, seq: r.seq, round: r.round, attacker: r.attacker, target: r.target, outcome: RULING_OUTCOME[r.label] ?? "clash", reason: r.reason, evidence: state.challenges[r.challengeId]?.evidence ?? [] })),
+    ...state.penalties.map((p) => ({ key: `p${p.seq}`, seq: p.seq, round: p.round, attacker: null, target: p.target, outcome: "hit", reason: p.reason, judge: fightMatch.judges[p.judge]?.name, evidence: [] })),
+  ]
+    .filter((x) => x.reason)
+    .sort((x, y) => y.seq - x.seq);
+  if (!items.length) return null;
+  const name = (side) => fightMatch.fighters[side]?.name ?? "";
+  return (
+    <section className="hits" aria-label="Every hit and why">
+      <h2 className="t-heading m0">Every hit has a reason</h2>
+      <ol className="hits__list m0">
+        <AnimatePresence initial={false}>
+          {items.map((x) => {
+            const href = evidenceHref(fightMatch.fighters[x.target]);
+            return (
+              <motion.li key={x.key} className={`hit hit--${x.outcome}`} layout initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}>
+                <span className="hit__who">
+                  <span className={`hit__tag hit__tag--${x.outcome}`}>{HIT_WORD[x.outcome]}</span>
+                  {x.attacker ? (
+                    <span>
+                      {name(x.attacker)} <span className="muted">→</span> {name(x.target)}
+                    </span>
+                  ) : (
+                    <span>
+                      {x.judge ? `${x.judge} penalises` : "Penalty on"} {name(x.target)}
+                    </span>
+                  )}
+                  {x.round && <span className="hit__round t-caption">{CRITERION_LABEL[x.round] ?? x.round}</span>}
+                </span>
+                <span className="hit__reason">“{x.reason}”</span>
+                {(href || x.evidence.length > 0) && (
+                  <span className="hit__proof t-caption">
+                    {x.evidence.slice(0, 2).map((e) => (
+                      <span key={e.label} className="t-mono">
+                        {e.label}
+                      </span>
+                    ))}
+                    {href && <Link to={href}>See the evidence →</Link>}
+                  </span>
+                )}
+              </motion.li>
+            );
+          })}
+        </AnimatePresence>
+      </ol>
+    </section>
+  );
+}
+
+/** Average of the three judges for one side of a sealed round. */
+const avg = (xs) => (xs?.length ? xs.reduce((s, v) => s + v, 0) / xs.length : null);
+
+/** The end of the fight: who won, the score per round, and where the proof lives. */
+export function Verdict({ fightMatch, fight, winner, scores }) {
+  const sealed = Object.fromEntries((fight?.events ?? []).filter((e) => e.type === "round_sealed").map((e) => [e.round, e.scores]));
+  const rows = CRITERIA.filter((c) => sealed[c]).map((c) => ({ id: c, a: avg(sealed[c].a), b: avg(sealed[c].b) }));
+  const final = scores ?? (fight?.scores?.a != null && typeof fight.scores.a === "number" ? fight.scores : null);
+  const w = fightMatch.fighters[winner];
+  const href = evidenceHref(w);
+  return (
+    <section className="verdict" aria-label="Verdict">
+      <span className="eyebrow">Verdict</span>
+      <h2 className="t-display-md m0">{w?.name ?? "The winner"} wins</h2>
+      {final && (
+        <p className="verdict__final t-num m0">
+          {fightMatch.fighters.a.name} <b>{(final.a / 100).toFixed(1)}</b> <span className="muted">·</span> {fightMatch.fighters.b.name} <b>{(final.b / 100).toFixed(1)}</b>
+        </p>
+      )}
+      {rows.length > 0 && (
+        <table className="verdict__table">
+          <thead>
+            <tr>
+              <th scope="col">Round</th>
+              <th scope="col">{fightMatch.fighters.a.name}</th>
+              <th scope="col">{fightMatch.fighters.b.name}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr key={r.id}>
+                <th scope="row">{CRITERION_LABEL[r.id]}</th>
+                <td className={`t-num ${r.a > r.b ? "verdict__win" : ""}`}>{r.a.toFixed(0)}</td>
+                <td className={`t-num ${r.b > r.a ? "verdict__win" : ""}`}>{r.b.toFixed(0)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+      <p className="verdict__proof t-caption m0">
+        {fight?.calls ? `Judged in ${fight.calls} calls to 0G Compute.` : "Judged on 0G."}
+        {fight?.resultHash && (
+          <>
+            {" "}
+            Result hash <span className="t-mono">{fight.resultHash.slice(0, 18)}…</span>
+          </>
+        )}
+        {href && (
+          <>
+            {" "}
+            <Link to={href}>See {w.name}'s evidence →</Link>
+          </>
+        )}
+      </p>
+    </section>
   );
 }

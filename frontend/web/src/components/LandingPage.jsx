@@ -4,7 +4,8 @@ import { Link } from "../lib/router.jsx";
 import { Ring } from "./Arena.jsx";
 import { PixelFighter } from "./PixelFighter.jsx";
 import { useEvents, useProjects } from "./Projects.jsx";
-import { FloatSticker, Magnetic, Marquee, Reveal, SplitWords, Squiggle, Tilt, bouncy, fadeUp, stagger } from "./fx.jsx";
+import { FloatSticker, Magnetic, Reveal, SplitWords, Squiggle, Tilt, bouncy, fadeUp, stagger } from "./fx.jsx";
+import { SUBMIT_PATH } from "./Header.jsx";
 
 /** The empty slot at the end of the roster, waiting for the next submission. */
 const GHOST = { id: "your-fighter", name: "Your fighter", pitch: "", description: "", tracks: [] };
@@ -26,24 +27,24 @@ function ArenaHero({ projects, eventName }) {
         </motion.span>
         <h1 id="hero-h" className="t-display-xl m0 hero__title">
           <SplitWords delay={0.12}>
-            Your code steps into the
+            Judge the product, not the
             <span className="hero__arena">
-              ring
+              pitch
               <Squiggle className="hero__squiggle" delay={0.9} />
             </span>
           </SplitWords>
         </h1>
         <motion.p className="t-body m0 hero__lede" variants={fadeUp}>
-          Every project becomes a fighter. Three AI judges score the code, and the fight shows who wins.
+          We turn every hackathon project into an AI fighter, test it for real, and let AI judges pick the winner live in an arena.
         </motion.p>
         <motion.div className="hero__actions" variants={fadeUp}>
           <Magnetic>
-            <Link to="/tournaments" className="btn btn--crush btn--lg btn--arrow">
-              Submit your project <span aria-hidden="true">→</span>
+            <Link to="/arena" className="btn btn--crush btn--lg btn--arrow">
+              Watch a fight <span aria-hidden="true">→</span>
             </Link>
           </Magnetic>
-          <Link to="/arena" className="btn btn--ghost btn--underline">
-            Watch a fight
+          <Link to={SUBMIT_PATH} className="btn btn--ghost btn--underline">
+            Submit a project
           </Link>
         </motion.div>
       </motion.div>
@@ -67,7 +68,7 @@ function ArenaHero({ projects, eventName }) {
                 </li>
               ))}
               <li className="roster__slot" style={{ "--i": roster.length }}>
-                <Link to="/tournaments" className="roster__link roster__link--ghost">
+                <Link to={SUBMIT_PATH} className="roster__link roster__link--ghost">
                   <PixelFighter project={GHOST} scale={scale} ghost label="Empty slot for your fighter" />
                   <span className="roster__name roster__name--always">Your fighter?</span>
                 </Link>
@@ -79,10 +80,10 @@ function ArenaHero({ projects, eventName }) {
           3 AI judges
         </FloatSticker>
         <FloatSticker className="float-sticker--crush hero__sticker hero__sticker--2" rotate={7} delay={0.85} drift={10}>
-          6 rounds ⚡
+          Tested on laptop + phone
         </FloatSticker>
         <FloatSticker className="float-sticker--oracle hero__sticker hero__sticker--3" rotate={-4} delay={1} drift={6}>
-          Evidence &gt; hype
+          Proof on 0G
         </FloatSticker>
       </motion.div>
     </section>
@@ -90,9 +91,9 @@ function ArenaHero({ projects, eventName }) {
 }
 
 const STEPS = [
-  ["Submit", "A public repo and a short form. Two minutes.", "crush"],
-  ["We read the code", "We pin your commit, run the tests and collect evidence.", "oracle"],
-  ["You fight", "Three AI judges score six rounds. Health follows the score.", "sunny"],
+  ["Submit", "Send your repo, your demo video and your live link. It takes two minutes.", "crush"],
+  ["Agents check it", "One reads the code. One watches the demo. One checks every claim against the repo. Then we test the live app on a laptop and a phone.", "oracle"],
+  ["The judges decide", "Three AI judges watch your fighter take on another, round by round. Every hit has a reason, and every reason links to proof on 0G.", "sunny"],
 ];
 
 /** Tiny line icons for the three steps. */
@@ -120,13 +121,29 @@ function StepIcon({ n }) {
   );
 }
 
+/** The problem, in the words we'd say out loud. */
+function Problem() {
+  return (
+    <Reveal as="section" className="problem" aria-labelledby="problem-h">
+      <span className="eyebrow">The problem</span>
+      <h2 id="problem-h" className="t-display-md m0">
+        Hundreds of projects. A few tired judges. Three minutes each.
+      </h2>
+      <p className="t-body m0 problem__body">
+        Nobody has time to open every repo, so judges end up scoring the demo, not the product. Two fitness apps with crypto rewards can sound the same on stage. One works and one doesn't. Today, nobody checks.
+      </p>
+      <p className="t-body-strong m0 problem__fix">We check. Then we let them fight.</p>
+    </Reveal>
+  );
+}
+
 function HowItWorks() {
   return (
     <section id="how" className="how" aria-labelledby="how-h">
       <Reveal className="section-title">
-        <span className="eyebrow">How it works</span>
+        <span className="eyebrow">Three steps</span>
         <h2 id="how-h" className="t-display-md m0">
-          Repo to ring in three steps
+          How it works
         </h2>
       </Reveal>
       <motion.ol className="how__list" initial="hidden" whileInView="show" viewport={{ once: true, margin: "-80px" }} variants={stagger(0.12)}>
@@ -159,11 +176,12 @@ export function LandingPage() {
   return (
     <>
       <ArenaHero projects={projects} eventName={latest?.name} />
-      {latest && <Marquee className="band" items={latest.tracks.map((t) => t.name)} label="Tracks" />}
+      <Problem />
       <HowItWorks />
       <Reveal as="section" className="landing-cta" aria-label="See the roster">
         <div className="landing-cta__copy">
           <p className="t-display-md m0">Meet the fighters</p>
+          <p className="t-body m0">Open any project to see its demo, its test runs and what the judges found.</p>
           <Link to="/projects" className="btn btn--primary btn--arrow">
             See all projects <span aria-hidden="true">→</span>
           </Link>

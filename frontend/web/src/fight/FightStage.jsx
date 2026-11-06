@@ -10,7 +10,7 @@ import { CRITERIA, CRITERION_LABEL, RULING_TEXT, WEIGHTS, fmtHealth, fmtScore } 
 import { SCENE, choreograph, voteCount } from "./choreo.js";
 import { scoreSoFar } from "./reducer.js";
 import { MumbaiBackdrop } from "./MumbaiBackdrop.jsx";
-import { MUMBAI_SCENES, sceneryForMatch, sceneryIdentity } from "./scenery.js";
+import { sceneryForMatch } from "./scenery.js";
 
 const GY = SCENE.ground;
 const OUTCOME_WORD = { hit: "Hit", graze: "Graze", block: "Block", clash: "Clash" };
@@ -197,9 +197,8 @@ export function captionFor(match, state, event) {
 export function FightStage({ match, state, event, ms, reduced = false, captions = true, typing = true, fit = false }) {
   const [wrap, scale] = useIntegerScale(2, fit ? 24 : 12, fit);
   const traits = useMemo(() => ({ a: fighterTraits(match.fighters.a), b: fighterTraits(match.fighters.b) }), [match]);
-  const [sceneChoice, setSceneChoice] = useState(null);
-  const sceneKey = sceneryIdentity(match);
-  const scenery = sceneChoice?.key === sceneKey ? sceneChoice.scene : sceneryForMatch(match);
+  // One stage per match, picked from the two projects: nothing to choose on a demo screen.
+  const scenery = useMemo(() => sceneryForMatch(match), [match]);
   const c = choreograph(event, ms, state, { reduced });
   const snap = (v) => Math.round(v * scale) / scale; // move in screen pixels, stay on the pixel grid
   const ruling = event?.type === "ruling" ? state.rulings.find((r) => r.challengeId === event.challengeId) : null;
@@ -269,17 +268,6 @@ export function FightStage({ match, state, event, ms, reduced = false, captions 
           </div>
         )}
       </div>
-      {!fit && <div className="fs-locations">
-        <span className="t-label fs-locations__heading">Stage</span>
-        <div className="fs-locations__options" role="group" aria-label="Stage">
-          {MUMBAI_SCENES.map((scene) => (
-            <button key={scene.id} type="button" aria-pressed={scenery.id === scene.id} title={scene.detail} onClick={() => setSceneChoice({ key: sceneKey, scene })}>
-              <span className="fs-locations__swatch" style={{ background: scene.color }} aria-hidden="true" />
-              {scene.name}
-            </button>
-          ))}
-        </div>
-      </div>}
       <p className="sr-only" aria-live="polite">{cap.who ? `${cap.who}: ${cap.text}` : cap.text}</p>
     </div>
   );

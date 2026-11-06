@@ -1,18 +1,13 @@
 /*
- * /arena: one 8-bit world under the header, painted in the site's own palette. Each
- * tournament is a walled area with its track and prize on a sticker plaque, and every
- * ring in it opens that fight. Original art, drawn in the same pixel style as the
- * fighters. Everything on the map is read from the chain.
+ * /arena: the fights, four to a screen. Live ones first, then the newest finished.
+ * One badge per ring, the two project names, and their health. Read from the chain.
  */
 import { useMemo } from "react";
 import { motion } from "motion/react";
 import { StatusPill } from "@ds/ui.jsx";
 import { usePoll } from "../lib/chain.js";
 import { loadTournaments } from "../lib/arena.js";
-import { MATCH_LABEL, PHASE_LABEL } from "../lib/labels.js";
-import { POOL_LABEL } from "../lib/pools.js";
 import { Link } from "../lib/router.jsx";
-import { isMatchOpen, openPools } from "../lib/tournamentView.js";
 import { AerialRing } from "./AerialRing.jsx";
 import { bouncy, stagger } from "./fx.jsx";
 
@@ -23,76 +18,39 @@ function withHealth(match) {
   return { ...match, healthA: hp(match.scoreA ?? 0), healthB: hp(match.scoreB ?? 0) };
 }
 
-/** Which rings stand in an area: the round being fought, or the last one played. */
-function ringsFor(t) {
-  const ready = t.matches.filter((m) => m.a != null && m.b != null);
-  const active = ready.filter((m) => m.status === "live" || m.status === "review");
-  if (active.length) return active;
-  if (t.phase === "completed") return ready.slice(-3);
-  return ready.slice(0, Math.min(ready.length, 4));
+/** Every fight worth showing, across tournaments: live first, then the newest finished. */
+function fightsOf(tournaments) {
+  const rank = { live: 0, review: 1, finalized: 2, scheduled: 3 };
+  return tournaments
+    .flatMap((t) => t.matches.filter((m) => m.a != null && m.b != null && m.status !== "void").map((m) => ({ t, match: withHealth(m) })))
+    .sort((x, y) => (rank[x.match.status] ?? 9) - (rank[y.match.status] ?? 9) || Number(y.t.id) - Number(x.t.id));
 }
 
-function Tower({ className }) {
-  return (
-    <svg className={`tower ${className}`} viewBox="0 0 16 22" shapeRendering="crispEdges" aria-hidden="true">
-      <rect className="t-wood" x="7" y="0" width="1" height="7" />
-      <rect className="tower__flag" x="8" y="0" width="5" height="3" />
-      <rect className="t-ink" x="1" y="5" width="3" height="3" />
-      <rect className="t-ink" x="6" y="5" width="4" height="3" />
-      <rect className="t-ink" x="12" y="5" width="3" height="3" />
-      <rect className="t-stone-light" x="2" y="6" width="1" height="2" />
-      <rect className="t-stone-light" x="7" y="6" width="2" height="2" />
-      <rect className="t-stone-light" x="13" y="6" width="1" height="2" />
-      <rect className="t-ink" x="1" y="8" width="14" height="14" />
-      <rect className="t-stone" x="2" y="8" width="12" height="13" />
-      <rect className="t-stone-light" x="2" y="8" width="12" height="2" />
-      <rect className="t-stone-dark" x="2" y="18" width="12" height="3" />
-      <rect className="t-stone-dark" x="4" y="12" width="3" height="1" />
-      <rect className="t-stone-dark" x="9" y="15" width="3" height="1" />
-      <rect className="t-ink" x="7" y="11" width="2" height="3" />
-    </svg>
-  );
-}
+const BADGE = { live: ["live", "Live"], review: ["reward", "Judges deciding"], finalized: ["neutral", "Final"], scheduled: ["neutral", "Up next"] };
 
-function Gate({ open }) {
-  return (
-    <svg className="gate-arch" viewBox="0 0 24 14" shapeRendering="crispEdges" aria-hidden="true">
-      <rect className="t-ink" x="0" y="0" width="24" height="14" />
-      <rect className="t-stone" x="1" y="1" width="22" height="13" />
-      <rect className="t-stone-light" x="1" y="1" width="22" height="2" />
-      <rect className={open ? "t-path" : "t-ink"} x="7" y="4" width="10" height="10" />
-      {!open && [8, 10, 12, 14].map((x) => <rect key={x} className="t-stone-dark" x={x} y="4" width="1" height="10" />)}
-    </svg>
-  );
-}
-
-function Sparkle({ tone, style }) {
-  return (
-    <svg className={`sparkle sparkle--${tone}`} style={style} viewBox="0 0 7 7" shapeRendering="crispEdges" aria-hidden="true">
-      <rect x="3" y="0" width="1" height="7" />
-      <rect x="0" y="3" width="7" height="1" />
-      <rect x="2" y="2" width="3" height="3" />
-    </svg>
-  );
-}
-
-function Plot({ t, match }) {
+function FightCard({ t, match, big }) {
   const a = t.projects[match.a];
   const b = t.projects[match.b];
-  const label = isMatchOpen(t, match) ? POOL_LABEL.OPEN : MATCH_LABEL[match.status];
   const winner = match.winner == null ? null : match.winner === match.a ? "a" : "b";
+  const [tone, word] = BADGE[match.status] ?? ["neutral", "Up next"];
   const healthA = match.healthA ?? 100;
   const healthB = match.healthB ?? 100;
+  const won = winner ? (winner === "a" ? a : b) : null;
   return (
-    <motion.div variants={{ hidden: { opacity: 0, scale: 0.7 }, show: { opacity: 1, scale: 1, transition: bouncy } }}>
-      <Link to={`/fights/${t.id}/${match.index}`} className="plot" aria-label={`Open fight: ${a.name} against ${b.name}, ${label.word}`}>
-        <span className="plot__ring">
-          <AerialRing compact a={a} b={b} status={match.status} winner={winner} seed={match.index + 3} label="" />
+    <motion.div variants={{ hidden: { opacity: 0, scale: 0.9 }, show: { opacity: 1, scale: 1, transition: bouncy } }}>
+      <Link to={`/fights/${t.id}/${match.index}`} className={`bout ${big ? "bout--big" : ""} bout--${match.status}`} aria-label={`Open fight: ${a.name} against ${b.name}, ${word}`}>
+        <span className="bout__top">
+          <StatusPill tone={tone}>{word}</StatusPill>
         </span>
-        <span className="plot__names">
-          {a.name} vs {b.name}
+        <span className="bout__ring">
+          <AerialRing compact a={a} b={b} status={match.status} winner={winner} seed={match.index + Number(t.id) + 3} label="" />
         </span>
-        <span className="plot__bars" aria-hidden="true">
+        <span className="bout__names">
+          <span className={winner === "a" ? "bout__won" : ""}>{a.name}</span>
+          <span className="bout__vs">vs</span>
+          <span className={winner === "b" ? "bout__won" : ""}>{b.name}</span>
+        </span>
+        <span className="bout__bars" aria-hidden="true">
           <span className="plot__bar">
             <motion.span animate={{ width: `${healthA}%` }} transition={{ type: "spring", stiffness: 120, damping: 18 }} />
           </span>
@@ -100,61 +58,23 @@ function Plot({ t, match }) {
             <motion.span animate={{ width: `${healthB}%` }} transition={{ type: "spring", stiffness: 120, damping: 18 }} />
           </span>
         </span>
-        <span className="plot__meta">
-          <span>{label.word}</span>
-          <span>
-            {Math.round(healthA)} · {Math.round(healthB)} HP
-          </span>
-        </span>
+        <span className="bout__foot">{won ? `${won.name} won` : match.status === "live" ? "Watch now →" : "Open →"}</span>
       </Link>
     </motion.div>
   );
 }
 
-function District({ t, size }) {
-  const label = openPools(t).length ? POOL_LABEL.OPEN : PHASE_LABEL[t.phase];
-  const rings = useMemo(() => ringsFor(t).map(withHealth), [t]);
-  const open = t.phase === "live";
-  return (
-    <motion.section className={`district district--${t.phase} ${size}`} aria-label={`${t.track}: ${label.word}`} variants={{ hidden: { opacity: 0, y: 30 }, show: { opacity: 1, y: 0, transition: bouncy } }}>
-      <span className="road" aria-hidden="true" />
-      <span className="wall wall--top" aria-hidden="true" />
-      <span className="wall wall--left" aria-hidden="true" />
-      <span className="wall wall--right" aria-hidden="true" />
-      <span className="wall wall--bottom" aria-hidden="true" />
-      <Tower className="tower--tl" />
-      <Tower className="tower--tr" />
-      <Tower className="tower--bl" />
-      <Tower className="tower--br" />
-      <Gate open={open} />
-      <Link to={`/tournaments/${t.id}`} className="plaque">
-        <span className="plaque__track">{t.track}</span>
-        <span className="plaque__row">
-          {t.prize ? <span className="plaque__prize">{t.prize}</span> : null}
-          <StatusPill tone={label.tone}>{label.word}</StatusPill>
-        </span>
-      </Link>
-      <motion.div className="district__floor" variants={stagger(0.05)}>
-        {rings.length ? rings.map((m) => <Plot key={m.index} t={t} match={m} />) : <p className="plot__empty m0">{t.frozen === false ? "Not frozen yet. Set it up in the organizer console." : "No fights to show."}</p>}
-      </motion.div>
-    </motion.section>
-  );
-}
-
-const SPARKLES = [
-  ["1%", "12%"], ["97%", "9%"], ["0.5%", "38%"], ["97.5%", "33%"], ["48%", "31%"], ["2%", "64%"],
-  ["96%", "60%"], ["32%", "62%"], ["66%", "64%"], ["1%", "90%"], ["97%", "88%"], ["50%", "94%"],
-];
+const PER_SCREEN = 4;
 
 export function ArenaPage() {
   const { data, error } = usePoll(loadTournaments, [], 15000, { key: "tournaments" });
-  const real = useMemo(() => (data ?? []).map((t) => ({ ...t, prize: "On chain" })), [data]);
-  const open = real.flatMap((t) => openPools(t)).length;
-
-  const sizeOf = (t) => (t.count >= 16 ? "district--wide" : t.count >= 8 ? "district--big" : "");
+  const fights = useMemo(() => fightsOf(data ?? []), [data]);
+  const shown = fights.slice(0, PER_SCREEN);
+  const earlier = fights.slice(PER_SCREEN);
+  const live = fights.filter((f) => f.match.status === "live").length;
 
   return (
-    <section className="village" aria-label="The arena map">
+    <section className="village" aria-label="The arena">
       <svg className="village__ground" aria-hidden="true" shapeRendering="crispEdges">
         <defs>
           <pattern id="ground" width="64" height="64" patternUnits="userSpaceOnUse">
@@ -168,37 +88,48 @@ export function ArenaPage() {
         </defs>
         <rect width="100%" height="100%" fill="url(#ground)" />
       </svg>
-      {SPARKLES.map(([left, top], i) => (
-        <Sparkle key={`${left}-${top}`} tone={i % 3} style={{ left, top, animationDelay: `${(parseFloat(left) * 37) % 2}s` }} />
-      ))}
 
-      <header className="intro intro--row village__sign">
-        <div className="intro">
-          <h1 className="t-display-lg m0 rise" style={{ "--i": 1 }}>
-            Arena
-          </h1>
-          <span className="t-body muted rise" style={{ "--i": 2 }}>
-            Every fight, live. Tap a ring to watch.
-          </span>
-        </div>
-        <div className="village__sign-right">
-          {open ? (
-            <Link className="btn btn--secondary btn--sm" to="/tournaments">
-              {open} open for betting
-            </Link>
-          ) : (
-            <StatusPill tone="neutral">Nothing open for betting</StatusPill>
-          )}
-        </div>
+      <header className="arena-head">
+        <h1 className="t-display-lg m0 rise" style={{ "--i": 1 }}>
+          Arena
+        </h1>
+        <p className="t-body muted m0 rise" style={{ "--i": 2 }}>
+          {live ? `${live} ${live === 1 ? "fight" : "fights"} live now.` : "Every fight, judged on evidence."} Tap a ring to watch.
+        </p>
       </header>
 
-      <motion.div className="village__map" variants={stagger(0.1)} initial="hidden" animate="show">
-        {real.map((t) => (
-          <District key={t.id} t={t} size={sizeOf(t)} />
+      <motion.div className="bouts" variants={stagger(0.08)} initial="hidden" animate="show">
+        {shown.map(({ t, match }) => (
+          <FightCard key={`${t.id}-${match.index}`} t={t} match={match} big />
         ))}
         {data == null && error && <p className="plot__empty m0">Couldn't reach the chain. Retrying…</p>}
-        {data != null && !real.length && <p className="plot__empty m0">No tournaments yet. Create one in the organizer console.</p>}
+        {data != null && !fights.length && <p className="plot__empty m0">No fights yet.</p>}
       </motion.div>
+
+      {earlier.length > 0 && (
+        <section className="bouts-earlier" aria-labelledby="earlier-h">
+          <h2 id="earlier-h" className="t-heading m0">
+            Earlier fights
+          </h2>
+          <ul className="bouts-earlier__list m0">
+            {earlier.map(({ t, match }) => {
+              const a = t.projects[match.a];
+              const b = t.projects[match.b];
+              const w = match.winner == null ? null : match.winner === match.a ? a : b;
+              return (
+                <li key={`${t.id}-${match.index}`}>
+                  <Link to={`/fights/${t.id}/${match.index}`} className="bouts-earlier__row">
+                    <span>
+                      {a.name} vs {b.name}
+                    </span>
+                    <span className="muted">{w ? `${w.name} won` : (BADGE[match.status] ?? BADGE.scheduled)[1]}</span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
     </section>
   );
 }

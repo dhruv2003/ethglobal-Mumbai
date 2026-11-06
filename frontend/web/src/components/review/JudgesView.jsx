@@ -210,7 +210,7 @@ function Compare({ reviews, sel, onPick }) {
   );
 }
 
-export function JudgesView({ project, data, sel: selIn = 0, onSel }) {
+export function JudgesView({ project, data, sel: selIn = 0, onSel, canAct = false }) {
   const { result, running, progress, health: h, ask, asking, error } = data;
   const reviews = result?.reviews ?? [];
   const [own, setOwn] = useState(selIn);
@@ -269,13 +269,13 @@ export function JudgesView({ project, data, sel: selIn = 0, onSel }) {
                 <JudgeTraces traces={r.traces} />
               </div>
             ))}
-            {h && <ArkivRecord projectId={project.id} ranAt={result?.ranAt} />}
+            {h && canAct && <ArkivRecord projectId={project.id} ranAt={result?.ranAt} />}
           </div>
         </details>
       )}
 
       {error && <span className="field__error">✕ {error}</span>}
-      <div className="jv__foot">
+      {canAct && <div className="jv__foot">
         {!h ? (
           <span className="t-caption">Judge service offline · showing the last stored review</span>
         ) : !h.judgesReady ? (
@@ -287,7 +287,7 @@ export function JudgesView({ project, data, sel: selIn = 0, onSel }) {
             {busy ? "Judging…" : result ? "↻ Ask the judges again" : "Ask the judges"}
           </button>
         )}
-      </div>
+      </div>}
     </div>
   );
 }

@@ -449,7 +449,7 @@ function Detail({ s, n, projectId, verdict, onOpen }) {
 
 /* ---------- the card ---------- */
 
-export function PipelineView({ project, live, onChanged, panelScore, onOpen }) {
+export function PipelineView({ project, live, onChanged, panelScore, onOpen, canAct = false }) {
   const steps = normalize(live.state?.steps);
   const queued = live.review?.status === "queued";
   const running = !queued && (live.running || (live.state && !live.state.finishedAt && live.state.startedAt));
@@ -519,7 +519,7 @@ export function PipelineView({ project, live, onChanged, panelScore, onOpen }) {
             ))}
           </ol>
           {total && <span className="fcard__time t-num">{finished ? `took ${total}` : total}</span>}
-          {project.kind === "submitted" && (
+          {canAct && project.kind === "submitted" && (
             <button type="button" className="fcard__rerun" onClick={rerun} disabled={asking || running || queued} title="Run the review again">
               <span aria-hidden="true">↻</span>
               <span>{running ? "Running" : queued ? "Queued" : asking ? "Starting" : "Re-run"}</span>

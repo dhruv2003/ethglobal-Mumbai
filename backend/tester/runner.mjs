@@ -112,8 +112,13 @@ async function startRecording(ctx, page, dir, maxWidth) {
   cdp.on("Page.screencastFrame", async (f) => {
     const file = path.join(framesDir, `f${String(frames.length).padStart(5, "0")}.jpg`);
     const jpg = Buffer.from(f.data, "base64");
-    fs.writeFileSync(file, jpg);
-    frames.push({ file, ts: f.metadata.timestamp });
+    // A throw here is uncaught (event handler) and would take the whole server down with it.
+    try {
+      fs.writeFileSync(file, jpg);
+      frames.push({ file, ts: f.metadata.timestamp });
+    } catch {
+      /* the run's folder was cleared under us (another run of the same project); drop the frame */
+    }
     if (Date.now() - lastLive > 250) {
       lastLive = Date.now();
       try {

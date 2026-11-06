@@ -44,11 +44,13 @@ export function BrandMark() {
   );
 }
 
+// Three places, in the order of the story: watch the fights, see the evidence, enter your own.
+// Tournaments, the graph and storage still open by URL.
+export const SUBMIT_PATH = "/tournaments/ethglobal-mumbai/submit";
 const NAV = [
-  { to: "/arena", label: "Arena", on: (r) => r.name === "arena" },
-  { to: "/tournaments", label: "Tournaments", on: (r) => r.name === "tournaments" || r.name === "tournament" || r.name === "event" || r.name === "form" || r.name === "matchFight" },
+  { to: "/arena", label: "Arena", on: (r) => r.name === "arena" || r.name === "matchFight" || r.name === "tournament" || r.name === "tournaments" },
   { to: "/projects", label: "Projects", on: (r) => r.name === "projects" || r.name === "project" },
-  { to: "/graph", label: "Graph", on: (r) => r.name === "graph" },
+  { to: SUBMIT_PATH, label: "Submit", on: (r) => r.name === "form" || r.name === "event" },
 ];
 const ORGANIZER_NAV = [
   { to: "/judge", label: "Judges", on: (r) => r.name === "judges" },

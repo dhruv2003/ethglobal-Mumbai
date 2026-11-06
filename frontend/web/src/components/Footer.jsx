@@ -1,6 +1,5 @@
-import { EVENT } from "../config/event.js";
 import { Link } from "../lib/router.jsx";
-import { BrandMark } from "./Header.jsx";
+import { BrandMark, SUBMIT_PATH } from "./Header.jsx";
 
 export function Footer() {
   return (
@@ -10,14 +9,13 @@ export function Footer() {
           <BrandMark />
           <div>
             <span className="foot__name">Battle Arena</span>
-            <span className="t-caption">Built for {EVENT.name}</span>
+            <span className="t-caption">Built at ETHGlobal Mumbai</span>
           </div>
         </div>
         <nav className="foot__nav" aria-label="Footer">
           <Link to="/arena">Arena</Link>
-          <Link to="/tournaments">Tournaments</Link>
           <Link to="/projects">Projects</Link>
-          <Link to="/wallet">Wallet</Link>
+          <Link to={SUBMIT_PATH}>Submit</Link>
         </nav>
       </div>
     </footer>

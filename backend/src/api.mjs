@@ -48,7 +48,7 @@ import zgModels from "./zg/models.js";
 import { EXAMPLE_FORMS } from "./judges/seed.mjs";
 import { loadProject } from "./projects.mjs";
 import { db, deleteProject, dossiers, judges, liveDir, liveFile, liveTests, pipelines, reviews, submissions, videos, voiceNotes } from "./store.mjs";
-import { fileLinks, filesStatus, sendFile } from "./zg/files.mjs";
+import { fileInfo, fileLinks, filesStatus, sendFile } from "./zg/files.mjs";
 import { storageConfig, walletInfo } from "./zg/storage.mjs";
 import { cleanUploads, IMAGE_MAX, IMAGE_REF, MAX_IMAGES, MIME, storeImageUpload, storeUpload, UPLOAD_FILE, UPLOAD_REF, UPLOADS, uploadExists, VIDEO_MAX } from "./reviewer/media.mjs";
 import { dequeue, enqueue, isRunning, queueLength, queuePosition, resumeQueue } from "./reviewer/pipeline.mjs";
@@ -256,6 +256,9 @@ function publicVideo(id) {
   const v = videos.get(id);
   if (!v) return null;
   if (v.error) return { saved: false, reason: v.error };
+  // The facts say we made a copy; only offer it if the file is really stored (or still uploading) on 0G.
+  const f = v.ext ? fileInfo(String(id), `demo.${v.ext}`) : null;
+  if (!f || (f.error && !f.stored)) return { saved: false, reason: f?.error ? `Our copy didn't reach 0G Storage (${f.error}).` : "Our copy of the video isn't stored." };
   return { saved: true, url: `/api/projects/${encodeURIComponent(id)}/video/file`, seconds: v.seconds, bytes: v.bytes, source: v.source };
 }
 
@@ -345,11 +348,12 @@ router.post("/submissions", rateLimit({ max: 5, windowMs: 60 * 60 * 1000 }), asy
   res.status(201).json(publicSubmission(record));
 });
 
-router.get("/projects/:id/pipeline", requireOrganizer, (req, res) => {
+/* Read-only review data is public: the evidence is the point. Writes stay organizer-only. */
+router.get("/projects/:id/pipeline", (req, res) => {
   res.json({ running: isRunning(req.params.id), review: reviewStatus(req.params.id), queueLength: queueLength(), state: pipelines.get(req.params.id) });
 });
 
-router.get("/projects/:id/dossier", requireOrganizer, (req, res) => res.json({ dossier: dossiers.get(req.params.id) }));
+router.get("/projects/:id/dossier", (req, res) => res.json({ dossier: dossiers.get(req.params.id) }));
 
 const arkivReadFailed = (e) => `Arkiv read failed: ${String(e?.shortMessage ?? e?.message ?? e).slice(0, 200)}`;
 
@@ -435,8 +439,8 @@ router.post("/projects/:id/arkiv", requireOrganizer, async (req, res) => {
   res.json(await publishRun(project, result));
 });
 
-/** Live test results for a submitted project; media under /live/files/... */
-router.get("/projects/:id/live", requireOrganizer, (req, res) => res.json({ liveTest: liveTests.get(req.params.id) }));
+/** Live test results for a submitted project (public, like the rest of the review data); media under /live/files/... */
+router.get("/projects/:id/live", (req, res) => res.json({ liveTest: liveTests.get(req.params.id) }));
 
 /**
  * Watch a cloud browser while the live test runs: an MJPEG stream of its newest
@@ -600,7 +604,7 @@ router.post("/projects/:id/pipeline", requireOrganizer, (req, res) => {
   res.status(202).json({ review: reviewStatus(req.params.id), state: pipelines.get(req.params.id) });
 });
 
-router.get("/projects/:id/reviews", requireOrganizer, (req, res) => {
+router.get("/projects/:id/reviews", (req, res) => {
   const id = req.params.id;
   const r = reviews.get(id);
   // Keep the panel polling while the pipeline prepares evidence or waits in line.

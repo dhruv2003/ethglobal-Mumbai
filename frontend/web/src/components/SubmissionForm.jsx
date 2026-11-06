@@ -46,6 +46,8 @@ export function SubmissionForm({ tracks, wallet, onSubmit, submitState, problemC
     const first = STEPS.findIndex((s, i) => i < 3 && s.fields.some((p) => errors[p]));
     return first === -1 ? 3 : first;
   });
+  // A step only shows ✓ once you've been there, so optional steps don't look done before you've seen them.
+  const [visited, setVisited] = useState(() => new Set(Array.from({ length: step + 1 }, (_, i) => i)));
   const [dir, setDir] = useState(1);
   const [nudge, setNudge] = useState(0);
   const top = useRef(null);
@@ -58,6 +60,7 @@ export function SubmissionForm({ tracks, wallet, onSubmit, submitState, problemC
     }
     setDir(i > step ? 1 : -1);
     setStep(i);
+    setVisited((v) => (v.has(i) ? v : new Set([...v, i])));
     pendingFocus.current = focusPath ?? null;
     const el = top.current;
     if (el && el.getBoundingClientRect().top < 72) el.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -102,7 +105,7 @@ export function SubmissionForm({ tracks, wallet, onSubmit, submitState, problemC
       }}
     >
       <div ref={top} className="wiz__anchor" />
-      <Stepper step={step} missing={missing} problems={problems} onPick={go} />
+      <Stepper step={step} visited={visited} missing={missing} problems={problems} onPick={go} />
 
       <div className="wiz__stage">
         <AnimatePresence mode="wait" initial={false} custom={dir}>
@@ -163,7 +166,7 @@ function focusField(path) {
 
 /* ---------- Stepper ---------- */
 
-function Stepper({ step, missing, problems, onPick }) {
+function Stepper({ step, visited, missing, problems, onPick }) {
   return (
     <LayoutGroup id="wiz-steps">
       <nav className="wsteps" aria-label="Entry steps">
@@ -171,7 +174,7 @@ function Stepper({ step, missing, problems, onPick }) {
           {STEPS.map((x, i) => {
             const on = i === step;
             const left = i < 3 ? missing(i) : problems.length;
-            const done = i < 3 ? left === 0 : false;
+            const done = i < 3 && left === 0 && (visited.has(i) || i < step);
             return (
               <li key={x.id} className="wsteps__item">
                 {i > 0 && <span className={`wsteps__link ${i <= step ? "wsteps__link--on" : ""}`} aria-hidden="true" />}
@@ -308,7 +311,6 @@ function ArenaStep({ tracks }) {
             <span className="trackcard__name">Overall finalist</span>
             <span className="trackcard__prize">Every project, automatically</span>
           </span>
-          <span className="trackcard__state">Entered</span>
         </div>
         {tracks.map((t, i) => {
           const on = selected.includes(t.id);
@@ -508,15 +510,19 @@ function NavBar({ step, missing, nudge, onBack, onNext, wallet, submitState, pro
 
   return (
     <div className="wnav">
-      <button type="button" className="btn btn--ghost" onClick={onBack} disabled={step === 0} aria-label="Previous step">
-        ← <span className="wnav__hide">Back</span>
+      <button type="button" className="btn btn--ghost wnav__back" onClick={onBack} disabled={step === 0} aria-label="Previous step" style={step === 0 ? { visibility: "hidden" } : undefined}>
+        <span aria-hidden="true">←</span>
+        <span className="wnav__hide">Back</span>
       </button>
       <motion.div key={nudge} className="wnav__status" role="status" aria-live="polite" animate={nudge && missing ? { x: [0, -6, 6, -3, 0] } : {}} transition={{ duration: 0.35 }}>
         {status}
       </motion.div>
       {!last ? (
         <button type="button" className="btn btn--primary btn--arrow" onClick={onNext}>
-          Next<span className="wnav__hide">: {nextStep.short}</span> <span aria-hidden="true">→</span>
+          <span>
+            Next<span className="wnav__hide">: {nextStep.short}</span>
+          </span>
+          <span aria-hidden="true">→</span>
         </button>
       ) : connected ? (
         <button type="submit" className={`btn ${problemCount ? "btn--primary" : "btn--crush"} btn--arrow`} disabled={busy}>

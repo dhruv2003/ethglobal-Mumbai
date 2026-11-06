@@ -1,12 +1,14 @@
 /*
- * /fights/:tournament/:match: the ring on the left, betting on the right, dialogue below. PRD UI-08.
+ * /fights/:tournament/:match: demo-first. The two names, the three judges, the ring at full
+ * width, then every hit with the judges' reason, then the verdict. Betting is a slim strip;
+ * wallet prompts only appear once someone presses "Place a bet". PRD UI-08.
  * The fight is the recorded transcript the 0G judges and fighters produced for these two
  * projects (backend /api/arena/fights). Until it is recorded and revealed, the ring waits.
  * Bets go to the chain.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { Card, OddsBar, StatusPill } from "@ds/ui.jsx";
+import { Card, StatusPill } from "@ds/ui.jsx";
 import { formatAmount, usePoll, useToken } from "../lib/chain.js";
 import { cachedTournament, getFight, loadTournament } from "../lib/arena.js";
 import { MATCH_LABEL } from "../lib/labels.js";
@@ -14,9 +16,10 @@ import { POOL_LABEL, matchMarket, percent } from "../lib/pools.js";
 import { Link } from "../lib/router.jsx";
 import { chainBetPool, isMatchOpen } from "../lib/tournamentView.js";
 import { BetPanel, myBet, usePoolData } from "./BetPanel.jsx";
+import { PixelFighter } from "./PixelFighter.jsx";
 import { BetModal } from "./BetModal.jsx";
 import { useCountdown } from "./ChainBits.jsx";
-import { Player, WaitingRing, canPlay, matchFor } from "./FightPlayer.jsx";
+import { Player, Verdict, WaitingRing, canPlay, matchFor } from "./FightPlayer.jsx";
 import { Theater } from "./FightTheater.jsx";
 
 function Stage({ tournament, match, fight, a, b, covered }) {
@@ -31,15 +34,7 @@ function PreFight({ tournament, match, fight, fightMatch }) {
   const countdown = useCountdown(revealMs && revealMs > Date.now() ? revealMs : match.startMs > Date.now() ? match.startMs : null);
   const open = isMatchOpen(tournament, match);
   if (match.status === "finalized") {
-    const winner = tournament.projects[match.winner]?.name ?? "The winning project";
-    return (
-      <Card variant="surface" className="stack">
-        <StatusPill tone="success">Finalized on chain</StatusPill>
-        <h2 className="t-heading m0">{winner} won</h2>
-        <p className="t-body m0 t-num">{fightMatch.fighters.a.name} {(match.scoreA / 100).toFixed(2)} · {fightMatch.fighters.b.name} {(match.scoreB / 100).toFixed(2)}</p>
-        <p className="t-body m0 muted">The published result is final. No recorded fight replay is available for this match.</p>
-      </Card>
-    );
+    return <Verdict fightMatch={fightMatch} fight={fight} winner={match.winner === match.a ? "a" : "b"} scores={{ a: match.scoreA, b: match.scoreB }} />;
   }
   let title = "The fight hasn't started";
   let note;
@@ -67,90 +62,113 @@ function PreFight({ tournament, match, fight, fightMatch }) {
   );
 }
 
-/** Minimal side card: who's ahead, pool size, one button. The bet itself happens in the popup. */
-function BetCard({ shares, names, total, symbol, mine, onBet, live }) {
+/** The panel for this fight: three judges, each with their lens. */
+function JudgesRow({ judges }) {
+  const list = Object.entries(judges ?? {});
+  if (!list.length) return null;
   return (
-    <Card className="bet bet--mini">
-      <div className="section-head">
-        <h2 className="t-heading m0">Who wins this match?</h2>
-        <StatusPill tone="live">{live ? "Live" : "Betting open"}</StatusPill>
-      </div>
-      <OddsBar yesPct={shares[0]} yesLabel={names[0]} noLabel={names[1]} />
-      <div className="bet-mini__row">
-        <span className="t-caption">Pool</span>
-        <span className="t-body-strong t-num">
-          {total} {symbol}
-        </span>
-      </div>
-      {mine && (
-        <div className="bet-mini__row">
-          <span className="t-caption">Your bet</span>
-          <span className="t-body-strong t-num">
-            {mine.amount} {mine.symbol} on {mine.name}
+    <ul className="fjudges m0" aria-label="The judges">
+      {list.map(([id, j]) => (
+        <li key={id} className="fjudge">
+          <span className="fjudge__face" aria-hidden="true">
+            <PixelFighter project={{ seed: id, name: j.name, tracks: [] }} scale={2} />
           </span>
-        </div>
-      )}
-      <button type="button" className="bm__go" onClick={onBet}>
-        Place a bet
-      </button>
-    </Card>
+          <span className="fjudge__text">
+            <span className="fjudge__name">{j.name}</span>
+            <span className="fjudge__focus t-caption">{j.focus}</span>
+          </span>
+        </li>
+      ))}
+    </ul>
   );
 }
 
-function ChainBetCard({ pool, wallet, ...rest }) {
+/** One line for betting: who the crowd backs, the pool, and a button. The wallet only comes up after a click. */
+function BetStrip({ wallet, tournament, match, a, b, onBet }) {
   const info = useToken();
-  const { data } = usePoolData(wallet, pool.tournamentId, pool.market, pool.selections);
-  if (!data || !info) return <Card className="bet"><div className="skeleton bet__skeleton" aria-label="Loading pool" /></Card>;
-  const total = data.pool.total;
-  const pctA = total > 0n ? Math.round(percent(data.stakes[0], total)) : 50;
-  const mine = myBet(data, info, pool.selections);
-  return <BetCard shares={[pctA, 100 - pctA]} names={pool.selections.map((s) => s.project.name)} total={formatAmount(total, info.decimals)} symbol={info.symbol} mine={mine} {...rest} />;
+  const selections = useMemo(() => [{ id: match.a, project: a }, { id: match.b, project: b }], [match.a, match.b, a, b]);
+  const market = matchMarket(tournament.id, match.index);
+  const { data } = usePoolData(wallet, tournament.id, market, selections);
+  const [mineOpen, setMineOpen] = useState(false);
+  const open = isMatchOpen(tournament, match);
+  if (!match.opened) return null;
+  const total = data?.pool?.total ?? 0n;
+  const pctA = data && total > 0n ? Math.round(percent(data.stakes[0], total)) : 50;
+  const bet = data && info ? myBet(data, info, selections) : null;
+  const mine = bet ? `${bet.amount} ${bet.symbol} on ${bet.name}` : null;
+  return (
+    <div className="betstrip">
+      <span className="betstrip__odds" aria-label={`${a.name} ${pctA}%, ${b.name} ${100 - pctA}%`}>
+        <span className="betstrip__name">{a.name}</span>
+        <span className="betstrip__bar" aria-hidden="true">
+          <span style={{ width: `${pctA}%` }} />
+        </span>
+        <span className="betstrip__name">{b.name}</span>
+        <span className="t-caption t-num">
+          {pctA}% · {100 - pctA}%
+        </span>
+      </span>
+      <span className="betstrip__pool t-caption t-num">{data && info ? `Pool ${formatAmount(total, info.decimals)} ${info.symbol} · testnet` : "Testnet pool"}</span>
+      {mine && (
+        <button type="button" className="btn btn--ghost btn--sm" onClick={() => setMineOpen((o) => !o)} aria-expanded={mineOpen}>
+          Your bet: {mine}
+        </button>
+      )}
+      {open ? (
+        <button type="button" className="btn btn--crush btn--sm" onClick={onBet}>
+          Place a bet
+        </button>
+      ) : (
+        <StatusPill tone="neutral">Betting closed</StatusPill>
+      )}
+      {mine && mineOpen && (
+        <div className="betstrip__mine">
+          <BetPanel wallet={wallet} tournamentId={tournament.id} market={market} title="Your bet" selections={selections} />
+        </div>
+      )}
+    </div>
+  );
 }
 
-function Layout({ tournament, match, side, fight, theater }) {
+function Layout({ tournament, match, fight, theater, wallet, onBet }) {
   const a = match.a != null ? tournament.projects[match.a] : null;
   const b = match.b != null ? tournament.projects[match.b] : null;
   const label = isMatchOpen(tournament, match) ? POOL_LABEL.OPEN : MATCH_LABEL[match.status];
   return (
-    <div className="stack stack--page">
-      <Link to={`/tournaments/${tournament.id}`} className="back btn btn--ghost btn--sm">
-        ← {tournament.title}
+    <div className="stack stack--page fight-page">
+      <Link to="/arena" className="back btn btn--ghost btn--sm">
+        ← Arena
       </Link>
-      <header className="intro intro--row">
+      <header className="fight-head">
         <div className="intro">
           <span className="org-roles">
             <StatusPill tone={label.tone}>{label.word}</StatusPill>
-            <span className="t-caption">
-              {match.roundName} · Match {match.index + 1}
-            </span>
+            <span className="t-caption">{tournament.title}</span>
           </span>
           <h1 className="t-display-lg m0 rise">
             {a?.name ?? "To be decided"} <span className="muted">vs</span> {b?.name ?? "To be decided"}
           </h1>
         </div>
-        {a && b && (
+        {a && b && canPlay(fight) && (
           <button type="button" className="btn btn--secondary btn--sm" onClick={theater.watch}>
             Watch full screen
           </button>
         )}
       </header>
+      <JudgesRow judges={fight?.judges} />
+      {a && b && <BetStrip wallet={wallet} tournament={tournament} match={match} a={a} b={b} onBet={onBet} />}
       {match.status === "review" && (
         <motion.div className="notice" role="status" initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}>
           <span>Tied twice. Waiting for the organizer to decide. Payouts are paused.</span>
         </motion.div>
       )}
-      <div className="fight-layout">
-        <div className="fight-layout__stage">
-          {a && b ? (
-            <Stage tournament={tournament} match={match} fight={fight} a={a} b={b} covered={theater.open} />
-          ) : (
-            <Card variant="surface" className="empty">
-              <span className="t-body muted">The fighters for this match aren't decided yet.</span>
-            </Card>
-          )}
-        </div>
-        <aside className="fight-layout__side">{side(a, b)}</aside>
-      </div>
+      {a && b ? (
+        <Stage tournament={tournament} match={match} fight={fight} a={a} b={b} covered={theater.open} />
+      ) : (
+        <Card variant="surface" className="empty">
+          <span className="t-body muted">The fighters for this match aren't decided yet.</span>
+        </Card>
+      )}
       <AnimatePresence>{a && b && theater.open && <Theater tournament={tournament} match={match} fight={fight} a={a} b={b} wallet={theater.wallet} onClose={theater.close} />}</AnimatePresence>
     </div>
   );
@@ -206,27 +224,9 @@ export function MatchFightPage({ id, matchIndex, wallet }) {
         tournament={t}
         match={match}
         fight={fight}
+        wallet={wallet}
+        onBet={() => chainOpen && setBetting(chainBetPool(t, match))}
         theater={{ open: watching, wallet, close: closeTheater, watch: () => setWatching(true) }}
-        side={(a, b) =>
-          a && b && chainOpen ? (
-            <ChainBetCard wallet={wallet} pool={chainBetPool(t, match)} live={match.status === "live"} onBet={() => setBetting(chainBetPool(t, match))} />
-          ) : match.opened ? (
-            <BetPanel
-              wallet={wallet}
-              tournamentId={t.id}
-              market={matchMarket(t.id, matchIndex)}
-              title="Who wins this match?"
-              selections={[
-                { id: match.a, project: a },
-                { id: match.b, project: b },
-              ]}
-            />
-          ) : (
-            <Card variant="surface">
-              <p className="t-body m0 muted">This match's pool isn't open yet.</p>
-            </Card>
-          )
-        }
       />
       <BetModal pool={betting} wallet={wallet} onClose={closeBet} onPlaced={placed} />
     </>

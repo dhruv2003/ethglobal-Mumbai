@@ -204,7 +204,7 @@ function Overview({ project, data, live, open, pickJudge }) {
 
 /* ---------- shell ---------- */
 
-export function ReviewTab({ project }) {
+export function ReviewTab({ project, canAct = false }) {
   const [live, refresh] = usePipeline(project);
   const data = useReviewData(project, live);
   const busy = live.running || live.review?.status === "queued" || (live.state && !live.state.finishedAt);
@@ -289,9 +289,9 @@ export function ReviewTab({ project }) {
               }}
             />
           )}
-          {tab === "pipeline" && <PipelineView project={project} live={live} onChanged={refresh} panelScore={data.result?.panelHundredths} onOpen={setTab} />}
+          {tab === "pipeline" && <PipelineView project={project} canAct={canAct} live={live} onChanged={refresh} panelScore={data.result?.panelHundredths} onOpen={setTab} />}
           {tab === "testing" && <TestingView project={project} live={live} />}
-          {tab === "judges" && <JudgesView project={project} data={data} sel={judge} onSel={setJudge} />}
+          {tab === "judges" && <JudgesView project={project} canAct={canAct} data={data} sel={judge} onSel={setJudge} />}
           {tab === "evidence" && <EvidenceView project={project} data={data} live={live} />}
           </>
           )}

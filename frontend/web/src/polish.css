@@ -436,3 +436,8 @@ a.brand:hover .brand__token { transform: translateY(-14px) scale(1.25); }
 
 /* Status pills never stretch inside column stacks. */
 .stack > .pill, .card > .pill, .intro > .pill { align-self: flex-start; }
+
+/* Landing: the problem, said plainly. */
+.problem { display: flex; flex-direction: column; gap: var(--space-3); max-width: 760px; padding: var(--space-7, 56px) 0 var(--space-4); }
+.problem__body { font-size: 1.125rem; line-height: 1.6; color: var(--ink-2, var(--ink)); }
+.problem__fix { font-size: 1.125rem; }

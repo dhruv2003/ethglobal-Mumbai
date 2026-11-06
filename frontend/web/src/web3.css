@@ -611,3 +611,74 @@ a.bracket-match:hover { transform: translateY(-2px); box-shadow: var(--shadow-so
   .txn__what { grid-row: 1 / span 2; }
   .txn__link { grid-column: 2; justify-self: end; }
 }
+
+/* Arena: four fights to a screen, 2x2. One badge, two names, two health bars. */
+.arena-head { max-width: 1120px; margin: 0 auto var(--space-6); display: flex; flex-direction: column; gap: var(--space-1); }
+.bouts { max-width: 1120px; margin: 0 auto; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-6); }
+.bout {
+  position: relative; display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-4);
+  background: var(--surface); border: 3px solid var(--ink); border-radius: var(--radius-xl); box-shadow: var(--shadow-pop);
+  color: var(--ink); text-decoration: none; transition: transform var(--dur-fast) var(--ease-standard), box-shadow var(--dur-fast) var(--ease-standard);
+}
+.bout:hover { transform: translateY(-3px); box-shadow: var(--shadow-lift); }
+.bout--live { border-color: var(--oracle); }
+.bout__top { display: flex; justify-content: flex-start; }
+.bout__ring { line-height: 0; background: var(--arena-canvas); border-radius: var(--radius-lg); padding: var(--space-2); }
+.bout__ring .aer { width: 100%; height: auto; max-height: 260px; }
+.bout__names { display: flex; align-items: baseline; justify-content: center; flex-wrap: wrap; gap: var(--space-2); font: 800 20px/26px var(--font-sans); text-align: center; }
+.bout__vs { font: 700 13px/18px var(--font-mono); color: var(--ink-muted, var(--ink)); opacity: 0.6; }
+.bout__won { text-decoration: underline; text-decoration-color: var(--sunny); text-decoration-thickness: 4px; text-underline-offset: 4px; }
+.bout__bars { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-2); }
+.bout__foot { font: 700 14px/20px var(--font-sans); text-align: center; }
+.bouts-earlier { max-width: 1120px; margin: var(--space-10, 64px) auto 0; display: flex; flex-direction: column; gap: var(--space-3); }
+.bouts-earlier__list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }
+.bouts-earlier__row { display: flex; justify-content: space-between; gap: var(--space-3); padding: var(--space-3) var(--space-4); background: var(--surface); border: 2px solid var(--ink); border-radius: var(--radius-lg); color: var(--ink); text-decoration: none; font-weight: 700; }
+.bouts-earlier__row:hover { background: var(--surface-sunken); }
+@media (max-width: 720px) {
+  .bouts { grid-template-columns: minmax(0, 1fr); gap: var(--space-4); }
+  .village { padding: var(--space-4) 16px var(--space-10, 64px); }
+  .bout__ring .aer { max-height: 170px; }
+}
+
+/* Fight page, demo-first: one column, ring at full width. */
+.fight-page { width: 100%; max-width: 1120px; margin: 0 auto; }
+.fight-page .fs-wrap { width: 100%; }
+.fight-head { display: flex; justify-content: space-between; align-items: flex-end; gap: var(--space-4); flex-wrap: wrap; }
+.fjudges { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.fjudge { display: flex; align-items: center; gap: var(--space-2); padding: 4px var(--space-3) 4px 4px; background: var(--surface); border: 2px solid var(--ink); border-radius: var(--radius-pill); }
+.fjudge__face { display: grid; place-items: center; width: 36px; height: 36px; overflow: hidden; border-radius: 50%; background: var(--arena-canvas); line-height: 0; }
+.fjudge__text { display: flex; flex-direction: column; line-height: 1.15; }
+.fjudge__name { font-weight: 800; font-size: 14px; }
+.fjudge__focus::first-letter { text-transform: uppercase; }
+.betstrip { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-3); padding: var(--space-2) var(--space-3); background: var(--surface); border: 2px solid var(--line-strong, var(--ink)); border-radius: var(--radius-lg); }
+.betstrip__odds { display: flex; align-items: center; gap: var(--space-2); flex: 1 1 320px; min-width: 0; }
+.betstrip__name { font-weight: 700; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 30%; }
+.betstrip__bar { flex: 1; height: 8px; min-width: 60px; border-radius: var(--radius-pill); background: var(--stake-no-fill); overflow: hidden; border: 2px solid var(--ink); }
+.betstrip__bar > span { display: block; height: 100%; background: var(--oracle); }
+.betstrip__mine { flex-basis: 100%; }
+.hits { display: flex; flex-direction: column; gap: var(--space-3); }
+.hits__list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }
+.hit { display: flex; flex-direction: column; gap: var(--space-1); padding: var(--space-3) var(--space-4); background: var(--surface); border: 2px solid var(--ink); border-left-width: 8px; border-radius: var(--radius-lg); }
+.hit--hit { border-left-color: var(--danger); }
+.hit--graze { border-left-color: var(--sunny); }
+.hit--block, .hit--clash { border-left-color: var(--line-strong, var(--ink)); }
+.hit__who { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2); font-weight: 700; font-size: 14px; }
+.hit__tag { padding: 0 var(--space-2); border-radius: var(--radius-pill); font: 800 11px/20px var(--font-mono); text-transform: uppercase; background: var(--surface-sunken); }
+.hit__tag--hit { background: var(--danger); color: var(--on-action, #fff); }
+.hit__tag--graze { background: var(--sunny); color: var(--ink); }
+.hit__round { margin-left: auto; }
+.hit__reason { font-size: 17px; line-height: 1.45; }
+.hit__proof { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: center; }
+.verdict { display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-5); background: var(--surface); border: 3px solid var(--ink); border-radius: var(--radius-xl); box-shadow: var(--shadow-pop); }
+.verdict__final { font-size: 18px; }
+.verdict__table { width: 100%; border-collapse: collapse; font-size: 15px; }
+.verdict__table th, .verdict__table td { padding: var(--space-2) var(--space-3); text-align: left; border-bottom: 1px solid var(--line, rgba(0,0,0,.1)); }
+.verdict__table td { text-align: right; }
+.verdict__table thead th:not(:first-child) { text-align: right; }
+.verdict__win { font-weight: 800; }
+.fight-talk summary { cursor: pointer; font-weight: 700; padding: var(--space-2) 0; }
+.fight-talk .fight-lines { margin-top: var(--space-2); }
+@media (max-width: 720px) {
+  .betstrip__name { max-width: 28%; }
+  .hit__round { margin-left: 0; }
+}

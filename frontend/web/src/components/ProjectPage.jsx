@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { AnimatePresence, motion } from "motion/react";
+import { motion } from "motion/react";
 import { StatusPill } from "@ds/ui.jsx";
 import { trackNameOf } from "../lib/events.js";
 import { useOrganizer } from "../lib/organizer.js";
@@ -11,12 +11,11 @@ import { shortAddress } from "../lib/wallet.js";
 import { api } from "../lib/api.js";
 import { rerunReview } from "../lib/review.js";
 import { ReviewTab } from "./review/ReviewTab.jsx";
-import { OrganizerGate } from "./OrganizerGate.jsx";
 import { DemoVideo } from "./DemoVideo.jsx";
 import { Ring } from "./Arena.jsx";
 import { toast } from "./Feedback.jsx";
 import { fighterTraitItems, PixelFighter } from "./PixelFighter.jsx";
-import { SplitWords, bouncy, easeOut, stagger } from "./fx.jsx";
+import { SplitWords, bouncy, stagger } from "./fx.jsx";
 import { FighterEns } from "./EnsName.jsx";
 import { EventBadge, Tracks } from "./Projects.jsx";
 
@@ -86,63 +85,9 @@ function DeleteProject({ project }) {
   );
 }
 
-/** Which side of a project page is showing; kept in ?view= so it can be linked. */
-function useView() {
-  const [view, setViewState] = useState(() => (new URLSearchParams(location.search).get("view") === "judge" ? "judge" : "team"));
-  const setView = (v) => {
-    setViewState(v);
-    history.replaceState({}, "", v === "judge" ? `${location.pathname}?view=judge` : location.pathname);
-  };
-  return [view, setView];
-}
-
-/** Segmented toggle: real tabs (arrow keys move between them), sliding thumb. */
-function ViewToggle({ view, onChange, hasDossier, review }) {
-  const tabs = [
-    { id: "team", label: "Submission", hint: "From the team" },
-    {
-      id: "judge",
-      label: "Review",
-      hint: review?.status === "reviewing" ? "Reviewing now" : review?.status === "queued" ? "In the queue" : hasDossier ? "From the AI judges" : "Pending",
-    },
-  ];
-  const onKey = (e) => {
-    if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
-    e.preventDefault();
-    const next = view === "team" ? "judge" : "team";
-    onChange(next);
-    document.getElementById(`tab-${next}`)?.focus();
-  };
-  return (
-    <div className="toggle rise" style={{ "--i": 2 }} role="tablist" aria-label="Project view" data-view={view} onKeyDown={onKey}>
-      {tabs.map((t) => (
-        <button
-          key={t.id}
-          id={`tab-${t.id}`}
-          type="button"
-          role="tab"
-          aria-selected={view === t.id}
-          aria-controls={`panel-${t.id}`}
-          tabIndex={view === t.id ? 0 : -1}
-          className={`toggle__tab toggle__tab--${t.id}`}
-          onClick={() => onChange(t.id)}
-        >
-          {view === t.id && (
-            <motion.span layoutId="view-thumb" className={`toggle__thumb toggle__thumb--${t.id}`} transition={{ type: "spring", stiffness: 420, damping: 32 }} aria-hidden="true" />
-          )}
-          <span className="toggle__label">{t.label}</span>
-          <span className="toggle__hint">{t.hint}</span>
-        </button>
-      ))}
-    </div>
-  );
-}
-
 export function ProjectPage({ id, wallet }) {
-  const [wantedView, setView] = useView();
-  // Reviews are only for organizers. Everyone else sees what the team submitted.
+  // Everyone sees the evidence; only organizers get the actions (rerun, delete, ask again).
   const { isOrganizer } = useOrganizer(wallet);
-  const view = isOrganizer ? wantedView : "team";
   // The cached list has this project already: show it at once, then swap in the fresh copy.
   // While a review is queued or running, re-read every 5s so its status (and the rerun button) stays current.
   const [watching, setWatching] = useState(false);
@@ -211,7 +156,7 @@ export function ProjectPage({ id, wallet }) {
               <RerunReview
                 project={p}
                 onStarted={() => {
-                  setView("judge");
+                  document.getElementById("evidence")?.scrollIntoView({ behavior: "smooth" });
                   refresh();
                 }}
               />
@@ -228,22 +173,8 @@ export function ProjectPage({ id, wallet }) {
         </div>
       </header>
 
-      {isOrganizer && <ViewToggle view={view} onChange={setView} hasDossier={Boolean(p.dossier || p.hasDossier) || p.review?.status === "reviewed"} review={p.review} />}
-
-      <AnimatePresence mode="wait" initial={false}>
-      {view === "team" ? (
-        <motion.section
-          id="panel-team"
-          role="tabpanel"
-          aria-labelledby="tab-team"
-          className="panel panel--team"
-          key="team"
-          initial={{ opacity: 0, x: -24 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -24, transition: { duration: 0.15 } }}
-          transition={{ duration: 0.4, ease: easeOut }}
-        >
-          <div className="team-main">
+      <section className="panel panel--team" aria-label="What the team submitted">
+        <div className="team-main">
           <DemoVideo project={p} />
 
           <section className="card stack about rise" style={{ "--i": 3 }} aria-labelledby="about-h">
@@ -256,26 +187,19 @@ export function ProjectPage({ id, wallet }) {
               ))}
             </div>
           </section>
-          </div>
+        </div>
 
-          <EntryCard project={p} />
-        </motion.section>
-      ) : (
-        <motion.section
-          id="panel-judge"
-          role="tabpanel"
-          aria-labelledby="tab-judge"
-          className="panel panel--judge"
-          key="judge"
-          initial={{ opacity: 0, x: 24 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: 24, transition: { duration: 0.15 } }}
-          transition={{ duration: 0.4, ease: easeOut }}
-        >
-          <OrganizerGate wallet={wallet}><ReviewTab project={p} /></OrganizerGate>
-        </motion.section>
-      )}
-      </AnimatePresence>
+        <EntryCard project={p} />
+      </section>
+
+      <section id="evidence" className="evidence-section" aria-labelledby="evidence-h">
+        <header className="evidence-section__head">
+          <span className="eyebrow">The evidence</span>
+          <h2 id="evidence-h" className="t-display-md m0">What the agents found</h2>
+          <p className="t-body muted m0">We read the code, watched the demo, checked every claim against the repo and tested the live app on a laptop and a phone. This is what held up.</p>
+        </header>
+        <ReviewTab project={p} canAct={isOrganizer} />
+      </section>
     </>
   );
 }

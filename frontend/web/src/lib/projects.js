@@ -5,6 +5,9 @@ import { api } from "./api.js";
 import { peek, put } from "./cache.js";
 import { listEvents } from "./events.js";
 import { uploadUrl } from "./video.js";
+import { cleanName } from "./names.js";
+
+export { cleanName };
 
 function fromSubmission(r) {
   return {
@@ -12,7 +15,7 @@ function fromSubmission(r) {
     seed: r.fighterSeed ?? r.id,
     kind: "submitted",
     teamName: r.team?.name ?? "",
-    name: r.project?.name ?? "Untitled",
+    name: cleanName(r.project?.name),
     pitch: r.project?.pitch ?? "",
     description: r.project?.description ?? "",
     repoUrl: r.repoUrl ?? "",
