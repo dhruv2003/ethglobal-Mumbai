@@ -276,3 +276,69 @@ test("screenshot evidence reused from the cache isn't counted in a later run's c
   assert.deepEqual(z.requestIds, ["j"]);
   assert.equal(z.costUsdMicro, 100);
 });
+
+// ---------- OpenAI fallback (only when 0G fails) ----------
+const openaiAnswer = () => ({ parsed: goodReview(), refusal: null, usage: { input_tokens: 10, output_tokens: 5 }, stop: "completed" });
+const target = { provider: "openai", model: "gpt-5.4" };
+
+test("fallback: off without OPENAI_API_KEY or with JUDGE_FALLBACK=off; gpt-5.4 by default", () => {
+  const saved = { key: process.env.OPENAI_API_KEY, flag: process.env.JUDGE_FALLBACK, model: process.env.JUDGE_FALLBACK_MODEL };
+  try {
+    delete process.env.OPENAI_API_KEY;
+    delete process.env.JUDGE_FALLBACK_MODEL;
+    assert.equal(review.fallbackTarget(), null);
+    process.env.OPENAI_API_KEY = "sk-test";
+    assert.deepEqual(review.fallbackTarget(), { provider: "openai", model: "gpt-5.4" });
+    process.env.JUDGE_FALLBACK = "off";
+    assert.equal(review.fallbackTarget(), null);
+  } finally {
+    for (const [k, v] of [["OPENAI_API_KEY", saved.key], ["JUDGE_FALLBACK", saved.flag], ["JUDGE_FALLBACK_MODEL", saved.model]]) v == null ? delete process.env[k] : (process.env[k] = v);
+  }
+});
+
+test("fallback: 0G success never touches OpenAI", async () => {
+  let used = 0;
+  const res = await review.callWithFallback("s", "u", { primary: async () => ({ ...openaiAnswer(), trace: { requestId: "zg-1" } }), fallback: async () => void used++, target });
+  assert.equal(used, 0);
+  assert.equal(res.fallback, undefined);
+  assert.equal(res.trace.requestId, "zg-1");
+});
+
+test("fallback: a 0G failure is answered by OpenAI and recorded on the review", async () => {
+  let model;
+  const call = (s, u) =>
+    review.callWithFallback(s, u, {
+      primary: async () => {
+        throw Object.assign(new Error("0G balance empty"), { status: 402, requestId: "zg-bad" });
+      },
+      fallback: async (_s, _u, m) => ((model = m), openaiAnswer()),
+      target,
+    });
+  const judge = validateForm(EXAMPLE_FORMS[0]).persona;
+  const r = await review.reviewProject(judge, { submission: { name: "X" } }, { call });
+  assert.equal(model, "gpt-5.4");
+  assert.equal(r.status, "scored");
+  assert.equal(r.fallbacks.length, 1);
+  assert.deepEqual(r.fallbacks[0], { attempt: 1, provider: "openai", model: "gpt-5.4", reason: "0G balance empty", zgRequestId: "zg-bad" });
+});
+
+test("fallback: no target means the 0G error is thrown as before; both failing names both", async () => {
+  const boom = async () => {
+    throw new Error("provider down");
+  };
+  await assert.rejects(review.callWithFallback("s", "u", { primary: boom, target: null }), /provider down/);
+  await assert.rejects(
+    review.callWithFallback("s", "u", { primary: boom, fallback: async () => { throw new Error("openai 500"); }, target }),
+    /0G failed \(provider down\); OpenAI fallback failed too \(openai 500\)/,
+  );
+});
+
+test("fallback: the panel lists which judges fell back", async () => {
+  const panel = EXAMPLE_FORMS.map((f) => validateForm(f).persona);
+  let n = 0;
+  const call = async () => (n++ === 0 ? { ...openaiAnswer(), fallback: { ...target, reason: "timeout", zgRequestId: null } } : openaiAnswer());
+  const events = [];
+  const out = await review.runPanel(panel, { id: "p", submission: { name: "X" } }, { call, onEvent: (e) => events.push(e) });
+  assert.deepEqual(out.fallback, { provider: "openai", model: "gpt-5.4", judges: [panel[0].id] });
+  assert.equal(events.filter((e) => e.type === "fallback").length, 1);
+});

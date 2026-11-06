@@ -40,6 +40,7 @@ try {
     console.log(`- ${r.judge.name}: ${score}${r.review ? ` · ${r.review.headline}` : r.detail ? ` · ${r.detail}` : ""}`);
     if (r.status !== "scored" || r.attempts > 1) console.log(`  attempts: ${r.attempts}`);
     for (const t of r.traces ?? []) console.log(`  0G request ${t.requestId} · provider ${t.provider ?? "?"} · ${t.costUsdMicro == null ? "cost not reported" : usd(t.costUsdMicro)}`);
+    for (const f of r.fallbacks ?? []) console.log(`  attempt ${f.attempt}: 0G failed (${f.reason}), answered by ${f.provider} ${f.model}`);
   }
   console.log(`Panel: ${result.panelHundredths == null ? "no score" : (result.panelHundredths / 100).toFixed(2)}${result.complete ? "" : " (incomplete)"}`);
   if (result.zg) {

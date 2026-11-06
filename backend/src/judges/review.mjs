@@ -8,6 +8,7 @@
  * 0G is the 0G Compute Router (OpenAI-compatible chat completions). Every 0G call
  * keeps its trace (request ID, provider address, cost) so the UI can show proof.
  * On 0G, use 0gm-1.0-35b-a3b or gpt-5.4: Claude models there reject json_schema.
+ * If a 0G call fails and OPENAI_API_KEY is set, that call falls back to OpenAI (see callWithFallback).
  *
  * - Structured output (zod) so every review has the same shape, whichever provider.
  * - All 9 criteria must be scored exactly once, integers 0-100. Anything else
@@ -73,15 +74,15 @@ export function missingCredentialsError(provider = PROVIDER) {
  * SDKs are imported lazily so only the configured one loads.
  */
 let openaiCall;
-async function callOpenAI(system, user) {
+async function callOpenAI(system, user, model = MODEL) {
   openaiCall ??= await (async () => {
     const { default: OpenAI } = await import("openai");
     const { zodTextFormat } = await import("openai/helpers/zod");
-    const client = new OpenAI();
+    const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
     const format = zodTextFormat(ReviewSchema, "judge_review");
-    return (sys, usr) =>
+    return (sys, usr, m) =>
       client.responses.parse({
-        model: MODEL,
+        model: m,
         instructions: sys,
         input: usr,
         reasoning: { effort: EFFORT },
@@ -89,7 +90,7 @@ async function callOpenAI(system, user) {
         text: { format },
       });
   })();
-  const res = await openaiCall(system, user);
+  const res = await openaiCall(system, user, model);
   const refusal = (res.output ?? []).flatMap((o) => (o.type === "message" ? o.content : [])).find((c) => c.type === "refusal")?.refusal ?? null;
   return {
     parsed: res.output_parsed ?? null,
@@ -134,6 +135,8 @@ async function callAnthropic(system, user) {
  */
 let zgSetup;
 async function zeroGSetup() {
+  // Without this, the OpenAI SDK would read OPENAI_API_KEY and send it to the 0G router.
+  if (!process.env.ZG_API_KEY) throw missingCredentialsError("0g");
   zgSetup ??= await (async () => {
     const { default: OpenAI } = await import("openai");
     const { zodResponseFormat } = await import("openai/helpers/zod");
@@ -244,7 +247,39 @@ export async function callZeroG(system, user, { setup, sleep } = {}) {
 }
 
 const ADAPTERS = { "0g": callZeroG, openai: callOpenAI, anthropic: callAnthropic };
-const callModel = (system, user) => ADAPTERS[PROVIDER](system, user);
+/** The configured provider only, never a fallback (public runs use this: they must be 0G). */
+export const callPrimary = (system, user) => ADAPTERS[PROVIDER](system, user);
+
+/*
+ * OpenAI fallback, used only when 0G is the provider and a 0G call fails after its own
+ * retries (balance empty, provider down, timeout...). It never replaces 0G up front, and
+ * a refusal or a malformed reply from 0G is not a failure (the repair attempt handles those).
+ * On when OPENAI_API_KEY is set; JUDGE_FALLBACK=off disables it. JUDGE_FALLBACK_MODEL picks the model.
+ */
+export function fallbackTarget() {
+  if (PROVIDER !== "0g" || !process.env.OPENAI_API_KEY) return null;
+  if ((process.env.JUDGE_FALLBACK ?? "openai").toLowerCase() === "off") return null;
+  return { provider: "openai", model: process.env.JUDGE_FALLBACK_MODEL || DEFAULT_MODEL.openai };
+}
+
+/** opts.primary / opts.fallback / opts.target replace the real adapters and config (tests). */
+export async function callWithFallback(system, user, { primary = callPrimary, fallback = callOpenAI, target = fallbackTarget() } = {}) {
+  try {
+    return await primary(system, user);
+  } catch (e) {
+    if (!target) throw e;
+    const reason = String(e?.message ?? e).slice(0, 200);
+    let res;
+    try {
+      res = await fallback(system, user, target.model);
+    } catch (f) {
+      throw Object.assign(new Error(`0G failed (${reason}); OpenAI fallback failed too (${String(f?.message ?? f).slice(0, 200)})`), { status: e?.status, requestId: e?.requestId });
+    }
+    return { ...res, fallback: { provider: target.provider, model: target.model, reason, zgRequestId: e?.requestId ?? null } };
+  }
+}
+
+const callModel = (system, user) => callWithFallback(system, user);
 
 function materials(project) {
   const d = project.dossier;
@@ -308,7 +343,7 @@ export const overallHundredths = (weights, review) => review.criteria.reduce((n,
  * opts.call replaces the provider adapter (tests).
  * opts.onTrace(trace, attempt) is called as soon as each 0G call answers, so the UI can show its request ID live.
  */
-export async function reviewProject(judge, project, { call = callModel, onTrace } = {}) {
+export async function reviewProject(judge, project, { call = callModel, onTrace, onFallback } = {}) {
   const started = Date.now();
   let prompt = userPrompt(project);
   const usage = { input_tokens: 0, output_tokens: 0 };
@@ -317,7 +352,8 @@ export async function reviewProject(judge, project, { call = callModel, onTrace 
   let issues = [];
   let stop = null;
   const traces = []; // one per attempt on 0G: request ID, provider, cost
-  const withTraces = (r) => (traces.length ? { ...r, traces } : r);
+  const fallbacks = []; // attempts that 0G failed and OpenAI answered instead
+  const withTraces = (r) => ({ ...r, ...(traces.length ? { traces } : {}), ...(fallbacks.length ? { fallbacks } : {}) });
 
   while (attempts < 2) {
     attempts++;
@@ -331,6 +367,10 @@ export async function reviewProject(judge, project, { call = callModel, onTrace 
     if (res.trace) {
       traces.push(res.trace);
       onTrace?.(res.trace, attempts);
+    }
+    if (res.fallback) {
+      fallbacks.push({ attempt: attempts, ...res.fallback });
+      onFallback?.(res.fallback, attempts);
     }
     usage.input_tokens += res.usage.input_tokens;
     usage.output_tokens += res.usage.output_tokens;
@@ -393,7 +433,11 @@ export async function runPanel(judgesList, project, { onEvent, call } = {}) {
   };
   const results = await Promise.all(
     judgesList.map((j) =>
-      reviewProject(j, project, { call, onTrace: (t, attempt) => emit({ type: "call", judgeId: j.id, judgeName: j.name, attempt, ...t }) })
+      reviewProject(j, project, {
+        call,
+        onTrace: (t, attempt) => emit({ type: "call", judgeId: j.id, judgeName: j.name, attempt, ...t }),
+        onFallback: (f, attempt) => emit({ type: "fallback", judgeId: j.id, judgeName: j.name, attempt, ...f }),
+      })
         .catch((e) => ({ judgeId: j.id, status: "error", detail: String(e?.message ?? e).slice(0, 300) }))
         .then((r) => {
           emit({ type: "judge", judgeId: j.id, judgeName: j.name, status: r.status, overallHundredths: r.overallHundredths ?? null });
@@ -405,6 +449,8 @@ export async function runPanel(judgesList, project, { onEvent, call } = {}) {
   const panel = scored.length ? Math.floor((scored.reduce((n, r) => n + r.overallHundredths, 0) * 2 + scored.length) / (2 * scored.length)) : null;
   const evidence = project.screenshotEvidenceRecords ?? null;
   const zg = zeroGTotals(results, evidence ?? []);
+  const fellBack = results.filter((r) => r.fallbacks?.length);
+  const fallback = fellBack.length ? { provider: fellBack[0].fallbacks[0].provider, model: fellBack[0].fallbacks[0].model, judges: fellBack.map((r) => r.judgeId) } : null;
   return {
     projectId: project.id,
     ranAt: new Date().toISOString(),
@@ -414,6 +460,7 @@ export async function runPanel(judgesList, project, { onEvent, call } = {}) {
     complete: scored.length === judgesList.length,
     panelHundredths: panel,
     ...(zg ? { zg } : {}),
+    ...(fallback ? { fallback } : {}),
     ...(evidence ? { evidence } : {}),
     reviews: results.map((r) => {
       const j = judgesList.find((x) => x.id === r.judgeId);

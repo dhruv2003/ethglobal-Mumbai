@@ -18,7 +18,7 @@ import crypto from "node:crypto";
 import express from "express";
 import { CRITERIA } from "./judges/criteria.mjs";
 import { MAX_JUDGES, validateForm } from "./judges/persona.mjs";
-import { hasCredentials, missingCredentialsError, MODEL, PROVIDER, PROVIDER_LABEL, runPanel } from "./judges/review.mjs";
+import { callPrimary, fallbackTarget, hasCredentials, missingCredentialsError, MODEL, PROVIDER, PROVIDER_LABEL, runPanel } from "./judges/review.mjs";
 import { collectScreenshotEvidence, EVIDENCE_ENABLED, forJudges, hasCachedEvidence } from "./judges/evidence.mjs";
 import zg from "./zg/client.js";
 import zgModels from "./zg/models.js";
@@ -39,8 +39,9 @@ const lastRun = new Map(); // projectId -> ms timestamp of the last public run
  * Run the panel on one project and save the result.
  * opts.evidence: first let a vision model on 0G read the live-test screenshots (default JUDGE_EVIDENCE).
  * opts.save: false to skip saving to data/reviews (the CLI uses this for side-by-side model runs).
+ * opts.fallback: false to never fall back to OpenAI when 0G fails (public runs).
  */
-export async function reviewNow(projectId, { evidence = EVIDENCE_ENABLED, freshEvidence = false, save = true, log } = {}) {
+export async function reviewNow(projectId, { evidence = EVIDENCE_ENABLED, freshEvidence = false, save = true, fallback = true, log } = {}) {
   if (running.has(projectId)) return running.get(projectId);
   const project = loadProject(projectId);
   if (!project) throw Object.assign(new Error("No such project."), { status: 404 });
@@ -57,7 +58,7 @@ export async function reviewNow(projectId, { evidence = EVIDENCE_ENABLED, freshE
       project.screenshotEvidenceRecords = records;
       project.screenshotEvidence = forJudges(records);
     }
-    const result = await runPanel(panel, project, { onEvent });
+    const result = await runPanel(panel, project, { onEvent, call: fallback ? undefined : callPrimary });
     // A run where no judge scored never replaces the last good result: the page keeps showing it.
     if (!result.reviews.some((r) => r.status === "scored")) {
       const why = [...new Set(result.reviews.map((r) => r.detail).filter(Boolean))].join(" ");
@@ -89,6 +90,7 @@ router.get("/health", (req, res) => {
     providerLabel: PROVIDER_LABEL[PROVIDER],
     keyName: PROVIDER === "0g" ? "ZG_API_KEY" : PROVIDER === "openai" ? "OPENAI_API_KEY" : "ANTHROPIC_API_KEY",
     model: MODEL,
+    fallback: fallbackTarget(),
     voiceNotes: hasCredentials("0g") ? { model: zgModels.MODELS.transcribe } : null,
   });
 });
@@ -211,7 +213,8 @@ router.post(
     publicDay.n++;
     lastRun.set(id, Date.now());
     // Reuse screenshot observations already read on 0G (free); never pay for new ones from a public click.
-    reviewNow(id, { evidence: EVIDENCE_ENABLED || hasCachedEvidence(project) }).catch((e) => console.error(`[judges] public review of ${id} failed: ${e.message}`));
+    // Public runs show real 0G inference, so they never fall back to (and pay for) OpenAI.
+    reviewNow(id, { evidence: EVIDENCE_ENABLED || hasCachedEvidence(project), fallback: false }).catch((e) => console.error(`[judges] public review of ${id} failed: ${e.message}`));
     res.status(202).json({ running: true, progress: progress.get(id) ?? null });
   },
 );
