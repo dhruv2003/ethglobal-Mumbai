@@ -1,3 +1,4 @@
+import { API } from "./apiBase.js";
 /*
  * Demo videos: how a link plays, and what the server does with it.
  * Mirrors backend/src/reviewer/media.mjs classifyVideo.
@@ -55,7 +56,7 @@ export function linkPlan(raw) {
 
 export const isUploadRef = (v) => /^upload:[0-9a-f]{64}\.(mp4|mov|webm)$/.test(String(v ?? ""));
 export const isImageRef = (v) => /^upload:[0-9a-f]{64}\.(png|jpg|webp)$/.test(String(v ?? ""));
-export const uploadUrl = (ref) => (isUploadRef(ref) || isImageRef(ref) ? `/api/uploads/${ref.slice("upload:".length)}` : null);
+export const uploadUrl = (ref) => (isUploadRef(ref) || isImageRef(ref) ? `${API}/uploads/${ref.slice("upload:".length)}` : null);
 
 export const fmtBytes = (n) => (n >= 1048576 ? `${(n / 1048576).toFixed(n >= 100 * 1048576 ? 0 : 1)} MB` : `${Math.max(1, Math.round(n / 1024))} KB`);
 export const fmtSeconds = (s) => (s ? `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, "0")}` : "");

@@ -6,6 +6,7 @@ import { useRef, useState } from "react";
 import { Button, Card, StatusPill } from "@ds/ui.jsx";
 import { usePoll } from "../lib/chain.js";
 import { celebrate } from "./WalletPage.jsx";
+import { API } from "../lib/apiBase.js";
 
 const WORLD_ERROR = {
   user_rejected: "You cancelled, so nothing was claimed.",
@@ -25,7 +26,7 @@ async function postJson(url, body) {
 }
 
 async function readStatus(address) {
-  const res = await fetch(`/api/world/status?wallet=${encodeURIComponent(address)}`);
+  const res = await fetch(`${API}/world/status?wallet=${encodeURIComponent(address)}`);
   if (!res.ok) throw new Error("status unavailable");
   return res.json();
 }
@@ -44,7 +45,7 @@ export function FreePack({ wallet, onClaimed }) {
     serverProblem.current = "";
     try {
       // World's package is large, so it only loads for people who ask for it.
-      const [world, rp] = await Promise.all([import("@worldcoin/idkit"), postJson("/api/world/rp-signature", {})]);
+      const [world, rp] = await Promise.all([import("@worldcoin/idkit"), postJson(`${API}/world/rp-signature`, {})]);
       setWidget({
         ...world,
         open: true,
@@ -103,7 +104,7 @@ export function FreePack({ wallet, onClaimed }) {
           preset={widget.proofOfHuman({ signal: address.toLowerCase() })}
           handleVerify={async (result) => {
             try {
-              await postJson("/api/world/claim", { wallet: address, idkitResponse: result });
+              await postJson(`${API}/world/claim`, { wallet: address, idkitResponse: result });
             } catch (e) {
               serverProblem.current = e.message;
               throw e;

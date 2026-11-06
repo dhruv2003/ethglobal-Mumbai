@@ -1,3 +1,4 @@
+import { API } from "./apiBase.js";
 /*
  * The draft of the submission form lives in memory for this tab only: nothing is
  * kept in the browser (no localStorage). It survives moving between pages, not a
@@ -77,7 +78,7 @@ export async function submissionDigest(p) {
 export async function saveSubmission(payload) {
   let res;
   try {
-    res = await fetch("/api/submissions", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) });
+    res = await fetch(`${API}/submissions`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) });
   } catch {
     throw Object.assign(new Error("Couldn't reach the server, so nothing was submitted. Your draft is safe. Try again."), { fromServer: true });
   }

@@ -4,6 +4,7 @@
  * show when the judge service is offline.
  */
 import { dropPrivate, peek, put } from "./cache.js";
+import { API } from "./apiBase.js";
 
 let organizerSession = null;
 /** Set by lib/organizer.js. Every request then proves this wallet is an organizer. */
@@ -37,7 +38,7 @@ export function api(path, { method = "GET", body } = {}) {
 async function request(path, method, body) {
   const headers = organizerHeaders();
   if (body) headers["content-type"] = "application/json";
-  const res = await fetch(`/api${path}`, {
+  const res = await fetch(`${API}${path}`, {
     method,
     headers,
     body: body ? JSON.stringify(body) : undefined,
@@ -60,7 +61,7 @@ export const health = () => api("/health").catch(() => null);
 /** POST a file or recording as the raw request body (organizer key attached). */
 export async function upload(path, blob) {
   const headers = { "content-type": blob.type || "application/octet-stream", ...organizerHeaders() };
-  const res = await fetch(`/api${path}`, { method: "POST", headers, body: blob });
+  const res = await fetch(`${API}${path}`, { method: "POST", headers, body: blob });
   let data = null;
   try {
     data = await res.json();
@@ -86,7 +87,7 @@ export const MAX_IMAGES = 8;
 function uploadFile(path, file, contentType, onProgress) {
   const xhr = new XMLHttpRequest();
   const done = new Promise((resolve, reject) => {
-    xhr.open("POST", `/api${path}`);
+    xhr.open("POST", `${API}${path}`);
     xhr.setRequestHeader("content-type", contentType);
     xhr.upload.onprogress = (e) => e.lengthComputable && onProgress?.(e.loaded / e.total);
     xhr.onload = () => {

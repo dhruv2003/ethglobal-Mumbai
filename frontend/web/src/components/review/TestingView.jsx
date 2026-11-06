@@ -16,6 +16,7 @@ import { Icon } from "../Icon.jsx";
 import { Device, LiveStage } from "./TestDevices.jsx";
 import { Steps } from "./TestSteps.jsx";
 import { ST, allSteps } from "./testRun.js";
+import { API } from "../../lib/apiBase.js";
 
 const host = (u) => String(u ?? "").replace(/^https?:\/\//, "").replace(/\/$/, "");
 
@@ -31,7 +32,7 @@ function useLiveTest(project, pending) {
       const r = await api(`/projects/${encodeURIComponent(project.id)}/live`).catch(() => null);
       if (!alive) return;
       if (r?.liveTest) {
-        const base = `/api/projects/${encodeURIComponent(project.id)}/live/files`;
+        const base = `${API}/projects/${encodeURIComponent(project.id)}/live/files`;
         setRemote({ id: project.id, lt: {
           ...r.liveTest,
           runs: r.liveTest.runs.map((run) => ({
