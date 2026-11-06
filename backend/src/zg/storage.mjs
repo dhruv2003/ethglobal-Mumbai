@@ -40,7 +40,7 @@ const NETWORKS = {
 };
 
 export class ZgStorageError extends Error {
-  /** code: insufficient_funds | timeout | indexer_unavailable | upload_failed | not_found | hash_mismatch | not_configured | secret_detected */
+  /** code: insufficient_funds | timeout | indexer_unavailable | nonce_conflict | upload_failed | not_found | hash_mismatch | not_configured | secret_detected */
   constructor(message, code = "upload_failed", cause) {
     super(message);
     this.name = "ZgStorageError";
@@ -129,6 +129,8 @@ function classify(err, fallback = "upload_failed") {
   let code = fallback;
   if (/insufficient funds|INSUFFICIENT_FUNDS|insufficient balance/i.test(msg)) code = "insufficient_funds";
   else if (/timed? ?out|ETIMEDOUT/i.test(msg)) code = "timeout";
+  // Two processes (server + CLI) sharing one wallet can race for a nonce; a retry fixes it.
+  else if (/replacement fee too low|nonce too low|nonce has already been used|already known|NONCE_EXPIRED|REPLACEMENT_UNDERPRICED/i.test(msg)) code = "nonce_conflict";
   else if (/create uploader|create downloader|ENOTFOUND|ECONNREFUSED|fetch failed|getaddrinfo|indexer|socket hang up|EAI_AGAIN|Not Found|404|502|503/i.test(msg)) code = fallback === "not_found" ? "not_found" : "indexer_unavailable";
   return new ZgStorageError(msg.slice(0, 300), code, err);
 }

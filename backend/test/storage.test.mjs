@@ -170,6 +170,35 @@ test("failures back off, then end as failed with the reason; flush retries", asy
   assert.equal(store.zgStatus("review", "proj-3").status, "stored");
 });
 
+test("a new version replaces a failed one; a restart doesn't duplicate a failed item", async () => {
+  fake.state.failNext = 3;
+  fake.state.failCode = "Failed to create uploader: fetch failed";
+  store.reviews.save("proj-4", { v: 1 });
+  await archive.drain({ manifest: false });
+  assert.equal(store.zgStatus("review", "proj-4").status, "failed");
+  // Same content again (e.g. the boot backfill): no second item.
+  assert.equal(archive.archive("review", "proj-4", { v: 1 }), null);
+  assert.equal(outbox().items.filter((i) => i.key === "review:proj-4").length, 1);
+  // Newer content: the failed old version is dropped, only the new one uploads.
+  store.reviews.save("proj-4", { v: 2 });
+  assert.deepEqual(outbox().items.filter((i) => i.key === "review:proj-4").map((i) => i.status), ["pending"]);
+  await archive.drain({ manifest: false });
+  archive.flush();
+  await archive.drain({ manifest: false });
+  const r = manifest().records["review:proj-4"];
+  assert.equal(r.history.length, 1);
+  assert.equal(r.sha256, storage.contentSha256({ v: 2 }));
+});
+
+test("a nonce race between two processes is reported as nonce_conflict and retried", async () => {
+  fake.state.failNext = 1;
+  fake.state.failCode = "replacement fee too low";
+  store.reviews.save("proj-5", { v: 1 });
+  await archive.drain({ manifest: false });
+  assert.equal(store.zgStatus("review", "proj-5").status, "stored");
+  assert.equal(archive.counts().lastError.code, "nonce_conflict");
+});
+
 test("prev chaining: three judge panel saves give a 3-long history linked by prev", async () => {
   const before = manifest().records["judges:panel"].history.length;
   for (let i = 0; i < 3; i++) {

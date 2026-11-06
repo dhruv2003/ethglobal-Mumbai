@@ -109,6 +109,27 @@ function assertNoSecrets(buf) {
 // ---------- enqueue ----------
 
 /**
+ * The content hash of the newest version of a record we know of: the last outbox
+ * item for it (failed ones included: retrying those is flush's job, not a new
+ * write's), else what 0G has.
+ */
+function latestSha(ob, key) {
+  const queued = ob.items.filter((i) => i.key === key).at(-1);
+  return queued ? queued.sha256 : loadManifest().records[key]?.sha256;
+}
+
+/**
+ * A new version replaces older versions that failed to upload: they never
+ * reached 0G, and retrying them later would make stale content the "latest".
+ */
+function supersede(ob, key) {
+  for (const it of ob.items.filter((i) => i.key === key && i.status === "failed")) {
+    if (it.spooled) fs.rmSync(it.file, { force: true });
+  }
+  ob.items = ob.items.filter((i) => !(i.key === key && i.status === "failed"));
+}
+
+/**
  * Archive a JSON record. Writes nothing to 0G now: it appends to the outbox and
  * wakes the worker. Skips the upload when the content equals the latest stored
  * or queued version of the same record.
@@ -119,9 +140,8 @@ export function archive(kind, id, payload) {
   const item = withLock(() => {
     const ob = loadOutbox();
     const key = keyOf(kind, id);
-    const queued = ob.items.filter((i) => i.key === key && i.status !== "failed").at(-1);
-    const stored = loadManifest().records[key];
-    if ((queued ? queued.sha256 : stored?.sha256) === hash) return null;
+    if (latestSha(ob, key) === hash) return null;
+    supersede(ob, key);
     const it = { seq: ++ob.seq, key, kind, id: String(id), sha256: hash, payload, createdAt: new Date().toISOString(), status: "pending", attempts: 0, nextAttemptAt: 0 };
     ob.items.push(it);
     writeJSON(OUTBOX, ob);
@@ -151,10 +171,7 @@ export function archiveFile(kind, id, file, { encrypt = false, contentType = nul
     size = buf.length;
   }
   const key = keyOf(kind, id);
-  const dup = withLock(() => {
-    const queued = loadOutbox().items.filter((i) => i.key === key && i.status !== "failed").at(-1);
-    return (queued ? queued.sha256 : loadManifest().records[key]?.sha256) === hash;
-  });
+  const dup = withLock(() => latestSha(loadOutbox(), key) === hash);
   if (dup) return null;
   if (bytes) {
     fs.mkdirSync(path.join(DATA_DIR, SPOOL), { recursive: true, mode: 0o700 });
@@ -164,6 +181,7 @@ export function archiveFile(kind, id, file, { encrypt = false, contentType = nul
   }
   const item = withLock(() => {
     const ob = loadOutbox();
+    supersede(ob, key);
     const it = { seq: ++ob.seq, key, kind, id: String(id), sha256: hash, size, file: filePath, spooled, encrypt, contentType, createdAt: new Date().toISOString(), status: "pending", attempts: 0, nextAttemptAt: 0 };
     ob.items.push(it);
     writeJSON(OUTBOX, ob);
