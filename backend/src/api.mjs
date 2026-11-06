@@ -24,6 +24,7 @@
  *   GET    /api/projects/:id/video     our saved copy of the demo video (+ /video/file to play it)
  *   GET    /api/projects/:id/arkiv     the result as published on Arkiv (read from Arkiv) + Swarm links
  *   POST   /api/projects/:id/arkiv     publish the latest result to Swarm + Arkiv again   (organizer)
+ *   GET    /api/graph/...              knowledge graph: judge bias, similar projects, project explain (graph/routes.mjs)
  */
 import crypto from "node:crypto";
 import express from "express";
@@ -49,6 +50,7 @@ import { TYPES } from "./arkiv/records/schemas.mjs";
 import { swarmConfigured } from "./arkiv/swarm.mjs";
 import { arenaRouter } from "./arena/routes.mjs";
 import { worldRouter } from "./world/routes.mjs";
+import { graphRouter } from "./graph/routes.mjs";
 import { payoutStatus, startPayouts } from "./payouts/index.mjs";
 import { startAutorun } from "./arena/autorunService.mjs";
 
@@ -117,6 +119,7 @@ export async function reviewNow(projectId, { evidence = EVIDENCE_ENABLED, freshE
 export const router = express.Router();
 router.use("/arena", arenaRouter);
 router.use("/world", worldRouter);
+router.use("/graph", graphRouter);
 
 router.get("/payouts", async (req, res) => res.json(await payoutStatus()));
 
