@@ -8,12 +8,15 @@
     "dev": "nodemon src/server.js",
     "test": "node --test test/",
     "judge": "node src/judges/run.mjs",
+    "review": "node src/reviewer/run.mjs",
+    "videos": "node src/reviewer/save-videos.mjs",
+    "arkiv": "node src/arkiv/run.mjs",
     "zg:status": "node scripts/zg.mjs status",
     "zg:seed-fixtures": "node scripts/zg.mjs seed-fixtures",
     "zg:restore": "node scripts/zg.mjs restore",
     "zg:verify": "node scripts/zg.mjs verify",
-    "test:0g-storage": "ZG_STORAGE_LIVE=1 node --test test/storage-0g.test.mjs",
-    "zg:check": "node scripts/zg.mjs check"
+    "zg:check": "node scripts/zg.mjs check",
+    "test:0g-storage": "ZG_STORAGE_LIVE=1 node --test test/storage-0g.test.mjs"
   },
   "keywords": [],
   "author": "",
@@ -22,6 +25,9 @@
   "dependencies": {
     "@0gfoundation/0g-storage-ts-sdk": "1.2.13",
     "@anthropic-ai/sdk": "^1.3.0",
+    "@arkiv-network/sdk": "^1.0.1",
+    "@ethersphere/bee-js": "^13.2.0",
+    "@worldcoin/idkit-core": "^4.6.0",
     "cors": "^2.8.6",
     "dotenv": "^18.0.9",
     "ethers": "6.13.1",

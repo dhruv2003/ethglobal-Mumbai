@@ -91,7 +91,10 @@ const keyOf = (kind, id) => `${kind}:${id}`;
 
 /** Values that must never appear in an upload (raw and without a 0x prefix). */
 function secretValues() {
-  const names = ["ZG_API_KEY", "ADMIN_TOKEN", "ZG_STORAGE_PRIVATE_KEY", "ZG_STORAGE_AES_KEY", "OPENAI_API_KEY", "ANTHROPIC_API_KEY"];
+  const names = [
+    "ZG_API_KEY", "ADMIN_TOKEN", "ZG_STORAGE_PRIVATE_KEY", "ZG_STORAGE_AES_KEY", "OPENAI_API_KEY", "ANTHROPIC_API_KEY",
+    "ARKIV_PRIVATE_KEY", "ARKIV_ACCESS_KEY", "PUBLISHER_PRIVATE_KEY", "RELAYER_PRIVATE_KEY", "STARTER_PRIVATE_KEY", "WORLD_RP_SIGNING_KEY", "MOZARK_TOKEN",
+  ];
   const out = [];
   for (const n of names) {
     const v = process.env[n];
@@ -150,6 +153,19 @@ export function archive(kind, id, payload) {
   if (item) kick();
   return item;
 }
+
+/**
+ * Record on 0G that a record was deleted here. 0G is permanent, so the old
+ * versions stay; restore skips a record whose latest version is a tombstone.
+ * Only for records 0G already has (or has queued).
+ */
+export function tombstone(kind, id) {
+  if (!enabled()) return null;
+  const key = keyOf(kind, id);
+  const known = withLock(() => Boolean(loadManifest().records[key] || loadOutbox().items.some((i) => i.key === key)));
+  return known ? archive(kind, id, { deleted: true, deletedAt: new Date().toISOString() }) : null;
+}
+const isTombstone = (data) => Boolean(data && typeof data === "object" && !Array.isArray(data) && data.deleted === true && Object.keys(data).length === 2 && "deletedAt" in data);
 
 /**
  * Archive a file as-is (fixture media, screenshots). With { encrypt: true } it is
@@ -519,6 +535,9 @@ export const RESTORE_KINDS = {
   review: (id) => `reviews/${safeId(id)}.json`,
   evidence: (id) => `evidence/${safeId(id)}.json`,
   "voice-note": (id) => `voice-notes/${safeId(id)}.json`,
+  dossier: (id) => `dossiers/${safeId(id)}.json`,
+  transcript: (id) => `transcripts/${safeId(id)}.json`,
+  video: (id) => `media/${safeId(id)}/video.json`,
   submission: null, // collected into submissions.json
 };
 
@@ -538,6 +557,10 @@ export async function restoreFromHead(headRoot, intoDir, { log = () => {} } = {}
     if (!(rec.kind in RESTORE_KINDS)) continue;
     const env = await downloadJSON(rec.rootHash);
     if (contentSha256(env.data) !== rec.sha256) throw new ZgStorageError(`${rec.kind}:${rec.id} content doesn't match the manifest.`, "hash_mismatch");
+    if (isTombstone(env.data)) {
+      log(`  ${rec.kind}:${rec.id} deleted, skipped`);
+      continue;
+    }
     log(`  ${rec.kind}:${rec.id} <- ${rec.rootHash}`);
     if (rec.kind === "submission") subs.push(env.data);
     else {

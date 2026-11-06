@@ -9,75 +9,36 @@ import { fighterTraits, poseRects } from "../lib/fighter.js";
 import { CRITERIA, CRITERION_LABEL, RULING_TEXT, WEIGHTS, fmtHealth, fmtScore } from "./score.js";
 import { SCENE, choreograph, voteCount } from "./choreo.js";
 import { scoreSoFar } from "./reducer.js";
+import { MumbaiBackdrop } from "./MumbaiBackdrop.jsx";
+import { MUMBAI_SCENES, sceneryForMatch, sceneryIdentity } from "./scenery.js";
 
 const GY = SCENE.ground;
-const JUDGE_X = { ada: 43, rook: 52, nova: 61 };
 const OUTCOME_WORD = { hit: "Hit", graze: "Graze", block: "Block", clash: "Clash" };
 
-/** Largest whole-number scale that fits the container (integer pixels only). */
-function useIntegerScale(min = 2, max = 12) {
+/** Largest whole-number scale that fits the container (integer pixels only). `fit` also respects its height. */
+function useIntegerScale(min = 2, max = 12, fit = false) {
   const ref = useRef(null);
   const [scale, setScale] = useState(min);
   useEffect(() => {
     const el = ref.current;
     if (!el) return undefined;
-    const ro = new ResizeObserver(([e]) => setScale(Math.max(min, Math.min(max, Math.floor(e.contentRect.width / SCENE.w)))));
+    const ro = new ResizeObserver(([e]) => {
+      const { width, height } = e.contentRect;
+      const byWidth = width / SCENE.w;
+      setScale(Math.max(min, Math.min(max, Math.floor(fit && height > 0 ? Math.min(byWidth, height / SCENE.h) : byWidth))));
+    });
     ro.observe(el);
     return () => ro.disconnect();
-  }, [min, max]);
+  }, [min, max, fit]);
   return [ref, scale];
 }
 
 const R = ({ x, y, w, h = 1, c, o }) => <rect x={x} y={y} width={w} height={h} className={c} opacity={o} />;
 
-const Backdrop = memo(function Backdrop({ judge }) {
-  const sun = [];
-  for (let y = -6; y < 6; y += 2) {
-    const hw = Math.round(Math.sqrt(36 - (y + 1) ** 2));
-    sun.push(<R key={y} x={22 - hw} y={14 + y} w={hw * 2} h={2} c="fs-sun" />);
-  }
-  const hills = (pts, c) =>
-    pts.map(([x, w, h]) => (
-      <g key={`${c}${x}`}>
-        <R x={x} y={GY - h + 1} w={w} h={h} c="fs-ink" o={0.9} />
-        <R x={x} y={GY - h} w={w} h={h} c={c} />
-      </g>
-    ));
-  const crowd = [];
-  let i = 0;
-  for (let x = -2; x < SCENE.w + 2; x += 8) {
-    i += 1;
-    if (x > 30 && x < 78) continue;
-    const y = 18 + ((i * 7) % 3);
-    crowd.push(
-      <g key={x} className="fs-crowd">
-        <rect x={x + 1} y={y} width={3} height={3} />
-        <rect x={x} y={y + 3} width={5} height={10} />
-        {i % 5 === 0 && <rect x={x - 1} y={y - 2} width={1} height={5} />}
-        {i % 5 === 0 && <rect x={x + 5} y={y - 2} width={1} height={5} />}
-      </g>,
-    );
-  }
+const Backdrop = memo(function Backdrop({ scene }) {
   return (
     <g>
-      <R x={0} y={0} w={SCENE.w} h={SCENE.h} c="fs-sky" />
-      {sun}
-      <R x={8} y={6} w={16} h={4} c="fs-canvas" /><R x={8} y={10} w={16} c="fs-ink" /><R x={12} y={4} w={8} h={2} c="fs-canvas" />
-      <R x={80} y={10} w={18} h={4} c="fs-canvas" /><R x={80} y={14} w={18} c="fs-ink" /><R x={84} y={8} w={10} h={2} c="fs-canvas" />
-      {hills([[0, 28, 24], [24, 16, 18], [70, 16, 20], [84, 24, 26]], "fs-hill")}
-      {hills([[0, 18, 16], [14, 14, 12], [78, 12, 14], [90, 18, 18]], "fs-hill2")}
-      {crowd}
-      <R x={41} y={21} w={28} h={5} c="fs-ink" /><R x={40} y={20} w={28} h={5} c="fs-canvas" /><R x={40} y={20} w={28} c="fs-ink" />
-      {Object.entries(JUDGE_X).map(([id, x]) => {
-        const up = judge === id ? 1 : 0;
-        return (
-          <g key={id} className={judge === id ? "fs-judge fs-judge--on" : "fs-judge"}>
-            <rect x={x} y={13 - up} width={4} height={4} />
-            <rect x={x - 1} y={17 - up} width={6} height={3 + up} />
-            <rect x={x} y={21} width={4} height={2} className={judge === id ? "fs-lamp fs-lamp--on" : "fs-lamp"} />
-          </g>
-        );
-      })}
+      <MumbaiBackdrop scene={scene} />
       <R x={0} y={GY} w={SCENE.w} h={6} c="fs-canvas" /><R x={0} y={GY} w={SCENE.w} c="fs-ink" />
       <R x={0} y={54} w={SCENE.w} h={6} c="fs-apron" /><R x={0} y={54} w={SCENE.w} c="fs-ink" />
       {Array.from({ length: 18 }, (_, k) => <R key={k} x={k * 6} y={57} w={3} c="fs-canvas" />)}
@@ -233,15 +194,17 @@ export function captionFor(match, state, event) {
   }
 }
 
-export function FightStage({ match, state, event, ms, reduced = false, captions = true, typing = true }) {
-  const [wrap, scale] = useIntegerScale();
+export function FightStage({ match, state, event, ms, reduced = false, captions = true, typing = true, fit = false }) {
+  const [wrap, scale] = useIntegerScale(2, fit ? 24 : 12, fit);
   const traits = useMemo(() => ({ a: fighterTraits(match.fighters.a), b: fighterTraits(match.fighters.b) }), [match]);
+  const [sceneChoice, setSceneChoice] = useState(null);
+  const sceneKey = sceneryIdentity(match);
+  const scenery = sceneChoice?.key === sceneKey ? sceneChoice.scene : sceneryForMatch(match);
   const c = choreograph(event, ms, state, { reduced });
   const snap = (v) => Math.round(v * scale) / scale; // move in screen pixels, stay on the pixel grid
   const ruling = event?.type === "ruling" ? state.rulings.find((r) => r.challengeId === event.challengeId) : null;
   const challenge = event?.type === "challenge" ? event : ruling ? state.challenges[event.challengeId] : null;
   const shakeX = c.shake ? snap(Math.sin(ms / 16) * 1.5 * c.shake) : 0;
-  const judge = event?.type === "question" ? event.actor : event?.type === "penalty" ? event.judge : null;
   const cap = captionFor(match, state, event);
   const reveal = reduced || !typing || !cap.text ? cap.text : cap.text.slice(0, Math.ceil(cap.text.length * Math.min(1, c.t * 1.7)));
   const w = SCENE.w * scale, h = SCENE.h * scale;
@@ -249,11 +212,11 @@ export function FightStage({ match, state, event, ms, reduced = false, captions 
   const review = state.review?.status === "pending";
 
   return (
-    <div ref={wrap} className="fs-wrap">
+    <div ref={wrap} className={`fs-wrap ${fit ? "fs-wrap--fit" : ""}`}>
       <div className="fs" style={{ width: w, height: h }}>
         <svg className="fs__scene" viewBox={`0 0 ${SCENE.w} ${SCENE.h}`} width={w} height={h} shapeRendering="crispEdges" aria-hidden="true">
           <g transform={`translate(${shakeX} 0)`}>
-            <Backdrop judge={judge} />
+            <Backdrop scene={scenery.id} />
             <Fighter traits={traits.a} side="a" snap={snap} {...c.a} />
             <Fighter traits={traits.b} side="b" snap={snap} {...c.b} />
             <Effects fx={c.fx} ruling={ruling} choreo={c} />
@@ -306,6 +269,17 @@ export function FightStage({ match, state, event, ms, reduced = false, captions 
           </div>
         )}
       </div>
+      {!fit && <div className="fs-locations">
+        <span className="t-label fs-locations__heading">Stage</span>
+        <div className="fs-locations__options" role="group" aria-label="Stage">
+          {MUMBAI_SCENES.map((scene) => (
+            <button key={scene.id} type="button" aria-pressed={scenery.id === scene.id} title={scene.detail} onClick={() => setSceneChoice({ key: sceneKey, scene })}>
+              <span className="fs-locations__swatch" style={{ background: scene.color }} aria-hidden="true" />
+              {scene.name}
+            </button>
+          ))}
+        </div>
+      </div>}
       <p className="sr-only" aria-live="polite">{cap.who ? `${cap.who}: ${cap.text}` : cap.text}</p>
     </div>
   );

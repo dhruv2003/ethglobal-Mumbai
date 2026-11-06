@@ -77,7 +77,6 @@ function Seat({ judge, criteria, onEdit, onRemove, i }) {
       <div className="seat__body">
         <div className="fighter-card__badges">
           <StatusPill tone="neutral">{judge.tone}</StatusPill>
-          {judge.example && <StatusPill tone="neutral">Example judge</StatusPill>}
         </div>
         <h2 className="t-heading m0">{judge.name}</h2>
         <p className="t-caption m0">{judge.title}</p>
@@ -301,17 +300,22 @@ export function JudgesPage() {
     return (
       <>
         <div className="intro">
-          <span className="eyebrow rise">Panel</span>
           <h1 className="t-display-lg m0">
-            <SplitWords>The judges' table</SplitWords>
+            <SplitWords>Judges</SplitWords>
           </h1>
+          <p className="t-body m0 muted rise" style={{ "--i": 1 }}>
+            Three AI judges score every project.
+          </p>
         </div>
-        <motion.div className="card card--surface stack offline" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25, ...bouncy }}>
-          <StatusPill tone="neutral">Judge service offline</StatusPill>
-          <p className="t-body m0">Judges live on the backend so their API key never reaches the browser. Start it, then reload:</p>
-          <pre className="t-mono-caption m0 code-block">
-            <span className="code-block__prompt" aria-hidden="true">$ </span>cd backend && npm install && npm start
-          </pre>
+        <motion.div className="card card--surface offline" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25, ...bouncy }}>
+          <div className="offline__copy">
+            <h2 className="t-heading m0">The judges are offline</h2>
+            <p className="t-body m0 muted">We can't reach the judging service right now. Try again in a minute.</p>
+            {import.meta.env.DEV && <p className="t-mono-caption m0">Dev: cd backend && npm start</p>}
+          </div>
+          <button type="button" className="btn btn--secondary btn--sm" onClick={() => location.reload()}>
+            Try again
+          </button>
         </motion.div>
       </>
     );
@@ -334,18 +338,17 @@ export function JudgesPage() {
     <>
       <div className="intro intro--row">
         <div className="intro">
-          <span className="eyebrow rise">Panel</span>
           <h1 className="t-display-lg m0">
-            <SplitWords>The judges' table</SplitWords>
+            <SplitWords>Judges</SplitWords>
           </h1>
           <p className="t-body m0 muted rise" style={{ "--i": 1 }}>
-            Three judges score every project. Each one's priorities decide how their score adds up.
+            Three AI judges score every project, each with their own priorities.
           </p>
         </div>
         <div className="fighter-card__badges rise" style={{ "--i": 2 }}>
           <StatusPill tone={judges.length === h.maxJudges ? "success" : "neutral"}>
             {judges.length === h.maxJudges ? "✓ " : ""}
-            {judges.length} of {h.maxJudges} seats filled
+            {judges.length}/{h.maxJudges} seats filled
           </StatusPill>
           <StatusPill tone={h.judgesReady ? "live" : "neutral"}>
             {h.judgesReady ? `Agents ready · ${h.model}${h.provider === "0g" ? " on 0G" : ""}` : `No ${h.providerLabel ?? h.provider} key on the server`}
@@ -372,7 +375,7 @@ export function JudgesPage() {
             }}
             aria-label="Organizer key"
           />
-          <span className="t-caption">Kept in this tab only. Adding, editing and removing judges needs it on a deployed server.</span>
+          <span className="t-caption">Needed to add, edit or remove judges. Kept in this tab only.</span>
         </div>
       </details>
 

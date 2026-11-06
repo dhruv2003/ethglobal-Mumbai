@@ -5,7 +5,8 @@
  * 3. Health       - load, errors, layout
  * Each step links to its moment in the recording. Statuses always carry words.
  */
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { api } from "../lib/api.js";
 import { StatusPill } from "@ds/ui.jsx";
 
 const OUTCOME = {
@@ -17,14 +18,25 @@ const OUTCOME = {
 const STEP = {
   passed: { mark: "✓", cls: "good", word: "Works" },
   failed: { mark: "✕", cls: "bad", word: "Broken" },
-  blocked: { mark: "–", cls: "skip", word: "Needs sign-in" },
+  blocked: { mark: "–", cls: "skip", word: "Can't run in a browser" },
+  missing: { mark: "?", cls: "bad", word: "Not found on the live site" },
 };
+const NEEDS = { "android-device": "an Android phone", "2x-android-device": "two Android phones", nfc: "NFC", wallet: "a wallet", "sign-in": "an account" };
+/** "Needs android-device,nfc; not run." -> "Needs an Android phone + NFC" */
+const needsText = (detail) =>
+  "Needs " +
+  detail
+    .replace(/^Needs /, "")
+    .replace(/; not run\.$/, "")
+    .split(/\s*,\s*/)
+    .map((x) => NEEDS[x] ?? x.replace(/-/g, " "))
+    .join(" + ");
 const fmt = (s) => `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, "0")}`;
 const count = (steps, st) => steps.filter((s) => s.status === st).length;
 
 function PhaseLine({ phase, noun }) {
   const ok = count(phase.steps, "passed");
-  const bad = count(phase.steps, "failed");
+  const bad = count(phase.steps, "failed") + count(phase.steps, "missing");
   const skip = count(phase.steps, "blocked");
   const checkable = ok + bad;
   return (
@@ -37,8 +49,9 @@ function PhaseLine({ phase, noun }) {
         <span className="t-caption">
           {" "}
           {ok} of {checkable} {noun}
-          {bad ? ` · ${bad} broken` : ""}
-          {skip ? ` · ${skip} need sign-in` : ""}
+          {count(phase.steps, "failed") ? ` · ${count(phase.steps, "failed")} broken` : ""}
+          {count(phase.steps, "missing") ? ` · ${count(phase.steps, "missing")} not on the live site` : ""}
+          {skip ? ` · ${skip} can't run in a browser` : ""}
         </span>
       </div>
     </div>
@@ -58,12 +71,12 @@ function Steps({ steps, onSeek, demo }) {
             <div className="step__text">
               <span className="t-body">{s.title}</span>
               <span className="t-caption">
-                {st.word}
+                {s.status === "blocked" && s.detail?.startsWith("Needs ") ? needsText(s.detail) : st.word}
                 {demo && s.demoAt ? ` · at ${s.demoAt} in their demo` : ""}
                 {s.status === "failed" && s.detail ? ` · ${s.detail}` : ""}
               </span>
             </div>
-            {s.status !== "blocked" && (
+            {s.status !== "blocked" && s.at != null && (
               <button type="button" className="step__seek t-mono-caption" onClick={() => onSeek(s.at)} aria-label={`Play recording from ${fmt(s.at)}`}>
                 ▶ {fmt(s.at)}
               </button>
@@ -75,7 +88,41 @@ function Steps({ steps, onSeek, demo }) {
   );
 }
 
-export function LiveTest({ liveTest }) {
+/**
+ * Sample projects carry their live test in the bundle; submitted projects load
+ * it from the API (refreshing while their review is running).
+ */
+export function LiveTest({ project, pending = false }) {
+  const [remote, setRemote] = useState(null);
+  useEffect(() => {
+    if (project.liveTest || project.kind !== "submitted") return undefined;
+    let alive = true;
+    let timer;
+    const load = async () => {
+      const r = await api(`/projects/${encodeURIComponent(project.id)}/live`).catch(() => null);
+      if (!alive) return;
+      if (r?.liveTest) {
+        const base = `/api/projects/${encodeURIComponent(project.id)}/live/files`;
+        setRemote({
+          ...r.liveTest,
+          runs: r.liveTest.runs.map((run) => ({
+            ...run,
+            videoUrl: run.video ? `${base}/${run.video.file}` : null,
+            posterUrl: run.phases?.[0]?.steps?.find((x) => x.screenshot)?.screenshot ? `${base}/${run.phases[0].steps.find((x) => x.screenshot).screenshot}` : null,
+          })),
+        });
+      } else if (pending) timer = setTimeout(load, 8000);
+    };
+    load();
+    return () => {
+      alive = false;
+      clearTimeout(timer);
+    };
+  }, [project.id, project.kind, project.liveTest, pending]);
+  return <LiveTestView liveTest={project.liveTest ?? remote} />;
+}
+
+function LiveTestView({ liveTest }) {
   const runs = liveTest?.runs ?? [];
   const [device, setDevice] = useState(runs[0]?.device);
   const videoRef = useRef(null);
@@ -160,13 +207,13 @@ export function LiveTest({ liveTest }) {
           <summary>
             <span className="t-label">Major flows</span>
             <span className="t-caption">
-              {count(flows.steps, "passed")} work · {count(flows.steps, "failed")} broken · {count(flows.steps, "blocked")} need sign-in
+              {count(flows.steps, "passed")} work · {count(flows.steps, "failed")} broken · {count(flows.steps, "blocked")} can't run here
             </span>
           </summary>
           <Steps steps={flows.steps} onSeek={seek} />
         </details>
       )}
-      <p className="t-caption m0">Never signs in, connects a wallet, stakes or pays. Steps that need an account are marked, not faked.</p>
+      <p className="t-caption m0">Never signs in, connects a wallet, stakes or pays. Steps that need an account, a wallet or a phone app are marked, not faked.</p>
     </section>
   );
 }

@@ -80,7 +80,8 @@ test("a missing ZG_API_KEY gives a clear 503", () => {
 
 test("reviewNow refuses with that 503 when ZG_API_KEY is missing", async () => {
   const { reviewNow } = await import("../src/api.mjs");
-  await assert.rejects(reviewNow("go-health-me"), (e) => e.status === 503 && /ZG_API_KEY/.test(e.message));
+  const { seedProject } = await import("./seedProject.mjs");
+  await assert.rejects(reviewNow(seedProject()), (e) => e.status === 503 && /ZG_API_KEY/.test(e.message));
 });
 
 test("mapZeroG maps parsed, usage names and the 0G trace", () => {
@@ -198,7 +199,8 @@ test("panel totals list every 0G request ID and sum the cost", () => {
 
 test("screenshot evidence: IDs per device and step, failures recorded, judges see no traces", async () => {
   const { loadProject } = await import("../src/projects.mjs");
-  const p = loadProject("go-health-me");
+  const { seedProject } = await import("./seedProject.mjs");
+  const p = loadProject(seedProject());
   const shots = evidence.screenshotsOf(p);
   assert.ok(shots.length > 0);
   assert.ok(shots.some((s) => s.id === "V-laptop-d1"));
@@ -230,6 +232,28 @@ test("observation validation names bad fields", () => {
   assert.ok(evidence.validateObservation({ seen: "", visibleText: "x", matchesStep: "maybe", problems: [] }).length === 3);
 });
 
+test("submitted-project screenshots are read from the live pipeline output", async () => {
+  const { liveDir } = await import("../src/store.mjs");
+  const id = "submitted-evidence-test";
+  const file = path.join(liveDir(id), "phone", "smoke-phone-d1.jpg");
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.writeFileSync(file, "test screenshot");
+  const project = { id, kind: "submitted", liveTest: { runs: [{ device: "phone", phases: [{ steps: [
+    { id: "d1", title: "Home", status: "passed", screenshot: "phone/smoke-phone-d1.jpg" },
+  ] }] }] } };
+  assert.equal(evidence.screenshotsOf(project)[0].file, file);
+  let images = 0;
+  const trace = { requestId: "submitted-vision", model: "vision-test", costUsdMicro: 1 };
+  const client = {
+    imagePart: (bytes) => { assert.equal(bytes.toString(), "test screenshot"); images++; return { type: "image_url" }; },
+    chatJSON: async () => ({ data: { seen: "Home", visibleText: ["Home"], matchesStep: "yes", problems: [] }, trace, traces: [trace] }),
+  };
+  const records = await evidence.collectScreenshotEvidence(project, { client, fresh: true });
+  assert.equal(images, 1);
+  assert.equal(records[0].id, "V-phone-d1");
+  assert.equal(records[0].trace.requestId, "submitted-vision");
+});
+
 test("runPanel reports each 0G request ID as it arrives, then each judge's result", async () => {
   const judges = EXAMPLE_FORMS.map((f) => validateForm(f).persona);
   let n = 0;
@@ -241,25 +265,6 @@ test("runPanel reports each 0G request ID as it arrives, then each judge's resul
   assert.ok(calls.every((e) => e.attempt === 1 && judges.some((j) => j.id === e.judgeId)));
   assert.equal(events.filter((e) => e.type === "judge" && e.status === "scored").length, 3);
   assert.equal(result.zg.requestIds.length, 3);
-});
-
-test("public judging: samples only, and a clear 503 without ZG_API_KEY", async () => {
-  const { default: express } = await import("express");
-  const { router } = await import("../src/api.mjs");
-  const app = express().use("/api", router);
-  const server = app.listen(0);
-  const base = `http://127.0.0.1:${server.address().port}/api`;
-  try {
-    const notSample = await fetch(`${base}/projects/not-a-project/reviews/public`, { method: "POST" });
-    assert.equal(notSample.status, 404);
-    const noKey = await fetch(`${base}/projects/go-health-me/reviews/public`, { method: "POST" });
-    assert.equal(noKey.status, 503);
-    assert.match((await noKey.json()).error, /ZG_API_KEY/);
-    const third = await fetch(`${base}/projects/go-health-me/reviews/public`, { method: "POST" });
-    assert.equal(third.status, 429); // 2 per IP per hour
-  } finally {
-    server.close();
-  }
 });
 
 test("a timeout is retried once, then thrown", async () => {
@@ -275,4 +280,70 @@ test("screenshot evidence reused from the cache isn't counted in a later run's c
   const z = review.zeroGTotals([{ traces: [{ requestId: "j", costUsdMicro: 100 }] }], [{ cached: true, trace: { requestId: "old", costUsdMicro: 900 } }]);
   assert.deepEqual(z.requestIds, ["j"]);
   assert.equal(z.costUsdMicro, 100);
+});
+
+// ---------- OpenAI fallback (only when 0G fails) ----------
+const openaiAnswer = () => ({ parsed: goodReview(), refusal: null, usage: { input_tokens: 10, output_tokens: 5 }, stop: "completed" });
+const target = { provider: "openai", model: "gpt-5.4" };
+
+test("fallback: off without OPENAI_API_KEY or with JUDGE_FALLBACK=off; gpt-5.4 by default", () => {
+  const saved = { key: process.env.OPENAI_API_KEY, flag: process.env.JUDGE_FALLBACK, model: process.env.JUDGE_FALLBACK_MODEL };
+  try {
+    delete process.env.OPENAI_API_KEY;
+    delete process.env.JUDGE_FALLBACK_MODEL;
+    assert.equal(review.fallbackTarget(), null);
+    process.env.OPENAI_API_KEY = "sk-test";
+    assert.deepEqual(review.fallbackTarget(), { provider: "openai", model: "gpt-5.4" });
+    process.env.JUDGE_FALLBACK = "off";
+    assert.equal(review.fallbackTarget(), null);
+  } finally {
+    for (const [k, v] of [["OPENAI_API_KEY", saved.key], ["JUDGE_FALLBACK", saved.flag], ["JUDGE_FALLBACK_MODEL", saved.model]]) v == null ? delete process.env[k] : (process.env[k] = v);
+  }
+});
+
+test("fallback: 0G success never touches OpenAI", async () => {
+  let used = 0;
+  const res = await review.callWithFallback("s", "u", { primary: async () => ({ ...openaiAnswer(), trace: { requestId: "zg-1" } }), fallback: async () => void used++, target });
+  assert.equal(used, 0);
+  assert.equal(res.fallback, undefined);
+  assert.equal(res.trace.requestId, "zg-1");
+});
+
+test("fallback: a 0G failure is answered by OpenAI and recorded on the review", async () => {
+  let model;
+  const call = (s, u) =>
+    review.callWithFallback(s, u, {
+      primary: async () => {
+        throw Object.assign(new Error("0G balance empty"), { status: 402, requestId: "zg-bad" });
+      },
+      fallback: async (_s, _u, m) => ((model = m), openaiAnswer()),
+      target,
+    });
+  const judge = validateForm(EXAMPLE_FORMS[0]).persona;
+  const r = await review.reviewProject(judge, { submission: { name: "X" } }, { call });
+  assert.equal(model, "gpt-5.4");
+  assert.equal(r.status, "scored");
+  assert.equal(r.fallbacks.length, 1);
+  assert.deepEqual(r.fallbacks[0], { attempt: 1, provider: "openai", model: "gpt-5.4", reason: "0G balance empty", zgRequestId: "zg-bad" });
+});
+
+test("fallback: no target means the 0G error is thrown as before; both failing names both", async () => {
+  const boom = async () => {
+    throw new Error("provider down");
+  };
+  await assert.rejects(review.callWithFallback("s", "u", { primary: boom, target: null }), /provider down/);
+  await assert.rejects(
+    review.callWithFallback("s", "u", { primary: boom, fallback: async () => { throw new Error("openai 500"); }, target }),
+    /0G failed \(provider down\); OpenAI fallback failed too \(openai 500\)/,
+  );
+});
+
+test("fallback: the panel lists which judges fell back", async () => {
+  const panel = EXAMPLE_FORMS.map((f) => validateForm(f).persona);
+  let n = 0;
+  const call = async () => (n++ === 0 ? { ...openaiAnswer(), fallback: { ...target, reason: "timeout", zgRequestId: null } } : openaiAnswer());
+  const events = [];
+  const out = await review.runPanel(panel, { id: "p", submission: { name: "X" } }, { call, onEvent: (e) => events.push(e) });
+  assert.deepEqual(out.fallback, { provider: "openai", model: "gpt-5.4", judges: [panel[0].id] });
+  assert.equal(events.filter((e) => e.type === "fallback").length, 1);
 });

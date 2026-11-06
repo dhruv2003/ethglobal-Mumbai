@@ -6,7 +6,8 @@ Draft for review. Nothing here is implemented yet. It implements `PRD.md` v1.1, 
 
 | Topic | Choice | Why |
 | --- | --- | --- |
-| Network | Base Sepolia (chain ID 84532) | Available on the ETHGlobal faucet and already claimed by the team |
+| Network | Base Sepolia (84532) | The team has Base Sepolia ETH |
+| Betting token | FilterCoin | `BettingPools` takes the token address at deployment |
 | Tooling | Remix IDE, OpenZeppelin Contracts v5 | Nothing to install. Compiles, tests and deploys in the browser through MetaMask |
 | Upgrades | None; contracts are immutable | No admin path can redirect user funds (SEC-07). New version means new deployment |
 | Testing | Remix unit tests on the Remix VM first, then a rehearsal on Base Sepolia | Catches contract bugs before spending test ETH, then proves the full flow on the real network |
@@ -34,7 +35,7 @@ No LLM ever calls a contract. Agents have no keys. The result service submits va
 | Operator | Platform deployer | Grant organizer and publisher roles, pause new bets | Move funds, change results |
 | Organizer | Per tournament | Create, freeze, cancel | Bet, change frozen data, reverse a result |
 | Reviewer | Per tournament, may be the organizer | Decide a match in human review | Decide any other match, bet |
-| Publisher | Result service key, per tournament | Open matches, publish scores, void a match | Pick a winner directly, access funds |
+| Publisher | Result service key, per tournament | Open matches, publish scores, void a match | Pick a winner directly, access funds, bet |
 | Anyone | Any wallet | Settle pools, expire overdue matches, pay out frozen recipients | Redirect any payment |
 
 ## `FilterCoin`
@@ -46,7 +47,9 @@ The price is fixed at 0.00001 test ETH for 1,000 FILTER, which is `RATE = 100,00
 | Function | Caller | Rule |
 | --- | --- | --- |
 | `buy()` | Anyone | Payable. Mints `msg.value × RATE` base units to the caller. Reverts on zero value |
-| `sell(amount)` | Any holder | Burns `amount` and sends the caller `floor(amount / RATE)` wei. Reverts if that payout is zero |
+| `sell(amount)` | Any holder | Sends the caller `floor(amount / RATE)` wei and burns exactly the FILTER that pays for. Any remainder stays with the caller. Reverts if the payout is zero |
+| `isFullyBacked()` | Anyone | Returns whether the ETH held covers every FILTER in existence |
+| `permit(...)` | Anyone with a holder's signature | Standard EIP-2612 gasless approval |
 
 - Tokens exist only through `buy()`. There is no owner mint and no pre-mine.
 - The price cannot change after deployment.
@@ -54,8 +57,6 @@ The price is fixed at 0.00001 test ETH for 1,000 FILTER, which is `RATE = 100,00
 - `sell()` burns before sending and has a reentrancy guard. A failed ETH transfer reverts, so the seller keeps their FILTER.
 - FILTER staked in a pool cannot be sold until it is paid out by a claim or refund.
 - Plain ETH transfers without `buy()` revert.
-- Users pay their own gas for every transaction, using Base Sepolia ETH they get themselves.
-
 ## `TournamentManager`
 
 ### Bracket layout
@@ -73,7 +74,7 @@ The contract works out participants itself, so nobody can place an invented oppo
 | Function | Caller | What it does |
 | --- | --- | --- |
 | `createTournament(config)` | Organizer | Stores `configHash`, capacity, schedule, wallets and bet limits. Validates ORG-02, including the resolution deadline being at least `(rounds + 1) × 24h` after start |
-| `freeze(id, projects, seed, bracketHash)` | Organizer | Stores seeded projects (owner wallet, reward wallet, snapshot hash). Count must be 4, 8 or 16 and within capacity. Fixes recipients, blocks participant wallets from betting, and opens the tournament pool |
+| `freeze(id, projects, seed, bracketHash)` | Organizer | Stores seeded projects (owner wallet, reward wallet, snapshot hash). Count must be 2, 4, 8 or 16 and within capacity (2 = a single final). Fixes recipients, blocks participant wallets from betting, and opens the tournament pool |
 | `openMatch(id, match, cutoff, start)` | Publisher | Opens a match pool. Requires `now < cutoff ≤ start`, `start` at or after the tournament cutoff and before its deadline. Deadline is `min(start + 24h, tournament deadline)` |
 | `publishResult(id, match, scoreA, scoreB, tieA, tieB, resultHash)` | Publisher | Requires `now ≥ cutoff`, `now < deadline`, scores ≤ 10000. Contract applies the tie rule below |
 | `resolveHumanReview(id, match, winner, rationaleHash)` | Reviewer | Only in human review, only before the deadline, and the winner must be one of the two participants |
@@ -109,14 +110,17 @@ Each tournament pool and match pool is a market with its own ID. Markets need no
 | Function | Caller | What it does |
 | --- | --- | --- |
 | `bet(market, project, amount)` | Bettor | Requires market open, `now < cutoff`, not paused, wallet not blocked, valid selection, stake ≥ min, wallet total in this pool ≤ max across all selections |
+| `betFor(intent, signature, permit)` | Anyone, normally the relayer | Places a bet the bettor signed. Tokens come from the bettor, the same rules as `bet` apply, and the caller pays gas. Each signature works once and has a deadline |
 | `settle(market)` | Anyone | Fixes the pool outcome once, using the order below |
 | `claim(market)` | Winning bettor | Pays `floor(bettorBucket × stake / winningStake)` once |
+| `claimFor(market, bettor)` | Anyone | Same as `claim`, but funds always go to the bettor |
 | `refund(market)` | Bettor in a void pool | Returns all accepted stake once |
+| `refundFor(market, bettor)` | Anyone | Same as `refund`, but funds always go to the bettor |
 | `claimProject(market)` | Anyone | Pays 20% to the frozen winning reward wallet once |
 | `claimPlatform(market)` | Anyone | Pays the platform bucket to the frozen recipient once |
 | `sweepDust(market)` | Anyone | After all winning stake has claimed, sends only the remaining rounding dust to the platform |
 | `pause()` / `unpause()` | Operator | Blocks new bets only. Claims and refunds keep working |
-| `poolState(market)` | Anyone | Returns the PRD state: `OPEN`, `LOCKED`, `RESOLVED` or `VOID` |
+| `poolState(market)` | Anyone | Returns `NOT_OPEN`, `OPEN`, `LOCKED`, `RESOLVED` or `VOID` |
 
 ### Settlement order
 
@@ -161,6 +165,7 @@ platformBucket = P − bettorBucket − projectBucket
 | Area | Coverage |
 | --- | --- |
 | FilterCoin | Buy and sell price math, zero-value reverts, plain ETH transfer revert, reentrant sell, ETH backing after every buy and sell |
+| Gasless flow | Signed bet placed by another wallet, changed fields rejected, replay, expiry, bet rules, pause, missing allowance, `claimFor` and `refundFor` pay only the bettor |
 | Scoring and ties | All outcomes in the tie table, human review limits, no second result |
 | Bracket | 4, 8 and 16 projects; a later round cannot open early; participants always derived |
 | Betting | Cutoff (AC-17), limits, blocked wallets, paused state |
@@ -168,6 +173,8 @@ platformBucket = P − bettorBucket − projectBucket
 | Void paths | No stake on winner (AC-20), one-sided (AC-25), cancellation (AC-23), expiry (AC-16, AC-26) |
 | Exactly once | Duplicate claim, refund and settle (AC-21); failed transfer (AC-22); dust (AC-24) |
 | Accounting scenarios | Hand-picked pools with awkward amounts: token balance always covers every unpaid claim, refund and bucket (SEC-07), and total paid never exceeds total staked |
+
+Solidity tests cannot make normal wallet signatures, so gasless tests sign through a test smart account (ERC-1271). A real wallet's signature and `permit` must be checked on Base Sepolia.
 
 Remix has no built-in fuzz or invariant testing, so these scenarios replace it. They are weaker than the PRD's invariant-test release gate and could miss an unusual case. This is accepted for a testnet demo with no real funds.
 
@@ -209,4 +216,22 @@ Constraints from the Arkiv docs (Rabdi testnet, chain ID 7794095):
 ## Deployment settings
 
 - The owner's wallet is the platform recipient for demo tournaments, so the owner can sell back that FILTER after the event.
-- Deploy in this order: `FilterCoin`, `TournamentManager`, `BettingPools`.
+- On Base Sepolia, deploy in this order: `FilterCoin`, `TournamentManager`, `BettingPools`.
+
+## Gasless flow
+
+1. The user's wallet signs a `BetIntent` and, if needed, a FilterCoin `permit`.
+2. The relayer submits both in one `betFor` call and pays the gas.
+3. The relayer can trigger `claimFor` and `refundFor` later, and funds only go to the bettor.
+
+The relayer is off chain, so it must apply its own limits per wallet to stop its gas being drained.
+
+Signing details:
+
+| Signature | EIP-712 name | Version | Verifying contract |
+| --- | --- | --- | --- |
+| `BetIntent` | `BettingPools` | `1` | The deployed `BettingPools` |
+| FilterCoin `permit` | `FilterCoin` | `1` | The deployed `FilterCoin` |
+
+
+The `BetIntent` fields signed are `bettor`, `market`, `project`, `amount`, `nonce` and `deadline`. Read `nonce` from `betNonces(bettor)`.

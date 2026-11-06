@@ -1,8 +1,5 @@
 /*
- * A complete mock match in the event contract the player consumes, so the
- * scene can be built and demoed without the backend.
- *
- * Contract (every event): { seq, ts, type, ...payload }
+ * TEST FIGHT: a complete scripted match, used only by the tests. Contract (every event): { seq, ts, type, ...payload }
  *   intro        {}
  *   pitch        { actor, text }
  *   round_start  { round }

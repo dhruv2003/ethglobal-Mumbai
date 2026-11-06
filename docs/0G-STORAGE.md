@@ -9,12 +9,16 @@
 | `submission` | team, project, repo, wallet + signature | a team submits |
 | `judges` | the 3 judge personas (every version) | a judge is added or edited |
 | `review` | scores, comments, **0G Compute request IDs** | the judges finish |
+| `dossier` | the reviewer's evidence dossier (cited `file:line`s) | the review pipeline |
+| `transcript` / `video` | demo-video transcript / facts about our saved copy | the review pipeline |
 | `evidence` | what the vision model saw in each screenshot | the evidence step runs |
 | `voice-note` / `voice-audio` | transcript / recording (**AES-256 encrypted**) | a judge records a voice note |
 | `fixture-file`, `evidence-bundle` | sample project's frozen files | `npm run zg:seed-fixtures` |
 | `manifest` | index of all of the above (the **head**) | ~30 s after uploads |
 
-Never stored: API keys, wallet keys, the organizer token, browser drafts. Uploads that contain a secret are refused.
+Never stored: API keys, wallet keys, the organizer token, World ID data, browser drafts, review-progress state (`data/pipeline/`). Uploads that contain a secret are refused.
+
+0G is permanent: deleting a project here uploads a small "deleted" version of each of its records, so a restore leaves it out, but older versions stay on 0G.
 
 ## How it works
 
@@ -48,7 +52,7 @@ Never stored: API keys, wallet keys, the organizer token, browser drafts. Upload
                 "file": "https://storagescan-galileo.0g.ai/submission/159584" } }
    ```
 
-3. The success screen shows **✓ Stored on 0G Storage**, the root hash, both links and **Verify against 0G**. Verify downloads the copy from 0G and answers **✓ Matches 0G copy**.
+3. The project page shows **✓ Stored on 0G Storage** under the team's details, with the root hash, both links and **Verify against 0G**. Verify downloads the copy from 0G and answers **✓ Matches 0G copy**.
 
 4. Anyone can fetch it without our server, using only the root hash:
 
@@ -94,4 +98,6 @@ In the web app, **0G Storage** in the top bar (`/storage`) lists every upload wi
 | `POST /api/storage/verify/:kind/:id` | re-download and compare: `{ match, rootHash, localSha256, remoteSha256 }` |
 | `POST /api/storage/flush` | retry failed uploads now (organizer) |
 
-Code: `backend/src/zg/storage.mjs` (0G SDK client), `backend/src/zg/archive.mjs` (queue, manifest, verify, restore), `backend/src/store.mjs` (where writes are queued). Full manual test: [`0G-STORAGE-E2E.md`](0G-STORAGE-E2E.md).
+Tested end to end on testnet (submission, judges, persona edit, voice note, 61 sample files, failure drill, restore): see [`0G-STORAGE-E2E.md`](0G-STORAGE-E2E.md), which lists the real root hashes.
+
+Code: `backend/src/zg/storage.mjs` (0G SDK client), `backend/src/zg/archive.mjs` (queue, manifest, verify, restore), `backend/src/store.mjs` (where writes are queued). Fight, bracket and payout data (`src/arena/`, `src/payouts/`) is not archived yet; call `archive(kind, id, obj)` from `src/zg/archive.mjs` to add it.

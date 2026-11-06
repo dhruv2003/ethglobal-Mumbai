@@ -18,12 +18,19 @@ export function usePath() {
   return path;
 }
 
-/** "/" landing, "/projects" dashboard, "/projects/:id" one project, "/submit" the form, "/judge" the judges, "/fight-demo" the fight player, "/storage" what is on 0G Storage. Unknown paths land home. */
+/** "/" landing, "/projects" dashboard, "/projects/:id" one project, "/submit" the form, "/judge" the judges, plus the arena and betting pages below, "/storage" what is on 0G Storage. Unknown paths land home. */
 export function matchRoute(path) {
   const p = path.replace(/\/+$/, "") || "/";
   if (p === "/submit") return { name: "form" };
+  if (p === "/wallet") return { name: "wallet" };
+  if (p === "/organizer") return { name: "organizer" };
+  if (p === "/arena") return { name: "arena" };
+  if (p === "/tournaments") return { name: "tournaments" };
+  const tournament = p.match(/^\/tournaments\/([^/]+)$/);
+  if (tournament) return { name: "tournament", id: decodeURIComponent(tournament[1]) };
+  const fight = p.match(/^\/fights\/([^/]+)\/(\d+)$/);
+  if (fight) return { name: "matchFight", id: decodeURIComponent(fight[1]), match: Number(fight[2]) };
   if (p === "/judge" || p === "/judges") return { name: "judges" };
-  if (p === "/fight-demo") return { name: "fight" };
   if (p === "/projects") return { name: "projects" };
   if (p === "/storage") return { name: "storage" };
   const m = p.match(/^\/projects\/([^/]+)$/);

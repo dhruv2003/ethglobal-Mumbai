@@ -5,39 +5,51 @@
  * generation, judge prompts). This view reads dossier.highlights plus two
  * numbers. Every status carries a word, never colour alone.
  */
+import { useEffect, useState } from "react";
 import { Progress, StatusPill } from "@ds/ui.jsx";
+import { api, health } from "../lib/api.js";
 import { LiveTest } from "./LiveTest.jsx";
 
-const TALLY = [
-  ["supported_by_code", "success", "supported by code"],
-  ["contradicted", "danger", "contradicted"],
-  ["unverified", "neutral", "unverified"],
-  ["submitted_claim", "neutral", "can't check from code"],
-];
 
-export function DossierPending({ project }) {
-  const steps = ["Fetch the repository", "Pin the commit", "Run the tests in a sandbox", "Build the evidence dossier"];
-  return (
-    <div className="card stack">
-      <StatusPill tone="neutral">Waiting for the reviewer</StatusPill>
-      <p className="t-body m0">The reviewer agent checks {project.name}'s claims against its code. The main findings show up here.</p>
-      <ol className="pending-steps">
-        {steps.map((s, i) => (
-          <li key={s} className="rise" style={{ "--i": i }}>
-            <span className="pending-steps__num t-num">{i + 1}</span>
-            <span className="t-body">{s}</span>
-            <StatusPill tone="neutral">Queued</StatusPill>
-          </li>
-        ))}
-      </ol>
-    </div>
-  );
+/** For submitted projects: follow the backend pipeline live until the dossier exists. */
+function useLiveDossier(project) {
+  const [live, setLive] = useState({ dossier: project.dossier ?? null, state: null, running: false, review: null, offline: false });
+  const [tick, setTick] = useState(0);
+  useEffect(() => {
+    if (project.kind !== "submitted") return undefined;
+    let alive = true;
+    let timer;
+    const started = Date.now();
+    const load = async () => {
+      const h = await health();
+      if (!h) return alive && setLive((l) => ({ ...l, offline: true }));
+      const id = encodeURIComponent(project.id);
+      const [p, d] = await Promise.all([api(`/projects/${id}/pipeline`).catch(() => null), api(`/projects/${id}/dossier`).catch(() => null)]);
+      if (!alive) return;
+      const running = Boolean(p?.running) || (!p?.state && Date.now() - Date.parse(project.submittedAt ?? 0) < 5 * 60 * 1000);
+      setLive({ dossier: d?.dossier ?? null, state: p?.state ?? null, running, review: p?.review ?? null, offline: false });
+      const waiting = running || p?.review?.status === "queued" || (p?.state && !p.state.finishedAt);
+      if (waiting && Date.now() - started < 30 * 60 * 1000) timer = setTimeout(load, 3000);
+    };
+    load();
+    return () => {
+      alive = false;
+      clearTimeout(timer);
+    };
+  }, [project.id, project.dossier, project.kind, project.submittedAt, tick]);
+  return [live, () => setTick((t) => t + 1)];
 }
 
 function Findings({ title, tone, items, i }) {
   return (
     <section className={`card stack findings findings--${tone} rise`} style={{ "--i": i }}>
-      <h3 className="t-heading m0">{title}</h3>
+      <h3 className="findings__title m0">
+        <span className="findings__badge" aria-hidden="true">
+          {tone === "good" ? "✓" : "!"}
+        </span>
+        {title}
+        <span className="findings__n t-num">{items.length}</span>
+      </h3>
       <ul className="findings__list">
         {items.map((x) => (
           <li key={x.text} className="t-body">
@@ -50,54 +62,51 @@ function Findings({ title, tone, items, i }) {
 }
 
 export function Dossier({ project }) {
-  const d = project.dossier;
-  if (!d?.highlights) return <DossierPending project={project} />;
+  const [live] = useLiveDossier(project);
+  const d = project.dossier ?? live.dossier;
+  // No fact-check yet (or it couldn't run): the pipeline view above says why.
+  if (!d?.highlights) return <LiveTest project={project} pending={live.running || live.review?.status === "queued"} />;
   const h = d.highlights;
-  const count = (s) => d.evidence.filter((e) => e.status === s).length;
   const c = d.continuity;
   const total = (c?.commitsBefore ?? 0) + (c?.commitsDuringEvent ?? 0);
 
   return (
     <div className="judge">
-      <section className="card stack judge__verdict rise" style={{ "--i": 0 }} aria-label="Verdict">
-        <span className="t-label">Verdict</span>
-        <p className="t-prompt m0">{h.headline}</p>
-        <div className="tally" aria-label={`${d.evidence.length} claims checked`}>
-          {TALLY.filter(([s]) => count(s)).map(([s, tone, word]) => (
-            <StatusPill key={s} tone={tone}>
-              <span className="t-num">{count(s)}</span> {word}
-            </StatusPill>
-          ))}
-        </div>
-      </section>
+      <LiveTest project={project} />
 
-      <LiveTest liveTest={project.liveTest} />
-
+      <div className="sect-head">
+        <span className="t-label">What the fact-check found</span>
+        <span className="t-caption">
+          {d.evidence.length} claims checked against the code at {d.commit.slice(0, 7)}
+        </span>
+      </div>
       <div className="judge__pair">
         <Findings title="What holds up" tone="good" items={h.holdsUp} i={1} />
         <Findings title="What to watch" tone="watch" items={h.watch} i={2} />
       </div>
 
       <div className="judge__pair">
-        <section className="card stack rise" style={{ "--i": 3 }} aria-label="Tests">
+        <section className="card stack ftile ftile--oracle rise" style={{ "--i": 3 }} aria-label="Tests">
           <div className="verdict__head">
             <span className="t-label">Tests</span>
             <StatusPill tone="neutral">{d.tests.status === "not_run" ? "Not run yet" : d.tests.status}</StatusPill>
           </div>
           <p className="m0">
             <span className="stat__value t-num">{d.tests.found.vitestCases.toLocaleString()}</span>{" "}
-            <span className="t-body">vitest + {d.tests.found.forgeTests} forge found</span>
+            <span className="t-body">
+              JS/TS + {d.tests.found.forgeTests} Solidity{d.tests.found.pyTests ? ` + ${d.tests.found.pyTests} Python` : ""} tests found
+            </span>
           </p>
-          <span className="t-caption">Team says {d.tests.claimed}.</span>
+          <span className="t-caption">{d.tests.claimed ? `Team says ${d.tests.claimed}. ` : ""}Counted from the code, not run.</span>
         </section>
         {c && (
-          <section className="card stack rise" style={{ "--i": 4 }} aria-label="Built at the event">
+          <section className="card stack ftile ftile--sunny rise" style={{ "--i": 4 }} aria-label="Built at the event">
             <span className="t-label">Built at the event</span>
             <p className="m0">
               <span className="stat__value t-num">{c.commitsDuringEvent}</span> <span className="t-body">of {total} commits</span>
             </p>
             <Progress value={c.commitsDuringEvent} max={total || 1} label="Commits made during the event" />
-            <span className="t-caption">Earlier work ends at commit {c.boundaryCommit}.</span>
+            <span className="t-caption">{c.boundaryCommit ? `Earlier work ends at commit ${c.boundaryCommit}.` : `Counted from ${c.boundaryLabel ?? "the event start"}${c.historyTruncated ? "; only recent history was fetched" : ""}.`}</span>
           </section>
         )}
       </div>

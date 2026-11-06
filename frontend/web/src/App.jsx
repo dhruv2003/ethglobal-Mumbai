@@ -3,24 +3,41 @@ import { FormCtx, fieldId } from "./components/fields.jsx";
 import { Header } from "./components/Header.jsx";
 import { SubmissionForm } from "./components/SubmissionForm.jsx";
 import { FighterPreview } from "./components/FighterPreview.jsx";
-import { Success } from "./components/Success.jsx";
+import { Toaster, toast } from "./components/Feedback.jsx";
 import { EVENT } from "./config/event.js";
 import { emptyForm, getIn, mergeDraft, setIn } from "./lib/form.js";
 import { clearDraft, loadDraft, saveDraft, saveSubmission, submissionDigest, toPayload } from "./lib/storage.js";
 import { validate } from "./lib/validate.js";
 import { useWallet } from "./lib/wallet.js";
-import { matchRoute, useCanonical, usePath } from "./lib/router.jsx";
+import { matchRoute, navigate, useCanonical, usePath } from "./lib/router.jsx";
 import { LandingPage, ProjectPage, ProjectsPage } from "./components/Projects.jsx";
 import { StoragePage } from "./components/StoragePage.jsx";
 import { JudgesPage } from "./components/JudgesPage.jsx";
-import { FightDemo } from "./components/FightDemo.jsx";
+import { WalletPage } from "./components/WalletPage.jsx";
+import { OrganizerPage } from "./components/OrganizerPage.jsx";
+import { TournamentPage, TournamentsPage } from "./components/TournamentsPage.jsx";
+import { ArenaPage } from "./components/ArenaPage.jsx";
+import { MatchFightPage } from "./components/MatchFightPage.jsx";
 import { Footer } from "./components/Footer.jsx";
 import { Backdrop, ScrollProgress, easeOut } from "./components/fx.jsx";
 import { AnimatePresence, MotionConfig, motion } from "motion/react";
 
 const hhmm = () => new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
-const TITLES = { home: "The arena", form: "Submit a project", projects: "Projects", project: "Project", judges: "Judges", fight: "Fight demo", storage: "0G Storage" };
+const TITLES = {
+  home: "The arena",
+  form: "Submit a project",
+  projects: "Projects",
+  project: "Project",
+  judges: "Judges",
+  wallet: "Wallet",
+  organizer: "Organizer",
+  tournaments: "Tournaments",
+  tournament: "Tournament",
+  arena: "Arena",
+  matchFight: "Fight",
+  storage: "0G Storage",
+};
 
 export default function App() {
   const wallet = useWallet();
@@ -34,7 +51,6 @@ export default function App() {
   const [showAll, setShowAll] = useState(false);
   const [savedAt, setSavedAt] = useState("");
   const [submitState, setSubmitState] = useState({ phase: "idle", error: "" });
-  const [record, setRecord] = useState(null);
 
   const { errors } = useMemo(() => validate(data, { walletAddress: wallet.address }), [data, wallet.address]);
   // The wallet isn't a form field; the submit row handles it.
@@ -42,12 +58,11 @@ export default function App() {
 
   // Autosave the draft half a second after the last change (PRD SUB-04).
   useEffect(() => {
-    if (record) return undefined;
     const t = setTimeout(() => {
       if (saveDraft(data)) setSavedAt(hhmm());
     }, 500);
     return () => clearTimeout(t);
-  }, [data, record]);
+  }, [data]);
 
   const set = useCallback((path, value) => setData((d) => setIn(d, path, value)), []);
   const touch = useCallback((path) => setTouched((t) => (t[path] ? t : { ...t, [path]: true })), []);
@@ -77,9 +92,17 @@ export default function App() {
       const signature = await wallet.sign(message);
       setSubmitState({ phase: "saving", error: "" });
       const saved = await saveSubmission({ ...payload, auth: { message, signature, issuedAt } });
+      // Fresh form for next time, then off to the dashboard with a toast.
       clearDraft();
-      setRecord(saved);
-      window.scrollTo({ top: 0 });
+      startOver();
+      const q = saved.review;
+      toast(
+        q?.status === "queued" && q.ahead > 0
+            ? `${payload.project.name} submitted. It's #${q.position} in the review queue.`
+            : `${payload.project.name} submitted. The reviewer is on it.`,
+        { tone: "success", ms: 6000 },
+      );
+      navigate("/projects");
     } catch (e) {
       setSubmitState({ phase: "idle", error: e.fromServer ? e.message : wallet.friendlyError(e) });
     }
@@ -90,12 +113,11 @@ export default function App() {
     setTouched({});
     setShowAll(false);
     setSubmitState({ phase: "idle", error: "" });
-    setRecord(null);
   }
 
   const ctx = { data, get, set, errors, touched, touch, showAll };
 
-  const pageClass = `page ${route.name === "form" ? "solo solo--form" : route.name === "fight" ? "solo solo--fight" : "solo solo--wide"}`;
+  const pageClass = `page ${route.name === "form" ? "solo solo--form" : route.name === "arena" ? "village-main" : route.name === "matchFight" || route.name === "tournament" ? "solo solo--arena" : "solo solo--wide"}`;
 
   return (
     <MotionConfig reducedMotion="user">
@@ -106,6 +128,7 @@ export default function App() {
           Skip to content
         </a>
         <Header wallet={wallet} route={route} />
+        <Toaster />
         <AnimatePresence>
           {wallet.error && (
             <motion.div
@@ -126,7 +149,7 @@ export default function App() {
         <AnimatePresence mode="wait" initial={false}>
           <motion.main
             id="main"
-            key={route.name + (route.id ?? "") + (record ? ":done" : "")}
+            key={route.name + (route.id ?? "") + (route.match ?? "")}
             className={pageClass}
             initial={{ opacity: 0, y: 14, filter: "blur(8px)" }}
             animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
@@ -137,29 +160,47 @@ export default function App() {
               <LandingPage />
             ) : route.name === "judges" ? (
               <JudgesPage />
-            ) : route.name === "fight" ? (
-              <FightDemo />
+            ) : route.name === "wallet" ? (
+              <WalletPage wallet={wallet} />
+            ) : route.name === "organizer" ? (
+              <OrganizerPage wallet={wallet} />
+            ) : route.name === "tournaments" ? (
+              <TournamentsPage wallet={wallet} />
+            ) : route.name === "tournament" ? (
+              <TournamentPage id={route.id} wallet={wallet} />
+            ) : route.name === "arena" ? (
+              <ArenaPage />
+            ) : route.name === "matchFight" ? (
+              <MatchFightPage id={route.id} matchIndex={route.match} wallet={wallet} />
             ) : route.name === "projects" ? (
               <ProjectsPage />
             ) : route.name === "storage" ? (
               <StoragePage />
             ) : route.name === "project" ? (
               <ProjectPage id={route.id} />
-            ) : record ? (
-              <Success record={record} onStartOver={startOver} />
             ) : (
               <>
                 <div className="intro intro--form">
-                  <span className="eyebrow rise">Step into the ring</span>
                   <h1 className="t-display-lg m0 rise" style={{ "--i": 1 }}>
-                    Build your <span className="hl hl--crush">fighter</span>
+                    Submit a project
                   </h1>
                   <p className="t-body m0 muted rise" style={{ "--i": 2 }}>
-                    Seven fields. Watch your fighter take shape as you fill them in.
+                    Three short rounds. Your fighter levels up as you go.
                   </p>
-                  <span className="t-caption save-state rise" style={{ "--i": 3 }} data-saved={savedAt ? "true" : "false"}>
+                  <ul className="after-submit rise" style={{ "--i": 3 }} aria-label="What happens after you submit">
+                    <li>
+                      <span aria-hidden="true">1</span>We pin your commit
+                    </li>
+                    <li>
+                      <span aria-hidden="true">2</span>Replay your demo on a laptop and a phone
+                    </li>
+                    <li>
+                      <span aria-hidden="true">3</span>AI judges score it
+                    </li>
+                  </ul>
+                  <span className="t-caption save-state rise" style={{ "--i": 4 }} data-saved={savedAt ? "true" : "false"}>
                     <span className="save-state__dot" aria-hidden="true" />
-                    {savedAt ? `Draft saved ${savedAt}` : "Drafts save as you type"}
+                    {savedAt ? `Draft saved ${savedAt}` : "Saves as you type"}
                   </span>
                 </div>
                 <div className="submit-layout">
@@ -170,7 +211,7 @@ export default function App() {
             )}
           </motion.main>
         </AnimatePresence>
-        <Footer />
+        {route.name !== "arena" && <Footer />}
       </FormCtx.Provider>
     </MotionConfig>
   );

@@ -1,17 +1,18 @@
 /*
  * Each judge's score and comment on a project. Reads the latest review from
- * the backend; falls back to the review stored with a sample project when the
- * backend is offline. Scores are integer hundredths computed by the backend.
+ * the backend. Scores are integer hundredths computed by the backend.
  */
 import { useEffect, useState } from "react";
-import { motion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import { StatusPill } from "@ds/ui.jsx";
 import { api, health } from "../lib/api.js";
 import { useCountUp } from "../lib/motion.js";
+import { Spinner } from "./Feedback.jsx";
 import { Ring } from "./Arena.jsx";
 import { judgeAsFighter } from "./JudgesPage.jsx";
 import { PixelFighter } from "./PixelFighter.jsx";
 import { EvidenceList, JudgeTraces, LiveCalls, PanelProof, StorageProof } from "./ZeroGProof.jsx";
+import { ArkivRecord } from "./ArkivRecord.jsx";
 
 const LABELS = {
   product_journey: "Product journey",
@@ -59,44 +60,73 @@ function JudgeCard({ r, i }) {
   }
   const rv = r.review;
   const rows = rv.criteria.map((c) => ({ ...c, w: j.weights?.[c.id] ?? 0 })).sort((a, b) => b.w - a.w);
+  return <ScoredCard r={r} i={i} j={j} rv={rv} rows={rows} />;
+}
+
+const band = (n) => (n >= 70 ? "high" : n >= 50 ? "mid" : "low");
+
+/** A judge who scored: who, score, headline, the comment (expandable), and a compact per-criterion breakdown. */
+function ScoredCard({ r, i, j, rv, rows }) {
+  const [more, setMore] = useState(false);
+  const [open, setOpen] = useState(null);
+  const long = rv.comment.length > 260;
   return (
-    <article className="card jcard rise" style={{ "--i": i }}>
-      <div className="jcard__who">
-        <Ring compact className="jcard__ring">
+    <article className={`card jcard jcard--${["crush", "oracle", "sunny"][i % 3]} rise`} style={{ "--i": i }}>
+      <header className="jcard__top">
+        <span className="jcard__face">
           <PixelFighter project={judgeAsFighter(j)} scale={3} label={`${j.name}, judge`} />
-        </Ring>
-        <div className="jcard__name">
+        </span>
+        <span className="jcard__id">
           <span className="t-body-strong">{j.name}</span>
           <span className="t-caption jcard__title">{j.title}</span>
-        </div>
-        <Score hundredths={r.overallHundredths} />
+        </span>
+        <span className={`jcard__score jcard__score--${band(r.overallHundredths / 100)}`}>
+          <Score hundredths={r.overallHundredths} />
+        </span>
+      </header>
+      <p className="jcard__headline m0">{rv.headline}</p>
+      <div className="jcard__say">
+        <p className={`t-body m0 jcard__comment ${more || !long ? "jcard__comment--open" : ""}`}>{rv.comment}</p>
+        {long && (
+          <button type="button" className="jcard__toggle" onClick={() => setMore((m) => !m)} aria-expanded={more}>
+            {more ? "Show less" : "Read more"}
+          </button>
+        )}
       </div>
-      <p className="t-body-strong m0">{rv.headline}</p>
-      <p className="t-body m0 jcard__comment">{rv.comment}</p>
       {rv.dealBreakerHit && <StatusPill tone="danger">✕ Deal-breaker: {rv.dealBreakerNote}</StatusPill>}
-      <JudgeTraces traces={r.traces} />
-      <details className="jcard__more">
-        <summary className="t-label">How {j.name.split(" ")[0]} scored each part</summary>
-        <ul className="crit">
-          {rows.map((c) => (
-            <li key={c.id}>
-              <div className="crit__head">
-                <span className="t-caption">
-                  <span className="t-body-strong">{LABELS[c.id]}</span> · counts {c.w}%
-                </span>
-                <span className="t-caption t-num">{c.score}</span>
-              </div>
-              <span className="crit__track" aria-hidden="true">
-                <motion.span initial={{ width: 0 }} whileInView={{ width: `${c.score}%` }} viewport={{ once: true }} transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }} />
-              </span>
-              <span className="t-caption">{c.comment}</span>
-            </li>
-          ))}
+      <div className="jcard__parts">
+        <span className="t-label">How {j.name.split(" ")[0]} scored each part</span>
+        <ul className="jcrit">
+          {rows.map((c) => {
+            const isOpen = open === c.id;
+            return (
+              <li key={c.id} className={`jcrit__row ${isOpen ? "jcrit__row--open" : ""}`}>
+                <button type="button" className="jcrit__btn" onClick={() => setOpen(isOpen ? null : c.id)} aria-expanded={isOpen} title="Show why">
+                  <span className="jcrit__name">
+                    {LABELS[c.id]}
+                    <span className="jcrit__w"> {c.w}%</span>
+                  </span>
+                  <span className="jcrit__track" aria-hidden="true">
+                    <motion.span className={`jcrit__fill jcrit__fill--${band(c.score)}`} initial={{ width: 0 }} whileInView={{ width: `${c.score}%` }} viewport={{ once: true }} transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }} />
+                  </span>
+                  <span className="jcrit__n t-num">{c.score}</span>
+                </button>
+                <AnimatePresence initial={false}>
+                  {isOpen && (
+                    <motion.p className="jcrit__why m0" initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}>
+                      {c.comment}
+                    </motion.p>
+                  )}
+                </AnimatePresence>
+              </li>
+            );
+          })}
         </ul>
-        <p className="t-mono-caption m0">
-          {rv.certainty} certainty · persona v{j.version} · {Math.round((r.ms ?? 0) / 1000)} s
-        </p>
-      </details>
+      </div>
+      <JudgeTraces traces={r.traces} />
+      <p className="t-mono-caption m0 jcard__meta">
+        {rv.certainty} certainty · persona v{j.version} · {Math.round((r.ms ?? 0) / 1000)} s
+      </p>
     </article>
   );
 }
@@ -137,7 +167,12 @@ export function JudgesPanel({ project }) {
   useEffect(() => {
     if (!state.running) return undefined;
     let live = true;
+    const startedAt = Date.now();
     const tick = async () => {
+      if (Date.now() - startedAt >= 10 * 60 * 1000) {
+        clearInterval(t);
+        return;
+      }
       try {
         const r = await api(path);
         if (!live) return;
@@ -154,20 +189,12 @@ export function JudgesPanel({ project }) {
     };
   }, [state.running, path]);
 
-  // Anyone may re-judge a sample project on 0G; other projects need the organizer key.
-  const isPublic = project.kind === "sample" && state.health?.provider === "0g";
-
   async function ask() {
     setAsking(true);
     setError("");
     try {
-      if (isPublic) {
-        const r = await api(`${path}/public`, { method: "POST" });
-        setState((s) => ({ ...s, running: true, progress: r.progress }));
-      } else {
-        const r = await api(path, { method: "POST" });
-        setState((s) => ({ ...s, result: r.result, running: false, zgStorage: r.zgStorage ?? s.zgStorage }));
-      }
+      const r = await api(path, { method: "POST" });
+      setState((s) => ({ ...s, result: r.result, running: false, zgStorage: r.zgStorage ?? s.zgStorage }));
     } catch (e) {
       setError(e.message);
     } finally {
@@ -181,7 +208,7 @@ export function JudgesPanel({ project }) {
 
   return (
     <section className="card stack judges rise" style={{ "--i": 1 }} aria-labelledby="judges-h">
-      <div className="verdict__head">
+      <div className="verdict__head judges__head">
         <div className="stack-xs">
           <span className="t-label" id="judges-h">
             Judges' panel
@@ -202,11 +229,7 @@ export function JudgesPanel({ project }) {
 
       {busy && (
         <div className="judges__busy" role="status">
-          <div className="judges__thinking" aria-hidden="true">
-            {[0, 1, 2].map((k) => (
-              <span key={k} style={{ "--k": k }} />
-            ))}
-          </div>
+          <Spinner size={22} label="Judges at work" />
           <span className="t-body">
             The judges are reading the dossier and the live test{h?.provider === "0g" ? " on 0G" : ""}. This takes a minute or two.
           </span>
@@ -216,9 +239,10 @@ export function JudgesPanel({ project }) {
 
       <PanelProof result={result} />
       {h && state.zgStorage && <StorageProof kind="review" id={project.id} initial={state.zgStorage} />}
+      {h && <ArkivRecord projectId={project.id} ranAt={result?.ranAt} />}
 
       {result ? (
-        <div className="jcards">
+        <div className="jcards" style={{ "--n": Math.min(3, result.reviews.length) }}>
           {result.reviews.map((r, i) => (
             <JudgeCard key={r.judge.id} r={r} i={i} />
           ))}
@@ -240,9 +264,8 @@ export function JudgesPanel({ project }) {
         ) : (
           <div className="judges__ask">
             <button type="button" className="btn btn--oracle btn--sm" onClick={ask} disabled={busy}>
-              {busy ? "Judging on 0G…" : isPublic ? "Watch the judges score this on 0G" : result ? "Ask the judges again" : "Ask the judges"}
+              {busy ? "Judging on 0G…" : result ? "Ask the judges again" : "Ask the judges"}
             </button>
-            {isPublic && !busy && <span className="t-caption">Three judges run live on the 0G Compute Router. You'll see each request ID as it comes back.</span>}
           </div>
         )}
       </div>

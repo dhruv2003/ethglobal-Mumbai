@@ -30,6 +30,22 @@ The web app (`frontend/web`) proxies `/api` here in dev and preview.
 
 From the command line: `npm run judge -- --project go-health-me`. This also writes `fixtures/<id>/reviews.json`, so the static site can show the review. Add `--no-fixture --out <file>` to compare models without overwriting it, and `--evidence` to run the screenshot step first.
 
+**Reviewer pipeline** (`src/reviewer/`): runs automatically for every submission, in a queue (`REVIEW_CONCURRENCY`, default 1; unfinished reviews resume on restart), with live status at `GET /api/projects/:id/pipeline`:
+
+1. **Fetch:** shallow clone of a public github.com repo. Hooks, submodules and LFS are off; blobs over 1 MB are skipped; 300 MB cap. Nothing from the repo is ever run.
+2. **Pin:** the exact commit reviewed, plus history split at `EVENT_START`.
+3. **Tests:** counted by reading files. **Not run**: that needs the sandbox (PRD TST-05), which isn't built yet.
+4. **Demo:** a timed transcript of the demo video. Loom uses its captions; direct video files (MP4, Mux, ETHGlobal storage) are downloaded through `safeFetch` (https only, public addresses only, 300 MB cap), turned into audio with `ffmpeg` and transcribed with OpenAI (`TRANSCRIBE_MODEL`, default `gpt-4o-transcribe`). YouTube is skipped with a reason.
+5. **Dossier:** the reviewer agent reads a bounded, line-numbered pack of the repo plus the transcript and writes the evidence dossier. Every `file:line` it cites is checked against the clone; a "supported" claim with no real line is downgraded to "unverified".
+6. **Live test:** the live URL is the team's optional field, else the GitHub repo's homepage. `discoverSite` explores up to 6 pages on a Mozark cloud browser. The reviewer agent then writes the demo replay and major flows (`flows.mjs`): major flows may only target text the explorer saw, and demo screens it never saw are flagged so a miss reads as "not found on the live site". The flows run on laptop and phone through `tester/runner.mjs`, recorded. Results go to `data/live/<id>/`. Needs `MOZARK_TOKEN`, or the KEY=VALUE file at `MOZARK_ENV_FILE` (default `~/.mozark.env`).
+7. **Judges:** the panel scores with the dossier and the live test.
+
+The dossier and flow writer use the same `JUDGE_PROVIDER`, `JUDGE_MODEL`, and credentials as the judges, including 0G by default. Each request keeps its own output schema; demo transcription still uses the separate OpenAI transcription step described above.
+
+Re-run one by hand: `npm run review -- --project <id>`. Delete a project with `DELETE /api/projects/:id` (organizer).
+
+Needs on the server: `git`, `ffmpeg`/`ffprobe`, and `npm install` in `backend/tester` (Playwright, no browsers).
+
 **Store** (`src/store.mjs`): JSON files in `data/` (gitignored), standing in for the database, written with sorted keys. With `ZG_STORAGE=1` every write is also archived on 0G Storage (see below). Swap those functions for real queries later.
 
 **Routes** (`src/api.mjs`): health, criteria, judges (CRUD, max 3), submissions, and project reviews (get, run).
@@ -63,12 +79,13 @@ Every model call runs on 0G Compute; everything the arena produces is kept on [0
 | `judges` | the whole judge panel on every change, so each persona version stays recoverable | seed, `POST/PUT/DELETE /api/judges` |
 | `review` | the panel review: per-criterion scores and comments, panel score, **0G Compute request IDs, providers and costs** (PRD JDG-08) | `reviewNow()`, `npm run judge` |
 | `evidence` | screenshot observations from the vision model on 0G, with their traces | `collectScreenshotEvidence` |
+| `dossier`, `transcript`, `video` | the reviewer's dossier, the demo transcript, facts about our copy of the demo video | review pipeline (`src/reviewer/`) |
 | `voice-note` | a judge's voice-note transcript and its whisper trace | `POST /api/judges/voice-note` |
 | `voice-audio` | the recording, **AES-256 encrypted**, only when `ZG_STORAGE_AES_KEY` is set | same |
 | `fixture-file`, `evidence-bundle` | a sample project's frozen evidence files as-is, plus a bundle listing every file's root hash and sha256 and the repo's pinned commit | `npm run zg:seed-fixtures` |
 | `manifest` | the index of all of the above (the "head") | debounced, after uploads |
 
-Never uploaded: API keys, `ADMIN_TOKEN`, the storage wallet key, the AES key, browser drafts, rate-limit state, in-memory progress. The archive refuses any upload whose bytes contain one of those secrets (`secret_detected`). Fight code can call `archive(kind, id, obj)` from `src/zg/archive.mjs` later.
+Never uploaded: API keys and wallet keys (incl. Arkiv, publisher, relayer, starter), `ADMIN_TOKEN`, World ID data, the AES key, browser drafts, rate-limit state, in-memory progress and `data/pipeline/`. Deleting a project uploads a "deleted" version of each of its records so a restore leaves it out (0G itself is permanent). The archive refuses any upload whose bytes contain one of those secrets (`secret_detected`). Fight code can call `archive(kind, id, obj)` from `src/zg/archive.mjs` later.
 
 **How it works** (`src/zg/storage.mjs`, `src/zg/archive.mjs`):
 
@@ -77,7 +94,7 @@ Never uploaded: API keys, `ADMIN_TOKEN`, the storage wallet key, the AES key, br
 - `data/zg-manifest.json` maps `kind:id` to `{ rootHash, txHash, txSeq, sha256, size, uploadedAt, history }`. It is uploaded itself (at most every 30 s); its latest root hash is in `data/zg-head.json`. **That head root hash is the one value needed to recover everything.**
 - Downloads are checked by recomputing the 0G Merkle root of the bytes and comparing it with the requested root (the hash the Flow contract committed on chain). We do this ourselves because the TS SDK's `proof` option is currently a no-op (`Downloader.downloadTask` has "TODO: add proof check"). Record content is also compared by `sha256` of its canonical JSON.
 - API: `zgStorage: { status: pending | stored | failed | off, rootHash, txHash, links }` on submissions and reviews; `GET /api/storage`, `/api/storage/records`, `/api/storage/status/:kind/:id`, `/api/storage/blob/:rootHash` (only root hashes in our manifest, so it isn't an open proxy), `POST /api/storage/verify/:kind/:id`.
-- Web app: the submission success screen and the judges' panel show "Stored on 0G Storage" with the root hash, a link to the transaction on chainscan and the file on storagescan, and **Verify against 0G**.
+- Web app: the project page (submission and judges' panel) shows "Stored on 0G Storage" with the root hash, a link to the transaction on chainscan and the file on storagescan, and **Verify against 0G**.
 
 **Set up** (testnet): make a new wallet just for this, fund it at https://faucet.0g.ai, then in `.env` set `ZG_STORAGE=1` and `ZG_STORAGE_PRIVATE_KEY`. `npm run zg:status` shows the balance.
 
@@ -88,11 +105,12 @@ npm run zg:status                                            # head root hash
 npm run zg:restore -- --head <rootHash> --into /tmp/arena-restore
 diff -r data /tmp/arena-restore                              # only zg-outbox / zg-cache / zg-head differ
 npm run zg:verify                                            # re-download every record, check hashes
+npm run zg:check                                             # download every upload with indexer.download(root, file, true)
 npm run zg:seed-fixtures -- --project go-health-me           # upload the sample's frozen evidence (idempotent)
 npm run test:0g-storage                                      # live round trips on testnet (funded wallet)
 ```
 
-The full manual run is in [`docs/0G-STORAGE-E2E.md`](../docs/0G-STORAGE-E2E.md).
+Short overview with a sample flow: [`docs/0G-STORAGE.md`](../docs/0G-STORAGE.md). The full manual run, with real testnet root hashes: [`docs/0G-STORAGE-E2E.md`](../docs/0G-STORAGE-E2E.md). In the web app, `/storage` lists every upload with download and verify.
 
 ### What breaks if 0G is removed
 

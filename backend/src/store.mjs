@@ -46,6 +46,58 @@ export const reviews = {
   },
 };
 
+fs.mkdirSync(path.join(DATA_DIR, "pipeline"), { recursive: true });
+fs.mkdirSync(path.join(DATA_DIR, "dossiers"), { recursive: true });
+export const pipelines = {
+  get: (projectId) => read(`pipeline/${safeId(projectId)}.json`, null),
+  save: (projectId, value) => write(`pipeline/${safeId(projectId)}.json`, value),
+};
+export const dossiers = {
+  get: (projectId) => read(`dossiers/${safeId(projectId)}.json`, null),
+  save: (projectId, value) => {
+    write(`dossiers/${safeId(projectId)}.json`, value);
+    archive.archive("dossier", safeId(projectId), value);
+    return value;
+  },
+};
+export const repoDir = (projectId) => path.join(DATA_DIR, "repos", safeId(projectId));
+
+fs.mkdirSync(path.join(DATA_DIR, "transcripts"), { recursive: true });
+export const transcripts = {
+  get: (projectId) => read(`transcripts/${safeId(projectId)}.json`, null),
+  save: (projectId, value) => {
+    write(`transcripts/${safeId(projectId)}.json`, value);
+    archive.archive("transcript", safeId(projectId), value);
+    return value;
+  },
+};
+/** Live test output (smoke.json, recordings, screenshots) for a submitted project. */
+export const liveDir = (projectId) => path.join(DATA_DIR, "live", safeId(projectId));
+/** Our copy of the demo video (demo.<ext>) and its facts (video.json). */
+export const mediaDir = (projectId) => path.join(DATA_DIR, "media", safeId(projectId));
+export const videos = {
+  get: (projectId) => read(`media/${safeId(projectId)}/video.json`, null),
+  save: (projectId, value) => {
+    fs.mkdirSync(mediaDir(projectId), { recursive: true });
+    write(`media/${safeId(projectId)}/video.json`, value);
+    archive.archive("video", safeId(projectId), value);
+    return value;
+  },
+};
+/** Scratch space for downloads; always deleted after use. */
+export const workDir = (projectId) => path.join(DATA_DIR, "work", safeId(projectId));
+
+/** Remove everything stored for a submitted project. */
+export function deleteProject(projectId) {
+  const id = safeId(projectId);
+  write("submissions.json", read("submissions.json", []).filter((s) => s.id !== projectId));
+  for (const f of [`reviews/${id}.json`, `pipeline/${id}.json`, `dossiers/${id}.json`, `transcripts/${id}.json`, `evidence/${id}.json`]) fs.rmSync(path.join(DATA_DIR, f), { force: true });
+  for (const d of [repoDir(projectId), liveDir(projectId), workDir(projectId), mediaDir(projectId)]) fs.rmSync(d, { recursive: true, force: true });
+  // 0G Storage is permanent: the old versions stay there. Record the deletion so a
+  // restore from 0G doesn't bring the project back.
+  for (const kind of ["submission", "review", "evidence", "dossier", "transcript", "video"]) archive.tombstone(kind, kind === "submission" ? projectId : id);
+}
+
 /** Screenshot observations from the vision model on 0G, cached per project. */
 export const evidence = {
   get: (projectId) => read(`evidence/${safeId(projectId)}.json`, null),
@@ -96,6 +148,18 @@ export const localRecords = {
   review: () => listDir("reviews"),
   evidence: () => listDir("evidence"),
   "voice-note": () => listDir("voice-notes"),
+  dossier: () => listDir("dossiers"),
+  transcript: () => listDir("transcripts"),
+  video: () => {
+    try {
+      return fs
+        .readdirSync(path.join(DATA_DIR, "media"))
+        .map((id) => [id, read(`media/${id}/video.json`, null)])
+        .filter(([, v]) => v != null);
+    } catch {
+      return [];
+    }
+  },
 };
 
 /** The local value behind one archive record, or undefined. */

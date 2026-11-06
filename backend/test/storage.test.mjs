@@ -289,7 +289,8 @@ test("no secret is ever uploaded: full submission + review + voice-note flow", a
   const { validateForm } = await import("../src/judges/persona.mjs");
   store.judges.save(EXAMPLE_FORMS.map((f) => ({ ...validateForm(f).persona, example: true })));
   const sub = await (await api("/submissions", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(await signedSubmission("Leakcheck")) })).json();
-  const result = await reviewNow("go-health-me");
+  // Main's pipeline may already be reviewing it; reviewNow joins that run.
+  const result = await reviewNow(sub.id);
   assert.ok(result.zg.requestIds.length >= 3, "the review ran on the (fake) 0G router");
   const vn = await api("/judges/voice-note", { method: "POST", headers: { "content-type": "audio/webm", authorization: `Bearer ${SECRETS.ADMIN_TOKEN}` }, body: crypto.randomBytes(4000) });
   assert.equal(vn.status, 200);
@@ -300,7 +301,7 @@ test("no secret is ever uploaded: full submission + review + voice-note flow", a
   await archive.drain();
 
   const m = manifest().records;
-  assert.ok(m["review:go-health-me"]);
+  assert.ok(m[`review:${sub.id}`]);
   assert.ok(m[`submission:${sub.id}`]);
   assert.ok(m[`voice-note:${note.id}`]);
   assert.equal(m[`voice-audio:${note.id}`]?.encrypted, true, "audio stored encrypted");
@@ -327,6 +328,24 @@ test("no secret is ever uploaded: full submission + review + voice-note flow", a
   assert.equal(store.zgStatus("review", "leaky").status, "failed");
 });
 
+test("deleting a project records tombstones on 0G, so a restore doesn't bring it back", async () => {
+  store.submissions.add({ id: "gone-1", project: { name: "Gone" }, submittedAt: new Date().toISOString() });
+  store.dossiers.save("gone-1", { summary: "x" });
+  store.transcripts.save("gone-1", { text: "y" });
+  await archive.drain({ manifest: false });
+  assert.equal(manifest().records["dossier:gone-1"].history.length, 1);
+  store.deleteProject("gone-1");
+  await archive.drain({ manifest: false });
+  for (const k of ["submission:gone-1", "dossier:gone-1", "transcript:gone-1"]) {
+    const r = manifest().records[k];
+    assert.equal(r.history.length, 2, k);
+    const env = await storage.downloadJSON(r.rootHash);
+    assert.equal(env.data.deleted, true);
+    assert.equal(env.prev, r.history[0]);
+  }
+  assert.equal(manifest().records["review:gone-1"], undefined, "no tombstone for records 0G never had");
+});
+
 test("restore rebuilds data/ from the head manifest alone, byte for byte", async () => {
   // Drop the leaky record so local == what 0G has.
   fs.rmSync(path.join(DATA, "reviews/leaky.json"), { force: true });
@@ -336,10 +355,13 @@ test("restore rebuilds data/ from the head manifest alone, byte for byte", async
   const into = fs.mkdtempSync(path.join(os.tmpdir(), "arena-restore-test-"));
   const { written } = await archive.restoreFromHead(head.rootHash, into);
   assert.ok(written.includes("judges.json") && written.includes("submissions.json"));
+  assert.ok(!written.some((f) => f.includes("gone-1")), "deleted project not restored");
+  assert.ok(!JSON.parse(fs.readFileSync(path.join(into, "submissions.json"), "utf8")).some((s) => s.id === "gone-1"));
   const files = (dir) =>
     fs
       .readdirSync(dir, { recursive: true })
-      .filter((f) => f.endsWith(".json") && !f.startsWith("zg-") && !f.startsWith(".") && !f.startsWith("zg-cache"))
+      // pipeline/ is review-progress state (like the in-memory progress map): not archived on purpose.
+      .filter((f) => f.endsWith(".json") && !f.startsWith("zg-") && !f.startsWith(".") && !f.startsWith("pipeline/"))
       .sort();
   assert.deepEqual(files(into), files(DATA));
   for (const f of files(DATA)) {

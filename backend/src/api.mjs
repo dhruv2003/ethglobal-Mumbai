@@ -12,7 +12,18 @@
  *   POST   /api/submissions            save a signed submission; the panel reviews it in the background
  *   GET    /api/projects/:id/reviews   latest panel review
  *   POST   /api/projects/:id/reviews   run the panel now   (organizer)
- *   POST   /api/projects/:id/reviews/public   anyone: re-judge a sample project on 0G (rate limited, capped per day)
+ *   GET    /api/projects/:id/pipeline  live status: fetch, pin, tests, dossier, judges
+ *   POST   /api/projects/:id/pipeline  run the whole review again   (organizer)
+ *   GET    /api/projects/:id/dossier   the reviewer's dossier for a submitted project
+ *   GET    /api/projects/:id/live      live test results (+ /live/files/<device>/<file> for media)
+ *   GET    /api/projects/:id/live/stream/:device   watch a cloud browser live (MJPEG) while the test runs
+ *   DELETE /api/projects/:id           delete a submitted project and its data   (organizer)
+ *   POST   /api/uploads/video          upload a demo video file (raw body; MP4, MOV or WebM, max 300 MB)
+ *   POST   /api/uploads/image          upload a demo screenshot (raw body; PNG, JPEG or WebP, max 10 MB)
+ *   GET    /api/uploads/:file          play an uploaded video
+ *   GET    /api/projects/:id/video     our saved copy of the demo video (+ /video/file to play it)
+ *   GET    /api/projects/:id/arkiv     the result as published on Arkiv (read from Arkiv) + Swarm links
+ *   POST   /api/projects/:id/arkiv     publish the latest result to Swarm + Arkiv again   (organizer)
  *
  *   0G Storage (every record above is also archived on 0G when ZG_STORAGE=1):
  *   GET    /api/storage                       wallet, balance, head root hash, outbox counts
@@ -29,16 +40,28 @@ import path from "node:path";
 import express from "express";
 import { CRITERIA } from "./judges/criteria.mjs";
 import { MAX_JUDGES, validateForm } from "./judges/persona.mjs";
-import { hasCredentials, missingCredentialsError, MODEL, PROVIDER, PROVIDER_LABEL, runPanel } from "./judges/review.mjs";
+import { callPrimary, fallbackTarget, hasCredentials, missingCredentialsError, MODEL, PROVIDER, PROVIDER_LABEL, runPanel } from "./judges/review.mjs";
 import { collectScreenshotEvidence, EVIDENCE_ENABLED, forJudges, hasCachedEvidence } from "./judges/evidence.mjs";
 import zg from "./zg/client.js";
 import zgModels from "./zg/models.js";
 import { EXAMPLE_FORMS } from "./judges/seed.mjs";
 import { loadProject } from "./projects.mjs";
-import { DATA_DIR, judges, localValue, reviews, startArchive, submissions, voiceNotes, zgStatus } from "./store.mjs";
+import { DATA_DIR, deleteProject, dossiers, judges, liveDir, localValue, mediaDir, pipelines, reviews, startArchive, submissions, videos, voiceNotes, zgStatus } from "./store.mjs";
 import * as archive from "./zg/archive.mjs";
 import { downloadBytes, explorerLinks, storageConfig, walletInfo } from "./zg/storage.mjs";
+import { cleanUploads, IMAGE_MAX, IMAGE_REF, MAX_IMAGES, MIME, storeImageUpload, storeUpload, UPLOAD_DIR, UPLOAD_FILE, UPLOAD_REF, VIDEO_MAX } from "./reviewer/media.mjs";
+import { dequeue, enqueue, isRunning, queueLength, queuePosition, resumeQueue } from "./reviewer/pipeline.mjs";
 import { checkSubmissionSignature, rateLimit, requireOrganizer } from "./security.mjs";
+import { canRead, canWrite, explorerEntity, publisher, readLatest } from "./arkiv/arkiv.mjs";
+import { lastPublish, publishInBackground, publishing, publishRun } from "./arkiv/publish.mjs";
+import { syncJudgesInBackground, syncProjectInBackground } from "./arkiv/records/sync.mjs";
+import { listRecords, readRecord } from "./arkiv/records/store.mjs";
+import { TYPES } from "./arkiv/records/schemas.mjs";
+import { swarmConfigured } from "./arkiv/swarm.mjs";
+import { arenaRouter } from "./arena/routes.mjs";
+import { worldRouter } from "./world/routes.mjs";
+import { payoutStatus, startPayouts } from "./payouts/index.mjs";
+import { startAutorun } from "./arena/autorunService.mjs";
 
 // Seed the example panel the first time only.
 if (!judges.list().length) judges.save(EXAMPLE_FORMS.map((f) => ({ ...validateForm(f).persona, example: true })));
@@ -48,37 +71,49 @@ startArchive();
 const running = new Map(); // projectId -> Promise, so one project is never reviewed twice at once
 // projectId -> { startedAt, events, error? }: what the UI shows while a run is going (0G request IDs as they arrive)
 const progress = new Map();
-const lastRun = new Map(); // projectId -> ms timestamp of the last public run
 
 /**
  * Run the panel on one project and save the result.
  * opts.evidence: first let a vision model on 0G read the live-test screenshots (default JUDGE_EVIDENCE).
  * opts.save: false to skip saving to data/reviews (the CLI uses this for side-by-side model runs).
+ * opts.fallback: false to never fall back to OpenAI when 0G fails (public runs).
  */
-export async function reviewNow(projectId, { evidence = EVIDENCE_ENABLED, freshEvidence = false, save = true, log } = {}) {
+export async function reviewNow(projectId, { evidence = EVIDENCE_ENABLED, freshEvidence = false, save = true, fallback = true, log, onEvent: hook } = {}) {
   if (running.has(projectId)) return running.get(projectId);
   const project = loadProject(projectId);
   if (!project) throw Object.assign(new Error("No such project."), { status: 404 });
   const panel = judges.list();
-  if (panel.length !== MAX_JUDGES) throw Object.assign(new Error(`The panel needs ${MAX_JUDGES} judges; it has ${panel.length}.`), { status: 409 });
+  // Whoever is on the panel judges: one, two or three seats filled all work. Only an empty panel can't.
+  if (!panel.length) throw Object.assign(new Error("There are no judges on the panel yet. Add one on /judge."), { status: 409 });
   if (!hasCredentials()) throw missingCredentialsError();
   if (evidence && !hasCredentials("0g")) throw missingCredentialsError("0g");
   const prog = { startedAt: new Date().toISOString(), events: [] };
   progress.set(projectId, prog);
-  const onEvent = (e) => prog.events.push({ at: new Date().toISOString(), ...e });
+  const onEvent = (e) => {
+    prog.events.push({ at: new Date().toISOString(), ...e });
+    try {
+      hook?.(e); // the pipeline ticks judges off as they finish
+    } catch {
+      /* a progress hook never breaks the review */
+    }
+  };
   const job = (async () => {
     if (evidence) {
       const records = await collectScreenshotEvidence(project, { fresh: freshEvidence, log });
       project.screenshotEvidenceRecords = records;
       project.screenshotEvidence = forJudges(records);
     }
-    const result = await runPanel(panel, project, { onEvent });
+    const result = await runPanel(panel, project, { onEvent, call: fallback ? undefined : callPrimary });
     // A run where no judge scored never replaces the last good result: the page keeps showing it.
     if (!result.reviews.some((r) => r.status === "scored")) {
       const why = [...new Set(result.reviews.map((r) => r.detail).filter(Boolean))].join(" ");
       throw Object.assign(new Error(`No judge could score this time (${why || "unknown error"}). The last result is still shown.`), { status: 502, result });
     }
-    return save ? reviews.save(projectId, result) : result;
+    if (!save) return result;
+    const saved = reviews.save(projectId, result);
+    publishInBackground(project, saved); // Swarm + Arkiv, when set up; never fails the review
+    syncProjectInBackground(projectId); // judge context (dossier, live test, screenshot notes) on Arkiv
+    return saved;
   })()
     .catch((e) => {
       prog.error = e.message;
@@ -93,6 +128,10 @@ export async function reviewNow(projectId, { evidence = EVIDENCE_ENABLED, freshE
 }
 
 export const router = express.Router();
+router.use("/arena", arenaRouter);
+router.use("/world", worldRouter);
+
+router.get("/payouts", async (req, res) => res.json(await payoutStatus()));
 
 router.get("/health", (req, res) => {
   res.json({
@@ -104,7 +143,9 @@ router.get("/health", (req, res) => {
     providerLabel: PROVIDER_LABEL[PROVIDER],
     keyName: PROVIDER === "0g" ? "ZG_API_KEY" : PROVIDER === "openai" ? "OPENAI_API_KEY" : "ANTHROPIC_API_KEY",
     model: MODEL,
+    fallback: fallbackTarget(),
     voiceNotes: hasCredentials("0g") ? { model: zgModels.MODELS.transcribe } : null,
+    arkiv: { read: canRead(), write: canWrite(), swarm: swarmConfigured(), publisher: publisher() },
     storage: storageSummary(),
   });
 });
@@ -119,6 +160,7 @@ router.post("/judges", requireOrganizer, (req, res) => {
   const { persona, errors } = validateForm(req.body ?? {});
   if (errors) return res.status(400).json({ errors });
   judges.save([...all, persona]);
+  syncJudgesInBackground();
   res.status(201).json(persona);
 });
 
@@ -170,6 +212,7 @@ router.put("/judges/:id", requireOrganizer, (req, res) => {
   const { persona, errors } = validateForm(req.body ?? {}, { existing });
   if (errors) return res.status(400).json({ errors });
   judges.save(all.map((j) => (j.id === existing.id ? persona : j)));
+  syncJudgesInBackground();
   res.json(persona);
 });
 
@@ -180,8 +223,55 @@ router.delete("/judges/:id", requireOrganizer, (req, res) => {
   res.status(204).end();
 });
 
+/** Where a project's review stands: queued (with place in line), reviewing, reviewed, stopped. */
+function reviewStatus(id) {
+  const position = queuePosition(id);
+  if (position) return { status: "queued", position, ahead: position - 1 };
+  if (isRunning(id)) return { status: "reviewing" };
+  const p = pipelines.get(id);
+  if (!p) return { status: "not_started" };
+  // Started but not finished and not in this server's line: running elsewhere (e.g. the CLI).
+  if (!p.finishedAt) return p.startedAt ? { status: "reviewing" } : { status: "queued", position: null };
+  // Every step runs even when one fails: the review is done, with the failures shown.
+  return { status: "reviewed", failed: p.steps.filter((x) => x.status === "failed").length };
+}
+
 /** Submissions as the public sees them: no signature material. */
-const publicSubmission = ({ auth, ...rest }) => ({ ...rest, signed: Boolean(auth?.signature) });
+const publicSubmission = ({ auth, ...rest }) => ({ ...rest, signed: Boolean(auth?.signature), review: reviewStatus(rest.id), hasDossier: Boolean(dossiers.get(rest.id)), video: publicVideo(rest.id) });
+
+/** What the web app needs to play our copy of the demo video. */
+function publicVideo(id) {
+  const v = videos.get(id);
+  if (!v) return null;
+  if (v.error) return { saved: false, reason: v.error };
+  return { saved: true, url: `/api/projects/${encodeURIComponent(id)}/video/file`, seconds: v.seconds, bytes: v.bytes, source: v.source };
+}
+
+/** A demo needs a video or at least one screenshot. Returns an error string or null. */
+function checkDemo(body) {
+  const imgs = body.demoImages ?? [];
+  if (!Array.isArray(imgs) || imgs.length > MAX_IMAGES) return `Add up to ${MAX_IMAGES} screenshots.`;
+  for (const ref of imgs) {
+    const m = IMAGE_REF.exec(String(ref));
+    if (!m || !fs.existsSync(path.join(UPLOAD_DIR, m[1]))) return "One of the screenshots isn't on the server any more. Upload it again.";
+  }
+  if (!body.demoVideoUrl) return imgs.length ? null : "Add a demo video or some screenshots.";
+  return checkDemoVideo(body.demoVideoUrl);
+}
+
+/** Is this an acceptable demo video value? Returns an error string or null. */
+function checkDemoVideo(v) {
+  if (!v) return "Add a demo video.";
+  if (String(v).startsWith("upload:")) {
+    const m = UPLOAD_REF.exec(v);
+    return m && fs.existsSync(path.join(UPLOAD_DIR, m[1])) ? null : "That uploaded video isn't on the server any more. Upload it again.";
+  }
+  try {
+    return new URL(v).protocol === "https:" ? null : "The demo video link must start with https://.";
+  } catch {
+    return "The demo video link isn't a valid URL.";
+  }
+}
 
 router.get("/submissions", (req, res) => res.json(submissions.list().map((s) => ({ ...publicSubmission(s), zgStorage: zgStatus("submission", s.id) }))));
 router.get("/submissions/:id/storage", (req, res) => {
@@ -192,58 +282,264 @@ router.get("/submissions/:id/storage", (req, res) => {
 router.post("/submissions", rateLimit({ max: 5, windowMs: 60 * 60 * 1000 }), async (req, res) => {
   const body = req.body ?? {};
   if (!body.project?.name || !body.repoUrl || !body.ownerWallet) return res.status(400).json({ error: "Missing project name, repo or owner wallet." });
+  const videoError = checkDemo(body);
+  if (videoError) return res.status(400).json({ error: videoError });
   const sigError = await checkSubmissionSignature(body, {
     seen: (sig) => submissions.list().some((s) => String(s.auth?.signature ?? "").toLowerCase() === sig),
   });
   if (sigError) return res.status(401).json({ error: sigError });
   const record = { ...body, id: crypto.randomUUID(), submittedAt: new Date().toISOString() };
   submissions.add(record);
-  // The panel reviews every new submission in the background when it can.
-  let review = "skipped";
-  if (hasCredentials() && judges.list().length === MAX_JUDGES) {
-    review = "started";
-    reviewNow(record.id).catch((e) => console.error(`[judges] review of ${record.id} failed: ${e.message}`));
-  }
-  res.status(201).json({ ...publicSubmission(record), review, zgStorage: zgStatus("submission", record.id) });
+  syncProjectInBackground(record.id);
+  // Into the review queue: fetch, pin, count tests, build the dossier, then the judges score.
+  enqueue(record.id, { judge: reviewNow });
+  res.status(201).json({ ...publicSubmission(record), zgStorage: zgStatus("submission", record.id) });
 });
 
-router.get("/projects/:id/reviews", (req, res) => {
-  const r = reviews.get(req.params.id);
-  res.json({ running: running.has(req.params.id), progress: progress.get(req.params.id) ?? null, result: r, zgStorage: r ? zgStatus("review", req.params.id) : null });
+router.get("/projects/:id/pipeline", (req, res) => {
+  res.json({ running: isRunning(req.params.id), review: reviewStatus(req.params.id), queueLength: queueLength(), state: pipelines.get(req.params.id) });
+});
+
+router.get("/projects/:id/dossier", (req, res) => res.json({ dossier: dossiers.get(req.params.id) }));
+
+/** Live test results for a submitted project; media under /live/files/... */
+/*
+ * The judged result as published on Arkiv, read back from Arkiv itself (not from
+ * the local store), with links to the evidence bundle on Swarm.
+ */
+router.get("/projects/:id/arkiv", async (req, res) => {
+  const id = req.params.id;
+  const last = lastPublish(id);
+  const out = { configured: { read: canRead(), write: canWrite(), swarm: swarmConfigured() }, publishing: publishing.has(id), last, onchain: null };
+  if (!canRead()) return res.json(out);
+  try {
+    out.onchain = await readLatest(id);
+    // Only link the files this bundle really holds (a project may have no dossier or videos).
+    const s = out.onchain?.swarm;
+    const files = s && last?.swarm?.reference === s.reference ? last.swarm.files : null;
+    if (s && files) {
+      const has = { dossier: "dossier.json", liveTest: "live/smoke.json", laptopVideo: "live/laptop/video.mp4", phoneVideo: "live/phone/video.mp4" };
+      for (const [k, f] of Object.entries(has)) if (!files.includes(f)) delete s[k];
+    }
+  } catch (e) {
+    out.error = `Arkiv read failed: ${String(e?.shortMessage ?? e?.message ?? e).slice(0, 200)}`;
+  }
+  res.json(out);
 });
 
 /*
- * Public "watch the judges score this" for sample projects, so anyone trying the app
- * can start real 0G inference and see the request IDs arrive. Guarded three ways,
- * because each run is paid: 0G provider only, 2 runs per IP per hour, a 10-minute
- * cooldown per project, and PUBLIC_RUNS_PER_DAY in total (default 40, ~$0.30 on 0gm).
+ * Any arena record, read from Arkiv (not the local store).
+ *   GET /api/arkiv/:type?projectId=...        newest versions, columns only
+ *   GET /api/arkiv/:type/latest?projectId=... the newest one with its full payload
+ * Query parameters filter on the type's indexed columns (identity columns for /latest).
  */
-const PUBLIC_COOLDOWN_MS = 10 * 60 * 1000;
-const publicDay = { day: "", n: 0 };
-router.post(
-  "/projects/:id/reviews/public",
-  rateLimit({ max: 2, windowMs: 60 * 60 * 1000, message: "You've asked the judges twice this hour. Try again later." }),
-  (req, res) => {
-    const id = req.params.id;
-    const project = loadProject(id);
-    if (!project || project.kind !== "sample") return res.status(404).json({ error: "Only sample projects can be re-judged from here." });
-    if (PROVIDER !== "0g") return res.status(409).json({ error: "Public judging runs on 0G only." });
-    if (!hasCredentials()) return res.status(503).json({ error: missingCredentialsError().message });
-    if (running.has(id)) return res.status(202).json({ running: true, progress: progress.get(id) ?? null });
-    const since = Date.now() - (lastRun.get(id) ?? 0);
-    if (since < PUBLIC_COOLDOWN_MS) {
-      return res.status(429).json({ error: `The judges scored this ${Math.max(1, Math.round(since / 60000))} min ago. Try again in ${Math.ceil((PUBLIC_COOLDOWN_MS - since) / 60000)} min.` });
+const ARKIV_FILTERS = new Set(["projectId", "projectName", "judgeId", "tournamentId", "match", "projectA", "projectB", "status", "kind", "winner", "track"]);
+const arkivFilters = (q) => Object.fromEntries(Object.entries(q).filter(([k, v]) => ARKIV_FILTERS.has(k) && typeof v === "string" && v).map(([k, v]) => [k, k === "match" ? Number(v) : v]));
+router.get("/arkiv/:type", async (req, res) => {
+  if (!TYPES.includes(req.params.type)) return res.status(404).json({ error: `Unknown record type. One of: ${TYPES.join(", ")}.` });
+  if (!canRead()) return res.status(503).json({ error: "Arkiv is not set up on this server." });
+  try {
+    res.json(await listRecords(req.params.type, arkivFilters(req.query)));
+  } catch (e) {
+    res.status(502).json({ error: `Arkiv read failed: ${String(e?.shortMessage ?? e?.message ?? e).slice(0, 200)}` });
+  }
+});
+router.get("/arkiv/:type/latest", async (req, res) => {
+  if (!TYPES.includes(req.params.type)) return res.status(404).json({ error: `Unknown record type. One of: ${TYPES.join(", ")}.` });
+  if (!canRead()) return res.status(503).json({ error: "Arkiv is not set up on this server." });
+  try {
+    const r = await readRecord(req.params.type, arkivFilters(req.query));
+    if (!r) return res.status(404).json({ error: "Nothing published on Arkiv for that yet." });
+    res.json({ ...r, explorer: explorerEntity(r.$key) });
+  } catch (e) {
+    res.status(502).json({ error: `Arkiv read failed: ${String(e?.shortMessage ?? e?.message ?? e).slice(0, 200)}` });
+  }
+});
+
+/** Publish the latest saved review again (organizer). */
+router.post("/projects/:id/arkiv", requireOrganizer, async (req, res) => {
+  const project = loadProject(req.params.id);
+  const result = reviews.get(req.params.id);
+  if (!project || !result) return res.status(404).json({ error: "No judged result to publish." });
+  if (!canWrite()) return res.status(503).json({ error: "Arkiv is not set up: set ARKIV_PRIVATE_KEY or PUBLISHER_PRIVATE_KEY in backend/.env." });
+  res.json(await publishRun(project, result));
+});
+
+router.get("/projects/:id/live", (req, res) => {
+  try {
+    res.json({ liveTest: JSON.parse(fs.readFileSync(path.join(liveDir(req.params.id), "smoke.json"), "utf8")) });
+  } catch {
+    res.json({ liveTest: null });
+  }
+});
+
+/**
+ * Watch a cloud browser while the live test runs: an MJPEG stream of its newest
+ * screen frame (an <img> plays it). Ends when the run stops writing frames.
+ */
+router.get("/projects/:id/live/stream/:device", (req, res) => {
+  const { device } = req.params;
+  if (!/^(laptop|phone)$/.test(device)) return res.status(404).end();
+  const file = path.join(liveDir(req.params.id), device, "live.jpg");
+  const B = "arenaframe";
+  res.writeHead(200, {
+    "content-type": `multipart/x-mixed-replace; boundary=${B}`,
+    "cache-control": "no-store, no-cache, must-revalidate",
+    pragma: "no-cache",
+    connection: "close",
+    "x-content-type-options": "nosniff",
+  });
+  let last = 0;
+  let idleSince = Date.now();
+  const started = Date.now();
+  const send = () => {
+    let st;
+    try {
+      st = fs.statSync(file);
+    } catch {
+      st = null;
     }
-    const today = new Date().toISOString().slice(0, 10);
-    if (publicDay.day !== today) Object.assign(publicDay, { day: today, n: 0 });
-    if (publicDay.n >= Number(process.env.PUBLIC_RUNS_PER_DAY || 40)) return res.status(429).json({ error: "Today's free judge runs are used up. Come back tomorrow." });
-    publicDay.n++;
-    lastRun.set(id, Date.now());
-    // Reuse screenshot observations already read on 0G (free); never pay for new ones from a public click.
-    reviewNow(id, { evidence: EVIDENCE_ENABLED || hasCachedEvidence(project) }).catch((e) => console.error(`[judges] public review of ${id} failed: ${e.message}`));
-    res.status(202).json({ running: true, progress: progress.get(id) ?? null });
-  },
-);
+    if (st && st.mtimeMs !== last) {
+      last = st.mtimeMs;
+      idleSince = Date.now();
+      let jpg;
+      try {
+        jpg = fs.readFileSync(file);
+      } catch {
+        return;
+      }
+      res.write(`--${B}\r\ncontent-type: image/jpeg\r\ncontent-length: ${jpg.length}\r\n\r\n`);
+      res.write(jpg);
+      res.write("\r\n");
+    }
+    // No new frame for 30 s (run finished or not started), or 20 min overall: stop.
+    if (Date.now() - idleSince > 30000 || Date.now() - started > 20 * 60 * 1000) stop();
+  };
+  const timer = setInterval(send, 200);
+  const stop = () => {
+    clearInterval(timer);
+    res.end();
+  };
+  req.on("close", () => clearInterval(timer));
+  send();
+});
+
+/** Is a device being watched right now? (a fresh live frame exists) */
+router.get("/projects/:id/live/now", (req, res) => {
+  const out = {};
+  for (const d of ["laptop", "phone"]) {
+    try {
+      out[d] = Date.now() - fs.statSync(path.join(liveDir(req.params.id), d, "live.jpg")).mtimeMs < 15000;
+    } catch {
+      out[d] = false;
+    }
+  }
+  res.json(out);
+});
+
+router.get("/projects/:id/live/files/:device/:file", (req, res) => {
+  const { device, file } = req.params;
+  if (!/^(laptop|phone)$/.test(device) || !/^(video\.mp4|smoke-(laptop|phone)-[a-z0-9]+\.jpg)$/.test(file)) return res.status(404).end();
+  const full = path.join(liveDir(req.params.id), device, file);
+  if (!fs.existsSync(full)) return res.status(404).end();
+  res.sendFile(full, { headers: { "cache-control": "private, max-age=3600" } });
+});
+
+/* ---- Demo videos ---- */
+
+const VIDEO_TYPES = new Set(["video/mp4", "video/quicktime", "video/webm", "application/octet-stream"]);
+
+/** Upload a demo video before signing: the returned ref goes into the signed submission. */
+router.post("/uploads/video", rateLimit({ max: 10, windowMs: 60 * 60 * 1000, message: "Too many uploads from here. Try again later." }), async (req, res) => {
+  const type = String(req.headers["content-type"] ?? "").split(";")[0].trim().toLowerCase();
+  if (!VIDEO_TYPES.has(type)) return res.status(415).json({ error: "Upload an MP4, MOV or WebM video." });
+  const declared = Number(req.headers["content-length"] ?? 0);
+  if (declared > VIDEO_MAX) return res.status(413).json({ error: `That video is over ${Math.round(VIDEO_MAX / 1048576)} MB.` });
+  try {
+    const up = await storeUpload(req, { declaredBytes: declared });
+    res.status(201).json({ ref: `upload:${up.file}`, url: `/api/uploads/${up.file}`, bytes: up.bytes, seconds: up.seconds });
+  } catch (e) {
+    if (!res.headersSent) res.status(e.status ?? 500).json({ error: e.status ? e.message : "The upload failed. Try again." });
+    req.resume();
+  }
+});
+
+router.post("/uploads/image", rateLimit({ max: 60, windowMs: 60 * 60 * 1000, message: "Too many uploads from here. Try again later." }), async (req, res) => {
+  const type = String(req.headers["content-type"] ?? "").split(";")[0].trim().toLowerCase();
+  if (!["image/png", "image/jpeg", "image/webp", "application/octet-stream"].includes(type)) return res.status(415).json({ error: "Upload a PNG, JPEG or WebP image." });
+  if (Number(req.headers["content-length"] ?? 0) > IMAGE_MAX) return res.status(413).json({ error: "That image is over 10 MB." });
+  try {
+    const up = await storeImageUpload(req);
+    res.status(201).json({ ref: `upload:${up.file}`, url: `/api/uploads/${up.file}`, bytes: up.bytes });
+  } catch (e) {
+    if (!res.headersSent) res.status(e.status ?? 500).json({ error: e.status ? e.message : "The upload failed. Try again." });
+    req.resume();
+  }
+});
+
+const sendVideo = (res, full, ext) =>
+  res.sendFile(full, { headers: { "content-type": MIME[ext], "x-content-type-options": "nosniff", "content-disposition": "inline", "cache-control": "private, max-age=3600" } });
+
+router.get("/uploads/:file", (req, res) => {
+  const { file } = req.params;
+  if (!UPLOAD_FILE.test(file)) return res.status(404).end();
+  const full = path.join(UPLOAD_DIR, file);
+  if (!fs.existsSync(full)) return res.status(404).end();
+  sendVideo(res, full, path.extname(file).slice(1));
+});
+
+router.get("/projects/:id/video", (req, res) => res.json({ video: publicVideo(req.params.id) }));
+
+router.get("/projects/:id/video/file", (req, res) => {
+  const v = videos.get(req.params.id);
+  if (!v || v.error || !MIME[v.ext]) return res.status(404).end();
+  const full = path.join(mediaDir(req.params.id), `demo.${v.ext}`);
+  if (!fs.existsSync(full)) return res.status(404).end();
+  sendVideo(res, full, v.ext);
+});
+
+// Uploads nobody submitted are removed after a day.
+const referencedUploads = () =>
+  new Set(
+    submissions
+      .list()
+      .flatMap((s) => [UPLOAD_REF.exec(s.demoVideoUrl ?? "")?.[1], ...(s.demoImages ?? []).map((r) => IMAGE_REF.exec(String(r))?.[1])])
+      .filter(Boolean),
+  );
+if (process.env.ARENA_SERVER === "1") {
+  const sweep = () => {
+    try {
+      cleanUploads(referencedUploads());
+    } catch (e) {
+      console.warn("[uploads] clean-up failed:", e.message);
+    }
+  };
+  sweep();
+  setInterval(sweep, 60 * 60 * 1000).unref();
+}
+
+/** Delete a submitted project and everything stored for it. */
+router.delete("/projects/:id", requireOrganizer, (req, res) => {
+  const id = req.params.id;
+  if (!submissions.get(id)) return res.status(404).json({ error: "No such submitted project." });
+  if (isRunning(id)) return res.status(409).json({ error: "Its review is running right now. Try again when it finishes." });
+  dequeue(id);
+  deleteProject(id);
+  res.status(204).end();
+});
+
+router.post("/projects/:id/pipeline", requireOrganizer, (req, res) => {
+  if (!submissions.get(req.params.id)) return res.status(404).json({ error: "No such submitted project." });
+  enqueue(req.params.id, { judge: reviewNow });
+  res.status(202).json({ review: reviewStatus(req.params.id), state: pipelines.get(req.params.id) });
+});
+
+router.get("/projects/:id/reviews", (req, res) => {
+  const id = req.params.id;
+  const r = reviews.get(id);
+  // Keep the panel polling while the pipeline prepares evidence or waits in line.
+  res.json({ running: running.has(id) || isRunning(id) || queuePosition(id) != null, progress: progress.get(id) ?? null, result: r, zgStorage: r ? zgStatus("review", id) : null });
+});
 
 router.post("/projects/:id/reviews", requireOrganizer, async (req, res) => {
   try {
@@ -354,3 +650,10 @@ router.post("/storage/verify/:kind/:id", rateLimit({ max: 20, windowMs: 60 * 100
 });
 
 router.post("/storage/flush", requireOrganizer, (req, res) => res.json(archive.flush()));
+// Server start: anything submitted but not finished goes back in line.
+if (process.env.ARENA_SERVER === "1") {
+  const n = resumeQueue({ judge: reviewNow });
+  if (n) console.log(`[pipeline] resumed ${n} unfinished review(s)`);
+  startPayouts();
+  startAutorun();
+}
