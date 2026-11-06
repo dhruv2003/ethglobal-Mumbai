@@ -40,7 +40,8 @@ import path from "node:path";
 import { deleteProject, dossiers, judges, liveDir, mediaDir, pipelines, reviews, submissions, videos } from "./store.mjs";
 import { cleanUploads, IMAGE_MAX, IMAGE_REF, MAX_IMAGES, MIME, storeImageUpload, storeUpload, UPLOAD_DIR, UPLOAD_FILE, UPLOAD_REF, VIDEO_MAX } from "./reviewer/media.mjs";
 import { dequeue, enqueue, isRunning, queueLength, queuePosition, resumeQueue } from "./reviewer/pipeline.mjs";
-import { checkSubmissionSignature, rateLimit, requireOrganizer } from "./security.mjs";
+import { checkSubmissionSignature, isOrganizer, isOrganizerWallet, rateLimit, requireOrganizer } from "./security.mjs";
+import { events, submissionProblem, validateEvent } from "./events.mjs";
 import { canRead, canWrite, explorerEntity, publisher, readLatest } from "./arkiv/arkiv.mjs";
 import { lastPublish, publishInBackground, publishing, publishRun } from "./arkiv/publish.mjs";
 import { syncJudgesInBackground, syncProjectInBackground } from "./arkiv/records/sync.mjs";
@@ -69,7 +70,8 @@ export async function reviewNow(projectId, { evidence = EVIDENCE_ENABLED, freshE
   if (running.has(projectId)) return running.get(projectId);
   const project = loadProject(projectId);
   if (!project) throw Object.assign(new Error("No such project."), { status: 404 });
-  const panel = judges.list();
+  const event = events.get(submissions.get(projectId)?.eventId);
+  const panel = event ? judges.list().filter((j) => event.judgeIds.includes(j.id)) : judges.list().slice(0, 3);
   // Whoever is on the panel judges: one, two or three seats filled all work. Only an empty panel can't.
   if (!panel.length) throw Object.assign(new Error("There are no judges on the panel yet. Add one on /judge."), { status: 409 });
   if (!hasCredentials()) throw missingCredentialsError();
@@ -138,7 +140,7 @@ router.get("/health", (req, res) => {
 
 router.get("/criteria", (req, res) => res.json(CRITERIA));
 
-router.get("/judges", (req, res) => res.json(judges.list()));
+router.get("/judges", requireOrganizer, (req, res) => res.json(judges.list()));
 
 router.post("/judges", requireOrganizer, (req, res) => {
   const all = judges.list();
@@ -250,11 +252,51 @@ function checkDemoVideo(v) {
   }
 }
 
-router.get("/submissions", (req, res) => res.json(submissions.list().map(publicSubmission)));
+/** What everyone sees of a project. How the review went is for organizers. */
+const participantView = ({ review, hasDossier, ...rest }) => rest;
+
+router.get("/submissions", async (req, res) => {
+  const organizer = await isOrganizer(req);
+  const all = submissions.list().filter((s) => !req.query.eventId || s.eventId === req.query.eventId);
+  res.json(all.map(publicSubmission).map((s) => (organizer ? s : participantView(s))));
+});
+
+/** Which tabs a wallet sees. The real check happens on every organizer request. */
+router.get("/organizer", async (req, res) => {
+  if (!/^0x[0-9a-fA-F]{40}$/.test(String(req.query.wallet ?? ""))) return res.json({ isOrganizer: false });
+  res.json({ isOrganizer: await isOrganizerWallet(req.query.wallet).catch(() => false) });
+});
+
+// Tournaments: anyone can read them, only an organizer can create one.
+const publicEvent = ({ judgeIds, createdBy, ...rest }) => rest;
+router.get("/events", (req, res) => res.json(events.list().map(publicEvent)));
+router.get("/events/:id", (req, res) => {
+  const event = events.get(req.params.id);
+  return event ? res.json(publicEvent(event)) : res.status(404).json({ error: "No such tournament." });
+});
+/** Close submissions now: brackets are drawn as soon as reviews finish. */
+router.post("/events/:id/close", requireOrganizer, (req, res) => {
+  const event = events.get(req.params.id);
+  if (!event) return res.status(404).json({ error: "No such tournament." });
+  const minutes = Math.floor(Number(req.body?.bettingMinutes));
+  const now = new Date().toISOString();
+  const deadline = Date.parse(event.deadline) > Date.now() ? now : event.deadline;
+  events.update(event.id, { deadline, ...(minutes >= 1 && minutes <= 1440 ? { bettingMinutes: minutes } : {}) });
+  res.json(publicEvent(events.get(event.id)));
+});
+
+router.post("/events", requireOrganizer, (req, res) => {
+  const { event, errors } = validateEvent(req.body, { existing: events.list(), judgeIds: judges.list().map((j) => j.id), createdBy: req.organizerWallet ?? null });
+  if (errors) return res.status(400).json({ error: Object.values(errors)[0], errors });
+  events.add(event);
+  res.status(201).json(event);
+});
 
 router.post("/submissions", rateLimit({ max: 5, windowMs: 60 * 60 * 1000 }), async (req, res) => {
   const body = req.body ?? {};
   if (!body.project?.name || !body.repoUrl || !body.ownerWallet) return res.status(400).json({ error: "Missing project name, repo or owner wallet." });
+  const entryError = submissionProblem(events.get(body.eventId), body.tracks);
+  if (entryError) return res.status(400).json({ error: entryError });
   const videoError = checkDemo(body);
   if (videoError) return res.status(400).json({ error: videoError });
   const sigError = await checkSubmissionSignature(body, {
@@ -269,18 +311,18 @@ router.post("/submissions", rateLimit({ max: 5, windowMs: 60 * 60 * 1000 }), asy
   res.status(201).json(publicSubmission(record));
 });
 
-router.get("/projects/:id/pipeline", (req, res) => {
+router.get("/projects/:id/pipeline", requireOrganizer, (req, res) => {
   res.json({ running: isRunning(req.params.id), review: reviewStatus(req.params.id), queueLength: queueLength(), state: pipelines.get(req.params.id) });
 });
 
-router.get("/projects/:id/dossier", (req, res) => res.json({ dossier: dossiers.get(req.params.id) }));
+router.get("/projects/:id/dossier", requireOrganizer, (req, res) => res.json({ dossier: dossiers.get(req.params.id) }));
 
 /** Live test results for a submitted project; media under /live/files/... */
 /*
  * The judged result as published on Arkiv, read back from Arkiv itself (not from
  * the local store), with links to the evidence bundle on Swarm.
  */
-router.get("/projects/:id/arkiv", async (req, res) => {
+router.get("/projects/:id/arkiv", requireOrganizer, async (req, res) => {
   const id = req.params.id;
   const last = lastPublish(id);
   const out = { configured: { read: canRead(), write: canWrite(), swarm: swarmConfigured() }, publishing: publishing.has(id), last, onchain: null };
@@ -338,7 +380,7 @@ router.post("/projects/:id/arkiv", requireOrganizer, async (req, res) => {
   res.json(await publishRun(project, result));
 });
 
-router.get("/projects/:id/live", (req, res) => {
+router.get("/projects/:id/live", requireOrganizer, (req, res) => {
   try {
     res.json({ liveTest: JSON.parse(fs.readFileSync(path.join(liveDir(req.params.id), "smoke.json"), "utf8")) });
   } catch {
@@ -507,7 +549,7 @@ router.post("/projects/:id/pipeline", requireOrganizer, (req, res) => {
   res.status(202).json({ review: reviewStatus(req.params.id), state: pipelines.get(req.params.id) });
 });
 
-router.get("/projects/:id/reviews", (req, res) => {
+router.get("/projects/:id/reviews", requireOrganizer, (req, res) => {
   const id = req.params.id;
   const r = reviews.get(id);
   // Keep the panel polling while the pipeline prepares evidence or waits in line.

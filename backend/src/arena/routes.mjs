@@ -17,7 +17,8 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import express from "express";
-import { DATA_DIR, dossiers, submissions } from "../store.mjs";
+import { DATA_DIR, dossiers, judges as judgeStore, submissions } from "../store.mjs";
+import { events } from "../events.mjs";
 import { requireOrganizer } from "../security.mjs";
 import { hasCredentials } from "../judges/review.mjs";
 import { judgeCast, runFight } from "./fight.mjs";
@@ -87,7 +88,7 @@ arenaRouter.post("/matchmaking", requireOrganizer, async (req, res) => {
 });
 
 /** Saves a bracket: slot order, project details and how it was drawn. Throws with a status. */
-export function saveBracket(id, { title, track, submissionIds, proposal }) {
+export function saveBracket(id, { title, track, submissionIds, proposal, eventId, trackId }) {
   const refuse = (status, message) => Object.assign(new Error(message), { status });
   if (!Array.isArray(submissionIds) || ![2, 4, 8, 16].includes(submissionIds.length)) throw refuse(400, "A bracket holds 2, 4, 8 or 16 projects.");
   if (new Set(submissionIds).size !== submissionIds.length) throw refuse(400, "A project can only appear once.");
@@ -106,7 +107,7 @@ export function saveBracket(id, { title, track, submissionIds, proposal }) {
     matching = { manual: false, algorithmVersion: b.algorithmVersion, seed: b.seed, embeddingModel: b.embeddingModel, weights: b.weights, inputHash: b.inputHash, resultHash: b.resultHash, firstRound: b.firstRound };
   }
   const prior = readJson(tournamentFile(id));
-  const record = { id: String(id), title: String(title || `Tournament #${id}`).slice(0, 80), track: String(track || "Open").slice(0, 40), matching, createdAt: prior?.createdAt ?? new Date().toISOString(), projects };
+  const record = { id: String(id), title: String(title || `Tournament #${id}`).slice(0, 80), track: String(track || "Open").slice(0, 40), matching, eventId: eventId ?? prior?.eventId ?? null, trackId: trackId ?? prior?.trackId ?? null, createdAt: prior?.createdAt ?? new Date().toISOString(), projects };
   writeJson(tournamentFile(id), record);
   syncTournamentInBackground(id);
   return record;
@@ -129,7 +130,7 @@ export const listBrackets = () => {
 
 export function statusOf(t, m) {
   const live = running.get(`${t}-${m}`);
-  if (live) return { status: "running", note: live.note, startedAt: live.startedAt, eventCount: live.events.length, events: live.events };
+  if (live) return { status: "running", revealAt: live.revealAt, cast: live.cast, note: live.note, startedAt: live.startedAt, eventCount: live.events.length, events: live.events };
   const saved = readJson(fightFile(t, m));
   if (saved?.error) return { status: "failed", error: saved.error, ranAt: saved.ranAt };
   if (saved) return { status: "done", ...saved };
@@ -138,13 +139,26 @@ export function statusOf(t, m) {
 
 arenaRouter.get("/fights/:t/:m", (req, res) => {
   const s = statusOf(req.params.t, req.params.m);
+  // A fight runs while betting is open, so nothing about it may show until betting closes.
+  if (s.status === "running") return res.json({ status: "running", startedAt: s.startedAt, judges: s.cast ?? judgeCast() });
   if (s.status === "done" && s.revealAt && Date.now() < s.revealAt) {
     return res.json({ status: "sealed", revealAt: s.revealAt, judges: judgeCast() });
   }
-  res.json({ ...s, judges: judgeCast() });
+  res.json({ ...s, judges: s.cast ?? judgeCast() });
 });
 
-arenaRouter.post("/fights/:t/:m/result", requireOrganizer, (req, res) => res.json({ ...statusOf(req.params.t, req.params.m), judges: judgeCast() }));
+arenaRouter.post("/fights/:t/:m/result", requireOrganizer, (req, res) => { const s = statusOf(req.params.t, req.params.m); res.json({ ...s, judges: s.cast ?? judgeCast() }); });
+
+/** How many fights are running, so several brackets don't all hit 0G at once. */
+export const runningFights = () => running.size;
+
+/** The tournament's chosen judges in the shape the fight agents use; undefined keeps the default panel. */
+function fightJudges(meta) {
+  const event = events.get(meta.eventId);
+  if (!event) return undefined;
+  const panel = judgeStore.list().filter((j) => event.judgeIds.includes(j.id));
+  return panel.length ? panel.map((j) => ({ id: j.id, name: j.name, focus: j.title, tone: j.tone ?? "fair" })) : undefined;
+}
 
 /** Starts a fight in the background. Throws with a status if it can't start. */
 export function startFight(t, m, { a: slotA, b: slotB, revealAt, rerun } = {}) {
@@ -165,12 +179,14 @@ export function startFight(t, m, { a: slotA, b: slotB, revealAt, rerun } = {}) {
     const sub = submissions.get(p.submissionId);
     corners[side] = { project: { name: p.name, pitch: p.pitch, tracks: p.tracks }, dossier: dossiers.get(p.submissionId), submission: sub };
   }
-  const live = { startedAt: new Date().toISOString(), note: "Starting", events: [] };
+  const panel = fightJudges(meta);
+  const cast = judgeCast(panel);
+  const live = { startedAt: new Date().toISOString(), note: "Starting", events: [], cast, revealAt: Number(revealAt) || 0 };
   running.set(key, live);
 
-  runFight({ corners, onProgress: (note, events) => Object.assign(live, { note, events }) })
+  runFight({ corners, judges: panel, onProgress: (note, fightEvents) => Object.assign(live, { note, events: fightEvents }) })
     .then((result) => {
-      writeJson(fightFile(t, m), { tournamentId: String(t), match: Number(m), a: a.index, b: b.index, revealAt: Number(revealAt) || 0, ranAt: new Date().toISOString(), id: crypto.randomUUID(), ...result });
+      writeJson(fightFile(t, m), { tournamentId: String(t), match: Number(m), a: a.index, b: b.index, cast, revealAt: Number(revealAt) || 0, ranAt: new Date().toISOString(), id: crypto.randomUUID(), ...result });
     })
     .catch((e) => {
       console.error(`[fight ${key}] failed: ${e.message}`);
@@ -204,13 +220,7 @@ const asBot = (action) => async (req, res) => {
 arenaRouter.post("/tournaments/:id/matches/:m/open", requireOrganizer, asBot((s, req) => s.openMatchAsBot(req.params.id, req.params.m, req.body?.minutes)));
 arenaRouter.post("/tournaments/:id/matches/:m/void", requireOrganizer, asBot((s, req) => s.voidMatchAsBot(req.params.id, req.params.m, `0x${crypto.createHash("sha256").update("organizer").digest("hex")}`)));
 
-/** Whether the server can run tournaments by itself, and starting one by hand with chosen projects. */
+arenaRouter.post("/tournaments/:id/cancel", requireOrganizer, asBot((s, req) => s.cancelTournamentAsBot(req.params.id, `0x${crypto.createHash("sha256").update("organizer").digest("hex")}`)));
+
+/** Whether the server can run tournaments by itself. */
 arenaRouter.get("/auto", async (req, res) => res.json((await import("./autorunService.mjs")).autoStatus()));
-arenaRouter.post("/auto/start", requireOrganizer, async (req, res) => {
-  try {
-    const service = await import("./autorunService.mjs");
-    res.status(201).json({ tournamentId: await service.startTournamentNow(req.body?.submissionIds) });
-  } catch (e) {
-    res.status(e.status ?? 502).json({ error: e.shortMessage ?? e.message });
-  }
-});

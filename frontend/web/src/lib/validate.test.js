@@ -49,7 +49,7 @@ describe("validate", () => {
   });
 
   it("rejects tracks not on the event list", () => {
-    expect(errs(setIn(validForm(), "tracks.selected", ["made-up"]))["tracks.selected"]).toMatch(/isn't on this event's list/);
+    expect(validate(setIn(validForm(), "tracks.selected", ["made-up"]), { walletAddress: WALLET, tracks: [{ id: "base" }] }).errors["tracks.selected"]).toMatch(/isn't on this event's list/);
   });
 
   it("only accepts GitHub repo URLs", () => {

@@ -93,7 +93,7 @@ function ScoredCard({ r, i, j, rv, rows }) {
           </button>
         )}
       </div>
-      {rv.dealBreakerHit && <StatusPill tone="danger">✕ Deal-breaker: {rv.dealBreakerNote}</StatusPill>}
+      {rv.dealBreakerHit && <p className="jcard__deal m0">✕ Deal-breaker: {rv.dealBreakerNote}</p>}
       <div className="jcard__parts">
         <span className="t-label">How {j.name.split(" ")[0]} scored each part</span>
         <ul className="jcrit">

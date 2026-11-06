@@ -21,14 +21,14 @@ const evidenceChips = (ids = [], ctx) => ids.map((id) => ({ kind: "evidence", la
 const MOVES = { implemented_feature: "Feature Check", test_evidence: "Test Strike", user_value: "User Story Sweep", limitation_acknowledged: "Limits Probe", future_plan: "Roadmap Check", challenge: "Evidence Challenge", rebuttal: "Counter", clarification: "Clarify" };
 
 /** The judge panel as the player shows it. */
-export const judgeCast = () =>
-  Object.fromEntries(DEFAULT_JUDGES.map((j) => [j.id, { name: j.name.replace(/^The /, "").replace(/ Judge$/, ""), focus: j.focus.split(",")[0] }]));
+export const judgeCast = (judges = DEFAULT_JUDGES) =>
+  Object.fromEntries(judges.map((j) => [j.id, { name: j.name.replace(/^The /, "").replace(/ Judge$/, ""), focus: j.focus.split(",")[0] }]));
 
 /**
  * corners: { A: { project: {name,pitch,tracks}, dossier }, B: ... }
  * onProgress(text, events): called as the fight advances (events = player events so far).
  */
-export async function runFight({ corners, onProgress = () => {} }) {
+export async function runFight({ corners, onProgress = () => {}, judges = DEFAULT_JUDGES }) {
   const ctx = matchContext(corners);
   const out = []; // player events (lowercase sides)
   const model = []; // agent-format events the models read as the transcript
@@ -51,13 +51,13 @@ export async function runFight({ corners, onProgress = () => {} }) {
     emit({ type: "pitch", actor: lc(s), text: fighters[s].openingPitch }, fighters[s].trace);
   }
 
-  const cards = DEFAULT_JUDGES.map((j) => ({ judgeId: j.id, scores: {}, A: {}, B: {} })); // per judge, per criterion
+  const cards = judges.map((j) => ({ judgeId: j.id, scores: {}, A: {}, B: {} })); // per judge, per criterion
   const sealedByRound = {};
 
   for (const [i, c] of CRITERIA.entries()) {
     note(`Round ${i + 1} of ${CRITERIA.length}: ${c.name}`);
     emit({ type: "round_start", round: c.id });
-    const judge = DEFAULT_JUDGES[i % DEFAULT_JUDGES.length];
+    const judge = judges[i % judges.length];
 
     const q = await agents.judgeQuestion({ judge, criterionId: c.id, ctx, events: model });
     keep(q.traces);
@@ -104,7 +104,7 @@ export async function runFight({ corners, onProgress = () => {} }) {
     }
 
     // Three judges score independently and in parallel, never seeing each other (JDG-03).
-    const round = await Promise.all(DEFAULT_JUDGES.map((j) => agents.judgeScorecard({ judge: j, criterionId: c.id, ctx, events: model, challenges: chList })));
+    const round = await Promise.all(judges.map((j) => agents.judgeScorecard({ judge: j, criterionId: c.id, ctx, events: model, challenges: chList })));
     round.forEach((r) => keep(r.traces));
     for (const ch of chList) {
       const votes = Object.fromEntries(round.map((r) => [r.judgeId, r.rulings.find((x) => x.challengeId === ch.challengeId)?.label ?? "inconclusive"]));
@@ -129,7 +129,7 @@ export async function runFight({ corners, onProgress = () => {} }) {
   if (decision.step === MATCH_STEP.RUN_TIEBREAK) {
     note("Scores tied: running the tie-break round");
     emit({ type: "tie_break", stage: "start" });
-    const judge = DEFAULT_JUDGES[0];
+    const judge = judges[0];
     const q = await agents.judgeQuestion({ judge, criterionId: "product", ctx, events: model, tiebreak: true });
     keep(q.traces);
     say({ actor: judge.id, round: "tiebreak", type: "question", text: q.question });
@@ -148,10 +148,10 @@ export async function runFight({ corners, onProgress = () => {} }) {
     });
     // Product reasoning is scored on the product lens, evidence/defense accuracy on the defense lens.
     const [reason, defense] = await Promise.all(
-      ["product", "defense"].map((cid) => Promise.all(DEFAULT_JUDGES.map((j) => agents.judgeScorecard({ judge: j, criterionId: cid, ctx, events: model, challenges: [] })))),
+      ["product", "defense"].map((cid) => Promise.all(judges.map((j) => agents.judgeScorecard({ judge: j, criterionId: cid, ctx, events: model, challenges: [] })))),
     );
     [...reason, ...defense].forEach((r) => keep(r.traces));
-    const tb = (side) => DEFAULT_JUDGES.map((j, k) => ({ judgeId: j.id, scores: { productReasoning: reason[k].scores[side].score, evidenceDefense: defense[k].scores[side].score } }));
+    const tb = (side) => judges.map((j, k) => ({ judgeId: j.id, scores: { productReasoning: reason[k].scores[side].score, evidenceDefense: defense[k].scores[side].score } }));
     const tiebreak = { a: tb("A"), b: tb("B") };
     decision = decideMatch({ ...mainInput, tiebreak });
     tie = { a: computeFinalScore(tiebreak.a, TIEBREAK_RUBRIC).finalHundredths, b: computeFinalScore(tiebreak.b, TIEBREAK_RUBRIC).finalHundredths };

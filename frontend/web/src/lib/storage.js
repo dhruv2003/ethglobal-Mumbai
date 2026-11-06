@@ -70,6 +70,7 @@ export async function submissionDigest(p) {
     tracks: p.tracks ?? [],
     ownerWallet: String(p.ownerWallet ?? "").toLowerCase(),
     fighterSeed: p.fighterSeed ?? null,
+    eventId: p.eventId ?? null,
   });
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(canonical));
   return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");

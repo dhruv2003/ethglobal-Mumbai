@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { StatusPill } from "@ds/ui.jsx";
 import { SplitWords, bouncy, easeOut } from "./fx.jsx";
-import { api, health, organizerKey } from "../lib/api.js";
+import { api, health } from "../lib/api.js";
 import { Ring } from "./Arena.jsx";
 import { PixelFighter } from "./PixelFighter.jsx";
 import { VoiceNote } from "./VoiceNote.jsx";
@@ -275,7 +275,6 @@ export function JudgesPage() {
   const [state, setState] = useState({ loading: true });
   const [editor, setEditor] = useState(null); // { editing?: judge }
   const [error, setError] = useState("");
-  const [key, setKey] = useState(organizerKey.get());
 
   async function load() {
     const h = await health();
@@ -322,7 +321,7 @@ export function JudgesPage() {
   }
 
   const { criteria, judges, health: h } = state;
-  const seats = Array.from({ length: h.maxJudges }, (_, i) => judges[i] ?? null);
+  const seats = judges.length < h.maxJudges ? [...judges, null] : judges;
 
   async function remove(j) {
     if (!window.confirm(`Remove ${j.name} from the panel?`)) return;
@@ -342,13 +341,12 @@ export function JudgesPage() {
             <SplitWords>Judges</SplitWords>
           </h1>
           <p className="t-body m0 muted rise" style={{ "--i": 1 }}>
-            Three AI judges score every project, each with their own priorities.
+            Your pool of AI judges. Each tournament picks 3 of them to score its projects.
           </p>
         </div>
         <div className="fighter-card__badges rise" style={{ "--i": 2 }}>
-          <StatusPill tone={judges.length === h.maxJudges ? "success" : "neutral"}>
-            {judges.length === h.maxJudges ? "✓ " : ""}
-            {judges.length}/{h.maxJudges} seats filled
+          <StatusPill tone={judges.length >= 3 ? "success" : "neutral"}>
+            {judges.length} {judges.length === 1 ? "judge" : "judges"} in your pool
           </StatusPill>
           <StatusPill tone={h.judgesReady ? "live" : "neutral"}>
             {h.judgesReady ? `Agents ready · ${h.model}${h.provider === "0g" ? " on 0G" : ""}` : `No ${h.providerLabel ?? h.provider} key on the server`}
@@ -360,25 +358,6 @@ export function JudgesPage() {
           ✕ {error}
         </p>
       )}
-      <details className="organizer" open={Boolean(key)}>
-        <summary className="t-caption">Organizer key</summary>
-        <div className="organizer__row">
-          <input
-            className="input t-mono"
-            type="password"
-            autoComplete="off"
-            placeholder="Only needed when the server sets ADMIN_TOKEN"
-            value={key}
-            onChange={(e) => {
-              setKey(e.target.value);
-              organizerKey.set(e.target.value.trim());
-            }}
-            aria-label="Organizer key"
-          />
-          <span className="t-caption">Needed to add, edit or remove judges. Kept in this tab only.</span>
-        </div>
-      </details>
-
       <AnimatePresence mode="wait">
       {editor ? (
         <JudgeForm

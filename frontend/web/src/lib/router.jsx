@@ -21,13 +21,15 @@ export function usePath() {
 /** "/" landing, "/projects" dashboard, "/projects/:id" one project, "/submit" the form, "/judge" the judges, plus the arena and betting pages below. Unknown paths land home. */
 export function matchRoute(path) {
   const p = path.replace(/\/+$/, "") || "/";
-  if (p === "/submit") return { name: "form" };
+  if (p === "/submit") return { name: "tournaments", rewrite: "/tournaments" }; // you enter through a tournament
   if (p === "/wallet") return { name: "wallet" };
   if (p === "/organizer") return { name: "organizer" };
   if (p === "/arena") return { name: "arena" };
   if (p === "/tournaments") return { name: "tournaments" };
+  const entering = p.match(/^\/tournaments\/([^/]+)\/submit$/);
+  if (entering) return { name: "form", eventId: decodeURIComponent(entering[1]) };
   const tournament = p.match(/^\/tournaments\/([^/]+)$/);
-  if (tournament) return { name: "tournament", id: decodeURIComponent(tournament[1]) };
+  if (tournament) return { name: /^\d+$/.test(tournament[1]) ? "tournament" : "event", id: decodeURIComponent(tournament[1]) };
   const fight = p.match(/^\/fights\/([^/]+)\/(\d+)$/);
   if (fight) return { name: "matchFight", id: decodeURIComponent(fight[1]), match: Number(fight[2]) };
   if (p === "/judge" || p === "/judges") return { name: "judges" };
@@ -41,7 +43,8 @@ export function matchRoute(path) {
 export function useCanonical(route) {
   useEffect(() => {
     if (route.name === "home" && !route.canonical) history.replaceState({}, "", "/");
-  }, [route.name, route.canonical]);
+    if (route.rewrite) history.replaceState({}, "", route.rewrite);
+  }, [route.name, route.canonical, route.rewrite]);
 }
 
 /** <Link> that routes in-app but stays a real link (new tab, copy URL). */

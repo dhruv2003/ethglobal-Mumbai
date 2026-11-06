@@ -2,6 +2,7 @@
  * Projects shown on /projects: whatever teams submitted, from the backend's store.
  */
 import { api } from "./api.js";
+import { listEvents } from "./events.js";
 import { uploadUrl } from "./video.js";
 
 function fromSubmission(r) {
@@ -22,6 +23,7 @@ function fromSubmission(r) {
     liveUrl: r.liveUrl ?? null,
     tracks: r.tracks ?? [],
     pinnedCommit: null,
+    eventId: r.eventId ?? null,
     event: null,
     showcaseUrl: null,
     ownerWallet: r.ownerWallet ?? null,
@@ -34,8 +36,9 @@ function fromSubmission(r) {
 }
 
 export async function listProjects() {
-  const remote = await api("/submissions");
-  return remote.map(fromSubmission).sort((a, b) => String(b.submittedAt).localeCompare(String(a.submittedAt)));
+  const [remote, events] = await Promise.all([api("/submissions"), listEvents().catch(() => [])]);
+  const nameOf = new Map(events.map((e) => [e.id, e.name]));
+  return remote.map((r) => ({ ...fromSubmission(r), event: nameOf.get(r.eventId) ?? null })).sort((a, b) => String(b.submittedAt).localeCompare(String(a.submittedAt)));
 }
 
 export async function getProject(id) {

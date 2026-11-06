@@ -3,30 +3,16 @@
  * preview: see vite.config.js). Every call fails soft: callers decide what to
  * show when the judge service is offline.
  */
-const KEY_SLOT = "arena.organizerKey";
-/** Organizer key for judge/review actions. Kept for this browser tab only. */
-export const organizerKey = {
-  get: () => {
-    try {
-      return sessionStorage.getItem(KEY_SLOT) ?? "";
-    } catch {
-      return "";
-    }
-  },
-  set: (v) => {
-    try {
-      v ? sessionStorage.setItem(KEY_SLOT, v) : sessionStorage.removeItem(KEY_SLOT);
-    } catch {
-      /* storage blocked: the key just won't persist */
-    }
-  },
+let organizerSession = null;
+/** Set by lib/organizer.js. Every request then proves this wallet is an organizer. */
+export const setOrganizerSession = (session) => {
+  organizerSession = session;
 };
+const organizerHeaders = () => (organizerSession ? { "x-organizer": btoa(JSON.stringify(organizerSession)) } : {});
 
 export async function api(path, { method = "GET", body } = {}) {
-  const headers = {};
+  const headers = organizerHeaders();
   if (body) headers["content-type"] = "application/json";
-  const key = method !== "GET" ? organizerKey.get() : "";
-  if (key) headers.authorization = `Bearer ${key}`;
   const res = await fetch(`/api${path}`, {
     method,
     headers,
@@ -49,9 +35,7 @@ export const health = () => api("/health").catch(() => null);
 
 /** POST a file or recording as the raw request body (organizer key attached). */
 export async function upload(path, blob) {
-  const headers = { "content-type": blob.type || "application/octet-stream" };
-  const key = organizerKey.get();
-  if (key) headers.authorization = `Bearer ${key}`;
+  const headers = { "content-type": blob.type || "application/octet-stream", ...organizerHeaders() };
   const res = await fetch(`/api${path}`, { method: "POST", headers, body: blob });
   let data = null;
   try {

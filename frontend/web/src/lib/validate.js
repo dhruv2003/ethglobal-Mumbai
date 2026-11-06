@@ -19,7 +19,7 @@ export const LIMITS = { teamName: 60, projectName: 60, pitch: 140, description: 
 
 const blank = (v) => !String(v ?? "").trim();
 
-export function validate(d, { walletAddress = "" } = {}) {
+export function validate(d, { walletAddress = "", tracks } = {}) {
   const errors = {};
   const req = (path, v, msg) => {
     if (blank(v)) errors[path] = msg;
@@ -59,9 +59,8 @@ export function validate(d, { walletAddress = "" } = {}) {
   const live = (d.demo.liveUrl ?? "").trim();
   if (live && !isHttpsUrl(live)) errors["demo.liveUrl"] = "Use an https:// link to the running app.";
 
-  const known = new Set(EVENT.tracks.map((t) => t.id));
   if (d.tracks.selected.length > EVENT.maxTracks) errors["tracks.selected"] = `Pick at most ${EVENT.maxTracks} tracks.`;
-  else if (d.tracks.selected.some((id) => !known.has(id))) errors["tracks.selected"] = "One of your tracks isn't on this event's list.";
+  else if (tracks && d.tracks.selected.some((id) => !tracks.some((t) => t.id === id))) errors["tracks.selected"] = "One of your tracks isn't on this event's list.";
 
   if (!walletAddress) errors.wallet = "Connect your wallet to submit.";
 
