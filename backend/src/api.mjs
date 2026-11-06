@@ -239,7 +239,7 @@ router.post("/projects/:id/arkiv", requireOrganizer, async (req, res) => {
   const project = loadProject(req.params.id);
   const result = reviews.get(req.params.id);
   if (!project || !result) return res.status(404).json({ error: "No judged result to publish." });
-  if (!canWrite()) return res.status(503).json({ error: "Arkiv is not set up: set ARKIV_PRIVATE_KEY in backend/.env." });
+  if (!canWrite()) return res.status(503).json({ error: "Arkiv is not set up: set ARKIV_PRIVATE_KEY or PUBLISHER_PRIVATE_KEY in backend/.env." });
   res.json(await publishRun(project, result));
 });
 

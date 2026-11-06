@@ -6,11 +6,12 @@
  *                           reference of the evidence bundle (field swarmRef)
  *   battle-arena.scorecard  one per judge per run, linked to its panel by key
  *
- * Owner: the arena's publisher wallet (ARKIV_PRIVATE_KEY). Entities are created
+ * Owner: the arena's publisher wallet. Entities are created
  * readonly, so a published score can't be edited (PRD REC-09), and expire after
  * ARKIV_TTL_DAYS (default 120: PRD DAT-05 keeps evidence 90+ days after an event).
  *
- *   ARKIV_PRIVATE_KEY  test wallet that writes (fund it with tGLM at hub.arkiv.network/faucet)
+ *   ARKIV_PRIVATE_KEY  optional dedicated test wallet that writes (fund it with tGLM)
+ *   PUBLISHER_PRIVATE_KEY  existing arena publisher wallet; used when ARKIV_PRIVATE_KEY is absent
  *   ARKIV_ACCESS_KEY   RPC access key (hub.arkiv.network/access-keys); without it the
  *                      rate-limited public RPC is used
  *   ARKIV_PUBLISHER    address to read from when this server doesn't write (optional)
@@ -74,11 +75,24 @@ export const explorerQuery = (q) => `${EXPLORER}/entity-explorer?q=${encodeURICo
 export const explorerEntity = (k) => explorerQuery(`$key = key(${k})`);
 
 const chain = () => rabdi({ accessKey: process.env.ARKIV_ACCESS_KEY ?? "" });
-const account = () => (process.env.ARKIV_PRIVATE_KEY ? privateKeyToAccount(process.env.ARKIV_PRIVATE_KEY) : null);
+// An access key only identifies/rate-limits RPC calls; a wallet key signs writes.
+// Prefer a dedicated Arkiv key, but reuse the arena publisher signer when configured.
+const signingKey = () => process.env.ARKIV_PRIVATE_KEY || process.env.PUBLISHER_PRIVATE_KEY || null;
+/** MetaMask exports keys without "0x"; viem needs it. Accept both, and stray quotes or spaces. */
+export function normalizeKey(raw) {
+  const k = String(raw).trim().replace(/^["']|["']$/g, "");
+  const hex = k.startsWith("0x") || k.startsWith("0X") ? k.slice(2) : k;
+  if (!/^[0-9a-fA-F]{64}$/.test(hex)) throw new Error("ARKIV_PRIVATE_KEY must be 64 hex characters (with or without 0x).");
+  return `0x${hex}`;
+}
+const account = () => {
+  const value = signingKey();
+  return value ? privateKeyToAccount(normalizeKey(value)) : null;
+};
 
 /** The wallet whose entities this server trusts and shows. */
 export const publisher = () => account()?.address ?? process.env.ARKIV_PUBLISHER ?? null;
-export const canWrite = () => Boolean(process.env.ARKIV_PRIVATE_KEY);
+export const canWrite = () => Boolean(signingKey());
 export const canRead = () => Boolean(publisher());
 
 let pub;
@@ -117,7 +131,7 @@ export function scorecardValues(projectId, panelKey, r) {
  * opts.client replaces the wallet client (tests).
  */
 export async function publishPanel(projectId, result, { swarmRef = null, client = null } = {}) {
-  if (!client && !canWrite()) throw new Error("Arkiv is not set up: set ARKIV_PRIVATE_KEY in backend/.env.");
+  if (!client && !canWrite()) throw new Error("Arkiv is not set up: set ARKIV_PRIVATE_KEY or PUBLISHER_PRIVATE_KEY in backend/.env.");
   if (result.panelHundredths == null) throw new Error("Nothing to publish: no judge scored this run.");
   const w = client ?? walletClient();
   const options = { expiration: ExpirationTime.fromDays(TTL_DAYS), flags: { readonly: true } };
@@ -139,7 +153,7 @@ const v = (col) => (col == null ? null : col.value);
  */
 export async function readLatest(projectId, { client = null } = {}) {
   const owner = publisher();
-  if (!owner) throw new Error("Arkiv reads need ARKIV_PRIVATE_KEY or ARKIV_PUBLISHER in backend/.env.");
+  if (!owner) throw new Error("Arkiv reads need a signer (ARKIV_PRIVATE_KEY or PUBLISHER_PRIVATE_KEY) or ARKIV_PUBLISHER in backend/.env.");
   const c = client ?? publicClient();
   const { entities } = await c
     .select({ $key: true, $owner: true, $expiresAt: true, projectId: true, runAt: true, panelScore: true, complete: true, judges: true, provider: true, model: true, swarmRef: true })

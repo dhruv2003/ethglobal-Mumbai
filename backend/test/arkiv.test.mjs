@@ -131,3 +131,10 @@ test("readLatest reads the newest panel by the publisher, then its scorecards", 
   assert.match(r.panel.explorer, /^https:\/\/rabdi\.explorer\.arkiv\.network\/entity-explorer\?q=/);
   assert.equal(await arkiv.readLatest("none", { client: fakeReader([[]]).client }), null);
 });
+
+test("private keys work with or without 0x; bad ones get a clear error", () => {
+  const hex = "ab".repeat(32);
+  assert.equal(arkiv.normalizeKey(hex), `0x${hex}`);
+  assert.equal(arkiv.normalizeKey(` "0x${hex}" `), `0x${hex}`);
+  assert.throws(() => arkiv.normalizeKey("abc"), /64 hex characters/);
+});
