@@ -14,11 +14,8 @@
  * once the match's betting cutoff (revealAt) has passed.
  */
 import crypto from "node:crypto";
-import fs from "node:fs";
-import path from "node:path";
 import express from "express";
-import { safeId } from "../datafiles.mjs";
-import { DATA_DIR, dossiers, judges as judgeStore, submissions } from "../store.mjs";
+import { db, dossiers, judges as judgeStore, submissions } from "../store.mjs";
 import { events } from "../events.mjs";
 import { requireOrganizer } from "../security.mjs";
 import { hasCredentials } from "../judges/review.mjs";
@@ -27,25 +24,15 @@ import { proposeBracket, verifyProposal } from "./matchmaking.mjs";
 import { syncFightInBackground, syncTournamentInBackground } from "../arkiv/records/sync.mjs";
 import { collectUiImages } from "./ui.mjs";
 
-const dir = (name) => {
-  const d = path.join(DATA_DIR, name);
-  fs.mkdirSync(d, { recursive: true });
-  return d;
+// Brackets and recorded fights are Arkiv documents (collections "tournaments" and "fights").
+export const tournaments = {
+  get: (id) => db.get("tournaments", String(id)),
+  save: (id, value) => db.put("tournaments", String(id), value),
 };
-const readJson = (file) => {
-  try {
-    return JSON.parse(fs.readFileSync(file, "utf8"));
-  } catch {
-    return null;
-  }
+export const fights = {
+  get: (t, m) => db.get("fights", `${t}-${Number(m)}`),
+  save: (t, m, value) => db.put("fights", `${t}-${Number(m)}`, value),
 };
-const writeJson = (file, value) => {
-  const tmp = `${file}.${process.pid}.tmp`;
-  fs.writeFileSync(tmp, JSON.stringify(value, null, 2));
-  fs.renameSync(tmp, file);
-};
-const tournamentFile = (id) => path.join(dir("arena-tournaments"), `${safeId(id)}.json`);
-const fightFile = (t, m) => path.join(dir("arena-fights"), `${safeId(t)}-${Number(m)}.json`);
 
 /** What a bracket slot shows publicly: no signatures. */
 const slot = (s, index) => ({
@@ -70,7 +57,7 @@ export const arenaRouter = express.Router();
 arenaRouter.get("/tournaments", (req, res) => res.json(listBrackets()));
 
 arenaRouter.get("/tournaments/:id", (req, res) => {
-  const t = readJson(tournamentFile(req.params.id));
+  const t = tournaments.get(req.params.id);
   if (!t) return res.status(404).json({ error: "No bracket is registered for this tournament." });
   res.json(t);
 });
@@ -106,9 +93,9 @@ export function saveBracket(id, { title, track, submissionIds, proposal, eventId
     if (!b) throw refuse(400, "This bracket order doesn't match the matchmaking result. Run matchmaking again.");
     matching = { manual: false, algorithmVersion: b.algorithmVersion, seed: b.seed, embeddingModel: b.embeddingModel, weights: b.weights, inputHash: b.inputHash, resultHash: b.resultHash, firstRound: b.firstRound };
   }
-  const prior = readJson(tournamentFile(id));
+  const prior = tournaments.get(id);
   const record = { id: String(id), title: String(title || `Tournament #${id}`).slice(0, 80), track: String(track || "Open").slice(0, 40), matching, eventId: eventId ?? prior?.eventId ?? null, trackId: trackId ?? prior?.trackId ?? null, createdAt: prior?.createdAt ?? new Date().toISOString(), projects };
-  writeJson(tournamentFile(id), record);
+  tournaments.save(id, record);
   syncTournamentInBackground(id);
   return record;
 }
@@ -124,14 +111,13 @@ arenaRouter.put("/tournaments/:id", requireOrganizer, (req, res) => {
 
 /** Every registered bracket (the tournaments list, and the auto-run loop). */
 export function listBrackets() {
-  const d = dir("arena-tournaments");
-  return fs.readdirSync(d).filter((x) => x.endsWith(".json")).map((x) => readJson(path.join(d, x))).filter(Boolean);
+  return db.list("tournaments");
 }
 
 export function statusOf(t, m) {
   const live = running.get(`${t}-${m}`);
   if (live) return { status: "running", revealAt: live.revealAt, cast: live.cast, note: live.note, startedAt: live.startedAt, eventCount: live.events.length, events: live.events };
-  const saved = readJson(fightFile(t, m));
+  const saved = fights.get(t, m);
   if (saved?.error) return { status: "failed", error: saved.error, ranAt: saved.ranAt };
   if (saved) return { status: "done", ...saved };
   return { status: "none" };
@@ -167,13 +153,13 @@ function fightJudges(meta) {
 export function startFight(t, m, { a: slotA, b: slotB, revealAt, rerun } = {}) {
   const key = `${t}-${m}`;
   if (running.has(key)) throw refuse(409, "This fight is already running.");
-  const meta = readJson(tournamentFile(t));
+  const meta = tournaments.get(t);
   if (!meta) throw refuse(409, "Register the bracket for this tournament first (organizer page, step 3).");
   const a = meta.projects[Number(slotA)];
   const b = meta.projects[Number(slotB)];
   if (!a || !b || a === b) throw refuse(400, "Both fighters must be projects in this bracket.");
   if (!hasCredentials("0g")) throw refuse(503, "The fight service has no 0G key (set ZG_API_KEY in backend/.env).");
-  const prior = readJson(fightFile(t, m));
+  const prior = fights.get(t, m);
   if (prior && !prior.error && !rerun) throw refuse(409, "This fight was already run and its result is recorded. It can't be run twice.");
 
   const corners = {};
@@ -196,11 +182,11 @@ export function startFight(t, m, { a: slotA, b: slotB, revealAt, rerun } = {}) {
     return runFight({ corners, judges: panel, onProgress: (note, fightEvents) => Object.assign(live, { note, events: fightEvents }) });
   })()
     .then((result) => {
-      writeJson(fightFile(t, m), { tournamentId: String(t), match: Number(m), a: a.index, b: b.index, cast, revealAt: Number(revealAt) || 0, ranAt: new Date().toISOString(), id: crypto.randomUUID(), ...result });
+      fights.save(t, m, { tournamentId: String(t), match: Number(m), a: a.index, b: b.index, cast, revealAt: Number(revealAt) || 0, ranAt: new Date().toISOString(), id: crypto.randomUUID(), ...result });
     })
     .catch((e) => {
       console.error(`[fight ${key}] failed: ${e.message}`);
-      writeJson(fightFile(t, m), { tournamentId: String(t), match: Number(m), error: String(e.message ?? e).slice(0, 300), ranAt: new Date().toISOString() });
+      fights.save(t, m, { tournamentId: String(t), match: Number(m), error: String(e.message ?? e).slice(0, 300), ranAt: new Date().toISOString() });
     })
     .finally(() => {
       running.delete(key);

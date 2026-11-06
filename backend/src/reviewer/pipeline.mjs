@@ -22,6 +22,11 @@
  * Each step carries parts (sub-steps with their own status), a one-line detail
  * and facts (label/value pairs) for the summary panel.
  *
+ * Everything a run produces is stored: records on Arkiv (store.mjs), files on 0G Storage
+ * (zg/files.mjs). The clone,
+ * the downloaded video and the live test's raw output are scratch work, removed when the
+ * run ends.
+ *
  * Queue: submissions are reviewed in order, REVIEW_CONCURRENCY at a time
  * (default 1). Each waiting project knows its place in line. On restart,
  * anything submitted but not finished is put back in the queue.
@@ -31,9 +36,11 @@ import os from "node:os";
 import path from "node:path";
 import { countSteps, discoverSite, onRunnerLog, runLiveTest } from "../../tester/runner.mjs";
 import { hasCredentials, MODEL } from "../llm.mjs";
-import { dossiers, judges as judgesStore, liveDir, mediaDir, pipelines, repoDir, submissions, transcripts, videos, workDir } from "../store.mjs";
+import { filesOf, putFile, removeFile } from "../zg/files.mjs";
+import { clearScratch, scratch } from "../datafiles.mjs";
+import { dossiers, judges as judgesStore, liveDir, liveFile, liveTests, pipelines, repoDir, submissions, transcripts, videos, workDir } from "../store.mjs";
 import { demoTranscript, describeDuration } from "./demo.mjs";
-import { IMAGE_REF, imageInfo, probeInfo, reason, saveDemoVideo, UPLOAD_DIR } from "./media.mjs";
+import { IMAGE_REF, imageInfo, keepDemoVideo, probeInfo, reason, saveDemoVideo, shrinkVideo, uploadExists } from "./media.mjs";
 import { canReadScreens, describeScreenshots, VISION_MODEL } from "./screens.mjs";
 import { writeDossier } from "./dossier.mjs";
 import { writeFlows } from "./flows.mjs";
@@ -151,6 +158,39 @@ export function resumeQueue({ judge }) {
 }
 
 async function execute(projectId, judge) {
+  try {
+    return await executeSteps(projectId, judge);
+  } finally {
+    // Scratch only: everything worth keeping is on Arkiv / 0G by now.
+    for (const d of [repoDir(projectId), liveDir(projectId), workDir(projectId), scratch("media", projectId)]) clearScratch(d);
+  }
+}
+
+/**
+ * The live test's output folder -> stored: smoke.json as the project's live test (Arkiv), and its
+ * recordings (compressed if big) and step screenshots as 0G files live/<device>/<file>.
+ * Files from an earlier run that this one didn't make are forgotten.
+ */
+async function keepLiveTest(projectId, out) {
+  const smoke = JSON.parse(fs.readFileSync(path.join(out, "smoke.json"), "utf8"));
+  const keep = new Set();
+  const rels = (smoke.runs ?? []).flatMap((r) => [r.video?.file, ...(r.phases ?? []).flatMap((ph) => (ph.steps ?? []).map((st) => st.screenshot))]).filter(Boolean);
+  for (const rel of [...new Set(rels)]) {
+    const name = liveFile(rel);
+    const full = path.join(out, rel);
+    if (!name || !fs.existsSync(full)) continue;
+    if (name.endsWith(".mp4")) {
+      const small = await shrinkVideo(full, "mov");
+      putFile(projectId, name, fs.readFileSync(small.file), { mime: "video/mp4", kind: "live-recording" });
+    } else putFile(projectId, name, fs.readFileSync(full), { mime: "image/jpeg", kind: "live-screenshot" });
+    keep.add(name);
+  }
+  for (const [name] of filesOf(projectId)) if (name.startsWith("live/") && !keep.has(name)) removeFile(projectId, name);
+  liveTests.save(projectId, smoke);
+  return smoke;
+}
+
+async function executeSteps(projectId, judge) {
   const sub = submissions.get(projectId);
   if (!sub) throw Object.assign(new Error("No such submitted project."), { status: 404 });
   const state = { projectId, startedAt: new Date().toISOString(), finishedAt: null, steps: STEPS.map((s) => ({ ...s, status: "queued", parts: [], facts: [] })) };
@@ -291,7 +331,9 @@ async function execute(projectId, judge) {
       if (sub.demoVideoUrl) {
         part(s, "download", "running");
         try {
-          video = await saveDemoVideo(sub.demoVideoUrl, mediaDir(projectId), { onProgress: (m) => part(s, "download", "running", m, { quiet: true }) });
+          video = await saveDemoVideo(sub.demoVideoUrl, scratch("media", projectId), { onProgress: (m) => part(s, "download", "running", m, { quiet: true }) });
+          part(s, "download", "running", "Storing our copy on 0G Storage", { quiet: true });
+          video = await keepDemoVideo(projectId, video);
           videos.save(projectId, { ext: video.ext, bytes: video.bytes, seconds: video.seconds, source: video.source, savedAt: new Date().toISOString() });
           part(s, "download", "done", `${mb(video.bytes)} · ${video.source}`);
         } catch (e) {
@@ -320,7 +362,7 @@ async function execute(projectId, judge) {
       }
       if (shots.length) {
         part(s, "images", "running", `Opening ${plural(shots.length, "screenshot")}`);
-        const filesIn = shots.map((r) => IMAGE_REF.exec(String(r))?.[1]).filter((f) => f && fs.existsSync(path.join(UPLOAD_DIR, f)));
+        const filesIn = shots.map((r) => IMAGE_REF.exec(String(r))?.[1]).filter((f) => f && uploadExists(f));
         const sizes = [];
         for (const f of filesIn) sizes.push(await imageInfo(f).catch(() => null));
         const ok = sizes.filter(Boolean);
@@ -425,9 +467,10 @@ async function execute(projectId, judge) {
           words[dev] = `${c.passed} work${c.failed ? ` · ${c.failed} broken` : ""}${c.missing ? ` · ${c.missing} demo screens missing` : ""}${c.blocked ? ` · ${c.blocked} can't run in a browser` : ""}`;
           part(s, dev, r.outcome.status === "error" ? "failed" : "done", r.outcome.status === "error" ? (r.error ?? "The cloud browser failed.") : words[dev]);
         }
-        part(s, "save", "running");
+        part(s, "save", "running", "Storing the report on Arkiv, recordings and screenshots on 0G Storage");
+        await keepLiveTest(projectId, out);
         const vids = summary.runs.filter((r) => r.video).map((r) => `${r.label.toLowerCase()} ${Math.round(r.video.seconds)} s`);
-        part(s, "save", "done", vids.length ? `Recordings: ${vids.join(", ")} · screenshot for every step` : "No recordings");
+        part(s, "save", "done", vids.length ? `Recordings: ${vids.join(", ")} · screenshot for every step · on 0G Storage` : "No recordings");
         const failed = s.parts.some((x) => x.status === "failed");
         end(s, failed ? "failed" : "done", `${host} · laptop: ${words.laptop ?? "—"} · phone: ${words.phone ?? "—"}`, [
           { label: "Live app", value: host },
@@ -440,6 +483,8 @@ async function execute(projectId, judge) {
       } catch (e) {
         part(s, cur, "failed", reason(e));
         end(s, "failed", reason(e));
+        // Whatever the run wrote before it failed is still evidence for the judges.
+        if (cur !== "save" && fs.existsSync(path.join(liveDir(projectId), "smoke.json"))) await keepLiveTest(projectId, liveDir(projectId)).catch(() => {});
       } finally {
         stop();
       }
@@ -516,7 +561,7 @@ async function execute(projectId, judge) {
       const s = begin("judges", panel.map((j) => [j.id, j.name]));
       // Each judge's lane shows who they are and what they weigh most.
       for (const j of panel) Object.assign(s.parts.find((p) => p.id === j.id), { role: j.title ?? "", focus: focusOf(j) });
-      const had = [dossiers.get(projectId) && "fact-check", fs.existsSync(path.join(liveDir(projectId), "smoke.json")) && "live test", transcript && "demo", commit && "code review"].filter(Boolean);
+      const had = [dossiers.get(projectId) && "fact-check", liveTests.get(projectId) && "live test", transcript && "demo", commit && "code review"].filter(Boolean);
       for (const j of panel) part(s, j.id, "running", `Reading the ${had.join(", ") || "submission"}`);
       try {
         const r = await judge(projectId, {

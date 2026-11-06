@@ -1,21 +1,18 @@
 /*
- * Drafts are a per-browser convenience (localStorage). Submissions only ever live on the backend.
+ * The draft of the submission form lives in memory for this tab only: nothing is
+ * kept in the browser (no localStorage). It survives moving between pages, not a
+ * reload. Submissions only ever live on the backend (Arkiv; files on 0G Storage).
  */
 
-const DRAFT_SLOT = "arena.submission.draft.v2";
+let draft = null;
 
 export function loadDraft() {
-  try {
-    const raw = localStorage.getItem(DRAFT_SLOT);
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
+  return draft ? structuredClone(draft) : null;
 }
 
 export function saveDraft(data) {
   try {
-    localStorage.setItem(DRAFT_SLOT, JSON.stringify(data));
+    draft = structuredClone(data);
     return true;
   } catch {
     return false;
@@ -23,11 +20,7 @@ export function saveDraft(data) {
 }
 
 export function clearDraft() {
-  try {
-    localStorage.removeItem(DRAFT_SLOT);
-  } catch {
-    /* storage unavailable: nothing to clear */
-  }
+  draft = null;
 }
 
 export function toPayload(data, { ownerWallet, chainId }) {
@@ -78,9 +71,8 @@ export async function submissionDigest(p) {
 }
 
 /**
- * Save to the backend (POST /api/submissions), which also starts the review and
- * archives the signed record on 0G Storage. The returned record carries `zgStorage`
- * ({ status: pending | stored | failed | off, rootHash, ... }).
+ * Save to the backend (POST /api/submissions), which stores the signed record on
+ * Arkiv and starts the review.
  */
 export async function saveSubmission(payload) {
   let res;

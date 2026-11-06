@@ -1,6 +1,7 @@
 /*
- * Arkiv schemas for everything the arena records, except files (videos,
- * screenshots, recordings), which live on Swarm (../swarm.mjs).
+ * Arkiv schemas for everything the arena records. Arkiv is the arena's database:
+ * `doc` holds every stored record (../db.mjs); the other types are the public,
+ * queryable view of the same data. Files are on 0G Storage (../../zg/files.mjs).
  *
  * Every record shares the same base:
  *   projectId / projectName   which project it belongs to (fights use projectA/projectB)
@@ -33,6 +34,16 @@ function record(type, columns) {
 
 /** Each record type: its schema and the columns that identify one record (for "latest" and dedup). */
 export const RECORDS = {
+  // The arena's database (../db.mjs): one JSON document of a collection, e.g. events/eth-global.
+  // payload is { id, value }; a deleted document gets a newer version with deleted = 1.
+  doc: {
+    ...record("doc", {
+      collection: str().indexed(),
+      docId: str().indexed(), // the id, or sha256 of it when it is over 128 bytes
+      deleted: i32().indexed(),
+    }),
+    identity: ["collection", "docId"],
+  },
   // The submission as entered: team, pitch, description, repo, demo link, tracks.
   project: {
     ...record("project", {
@@ -100,8 +111,8 @@ export const RECORDS = {
     }),
     identity: ["projectId"],
   },
-  // A file kept on chain as raw bytes split into parts: demo video, demo screenshots,
-  // live-test recordings and step screenshots. hash = sha256 of the file itself.
+  // Older records: a file kept on chain as raw bytes split into parts. New files go to
+  // 0G Storage; this stays so earlier entities can still be read. hash = sha256 of the file.
   file: {
     ...record("file", {
       kind: str().indexed(), // demo-video | demo-screenshot | live-recording | live-screenshot

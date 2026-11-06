@@ -3,13 +3,9 @@
  * address and the cost the Router reported. Everything has a text label; colour
  * is never the only signal. We only say "TEE verified" when 0G itself reported
  * tee_verified: true for that call (whisper does; 0gm chat currently doesn't).
- *
- * StorageProof: where a record lives on 0G Storage (root hash, tx link) and a
- * Verify button that re-downloads it from 0G and compares it with ours.
  */
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { StatusPill } from "@ds/ui.jsx";
-import { api } from "../lib/api.js";
 
 /** Micro-dollars -> "$0.0110". Small runs need four decimals to show anything. */
 export const usd = (micro) => (Number.isFinite(micro) ? `$${(micro / 1e6).toFixed(micro < 10_000 ? 5 : 4)}` : "not reported");
@@ -177,96 +173,4 @@ export function LiveCalls({ progress }) {
   );
 }
 
-const STORAGE_PILL = {
-  pending: { tone: "neutral", text: "◌ Pending upload to 0G Storage" },
-  stored: { tone: "success", text: "✓ Stored on 0G Storage" },
-  failed: { tone: "danger", text: "✕ 0G Storage upload failed" },
-  off: { tone: "neutral", text: "0G Storage off on this server" },
-};
 
-/**
- * "Stored on 0G Storage" row for one record (kind: submission | review | ...).
- * Polls while the upload is pending. `initial` is the zgStorage field the API returned.
- */
-export function StorageProof({ kind, id, initial }) {
-  const [st, setSt] = useState(initial ?? null);
-  const [check, setCheck] = useState(null); // null | "checking" | result | { error }
-  const status = st?.status;
-
-  useEffect(() => setSt(initial ?? null), [initial?.status, initial?.rootHash]);
-
-  useEffect(() => {
-    if (status && status !== "pending") return undefined;
-    let live = true;
-    const tick = async () => {
-      try {
-        const r = await api(`/storage/status/${kind}/${encodeURIComponent(id)}`);
-        if (live) setSt(r);
-      } catch {
-        /* backend offline: keep what we have */
-      }
-    };
-    if (!status) tick();
-    const t = setInterval(tick, 4000);
-    return () => {
-      live = false;
-      clearInterval(t);
-    };
-  }, [kind, id, status]);
-
-  if (!st) return null;
-  const pill = STORAGE_PILL[status] ?? STORAGE_PILL.pending;
-
-  async function verify() {
-    setCheck("checking");
-    try {
-      setCheck(await api(`/storage/verify/${kind}/${encodeURIComponent(id)}`, { method: "POST" }));
-    } catch (e) {
-      setCheck({ error: e.message });
-    }
-  }
-
-  return (
-    <div className="zgstore">
-      <div className="zgpanel__head">
-        <StatusPill tone={pill.tone}>{pill.text}</StatusPill>
-        {status === "stored" && st.versions > 1 && <span className="t-caption">version {st.versions}</span>}
-        {status === "pending" && st.attempts > 0 && <span className="t-caption">retrying (attempt {st.attempts + 1})</span>}
-      </div>
-      {status === "failed" && st.error && <span className="t-caption">Reason: {st.error}</span>}
-      {status === "pending" && st.error && <span className="t-caption">Last try: {st.error}</span>}
-      {st.rootHash && (
-        <div className="zgstore__row">
-          <span className="t-label">Root hash</span>
-          <CopyId value={st.rootHash} label="0G Storage root hash" />
-        </div>
-      )}
-      {st.rootHash && (
-        <div className="zgstore__links">
-          {st.links?.tx && (
-            <a className="t-caption" href={st.links.tx} target="_blank" rel="noreferrer">
-              Transaction on 0G Chain ↗
-            </a>
-          )}
-          {st.links?.file && (
-            <a className="t-caption" href={st.links.file} target="_blank" rel="noreferrer">
-              File on 0G Storage Scan ↗
-            </a>
-          )}
-          <a className="t-caption" href={`/api/storage/blob/${st.rootHash}`} target="_blank" rel="noreferrer">
-            Stored copy (JSON) ↗
-          </a>
-        </div>
-      )}
-      {status === "stored" && (
-        <div className="zgstore__verify" aria-live="polite">
-          <button type="button" className="btn btn--secondary btn--sm" onClick={verify} disabled={check === "checking"}>
-            {check === "checking" ? "Checking 0G…" : "Verify against 0G"}
-          </button>
-          {check && check !== "checking" && (check.error ? <span className="t-caption">✕ Couldn't check: {check.error}</span> : check.match ? <StatusPill tone="success">✓ Matches 0G copy</StatusPill> : <StatusPill tone="danger">✕ Mismatch with 0G copy</StatusPill>)}
-          {check?.reason && <span className="t-caption">{check.reason}</span>}
-        </div>
-      )}
-    </div>
-  );
-}

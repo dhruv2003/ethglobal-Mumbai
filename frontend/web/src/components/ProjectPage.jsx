@@ -17,7 +17,6 @@ import { Ring } from "./Arena.jsx";
 import { toast } from "./Feedback.jsx";
 import { fighterTraitItems, PixelFighter } from "./PixelFighter.jsx";
 import { SplitWords, bouncy, easeOut, stagger } from "./fx.jsx";
-import { StorageProof } from "./ZeroGProof.jsx";
 import { FighterEns } from "./EnsName.jsx";
 import { EventBadge, Tracks } from "./Projects.jsx";
 
@@ -357,7 +356,6 @@ function EntryCard({ project: p }) {
         )}
       </dl>
       <FighterEns projectId={p.id} />
-      {p.kind === "submitted" && <StorageProof kind="submission" id={p.id} />}
     </aside>
   );
 }

@@ -4,7 +4,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-process.env.ARENA_DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), "arena-events-test-"));
+process.env.ARENA_SCRATCH_DIR = fs.mkdtempSync(path.join(os.tmpdir(), "arena-events-test-"));
 const { submissionProblem, validateEvent } = await import("../src/events.mjs");
 
 const NOW = Date.parse("2026-01-01T00:00:00Z");

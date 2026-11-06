@@ -1,6 +1,3 @@
-import fs from "node:fs";
-import os from "node:os";
-import path from "node:path";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { hashSignal } from "@worldcoin/idkit-core/hashing";
@@ -20,7 +17,9 @@ const proof = (over = {}, item = {}) => ({
 });
 
 function setup({ verify = async () => true, send = async () => "0xhash" } = {}) {
-  const file = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "world-")), "claims.json");
+  // Where the server keeps claims (the Arkiv database); here a stand-in that survives a "restart".
+  let saved = null;
+  const file = { load: () => (saved ? structuredClone(saved) : null), save: (d) => (saved = structuredClone(d)) };
   const sent = [];
   const store = claimStore(file);
   const claim = createClaims({
@@ -74,10 +73,8 @@ test("a restart remembers who claimed", async () => {
   assert.equal(reloaded.walletClaim(WALLET).hash, "0xhash");
 });
 
-test("a damaged record refuses to start instead of forgetting every claim", () => {
-  const { file } = setup();
-  fs.writeFileSync(file, "{ not json");
-  assert.throws(() => claimStore(file));
+test("a record that can't be read refuses to start instead of forgetting every claim", () => {
+  assert.throws(() => claimStore({ load: () => { throw new Error("Arkiv read failed"); }, save: () => {} }));
 });
 
 test("World rejecting the proof sends nothing and reserves nothing", async () => {

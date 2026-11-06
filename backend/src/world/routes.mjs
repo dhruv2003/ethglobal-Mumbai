@@ -5,13 +5,12 @@
  *   POST /api/world/rp-signature          sign a verification request (the key stays here)
  *   POST /api/world/claim                 { wallet, idkitResponse } -> check the proof, send FILTER
  */
-import path from "node:path";
 import express from "express";
 import { signRequest } from "@worldcoin/idkit-core/signing";
 import { hashSignal } from "@worldcoin/idkit-core/hashing";
 import { createPublicClient, createWalletClient, defineChain, getAddress, http, isAddress, parseAbi, parseUnits } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { DATA_DIR } from "../store.mjs";
+import { db } from "../store.mjs";
 import { rateLimit } from "../security.mjs";
 import { ACTION, ClaimError, claimStore, createClaims, worldVerifier } from "./claim.mjs";
 
@@ -56,7 +55,7 @@ let store = null;
 let claim = null;
 if (APP_ID && RP_ID && SIGNING_KEY && SENDER_KEY) {
   try {
-    store = claimStore(path.join(DATA_DIR, "world-claims.json"));
+    store = claimStore({ load: () => db.get("world-claims", "all"), save: (data) => db.put("world-claims", "all", data) });
     claim = createClaims({ environment: ENVIRONMENT, store, hashSignal, verifyProof: worldVerifier({ rpId: RP_ID, environment: ENVIRONMENT }), sendFilter: filterSender() });
   } catch (e) {
     console.error("World ID claims are off:", e.message);

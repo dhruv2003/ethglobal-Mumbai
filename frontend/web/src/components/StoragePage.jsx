@@ -1,8 +1,8 @@
 /*
- * /storage: everything this arena has put on 0G Storage. One row per record
- * (submissions, judge panel, reviews, evidence, voice notes, sample-project files),
- * each with its root hash, a download straight from 0G (?fresh=1 skips the
- * server's cache), the file on Storage Scan, the transaction, and Verify.
+ * /storage: every file this arena has put on 0G Storage (uploads, demo videos,
+ * live-test recordings and screenshots). Records live in the Arkiv database; its
+ * "files" index holds each file's root hash. One row per file: root hash, a
+ * download from 0G, the file on Storage Scan, the transaction, and Verify.
  */
 import { useEffect, useState } from "react";
 import { StatusPill } from "@ds/ui.jsx";
@@ -10,17 +10,11 @@ import { api, peekApi } from "../lib/api.js";
 import { CopyId } from "./ZeroGProof.jsx";
 
 const KIND_LABEL = {
-  submission: "Submissions",
-  judges: "Judge panel",
-  review: "Panel reviews",
-  evidence: "Screenshot evidence",
-  "voice-note": "Voice-note transcripts",
-  "voice-audio": "Voice-note audio (encrypted)",
-  "evidence-bundle": "Sample evidence bundles",
-  "fixture-file": "Sample project files",
-  dossier: "Project dossiers",
-  transcript: "Demo video transcripts",
-  video: "Demo video records",
+  "demo-video": "Demo videos (our copy)",
+  "upload-video": "Uploaded demo videos",
+  "upload-image": "Uploaded demo screenshots",
+  "live-recording": "Live-test recordings",
+  "live-screenshot": "Live-test step screenshots",
 };
 const ORDER = Object.keys(KIND_LABEL);
 
@@ -39,16 +33,15 @@ function Row({ r }) {
   return (
     <li className="zgfiles__row">
       <div className="zgfiles__name">
-        <span className="t-body-strong">{r.id}</span>
+        <span className="t-body-strong">{r.name}</span>
         <span className="t-caption">
           {size(r.size)}
-          {r.history.length > 1 ? ` · version ${r.history.length}` : ""}
-          {r.encrypted ? " · AES-256 encrypted" : ""} · {new Date(r.uploadedAt).toLocaleString()}
+          {r.scope !== "uploads" ? ` · project ${r.scope}` : ""} · {new Date(r.uploadedAt).toLocaleString()}
         </span>
       </div>
       <CopyId value={r.rootHash} label="0G Storage root hash" />
       <div className="zgstore__links">
-        <a className="btn btn--secondary btn--sm" href={`/api/storage/blob/${r.rootHash}?fresh=1&download=1`}>
+        <a className="btn btn--secondary btn--sm" href={`/api/storage/blob/${r.rootHash}?download=1`}>
           Download from 0G
         </a>
         {r.links?.file && (
@@ -79,8 +72,8 @@ export function StoragePage() {
     api("/storage").then(setInfo, () => {});
   }, []);
 
-  if (error) return <p className="t-body">0G Storage records aren't available: {error}</p>;
-  if (!data) return <p className="t-caption">Loading 0G Storage records…</p>;
+  if (error) return <p className="t-body">The 0G Storage file list isn't available: {error}</p>;
+  if (!data) return <p className="t-caption">Loading the files on 0G Storage…</p>;
   // Kinds this page doesn't know yet still get listed (under their own name), so the count always adds up.
   const kinds = [...ORDER, ...new Set(data.records.map((r) => r.kind).filter((k) => !KIND_LABEL[k]))];
   const groups = kinds.map((k) => [k, data.records.filter((r) => r.kind === k)]).filter(([, rows]) => rows.length);
@@ -89,31 +82,20 @@ export function StoragePage() {
     <div className="zgfiles">
       <div className="intro">
         <span className="eyebrow">0G Storage</span>
-        <h1 className="t-display-lg m0">Everything the arena stored on 0G</h1>
+        <h1 className="t-display-lg m0">Every file the arena stored on 0G</h1>
         <p className="t-body m0">
-          Every submission, judge panel, review and piece of evidence is uploaded to 0G Storage on {data.network}. Download any of them straight from the 0G storage nodes, open the file on Storage Scan,
-          or press Verify to re-download it and compare it with the copy this server serves.
+          Demo videos, uploaded screenshots and the live test's recordings and screenshots are stored on 0G Storage on {data.network}; the records (submissions, reviews, dossiers, brackets) are in the
+          Arkiv database. Download any file straight from the 0G storage nodes, open it on Storage Scan, or press Verify to re-download it and check its hash.
         </p>
       </div>
       <div className="zgstore">
         <div className="zgpanel__head">
-          <StatusPill tone={info?.enabled ? "success" : "neutral"}>{info?.enabled ? "✓ Archiving to 0G Storage" : "0G Storage off"}</StatusPill>
+          <StatusPill tone={info?.enabled ? "success" : "neutral"}>{info?.enabled ? "✓ Files go to 0G Storage" : "0G Storage not set up"}</StatusPill>
           <span className="t-caption">
-            {data.records.length} records{info?.outbox?.pending ? ` · ${info.outbox.pending} waiting to upload` : ""}
+            {data.records.length} files{info?.outbox?.pending ? ` · ${info.outbox.pending} uploading` : ""}
             {info?.outbox?.failed ? ` · ${info.outbox.failed} failed` : ""}
           </span>
         </div>
-        {data.head?.rootHash && (
-          <div className="zgstore__row">
-            <span className="t-label">Head manifest (rebuild everything from this one hash)</span>
-            <CopyId value={data.head.rootHash} label="head manifest root hash" />
-            <div className="zgstore__links">
-              <a className="btn btn--secondary btn--sm" href={`/api/storage/blob/${data.head.rootHash}?fresh=1&download=1`}>
-                Download manifest from 0G
-              </a>
-            </div>
-          </div>
-        )}
       </div>
       {groups.map(([kind, rows]) => (
         <section key={kind} className="zgfiles__group">

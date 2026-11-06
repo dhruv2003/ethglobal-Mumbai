@@ -9,8 +9,8 @@ cd backend
 npm install
 cp .env.example .env      # then put your 0G Compute Router key in ZG_API_KEY
 npm start                 # http://localhost:3000, API under /api
-npm test                  # judge, scoring, security and 0G Storage tests (no network)
-npm run zg:status         # 0G Storage wallet, balance, head manifest, outbox
+npm test                  # judge, scoring, security and store tests (in memory, no network)
+npm run migrate -- data   # once: move an old backend/data folder to Arkiv (records) and 0G (files)
 ```
 
 The web app (`frontend/web`) proxies `/api` here in dev and preview.
@@ -46,7 +46,7 @@ Re-run one by hand: `npm run review -- --project <id>`. Delete a project with `D
 
 Needs on the server: `git`, `ffmpeg`/`ffprobe`, and `npm install` in `backend/tester` (Playwright, no browsers).
 
-**Store** (`src/store.mjs`): JSON files in `data/` (gitignored), standing in for the database, written with sorted keys. With `ZG_STORAGE=1` every write is also archived on 0G Storage (see below). Swap those functions for real queries later.
+**Store** (`src/store.mjs`): nothing is kept on the server's disk. **Records** (submissions, tournaments, judges, reviews, dossiers, pipelines, transcripts, live-test reports, brackets, fights, payouts, World ID claims) are documents in the **Arkiv database** (`src/arkiv/db.mjs`). **Files** (uploaded videos and screenshots, our copy of each demo video, live-test recordings and step screenshots) are on **0G Storage** (`src/zg/files.mjs`), with each file's root hash kept in the Arkiv database. The only things written to disk are scratch work under the OS temp folder (a repo being read, a video being transcoded, a live test being recorded), removed when the work ends. See "Where the data lives" below.
 
 **Routes** (`src/api.mjs`): health, criteria, judges (CRUD, max 3), submissions, and project reviews (get, run).
 
@@ -69,52 +69,28 @@ All AI inference in the main flow runs on the 0G Compute Router (`https://router
 | Judge voice notes → persona text | `whisper-large-v3`, `verify_tee=true` | `POST /api/judges/voice-note` in `src/api.mjs` |
 | Public "Watch the judges score this on 0G" (sample projects) | as judge reviews | `POST /api/projects/:id/reviews/public` |
 
-### 0G Storage: the durable, verifiable record
+### Where the data lives: Arkiv (records) and 0G Storage (files)
 
-Every model call runs on 0G Compute; everything the arena produces is kept on [0G Storage](https://docs.0g.ai/developer-hub/building-on-0g/storage/sdk). Local `data/` stays the fast read cache; 0G is the record anyone can check, and `data/` can be rebuilt from 0G alone.
+**Arkiv database** (`src/arkiv/db.mjs`). Every record is a document in a collection, stored as `battle-arena.doc` entities owned by the publisher wallet (`ARKIV_PRIVATE_KEY`): gzip JSON, split into parts over 128 KiB, read-only, expiring after `ARKIV_TTL_DAYS` (default 120).
 
-| Kind | What | Written by |
-| --- | --- | --- |
-| `submission` | the full signed submission (team, project, repo, video, tracks, fighter seed, wallets, chain, the wallet signature and message) | `POST /api/submissions` |
-| `judges` | the whole judge panel on every change, so each persona version stays recoverable | seed, `POST/PUT/DELETE /api/judges` |
-| `review` | the panel review: per-criterion scores and comments, panel score, **0G Compute request IDs, providers and costs** (PRD JDG-08) | `reviewNow()`, `npm run judge` |
-| `evidence` | screenshot observations from the vision model on 0G, with their traces | `collectScreenshotEvidence` |
-| `dossier`, `transcript`, `video` | the reviewer's dossier, the demo transcript, facts about our copy of the demo video | review pipeline (`src/reviewer/`) |
-| `voice-note` | a judge's voice-note transcript and its whisper trace | `POST /api/judges/voice-note` |
-| `voice-audio` | the recording, **AES-256 encrypted**, only when `ZG_STORAGE_AES_KEY` is set | same |
-| `fixture-file`, `evidence-bundle` | a sample project's frozen evidence files as-is, plus a bundle listing every file's root hash and sha256 and the repo's pinned commit | `npm run zg:seed-fixtures` |
-| `manifest` | the index of all of the above (the "head") | debounced, after uploads |
+- On boot the server reads the newest version of every document from Arkiv (about a second for a hackathon's worth) and serves reads from that copy. A page needs dozens of records and an Arkiv query takes ~0.5 s, so reads don't go to Arkiv one by one.
+- A write changes that copy at once and goes to Arkiv in the background, one transaction at a time (~7 s each). A document that changes again while waiting is written once, with its newest value. Failed writes are retried with backoff; `/api/health` → `database` shows pending and failed writes.
+- Arkiv entities can't be edited, so a change is a new version (the newest wins) and a delete is a newer version marked deleted.
+- Collections: `submissions`, `events`, `judges`, `reviews`, `pipelines`, `dossiers`, `transcripts`, `evidence`, `livetests`, `videos`, `voice-notes`, `tournaments`, `fights`, `embeddings`, `proposals`, `payouts`, `world-claims`, `arkiv-publishes`, and `files` (the index of 0G files).
+- Without `ARKIV_PRIVATE_KEY` (or `PUBLISHER_PRIVATE_KEY`) the server refuses to start: there is no other store. Tests (`node --test`) use an in-memory database.
+- A CLI run (`npm run judge`, `npm run review`) writes to the same database and waits until Arkiv has everything; a server that is already running only sees those writes after a restart.
+- Arkiv is public: everything in it can be read by anyone. Voice-note audio is never stored (only its transcript and sha256).
 
-Never uploaded: API keys and wallet keys (incl. Arkiv, publisher, relayer, starter), `ADMIN_TOKEN`, World ID data, the AES key, browser drafts, rate-limit state, in-memory progress and `data/pipeline/`. Deleting a project uploads a "deleted" version of each of its records so a restore leaves it out (0G itself is permanent). The archive refuses any upload whose bytes contain one of those secrets (`secret_detected`). Fight code can call `archive(kind, id, obj)` from `src/zg/archive.mjs` later.
+**0G Storage** (`src/zg/files.mjs`, `src/zg/storage.mjs`). Every file is uploaded to 0G Storage from `ZG_STORAGE_PRIVATE_KEY`'s wallet; the Arkiv `files` index keeps its root hash, transaction, size and sha256. A file waits in memory until 0G has it, and recently read files are kept in memory (`ARKIV_FILE_CACHE_MB`, default 256). Downloads are checked against the root hash (we recompute the 0G Merkle root, since the SDK's `proof` option is a no-op) and the sha256. Videos over `ZG_VIDEO_SHRINK_MB` (default 40) are re-encoded to at most 720p first.
 
-**How it works** (`src/zg/storage.mjs`, `src/zg/archive.mjs`):
+- API: `GET /api/storage` (network, wallet, counts), `/api/storage/records` (every file with root hash and explorer links), `/api/storage/blob/:rootHash` (only our files, so it isn't an open proxy), `POST /api/storage/verify/:kind/:id` (download again from 0G and check the hash). The web app's `/storage` page lists them.
+- Set up (testnet): make a new wallet just for this, fund it at https://faucet.0g.ai, then in `.env` set `ZG_STORAGE=1` and `ZG_STORAGE_PRIVATE_KEY`. Uploads are public and permanent.
 
-- The store writes local JSON first, then appends to `data/zg-outbox.json`. A background worker uploads one item at a time from a dedicated server wallet (`ZG_STORAGE_PRIVATE_KEY`), retrying with exponential backoff (10 attempts, then `failed` with the reason). **A 0G failure never fails or slows an API request.** `POST /api/storage/flush` (organizer) retries failed items.
-- Each JSON record is uploaded as an envelope `{ schema: "arena.v1", kind, id, createdAt, prev, app: { commit }, data }`. `prev` is the root hash of the previous version of the same record, so re-judging and panel edits form an auditable chain.
-- `data/zg-manifest.json` maps `kind:id` to `{ rootHash, txHash, txSeq, sha256, size, uploadedAt, history }`. It is uploaded itself (at most every 30 s); its latest root hash is in `data/zg-head.json`. **That head root hash is the one value needed to recover everything.**
-- Downloads are checked by recomputing the 0G Merkle root of the bytes and comparing it with the requested root (the hash the Flow contract committed on chain). We do this ourselves because the TS SDK's `proof` option is currently a no-op (`Downloader.downloadTask` has "TODO: add proof check"). Record content is also compared by `sha256` of its canonical JSON.
-- API: `zgStorage: { status: pending | stored | failed | off, rootHash, txHash, links }` on submissions and reviews; `GET /api/storage`, `/api/storage/records`, `/api/storage/status/:kind/:id`, `/api/storage/blob/:rootHash` (only root hashes in our manifest, so it isn't an open proxy), `POST /api/storage/verify/:kind/:id`.
-- Web app: the project page (submission and judges' panel) shows "Stored on 0G Storage" with the root hash, a link to the transaction on chainscan and the file on storagescan, and **Verify against 0G**.
-
-**Set up** (testnet): make a new wallet just for this, fund it at https://faucet.0g.ai, then in `.env` set `ZG_STORAGE=1` and `ZG_STORAGE_PRIVATE_KEY`. `npm run zg:status` shows the balance.
-
-**Restore and verify:**
-
-```bash
-npm run zg:status                                            # head root hash
-npm run zg:restore -- --head <rootHash> --into /tmp/arena-restore
-diff -r data /tmp/arena-restore                              # only zg-outbox / zg-cache / zg-head differ
-npm run zg:verify                                            # re-download every record, check hashes
-npm run zg:check                                             # download every upload with indexer.download(root, file, true)
-npm run zg:seed-fixtures -- --project go-health-me           # upload the sample's frozen evidence (idempotent)
-npm run test:0g-storage                                      # live round trips on testnet (funded wallet)
-```
-
-Short overview with a sample flow: [`docs/0G-STORAGE.md`](../docs/0G-STORAGE.md). The full manual run, with real testnet root hashes: [`docs/0G-STORAGE-E2E.md`](../docs/0G-STORAGE-E2E.md). In the web app, `/storage` lists every upload with download and verify.
+**Moving an old `data/` folder:** `npm run migrate -- path/to/data` (`--dry-run` to list first) puts its records into Arkiv and its files onto 0G, skipping what's already there.
 
 ### What breaks if 0G is removed
 
-Without 0G Storage there is no tamper-evident copy of submissions, judge personas or reviews: the scores and their 0G Compute request IDs live only in one server's `data/` folder, and nobody outside can check that a review shown today is the one the judges produced. Restoring after losing that folder becomes impossible.
+Without 0G Storage the arena has nowhere to keep files: uploads are refused (503), demo videos aren't copied, and live-test recordings and screenshots are lost when the run ends, so the judges see no screenshots.
 
 Without 0G Compute no project gets a panel score, judges can't fill in their persona by voice, and the live-test screenshots go unread, because every model call in those flows goes through the 0G Compute Router.
 
@@ -130,7 +106,7 @@ Open a sample project, choose **Agent judge**, and press **Watch the judges scor
 - **Project page, judges' panel** (`frontend/web/src/components/JudgesPanel.jsx`): a "Ran on 0G Compute Router" label with the model, call count and panel cost; under each judge card, "Ran on 0G" with that judge's request ID(s) (copyable, monospace), provider address and cost; a list of every request ID for the panel.
 - **Project page, screenshot evidence**: each screenshot observation with its request ID (when the evidence step ran).
 - **`/judge` form, voice notes**: the whisper request ID, cost and the TEE status that 0G reported.
-- **Stored results**: `data/reviews/<id>.json` and `fixtures/<id>/reviews.json` (`reviews[].traces[]`, `zg.requestIds`, `zg.costUsdMicro`, `evidence[].trace`), and on 0G Storage as `review` records, so the request IDs themselves are kept on 0G.
+- **Stored results**: the `reviews` collection in the Arkiv database and `fixtures/<id>/reviews.json` (`reviews[].traces[]`, `zg.requestIds`, `zg.costUsdMicro`, `evidence[].trace`).
 - **CLI**: `npm run judge` prints each request ID, provider and cost.
 
 ### What we claim about TEEs

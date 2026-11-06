@@ -4,7 +4,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-process.env.ARENA_DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), "arena-queue-test-"));
+process.env.ARENA_SCRATCH_DIR = fs.mkdtempSync(path.join(os.tmpdir(), "arena-queue-test-"));
 const { enqueue, isRunning, queueLength, queuePosition } = await import("../src/reviewer/pipeline.mjs");
 
 const noJudge = async () => ({ reviews: [] });

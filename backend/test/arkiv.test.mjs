@@ -5,7 +5,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-process.env.ARENA_DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), "arena-arkiv-test-"));
+process.env.ARENA_SCRATCH_DIR = fs.mkdtempSync(path.join(os.tmpdir(), "arena-arkiv-test-"));
 delete process.env.ARKIV_PRIVATE_KEY;
 delete process.env.BEE_URL;
 delete process.env.SWARM_BATCH_ID;
@@ -13,7 +13,7 @@ process.env.ARKIV_PUBLISHER = "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045";
 
 const arkiv = await import("../src/arkiv/arkiv.mjs");
 const swarm = await import("../src/arkiv/swarm.mjs");
-const { publishRun, lastPublish, liveDirOf } = await import("../src/arkiv/publish.mjs");
+const { publishRun, lastPublish, liveOf } = await import("../src/arkiv/publish.mjs");
 const { loadProject } = await import("../src/projects.mjs");
 
 const { seedProject } = await import("./seedProject.mjs");
@@ -62,8 +62,8 @@ test("publishPanel writes one readonly panel, then one scorecard per judge linke
   await assert.rejects(arkiv.publishPanel("x", { ...result, panelHundredths: null }, { client }), /no judge scored/);
 });
 
-test("the evidence bundle holds the review, dossier and live-test media at stable paths", () => {
-  const { dir, files } = swarm.stageBundle({ result, dossier: sample.dossier, liveDir: liveDirOf(sample) });
+test("the evidence bundle holds the review, dossier and live-test media at stable paths", async () => {
+  const { dir, files } = swarm.stageBundle({ result, dossier: sample.dossier, ...(await liveOf(sample)) });
   try {
     assert.ok(files.includes("review.json") && files.includes("dossier.json") && files.includes("live/smoke.json"));
     assert.ok(files.includes("live/laptop/video.mp4"));

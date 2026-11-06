@@ -1,3 +1,0 @@
-# The data seed is built from a local backend/data at deploy time; never commit it.
-seed/*
-!seed/.gitkeep

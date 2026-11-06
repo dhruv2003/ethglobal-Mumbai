@@ -5,7 +5,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-process.env.ARENA_DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), "arena-pipeline-judges-"));
+process.env.ARENA_SCRATCH_DIR = fs.mkdtempSync(path.join(os.tmpdir(), "arena-pipeline-judges-"));
 process.env.JUDGE_PROVIDER = "0g";
 process.env.ZG_API_KEY = crypto.randomUUID();
 // Keep the pre-fix helper credentialed too, so this test isolates queue reporting.
@@ -15,7 +15,7 @@ delete process.env.ARENA_SERVER;
 const { router } = await import("../src/api.mjs");
 const { enqueue, isRunning, queueLength } = await import("../src/reviewer/pipeline.mjs");
 const { submissions, reviews } = await import("../src/store.mjs");
-after(() => fs.rmSync(process.env.ARENA_DATA_DIR, { recursive: true, force: true }));
+after(() => fs.rmSync(process.env.ARENA_SCRATCH_DIR, { recursive: true, force: true }));
 
 test("review polling stays active for both running and queued pipelines, retaining the last scores", async () => {
   const ids = ["pipeline-active", "pipeline-queued"];

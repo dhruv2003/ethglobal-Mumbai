@@ -3,22 +3,14 @@
  * how long betting stays open and its judges. Each track becomes its own bracket on chain once
  * the deadline passes, and every project also enters the overall finalist bracket.
  */
-import fs from "node:fs";
-import path from "node:path";
-import { readJSON } from "./datafiles.mjs";
-import { DATA_DIR } from "./store.mjs";
+import { db } from "./store.mjs";
 
-const FILE = path.join(DATA_DIR, "events.json");
 export const OVERALL = { id: "overall", name: "Overall finalist", prize: "" };
 export const MAX_TRACKS_PER_PROJECT = 3;
 export const JUDGES_PER_EVENT = 3;
 
-const readAll = () => readJSON("events.json", []);
-function writeAll(all) {
-  const tmp = `${FILE}.${process.pid}.tmp`;
-  fs.writeFileSync(tmp, JSON.stringify(all, null, 2));
-  fs.renameSync(tmp, FILE);
-}
+// One Arkiv document per tournament (collection "events"), oldest first.
+const readAll = () => db.list("events").sort((a, b) => String(a.createdAt ?? "").localeCompare(String(b.createdAt ?? "")));
 
 const clean = (v, max) => String(v ?? "").trim().slice(0, max);
 export const slug = (v) => clean(v, 60).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
@@ -59,9 +51,12 @@ export function validateEvent(form, { existing = [], judgeIds = [], now = Date.n
 
 export const events = {
   list: () => readAll(),
-  get: (id) => readAll().find((e) => e.id === id) ?? null,
-  add: (event) => writeAll([...readAll(), event]),
-  update: (id, patch) => writeAll(readAll().map((e) => (e.id === id ? { ...e, ...patch } : e))),
+  get: (id) => (id == null ? null : db.get("events", String(id))),
+  add: (event) => db.put("events", event.id, event),
+  update: (id, patch) => {
+    const e = db.get("events", String(id));
+    if (e) db.put("events", String(id), { ...e, ...patch });
+  },
 };
 
 /** Why a submission can't enter this tournament, or null. */

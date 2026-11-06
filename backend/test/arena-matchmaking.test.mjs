@@ -4,7 +4,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-process.env.ARENA_DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), "arena-mm-"));
+process.env.ARENA_SCRATCH_DIR = fs.mkdtempSync(path.join(os.tmpdir(), "arena-mm-"));
 const { submissions, dossiers } = await import("../src/store.mjs");
 const { proposeBracket, verifyProposal, embeddingText } = await import("../src/arena/matchmaking.mjs");
 

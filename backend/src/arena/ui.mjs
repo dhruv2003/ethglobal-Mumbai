@@ -3,8 +3,9 @@
  *   - the team's own screenshots (uploaded with the submission)
  *   - frames from our saved copy of the demo video
  *   - screenshots from the live test (one per device)
- * Every image goes through ffmpeg (local file, forced demuxer, like media.mjs) and comes
- * out as a small JPEG, so one 0G vision call can hold both projects.
+ * All of them are files on 0G Storage (zg/files.mjs). Every image goes through ffmpeg (a scratch
+ * copy, forced demuxer, like media.mjs) and comes out as a small JPEG, so one 0G vision call
+ * can hold both projects.
  *
  *   UI_IMAGES_PER_KIND   max images of each kind per project (default 2)
  */
@@ -13,8 +14,9 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
-import { liveDir, mediaDir, videos } from "../store.mjs";
-import { head, IMAGE_REF, lockedInput, sniffImage, sniffVideo, UPLOAD_DIR } from "../reviewer/media.mjs";
+import { getFile } from "../zg/files.mjs";
+import { liveFile, liveTests, videos } from "../store.mjs";
+import { IMAGE_REF, lockedInput, sniffImage, sniffVideo, UPLOADS } from "../reviewer/media.mjs";
 
 const run = promisify(execFile);
 const PER_KIND = Math.max(0, Number(process.env.UI_IMAGES_PER_KIND ?? 2) || 0);
@@ -32,41 +34,28 @@ async function shrink(file, demuxer, out, at = null) {
   return fs.readFileSync(out);
 }
 
-/** A file path inside dir, or null if `name` would escape it. */
-function inside(dir, name) {
-  const p = path.resolve(dir, String(name ?? ""));
-  return p.startsWith(path.resolve(dir) + path.sep) && fs.existsSync(p) ? p : null;
-}
+// Each source is { load() -> Buffer|null, label, at? }: bytes come from 0G only when used.
+const image = (scope, name, label) => ({ load: () => getFile(scope, name), label });
 
 function teamShots(sub) {
   return (sub.demoImages ?? [])
     .map((ref) => IMAGE_REF.exec(String(ref))?.[1])
     .filter(Boolean)
-    .map((f) => inside(UPLOAD_DIR, f))
-    .filter(Boolean)
-    .map((file, i) => ({ file, demuxer: IMAGE_DEMUXER[sniffImage(head(file, 16))], label: `team screenshot ${i + 1}` }))
-    .filter((x) => x.demuxer);
+    .map((f, i) => image(UPLOADS, f, `team screenshot ${i + 1}`));
 }
 
 function videoFrames(sub) {
   const v = videos.get(sub.id);
   if (!v?.ext || v.error) return [];
-  const file = inside(mediaDir(sub.id), `demo.${v.ext}`);
-  const demuxer = file && sniffVideo(head(file))?.demuxer;
-  if (!demuxer) return [];
+  let bytes = null; // one download for every frame
+  const load = async () => (bytes ??= await getFile(sub.id, `demo.${v.ext}`));
   const secs = Number(v.seconds) || 0;
   const times = secs > 2 ? [0.3, 0.7, 0.5, 0.15, 0.85].map((f) => Math.floor(secs * f)) : [0];
-  return times.map((at) => ({ file, demuxer, at, label: `demo video frame at ${fmt(at)}` }));
+  return times.map((at) => ({ load, at, label: `demo video frame at ${fmt(at)}` }));
 }
 
 function liveShots(sub) {
-  const dir = liveDir(sub.id);
-  let smoke = null;
-  try {
-    smoke = JSON.parse(fs.readFileSync(path.join(dir, "smoke.json"), "utf8"));
-  } catch {
-    return [];
-  }
+  const smoke = liveTests.get(sub.id);
   const out = [];
   for (const r of smoke?.runs ?? []) {
     const shots = (phase) => (r.phases ?? []).filter((p) => (phase ? p.id === phase : p.id !== "demo")).flatMap((p) => p.steps ?? []).filter((s) => s.screenshot);
@@ -76,14 +65,24 @@ function liveShots(sub) {
     const rest = [...shots("demo"), ...shots(null)];
     const ordered = [...new Set([...demo.slice(mid), ...demo.slice(0, mid), ...rest.filter((s) => s.status === "passed"), ...rest])];
     for (const s of ordered) {
-      const file = inside(dir, s.screenshot);
-      const demuxer = file && IMAGE_DEMUXER[sniffImage(head(file, 16))];
-      if (demuxer) out.push({ file, demuxer, device: r.device, label: `live test on a ${r.device}: "${String(s.title ?? "").slice(0, 80)}" (${s.status})` });
+      const name = liveFile(s.screenshot);
+      if (name) out.push({ ...image(sub.id, name, `live test on a ${r.device}: "${String(s.title ?? "").slice(0, 80)}" (${s.status})`), device: r.device });
     }
   }
   // One per device first (laptop, phone), then the rest.
   const firsts = out.filter((x, i) => out.findIndex((y) => y.device === x.device) === i);
   return [...firsts, ...out.filter((x) => !firsts.includes(x))];
+}
+
+/** The bytes in a scratch file with the demuxer ffmpeg must use, or null if it isn't an image or video we read. */
+function toScratch(bytes, work, n) {
+  if (!bytes) return null;
+  const img = sniffImage(bytes.subarray(0, 16));
+  const demuxer = img ? IMAGE_DEMUXER[img] : sniffVideo(bytes.subarray(0, 400))?.demuxer;
+  if (!demuxer || demuxer === "mpegts") return null;
+  const file = path.join(work, `src-${n}`);
+  if (!fs.existsSync(file)) fs.writeFileSync(file, bytes);
+  return { file, demuxer };
 }
 
 /**
@@ -106,7 +105,11 @@ export async function collectUiImages(sub, side) {
       for (const x of picked) {
         if (n >= PER_KIND) break;
         try {
-          const image = await shrink(x.file, x.demuxer, path.join(work, `${images.length}.jpg`), x.at ?? null);
+          const bytes = await x.load();
+          // Video frames share one scratch copy of the video.
+          const src = toScratch(bytes, work, x.at == null ? `${kind}-${images.length}` : `${kind}-video`);
+          if (!src) continue;
+          const image = await shrink(src.file, src.demuxer, path.join(work, `${images.length}.jpg`), x.at ?? null);
           images.push({ id: `${side}${images.length + 1}`, kind, label: x.label, image, mime: "image/jpeg" });
           n++;
         } catch {

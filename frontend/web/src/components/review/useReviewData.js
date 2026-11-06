@@ -21,7 +21,6 @@ export function useReviewData(project, live) {
       running: Boolean(r?.running),
       progress: r?.progress ?? null,
       dossier: project.dossier ?? d?.dossier ?? null,
-      zgStorage: r?.zgStorage ?? null,
     };
   };
   const [stored, setData] = useState(seed);
@@ -53,7 +52,6 @@ export function useReviewData(project, live) {
         running: Boolean(r?.running),
         progress: r?.progress ?? null,
         dossier: d?.dossier ?? x.dossier,
-        zgStorage: r?.zgStorage ?? x.zgStorage ?? null,
         };
       });
     })();
@@ -71,7 +69,7 @@ export function useReviewData(project, live) {
       if (Date.now() - started > 10 * 60 * 1000) return clearInterval(t);
       const r = await api(`/projects/${id}/reviews`).catch(() => null);
       if (!alive || !r) return;
-      setData((x) => ({ ...x, running: r.running, progress: r.progress, result: r.running ? x.result : (r.result ?? x.result), zgStorage: r.zgStorage ?? x.zgStorage }));
+      setData((x) => ({ ...x, running: r.running, progress: r.progress, result: r.running ? x.result : (r.result ?? x.result) }));
       if (!r.running && r.progress?.error) setError(r.progress.error);
     }, 2000);
     return () => {
@@ -85,7 +83,7 @@ export function useReviewData(project, live) {
     setError("");
     try {
       const r = await api(`/projects/${id}/reviews`, { method: "POST" });
-      setData((x) => ({ ...x, result: r.result, running: false, zgStorage: r.zgStorage ?? x.zgStorage }));
+      setData((x) => ({ ...x, result: r.result, running: false }));
     } catch (e) {
       setError(e.message);
     } finally {

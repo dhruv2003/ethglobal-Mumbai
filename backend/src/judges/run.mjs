@@ -4,8 +4,8 @@
  *
  *   cd backend && npm run judge -- --project go-health-me [--evidence] [--fresh-evidence] [--out file.json]
  *
- * With ZG_STORAGE=1 the saved review is archived on 0G Storage before exiting
- * (prints "pending" if 0G is slow; the server keeps retrying).
+ * The saved review goes to the Arkiv database; this waits until Arkiv has it before exiting.
+ * (A server already running only sees it after a restart: it reads Arkiv at boot.)
  *   --evidence        a vision model on 0G reads the live-test screenshots first
  *   --out <file>      also write the result here
  */
@@ -13,8 +13,8 @@ import "dotenv/config";
 import fs from "node:fs";
 import path from "node:path";
 import { reviewNow } from "../api.mjs";
-import { zgStatus } from "../store.mjs";
-import * as archive from "../zg/archive.mjs";
+import { db } from "../store.mjs";
+import { flushFiles } from "../zg/files.mjs";
 
 const args = process.argv.slice(2);
 const flag = (name) => args.includes(name);
@@ -53,16 +53,10 @@ try {
     fs.writeFileSync(path.resolve(out), JSON.stringify(result, null, 2));
     console.log(`wrote ${out}`);
   }
-  if (archive.enabled()) {
-    console.log("Archiving on 0G Storage…");
-    const left = await archive.drain({ timeoutMs: Number(process.env.ZG_STORAGE_DRAIN_MS) || 5 * 60_000 });
-    const st = zgStatus("review", id);
-    if (st.status === "stored") console.log(`0G Storage: review stored · root ${st.rootHash} · tx ${st.txHash ?? "(already on network)"}${st.links?.tx ? ` · ${st.links.tx}` : ""}`);
-    else console.log(`0G Storage: review ${st.status}${st.error ? ` (${st.error})` : ""}; the server will keep retrying.`);
-    const head = archive.loadHead();
-    if (head) console.log(`0G Storage head manifest: ${head.rootHash}`);
-    if (left.pending || left.failed) console.log(`0G outbox: ${left.pending} pending, ${left.failed} failed`);
-  }
+  console.log("Saving to Arkiv…");
+  await flushFiles();
+  const st = db.status();
+  console.log(st.failed.length ? `Arkiv: ${st.failed.length} write(s) failed: ${st.failed.map((f) => `${f.collection}/${f.id}: ${f.error}`).join("; ")}` : "Arkiv: saved.");
 } catch (e) {
   console.error(e.message);
   process.exit(1);

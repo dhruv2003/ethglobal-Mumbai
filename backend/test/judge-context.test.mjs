@@ -2,13 +2,15 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
-import os from "node:os";
 import path from "node:path";
 
-// Screenshots are read from data/live/<id>/: use a temporary data dir holding the sample's live test.
-process.env.ARENA_DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), "arena-judge-context-"));
+// Screenshots are files of the project (0G Storage; in memory under node --test): store the sample's.
 const ID = "go-health-me-sample";
-fs.cpSync(new URL("../fixtures/go-health-me/smoke", import.meta.url), path.join(process.env.ARENA_DATA_DIR, "live", ID), { recursive: true });
+const { putFile } = await import("../src/zg/files.mjs");
+const smoke = new URL("../fixtures/go-health-me/smoke/", import.meta.url).pathname;
+for (const device of ["laptop", "phone"])
+  for (const f of fs.readdirSync(path.join(smoke, device)).filter((x) => /^smoke-.+\.jpg$/.test(x))) putFile(ID, `live/${device}/${f}`, fs.readFileSync(path.join(smoke, device, f)), { mime: "image/jpeg", kind: "live-screenshot" });
+const { loadScreenshots } = await import("../src/judges/evidence.mjs");
 
 const { citableIds, judgeImages, reviewProject, textOf, userPrompt } = await import("../src/judges/review.mjs");
 const { compilePrompt, PROMPT_VERSION, validateForm } = await import("../src/judges/persona.mjs");
@@ -26,6 +28,7 @@ const project = {
   dossier: fixture("dossier.json"),
   liveTest: fixture("smoke/smoke.json"),
 };
+await loadScreenshots(project);
 
 test("the judge gets the live-test screenshots as images, laptop first, each with its citable ID", () => {
   const images = judgeImages(project, 5);

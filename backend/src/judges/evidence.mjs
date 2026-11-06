@@ -13,36 +13,52 @@
  *
  *   enable: npm run judge -- --project <id> --evidence   or JUDGE_EVIDENCE=1 for the API
  */
-import fs from "node:fs";
-import path from "node:path";
 import zg from "../zg/client.js";
 import zgModels from "../zg/models.js";
-import { evidence as evidenceStore, liveDir } from "../store.mjs";
+import { getFile } from "../zg/files.mjs";
+import { evidence as evidenceStore, liveFile } from "../store.mjs";
 
 export const EVIDENCE_ENABLED = process.env.JUDGE_EVIDENCE === "1" || process.env.JUDGE_EVIDENCE === "true";
 const MATCHES = ["yes", "partly", "no", "unclear"];
 
-/** Every screenshot the live test saved, with the step it belongs to. */
+/**
+ * Every screenshot the live test saved, with the step it belongs to. `name` is the file on
+ * 0G Storage; `bytes` is there once loadScreenshots(project) has read it (screenshots that
+ * couldn't be read have none).
+ */
 export function screenshotsOf(project) {
   const runs = project.liveTest?.runs ?? [];
-  const directory = liveDir(project.id);
   const out = [];
   for (const run of runs) {
     for (const phase of run.phases ?? []) {
       for (const step of phase.steps ?? []) {
-        if (!step.screenshot) continue;
+        const name = liveFile(step.screenshot);
+        if (!name) continue;
         out.push({
           id: `V-${run.device}-${step.id}`,
           device: run.device,
           stepId: step.id,
           stepTitle: step.title,
           stepStatus: step.status,
-          file: path.join(directory, step.screenshot),
+          name,
+          bytes: project.screenshots?.get(name) ?? null,
         });
       }
     }
   }
   return out;
+}
+
+/** Read the live test's screenshots from 0G Storage into project.screenshots (name -> bytes). */
+export async function loadScreenshots(project) {
+  if (project.screenshots) return project.screenshots;
+  const map = new Map();
+  for (const s of screenshotsOf(project)) {
+    const bytes = await getFile(project.id, s.name).catch(() => null);
+    if (bytes) map.set(s.name, bytes);
+  }
+  project.screenshots = map;
+  return map;
 }
 
 const SYSTEM = [
@@ -69,7 +85,7 @@ export function validateObservation(o) {
 const clip = (v, n) => String(v ?? "").slice(0, n);
 
 async function observeOne(shot, { client, model }) {
-  const image = fs.readFileSync(shot.file);
+  const image = shot.bytes;
   const { data, trace, traces } = await client.chatJSON({
     model,
     timeoutMs: 120_000,
@@ -131,7 +147,8 @@ function cachedRecords(project, shots, model) {
  * A screenshot that fails is recorded with its error; it never stops the judges.
  */
 export async function collectScreenshotEvidence(project, { fresh = false, client = zg, model = zgModels.MODELS.vision, concurrency = 4, log = () => {} } = {}) {
-  const shots = screenshotsOf(project).filter((s) => fs.existsSync(s.file));
+  await loadScreenshots(project);
+  const shots = screenshotsOf(project).filter((s) => s.bytes);
   if (!shots.length) return [];
   const cached = fresh ? null : cachedRecords(project, shots, model);
   // Marked cached: a later run reuses them without paying again, so its cost total must not count them.

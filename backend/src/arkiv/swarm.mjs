@@ -28,24 +28,13 @@ async function bee(url = process.env.BEE_URL) {
   return beeClient;
 }
 
-/** Media the live test saved: smoke.json, <device>/video.mp4, <device>/smoke-*.jpg. */
-function liveFiles(dir) {
-  if (!dir || !fs.existsSync(path.join(dir, "smoke.json"))) return [];
-  const out = ["smoke.json"];
-  for (const device of ["laptop", "phone"]) {
-    const d = path.join(dir, device);
-    if (!fs.existsSync(d)) continue;
-    for (const f of fs.readdirSync(d).sort()) if (/^(video\.mp4|smoke-(laptop|phone)-[a-z0-9]+\.jpg)$/.test(f)) out.push(`${device}/${f}`);
-  }
-  return out;
-}
-
 /**
  * Put the bundle in a temp folder with the paths readers will use:
  *   review.json, dossier.json?, live/smoke.json, live/<device>/...
+ * liveTest is the report; files are its media as [path like "laptop/video.mp4", bytes].
  * Returns { dir, files }. The caller removes dir.
  */
-export function stageBundle({ result, dossier, liveDir }) {
+export function stageBundle({ result, dossier, liveTest = null, files: media = [] }) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "arena-swarm-"));
   const files = [];
   const put = (rel, data) => {
@@ -56,7 +45,10 @@ export function stageBundle({ result, dossier, liveDir }) {
   };
   put("review.json", JSON.stringify(result, null, 2));
   if (dossier) put("dossier.json", JSON.stringify(dossier, null, 2));
-  for (const rel of liveFiles(liveDir)) put(`live/${rel}`, fs.readFileSync(path.join(liveDir, rel)));
+  if (liveTest) {
+    put("live/smoke.json", JSON.stringify(liveTest, null, 2));
+    for (const [rel, bytes] of media) if (/^(laptop|phone)\/(video\.mp4|smoke-(laptop|phone)-[a-z0-9]+\.jpg)$/.test(rel)) put(`live/${rel}`, bytes);
+  }
   return { dir, files };
 }
 

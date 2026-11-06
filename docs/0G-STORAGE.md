@@ -1,5 +1,8 @@
 # 0G Storage in Battle Arena
 
+> **Outdated (Nov 2026):** this describes the earlier 0G archive of every record, with a local `data/` folder. Now records live in the Arkiv database and only files (uploads, demo videos, live-test recordings and screenshots) go to 0G Storage, with nothing kept on disk. The `zg:*` scripts are gone. See "Where the data lives" in `backend/README.md`.
+
+
 **One line:** every record the arena produces is saved locally *and* uploaded to [0G Storage](https://docs.0g.ai/developer-hub/building-on-0g/storage/sdk), so anyone can download it from 0G and check it hasn't changed.
 
 ## What gets stored

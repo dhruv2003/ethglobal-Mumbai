@@ -5,7 +5,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-process.env.ARENA_DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), "arena-records-test-"));
+process.env.ARENA_SCRATCH_DIR = fs.mkdtempSync(path.join(os.tmpdir(), "arena-records-test-"));
 delete process.env.ARKIV_PRIVATE_KEY;
 delete process.env.PUBLISHER_PRIVATE_KEY;
 process.env.ARKIV_PUBLISHER = "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045";
@@ -53,7 +53,8 @@ const all = () =>
 
 test("every record type has a builder, and every built record has project identity where it should", () => {
   const types = new Set(all().map((r) => r.type));
-  assert.deepEqual([...types].sort(), [...TYPES].sort());
+  // "doc" is the database itself (arkiv/db.mjs), not a public view: it has no builder.
+  assert.deepEqual([...types].sort(), TYPES.filter((t) => t !== "doc").sort());
   for (const r of all()) {
     if (["project", "pipeline", "dossier", "transcript", "livetest", "vision", "review", "file"].includes(r.type)) {
       assert.ok(r.attrs.projectId, r.type);
@@ -175,15 +176,8 @@ test("the full judging review is its own record, with every judge's comment and 
   assert.equal(build.reviewRecord(sample, null), null);
 });
 
-test("the demo video stays off chain unless ARKIV_DEMO_VIDEO=1", async () => {
-  const { projectFiles } = await import("../src/arkiv/records/sync.mjs");
-  const { mediaDir, videos } = await import("../src/store.mjs");
-  fs.mkdirSync(mediaDir("vid-1"), { recursive: true });
-  fs.writeFileSync(path.join(mediaDir("vid-1"), "demo.mp4"), "x");
-  videos.save("vid-1", { ext: "mp4", bytes: 1, seconds: 1 });
-  delete process.env.ARKIV_DEMO_VIDEO;
-  assert.ok(!projectFiles("vid-1").some((f) => f.kind === "demo-video"));
-  process.env.ARKIV_DEMO_VIDEO = "1";
-  assert.ok(projectFiles("vid-1").some((f) => f.kind === "demo-video" && f.name === "demo.mp4"));
-  delete process.env.ARKIV_DEMO_VIDEO;
+test("the database type is keyed by collection and id, and a long id still fits", async () => {
+  const { RECORDS } = await import("../src/arkiv/records/schemas.mjs");
+  assert.deepEqual(RECORDS.doc.identity, ["collection", "docId"]);
+  assert.ok(RECORDS.doc.columnNames.includes("deleted"));
 });

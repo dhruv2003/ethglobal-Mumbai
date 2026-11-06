@@ -5,7 +5,7 @@ import path from "node:path";
 import os from "node:os";
 
 // Never touch the real backend/data.
-process.env.ARENA_DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), "arena-graph-test-"));
+process.env.ARENA_SCRATCH_DIR = fs.mkdtempSync(path.join(os.tmpdir(), "arena-graph-test-"));
 const { buildGraph, explainProject, judgeBias, judgeLeniency, loadGraph, similarProjects, toJson } = await import("../src/graph/graph.mjs");
 const { dossiers, judges, reviews, submissions } = await import("../src/store.mjs");
 

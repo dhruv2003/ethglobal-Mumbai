@@ -6,13 +6,17 @@ import os from "node:os";
 import path from "node:path";
 import { Readable } from "node:stream";
 
-process.env.ARENA_DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), "arena-media-test-"));
-const { classifyVideo, cleanUploads, IMAGE_REF, parsePlaylist, saveDemoVideo, sniffImage, sniffVideo, storeImageUpload, storeUpload, UPLOAD_DIR, UPLOAD_REF } = await import("../src/reviewer/media.mjs");
-after(() => fs.rmSync(process.env.ARENA_DATA_DIR, { recursive: true, force: true }));
+process.env.ARENA_SCRATCH_DIR = fs.mkdtempSync(path.join(os.tmpdir(), "arena-media-test-"));
+const { classifyVideo, cleanUploads, IMAGE_REF, parsePlaylist, saveDemoVideo, sniffImage, sniffVideo, storeImageUpload, storeUpload, UPLOAD_REF, UPLOADS, uploadExists } = await import("../src/reviewer/media.mjs");
+// Uploads are files on 0G Storage (in memory under node --test); scratch work goes to ARENA_SCRATCH_DIR.
+const { db } = await import("../src/store.mjs");
+const { filesOf, getFile, putFile } = await import("../src/zg/files.mjs");
+const { SCRATCH_ROOT } = await import("../src/datafiles.mjs");
+after(() => fs.rmSync(process.env.ARENA_SCRATCH_DIR, { recursive: true, force: true }));
 
 /** A real 2-second MP4 made by ffmpeg, so probing is tested for real. */
 function tinyMp4() {
-  const f = path.join(process.env.ARENA_DATA_DIR, "tiny.mp4");
+  const f = path.join(process.env.ARENA_SCRATCH_DIR, "tiny.mp4");
   if (!fs.existsSync(f)) execFileSync("ffmpeg", ["-v", "error", "-y", "-f", "lavfi", "-i", "testsrc=size=160x120:rate=10:duration=2", "-pix_fmt", "yuv420p", f]);
   return fs.readFileSync(f);
 }
@@ -59,36 +63,37 @@ test("uploads: a real video is stored by its hash, can be saved as a demo, and j
   assert.ok(UPLOAD_REF.test(`upload:${up.file}`));
   const again = await storeUpload(Readable.from([mp4]));
   assert.equal(again.file, up.file);
-  assert.equal(fs.readdirSync(UPLOAD_DIR).filter((f) => !f.startsWith(".")).length, 1);
+  assert.equal(filesOf(UPLOADS).length, 1);
+  assert.deepEqual(await getFile(UPLOADS, up.file), mp4, "stored byte for byte (small videos aren't re-encoded)");
 
-  const saved = await saveDemoVideo(`upload:${up.file}`, path.join(process.env.ARENA_DATA_DIR, "media", "p1"));
+  const saved = await saveDemoVideo(`upload:${up.file}`, path.join(process.env.ARENA_SCRATCH_DIR, "media", "p1"));
   assert.equal(saved.ext, "mp4");
   assert.equal(saved.seconds, 2);
   assert.ok(fs.existsSync(saved.file));
 
   await assert.rejects(storeUpload(Readable.from([Buffer.from("#EXTM3U\n".repeat(400))])), (e) => e.status === 415);
   await assert.rejects(storeUpload(Readable.from([Buffer.concat([mp4.subarray(0, 64), Buffer.alloc(4000)])])), (e) => e.status === 415);
-  assert.equal(fs.readdirSync(UPLOAD_DIR).filter((f) => f.startsWith(".part")).length, 0, "no partial files left behind");
+  assert.equal(filesOf(UPLOADS).length, 1, "refused files are never stored");
+  assert.equal(fs.existsSync(path.join(SCRATCH_ROOT, "uploads")) ? fs.readdirSync(path.join(SCRATCH_ROOT, "uploads")).length : 0, 0, "no scratch files left behind");
 });
 
-test("unused uploads are cleaned up after a day; submitted ones are kept", () => {
-  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
-  const old = new Date(Date.now() - 2 * 24 * 3600 * 1000);
+test("unused uploads are forgotten after a day; submitted ones are kept", () => {
+  const old = new Date(Date.now() - 2 * 24 * 3600 * 1000).toISOString();
   for (const f of [`${"1".repeat(64)}.mp4`, `${"2".repeat(64)}.mp4`]) {
-    fs.writeFileSync(path.join(UPLOAD_DIR, f), "x");
-    fs.utimesSync(path.join(UPLOAD_DIR, f), old, old);
+    putFile(UPLOADS, f, Buffer.from(f), { mime: "video/mp4" });
+    db.put("files", `${UPLOADS}/${f}`, { ...db.get("files", `${UPLOADS}/${f}`), savedAt: old });
   }
   cleanUploads(new Set([`${"2".repeat(64)}.mp4`]));
-  assert.ok(!fs.existsSync(path.join(UPLOAD_DIR, `${"1".repeat(64)}.mp4`)));
-  assert.ok(fs.existsSync(path.join(UPLOAD_DIR, `${"2".repeat(64)}.mp4`)));
+  assert.ok(!uploadExists(`${"1".repeat(64)}.mp4`));
+  assert.ok(uploadExists(`${"2".repeat(64)}.mp4`));
 });
 
 test("embed-only links are not downloaded", async () => {
-  await assert.rejects(saveDemoVideo("https://youtu.be/abc", path.join(process.env.ARENA_DATA_DIR, "media", "p2")), (e) => e.skip === true);
+  await assert.rejects(saveDemoVideo("https://youtu.be/abc", path.join(process.env.ARENA_SCRATCH_DIR, "media", "p2")), (e) => e.skip === true);
 });
 
 test("screenshots: PNG, JPEG and WebP are stored by hash; SVG and junk are refused", async () => {
-  const png = path.join(process.env.ARENA_DATA_DIR, "shot.png");
+  const png = path.join(process.env.ARENA_SCRATCH_DIR, "shot.png");
   execFileSync("ffmpeg", ["-v", "error", "-y", "-f", "lavfi", "-i", "testsrc=size=64x48", "-frames:v", "1", png]);
   const up = await storeImageUpload(Readable.from([fs.readFileSync(png)]));
   assert.match(up.file, /^[0-9a-f]{64}\.png$/);

@@ -4,30 +4,30 @@
  * the fight page offers the manual buttons instead.
  */
 import fs from "node:fs";
-import path from "node:path";
 import { createPublicClient, createWalletClient, defineChain, formatEther, getAddress, http, parseAbiItem } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { DATA_DIR } from "../store.mjs";
+import { db } from "../store.mjs";
 import { createPayoutBot } from "./bot.mjs";
 
 const abi = JSON.parse(fs.readFileSync(new URL("../../contracts/abi/BettingPools.json", import.meta.url), "utf8"));
 const POOLS_ABI = abi.abi ?? abi;
 const BET_PLACED = parseAbiItem("event BetPlaced(uint256 indexed market, address indexed bettor, uint256 indexed project, uint256 amount)");
 const EVERY_MS = 6000;
-const FILE = path.join(DATA_DIR, "payouts.json");
-
-const fileStore = {
-  load() {
-    try {
-      return JSON.parse(fs.readFileSync(FILE, "utf8"));
-    } catch {
-      return null;
-    }
-  },
+// The bot's progress (last block scanned, markets paid) is one Arkiv document. Bets and
+// payouts are written at once; a cursor that only moved forward at most every 5 minutes
+// (the scan runs every 6 s, an Arkiv write takes ~7 s, and rescanning a few blocks after a
+// restart is harmless: bettors are de-duplicated).
+const CURSOR_EVERY_MS = 5 * 60_000;
+let savedMarkets = null;
+let savedAt = 0;
+const arkivStore = {
+  load: () => db.get("payouts", "bot"),
   save(state) {
-    const tmp = `${FILE}.${process.pid}.tmp`;
-    fs.writeFileSync(tmp, JSON.stringify(state, null, 2));
-    fs.renameSync(tmp, FILE);
+    const markets = JSON.stringify(state.markets);
+    if (markets === savedMarkets && Date.now() - savedAt < CURSOR_EVERY_MS) return;
+    savedMarkets = markets;
+    savedAt = Date.now();
+    db.put("payouts", "bot", state);
   },
 };
 
@@ -56,7 +56,7 @@ export function startPayouts() {
   const pools = { address: getAddress(poolsAddress), abi: POOLS_ABI };
 
   bot = createPayoutBot({
-    store: fileStore,
+    store: arkivStore,
     fromBlock: BigInt(process.env.PAYOUTS_FROM_BLOCK ?? 0),
     log: (line) => console.log(`[payouts] ${line}`),
     chain: {

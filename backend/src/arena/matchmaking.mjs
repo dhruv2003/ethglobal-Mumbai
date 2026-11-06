@@ -10,20 +10,12 @@
  * The bracket is audit-hashed; the result hash is what gets committed on chain at freeze.
  */
 import crypto from "node:crypto";
-import fs from "node:fs";
-import path from "node:path";
 import zg from "../zg/client.js";
 import zgModels from "../zg/models.js";
 import { buildBracket } from "../../matching/src/index.js";
-import { DATA_DIR, dossiers, submissions } from "../store.mjs";
+import { db, dossiers, submissions } from "../store.mjs";
 
-const safe = (v) => String(v).replace(/[^a-zA-Z0-9_.@-]/g, "_");
 const sha = (s) => crypto.createHash("sha256").update(s).digest("hex");
-const dir = (name) => {
-  const d = path.join(DATA_DIR, name);
-  fs.mkdirSync(d, { recursive: true });
-  return d;
-};
 
 export const EMBEDDING_MODEL = () => zgModels.MODELS.embed;
 
@@ -46,23 +38,19 @@ const defaultEmbed = async (texts) => (await zg.embed({ input: texts, model: EMB
 /** Embeddings stored per project and model; recomputed only if the dossier text changed. */
 async function embeddingsFor(items, embed) {
   const model = EMBEDDING_MODEL();
-  const file = (id) => path.join(dir("arena-embeddings"), `${safe(id)}-${safe(model)}.json`);
+  // Arkiv documents (collection "embeddings"), one per project and model.
+  const docId = (id) => `${id}:${model}`;
   const out = new Map();
   const missing = [];
   for (const it of items) {
-    let hit = null;
-    try {
-      hit = JSON.parse(fs.readFileSync(file(it.id), "utf8"));
-    } catch {
-      /* not stored yet */
-    }
+    const hit = db.get("embeddings", docId(it.id));
     if (hit?.textHash === sha(it.text)) out.set(it.id, hit.vector);
     else missing.push(it);
   }
   if (missing.length) {
     const vectors = await embed(missing.map((m) => m.text));
     missing.forEach((m, i) => {
-      fs.writeFileSync(file(m.id), JSON.stringify({ model, textHash: sha(m.text), vector: vectors[i] }));
+      db.put("embeddings", docId(m.id), { model, textHash: sha(m.text), vector: vectors[i] });
       out.set(m.id, vectors[i]);
     });
   }
@@ -105,7 +93,7 @@ export async function proposeBracket({ submissionIds, seed, blockedPairs = [], e
   }
 
   const proposal = { createdAt: new Date().toISOString(), submissionIds: [...submissionIds].sort(), bracket: JSON.parse(JSON.stringify(bracket)) };
-  fs.writeFileSync(path.join(dir("arena-proposals"), `${bracket.resultHash}.json`), JSON.stringify(proposal));
+  db.put("proposals", bracket.resultHash, proposal);
   return {
     ...proposal.bracket,
     names,
@@ -116,10 +104,6 @@ export async function proposeBracket({ submissionIds, seed, blockedPairs = [], e
 /** A stored proposal, if its field is exactly this set of projects in this order. */
 export function verifyProposal(resultHash, submissionIds) {
   if (!/^[0-9a-f]{64}$/.test(String(resultHash))) return null;
-  try {
-    const p = JSON.parse(fs.readFileSync(path.join(dir("arena-proposals"), `${resultHash}.json`), "utf8"));
-    return JSON.stringify(p.bracket.slots) === JSON.stringify(submissionIds) ? p.bracket : null;
-  } catch {
-    return null;
-  }
+  const p = db.get("proposals", resultHash);
+  return p && JSON.stringify(p.bracket.slots) === JSON.stringify(submissionIds) ? p.bracket : null;
 }

@@ -69,23 +69,31 @@ export async function writeBlob(type, attrs, buf, opts = {}) {
   return writeParts(type, attrs, sha256Hex(buf), split(buf), "raw", opts);
 }
 
-async function writeParts(type, attrs, hash, chunks, enc, { client = null, reader = null, onPart = null } = {}) {
+/**
+ * opts.dedupe: false writes even when the newest version has the same hash (the
+ *   database does its own dedup, and a doc can go back to an earlier value).
+ * opts.writtenAt: the version's timestamp (default unix seconds now). The database
+ *   passes strictly increasing milliseconds so the newest version always wins.
+ */
+async function writeParts(type, attrs, hash, chunks, enc, { client = null, reader = null, onPart = null, dedupe = true, writtenAt: at = null } = {}) {
   const { schema } = spec(type);
   if (!client && !canWrite()) throw new Error("Arkiv is not set up: set ARKIV_PRIVATE_KEY in backend/.env.");
   const r = reader ?? publicClient();
   const owner = publisher();
   // Unchanged since the last write: keep the existing entity.
-  const same = await r
-    .select({ $key: true })
-    .from(schema)
-    .ownedBy(owner)
-    .where(and(...identityWhere(type, attrs), eq("hash", hash), eq("part", 0)))
-    .limit(1)
-    .fetch();
-  if (same.entities.length) return { entityKeys: [same.entities[0].$key], hash, skipped: true };
+  if (dedupe) {
+    const same = await r
+      .select({ $key: true })
+      .from(schema)
+      .ownedBy(owner)
+      .where(and(...identityWhere(type, attrs), eq("hash", hash), eq("part", 0)))
+      .limit(1)
+      .fetch();
+    if (same.entities.length) return { entityKeys: [same.entities[0].$key], hash, skipped: true };
+  }
 
   const w = client ?? walletClient();
-  const writtenAt = u64(BigInt(Math.floor(Date.now() / 1000)));
+  const writtenAt = u64(BigInt(at ?? Math.floor(Date.now() / 1000)));
   const options = { expiration: ExpirationTime.fromDays(ttlDays()), flags: { readonly: true } };
   const entityKeys = [];
   for (const [i, chunk] of chunks.entries()) {
@@ -165,6 +173,23 @@ async function readParts(type, identity, { reader = null, maxParts = 100 } = {})
   }
   delete columns.payload;
   return { columns, chunks };
+}
+
+/**
+ * Every version's first part matching the filters (in key order: stable pages), without payloads,
+ * paged through to the end (the node returns at most 100 rows at a time).
+ */
+export async function listAllHeads(type, filters = {}, { reader = null, page = 100 } = {}) {
+  const { schema } = spec(type);
+  const owner = readOwner();
+  const r = reader ?? publicClient();
+  const where = and(eq("part", 0), ...Object.entries(filters).map(([k, v]) => eq(k, v)));
+  const out = [];
+  for (let offset = 0; ; offset += page) {
+    const { entities } = await r.select(selection(type, false)).from(schema).ownedBy(owner).where(where).orderBy(asc("$key")).limit(page).offset(offset).fetch();
+    out.push(...entities.map(plain));
+    if (entities.length < page) return out;
+  }
 }
 
 /** First parts (one per record version) matching the filters, newest first, without payloads. */

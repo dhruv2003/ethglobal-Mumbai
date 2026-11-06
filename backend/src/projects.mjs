@@ -1,9 +1,9 @@
 /*
  * Everything a judge may see about a project: the team's submission, the
- * reviewer's dossier and the live test, all from the store.
+ * reviewer's dossier and the live test, all from the store (Arkiv). The live
+ * test's screenshots are read separately (judges/evidence.mjs loadScreenshots).
  */
-import { readJSON } from "./datafiles.mjs";
-import { dossiers, liveDir, submissions } from "./store.mjs";
+import { dossiers, liveTests, submissions } from "./store.mjs";
 
 function fromSubmission(r) {
   return {
@@ -19,7 +19,7 @@ function fromSubmission(r) {
       tracks: r.tracks ?? [],
     },
     dossier: dossiers.get(r.id),
-    liveTest: readJSON("smoke.json", null, liveDir(r.id)),
+    liveTest: liveTests.get(r.id),
   };
 }
 

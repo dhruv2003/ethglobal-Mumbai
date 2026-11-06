@@ -415,7 +415,7 @@ export function judgeImages(project, max = MAX_IMAGES) {
   if (!max || !project.id || !project.liveTest?.runs?.length) return [];
   let shots;
   try {
-    shots = screenshotsOf(project).filter((s) => fs.existsSync(s.file));
+    shots = screenshotsOf(project).filter((s) => s.bytes); // read from Arkiv first: loadScreenshots()
   } catch {
     return [];
   }
@@ -425,12 +425,12 @@ export function judgeImages(project, max = MAX_IMAGES) {
     .sort((a, b) => rank(a.s) - rank(b.s) || a.i - b.i)
     .slice(0, max)
     .map(({ s }) => {
-      const ext = s.file.split(".").pop().toLowerCase();
+      const ext = s.name.split(".").pop().toLowerCase();
       return {
         id: s.id,
         caption: `[${s.id}] ${s.device} screenshot, step ${s.stepId} "${s.stepTitle}", test result: ${s.stepStatus}. Shows only the visible part of the page.`,
         mime: ext === "png" ? "image/png" : ext === "webp" ? "image/webp" : "image/jpeg",
-        data: fs.readFileSync(s.file).toString("base64"),
+        data: s.bytes.toString("base64"),
       };
     });
 }

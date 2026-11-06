@@ -1,5 +1,9 @@
 /*
- * Keep our own copy of each project's demo video.
+ * Keep our own copy of each project's demo video, and the files teams upload.
+ * Both live on 0G Storage (zg/files.mjs): uploads under the scope "uploads", a
+ * project's demo video as its file demo.<ext>. Videos over SHRINK_OVER_BYTES are
+ * re-encoded smaller first, so they upload and play back faster.
+ * Downloads and ffmpeg work happen in scratch folders that are always removed.
  *
  *   upload:<sha256>.<ext>   a file the team uploaded from their computer
  *   Loom share links        Loom's HLS stream, joined and remuxed to MP4
@@ -18,14 +22,17 @@ import path from "node:path";
 import { pipeline as pump } from "node:stream/promises";
 import { Transform } from "node:stream";
 import { promisify } from "node:util";
-import { DATA_DIR } from "../store.mjs";
+import os from "node:os";
+import { fileInfo, filesOf, getFile, MAX_FILE_BYTES, putFile, removeFile } from "../zg/files.mjs";
+import { scratch } from "../datafiles.mjs";
 import { readCapped, safeFetch } from "./net.mjs";
 
 const run = promisify(execFile);
 export const VIDEO_MAX = 300 * 1024 * 1024;
 const MAX_SEGMENTS = 3000;
 
-export const UPLOAD_DIR = path.join(DATA_DIR, "uploads");
+/** Uploads are Arkiv files of this scope, named <sha256>.<ext>. */
+export const UPLOADS = "uploads";
 export const UPLOAD_FILE = /^[0-9a-f]{64}\.(mp4|mov|webm|png|jpg|webp)$/;
 export const UPLOAD_REF = /^upload:([0-9a-f]{64}\.(?:mp4|mov|webm))$/;
 export const IMAGE_REF = /^upload:([0-9a-f]{64}\.(?:png|jpg|webp))$/;
@@ -82,12 +89,73 @@ export async function probeInfo(file, demuxer) {
 }
 
 const IMAGE_DEMUXER = { png: "png_pipe", jpg: "jpeg_pipe", webp: "webp_pipe" };
+/** Is this upload (<sha>.<ext>) stored? */
+export const uploadExists = (file) => Boolean(fileInfo(UPLOADS, file));
+
+/** An upload's bytes, from 0G Storage. Throws if it is gone. */
+export async function uploadBytes(file) {
+  const buf = await getFile(UPLOADS, file);
+  if (!buf) throw new Error(`The upload ${file} is no longer stored.`);
+  return buf;
+}
+
+/** Run fn(path) with the bytes in a scratch file, then remove it. */
+export async function withTempFile(bytes, ext, fn) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "arena-file-"));
+  const file = path.join(dir, `file.${ext}`);
+  try {
+    fs.writeFileSync(file, bytes);
+    return await fn(file);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+}
+
 /** Picture size of an uploaded screenshot (file name like <sha>.png). */
 export async function imageInfo(file) {
   const ext = path.extname(file).slice(1);
-  const { stdout } = await run("ffprobe", ["-v", "error", ...lockedInput(IMAGE_DEMUXER[ext], path.join(UPLOAD_DIR, file)), "-show_entries", "stream=width,height", "-of", "json"], { timeout: 15000 });
-  const st = JSON.parse(stdout).streams?.[0] ?? {};
-  return { width: st.width ?? null, height: st.height ?? null, bytes: fs.statSync(path.join(UPLOAD_DIR, file)).size };
+  const bytes = await uploadBytes(file);
+  return withTempFile(bytes, ext, async (tmp) => {
+    const { stdout } = await run("ffprobe", ["-v", "error", ...lockedInput(IMAGE_DEMUXER[ext], tmp), "-show_entries", "stream=width,height", "-of", "json"], { timeout: 15000 });
+    const st = JSON.parse(stdout).streams?.[0] ?? {};
+    return { width: st.width ?? null, height: st.height ?? null, bytes: bytes.length };
+  });
+}
+
+/* ---------------- Smaller videos for 0G Storage ---------------- */
+
+const SHRINK_OVER_BYTES = Number(process.env.ZG_VIDEO_SHRINK_MB || 40) * 1024 * 1024;
+
+/**
+ * Re-encode a video smaller when it's over SHRINK_OVER_BYTES: H.264/AAC MP4 at most 720p
+ * (then 480p if that's still over the file limit). Returns { file, ext, demuxer, bytes };
+ * the input is replaced. ffmpeg reads only this local file with its demuxer forced.
+ */
+export async function shrinkVideo(file, demuxer) {
+  const bytes = fs.statSync(file).size;
+  if (bytes <= SHRINK_OVER_BYTES) return { file, ext: path.extname(file).slice(1), demuxer, bytes };
+  const out = path.join(path.dirname(file), `.small-${crypto.randomUUID()}.mp4`);
+  try {
+    for (const [height, crf, audio] of [[720, 30, "64k"], [480, 34, "48k"]]) {
+      await run("ffmpeg", ["-y", "-v", "error", ...lockedInput(demuxer, file), "-map", "0:v:0", "-map", "0:a:0?", "-vf", `scale=-2:'min(${height},ih)'`, "-r", "24", "-c:v", "libx264", "-preset", "veryfast", "-crf", String(crf), "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", audio, "-ac", "1", "-movflags", "+faststart", out], { timeout: 15 * 60_000 });
+      if (fs.statSync(out).size <= MAX_FILE_BYTES) break;
+    }
+    const small = fs.statSync(out).size;
+    if (small > MAX_FILE_BYTES) throw Object.assign(new Error(`The video is still ${Math.round(small / 1048576)} MB after compressing; files can be at most ${Math.round(MAX_FILE_BYTES / 1048576)} MB. Upload a shorter video.`), { status: 413 });
+    const dest = file.replace(/\.[^.\/]+$/, ".mp4");
+    fs.rmSync(file, { force: true });
+    fs.renameSync(out, dest);
+    return { file: dest, ext: "mp4", demuxer: "mov", bytes: small };
+  } finally {
+    fs.rmSync(out, { force: true });
+  }
+}
+
+/** Put our copy of a project's demo video on 0G Storage as demo.<ext> (compressed first if big). Returns the (possibly new) video. */
+export async function keepDemoVideo(projectId, video) {
+  const small = await shrinkVideo(video.file, video.demuxer);
+  putFile(projectId, `demo.${small.ext}`, fs.readFileSync(small.file), { mime: MIME[small.ext], kind: "demo-video" });
+  return { ...video, ...small };
 }
 
 /** A Transform that counts bytes (and hashes them) and fails past max. */
@@ -316,16 +384,10 @@ async function saveOnce(videoUrl, dir, onProgress) {
   let source;
   try {
     if (c.kind === "upload") {
-      const src = path.join(UPLOAD_DIR, c.file);
-      if (!fs.existsSync(src)) throw new Error("The uploaded video is no longer on the server.");
-      onProgress?.("Using the file the team uploaded");
+      if (!uploadExists(c.file)) throw new Error("The uploaded video is no longer stored.");
+      onProgress?.("Reading the file the team uploaded from 0G Storage");
       file = path.join(dir, `demo.${path.extname(c.file).slice(1)}`);
-      fs.rmSync(file, { force: true });
-      try {
-        fs.linkSync(src, file);
-      } catch {
-        fs.copyFileSync(src, file);
-      }
+      fs.writeFileSync(file, await uploadBytes(c.file));
       source = "uploaded by the team";
     } else if (c.kind === "loom" || c.kind === "hls") {
       let hls = c.url;
@@ -378,27 +440,26 @@ async function saveOnce(videoUrl, dir, onProgress) {
 const httpError = (status, message) => Object.assign(new Error(message), { status });
 
 /**
- * Stream an upload into UPLOAD_DIR, content-addressed (sha256), so the same file
- * uploaded twice is stored once. check(tmpFile, bytes) validates the bytes and
- * returns { ext, ...extra } (or throws); the result is { file, bytes, ...extra }.
+ * Stream an upload into a scratch file, check it, then store it on 0G Storage,
+ * content-addressed (sha256 of what was uploaded), so the same file uploaded twice
+ * is stored once. check(tmpFile, bytes) validates the bytes and returns
+ * { ext, mime, kind, ...extra } (or throws); it may replace the file (a video is
+ * compressed) and return its new path as `file`. The result is { file, bytes, ...extra }.
  */
 async function storeContentAddressed(stream, max, check) {
-  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
-  const tmp = path.join(UPLOAD_DIR, `.part-${crypto.randomUUID()}`);
+  const dir = scratch("uploads", crypto.randomUUID());
+  fs.mkdirSync(dir, { recursive: true });
+  const tmp = path.join(dir, "upload.part");
   const hash = crypto.createHash("sha256");
   const c = capped(max, hash);
   try {
     await pump(stream, c, fs.createWriteStream(tmp));
-    const { ext, ...extra } = await check(tmp, c.bytes());
-    const file = `${hash.digest("hex")}.${ext}`;
-    const full = path.join(UPLOAD_DIR, file);
-    if (fs.existsSync(full)) fs.rmSync(tmp, { force: true });
-    else fs.renameSync(tmp, full);
-    fs.utimesSync(full, new Date(), new Date()); // fresh again for the clean-up clock
-    return { file, bytes: c.bytes(), ...extra };
-  } catch (e) {
-    fs.rmSync(tmp, { force: true });
-    throw e;
+    const { ext, mime, kind, file: checked = tmp, ...extra } = await check(tmp, c.bytes());
+    const name = `${hash.digest("hex")}.${ext}`;
+    if (!uploadExists(name)) putFile(UPLOADS, name, fs.readFileSync(checked), { mime, kind });
+    return { file: name, bytes: c.bytes(), ...extra };
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
   }
 }
 
@@ -412,7 +473,9 @@ export async function storeUpload(stream, { declaredBytes = 0 } = {}) {
     const seconds = await probeSeconds(tmp, s.demuxer).catch(() => {
       throw httpError(415, "That file doesn't play as a video.");
     });
-    return { ext: s.ext, seconds };
+    const small = await shrinkVideo(tmp, s.demuxer);
+    const ext = small.file === tmp ? s.ext : small.ext; // not re-encoded: keep its own container
+    return { ext, mime: MIME[ext], kind: "upload-video", file: small.file, seconds };
   });
 }
 
@@ -422,19 +485,16 @@ export async function storeImageUpload(stream) {
     if (bytes < 100) throw httpError(400, "That image is empty.");
     const ext = sniffImage(head(tmp, 16));
     if (!ext) throw httpError(415, "Upload a PNG, JPEG or WebP image.");
-    return { ext };
+    return { ext, mime: MIME[ext], kind: "upload-image" };
   });
 }
 
-/** Delete uploads older than maxAgeMs that no submission points at. */
+/** Forget uploads older than maxAgeMs that no submission points at. */
 export function cleanUploads(referenced, maxAgeMs = 24 * 60 * 60 * 1000) {
-  if (!fs.existsSync(UPLOAD_DIR)) return 0;
   let n = 0;
-  for (const f of fs.readdirSync(UPLOAD_DIR)) {
-    const full = path.join(UPLOAD_DIR, f);
-    const old = Date.now() - fs.statSync(full).mtimeMs > maxAgeMs;
-    if (old && !referenced.has(f)) {
-      fs.rmSync(full, { force: true });
+  for (const [name, info] of filesOf(UPLOADS)) {
+    if (Date.now() - Date.parse(info.savedAt) > maxAgeMs && !referenced.has(name)) {
+      removeFile(UPLOADS, name);
       n++;
     }
   }

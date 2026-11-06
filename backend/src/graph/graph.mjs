@@ -9,10 +9,7 @@
  * buildGraph() is pure (records in, graph out) so it can be tested without the store;
  * loadGraph() feeds it from backend/data.
  */
-import fs from "node:fs";
-import path from "node:path";
-import { readJSON } from "../datafiles.mjs";
-import { DATA_DIR, dossiers, judges, reviews, submissions } from "../store.mjs";
+import { db, dossiers, judges, reviews, submissions } from "../store.mjs";
 
 const norm = (s) => String(s).trim().toLowerCase();
 /** The id inside a node id: "project:abc" -> "abc", "tech:viem" -> "viem". */
@@ -143,18 +140,7 @@ export function toJson(g) {
   return { nodes: [...g.nodes.values()].filter((n) => keep(n.id)), edges: g.edges.filter((e) => keep(e.to)) };
 }
 
-/** Every JSON record in a data folder. A missing folder is empty; an unreadable file is skipped, not the whole folder. */
-const readDir = (name) => {
-  const d = path.join(DATA_DIR, name);
-  if (!fs.existsSync(d)) return [];
-  return fs
-    .readdirSync(d)
-    .filter((f) => f.endsWith(".json"))
-    .map((f) => readJSON(f, null, d))
-    .filter(Boolean);
-};
-
-/** Builds the graph from backend/data. Cheap enough to rebuild per request at hackathon scale. */
+/** Builds the graph from the Arkiv database. Cheap enough to rebuild per request at hackathon scale. */
 export function loadGraph() {
   const subs = submissions.list();
   return buildGraph({
@@ -162,7 +148,7 @@ export function loadGraph() {
     judgeList: judges.list(),
     reviewList: subs.map((s) => reviews.get(s.id)).filter(Boolean),
     dossierList: subs.map((s) => ({ projectId: s.id, ...dossiers.get(s.id) })).filter((d) => d.dependencies || d.evidence),
-    tournaments: readDir("arena-tournaments"),
-    fights: readDir("arena-fights"),
+    tournaments: db.list("tournaments"),
+    fights: db.list("fights"),
   });
 }

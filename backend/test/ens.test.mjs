@@ -5,7 +5,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-process.env.ARENA_DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), "arena-ens-test-"));
+process.env.ARENA_SCRATCH_DIR = fs.mkdtempSync(path.join(os.tmpdir(), "arena-ens-test-"));
 delete process.env.ENS_PRIVATE_KEY;
 delete process.env.ENS_WRITER_PRIVATE_KEY;
 delete process.env.ENS_PARENT;

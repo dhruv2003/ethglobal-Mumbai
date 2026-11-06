@@ -27,33 +27,30 @@
  *   POST   /api/projects/:id/arkiv     publish the latest result to Swarm + Arkiv again   (organizer)
  *   GET    /api/graph/...              knowledge graph: judge bias, similar projects, project explain (graph/routes.mjs)
  *
- *   0G Storage (every record above is also archived on 0G when ZG_STORAGE=1):
- *   GET    /api/storage                       wallet, balance, head root hash, outbox counts
- *   GET    /api/storage/status/:kind/:id      off | pending | stored | failed for one record
- *   GET    /api/storage/records               the manifest: kind, id, root hash, tx hash, explorer links
- *   GET    /api/storage/blob/:rootHash        one stored item, downloaded from 0G and checked (our root hashes only;
- *                                             ?fresh=1 skips the local cache, ?download=1 saves it as a file)
- *   POST   /api/storage/verify/:kind/:id      re-download from 0G and compare with the local record
- *   POST   /api/storage/flush                 retry failed uploads now   (organizer)
+ * Every record above is stored on Arkiv (arkiv/db.mjs) and every file on 0G Storage
+ * (zg/files.mjs); nothing is kept on this server's disk.
+ *
+ *   GET    /api/storage                      0G Storage: network, wallet, balance, file counts
+ *   GET    /api/storage/records              every file on 0G: root hash, tx, explorer links
+ *   GET    /api/storage/blob/:rootHash       one of our files, downloaded from 0G and checked (?download=1 saves it)
+ *   POST   /api/storage/verify/:kind/:id     re-download a file from 0G and check its sha256 /api/health shows the database's state.
  */
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import express from "express";
 import { CRITERIA } from "./judges/criteria.mjs";
 import { MAX_JUDGES, validateForm } from "./judges/persona.mjs";
 import { callPrimary, fallbackTarget, hasCredentials, KEY_NAME, missingCredentialsError, MODEL, PROVIDER, PROVIDER_LABEL, runPanel } from "./judges/review.mjs";
-import { collectScreenshotEvidence, EVIDENCE_ENABLED, forJudges } from "./judges/evidence.mjs";
+import { collectScreenshotEvidence, EVIDENCE_ENABLED, forJudges, loadScreenshots } from "./judges/evidence.mjs";
 import zg from "./zg/client.js";
 import zgModels from "./zg/models.js";
 import { EXAMPLE_FORMS } from "./judges/seed.mjs";
-import { readJSON } from "./datafiles.mjs";
 import { loadProject } from "./projects.mjs";
-import { DATA_DIR, deleteProject, dossiers, judges, liveDir, localValue, mediaDir, pipelines, reviews, startArchive, submissions, videos, voiceNotes, zgStatus } from "./store.mjs";
-import * as archive from "./zg/archive.mjs";
-import { downloadBytes, explorerLinks, storageConfig, walletInfo } from "./zg/storage.mjs";
-import { cleanUploads, IMAGE_MAX, IMAGE_REF, MAX_IMAGES, MIME, storeImageUpload, storeUpload, UPLOAD_DIR, UPLOAD_FILE, UPLOAD_REF, VIDEO_MAX } from "./reviewer/media.mjs";
+import { db, deleteProject, dossiers, judges, liveDir, liveFile, liveTests, pipelines, reviews, submissions, videos, voiceNotes } from "./store.mjs";
+import { fileLinks, filesStatus, sendFile } from "./zg/files.mjs";
+import { storageConfig, walletInfo } from "./zg/storage.mjs";
+import { cleanUploads, IMAGE_MAX, IMAGE_REF, MAX_IMAGES, MIME, storeImageUpload, storeUpload, UPLOAD_FILE, UPLOAD_REF, UPLOADS, uploadExists, VIDEO_MAX } from "./reviewer/media.mjs";
 import { dequeue, enqueue, isRunning, queueLength, queuePosition, resumeQueue } from "./reviewer/pipeline.mjs";
 import { checkSubmissionSignature, isOrganizer, isOrganizerWallet, rateLimit, requireOrganizer } from "./security.mjs";
 import { events, JUDGES_PER_EVENT, submissionProblem, validateEvent } from "./events.mjs";
@@ -72,8 +69,6 @@ import { startAutorun } from "./arena/autorunService.mjs";
 
 // Seed the example panel the first time only.
 if (!judges.list().length) judges.save(EXAMPLE_FORMS.map((f) => ({ ...validateForm(f).persona, example: true })));
-// Archive anything 0G doesn't have yet and resume uploads left by an earlier run (ZG_STORAGE=1 only).
-startArchive();
 
 const running = new Map(); // projectId -> Promise, so one project is never reviewed twice at once
 // projectId -> { startedAt, events, error? }: what the UI shows while a run is going (0G request IDs as they arrive)
@@ -82,7 +77,7 @@ const progress = new Map();
 /**
  * Run the panel on one project and save the result.
  * opts.evidence: first let a vision model on 0G read the live-test screenshots (default JUDGE_EVIDENCE).
- * opts.save: false to skip saving to data/reviews (the CLI uses this for side-by-side model runs).
+ * opts.save: false to skip saving the review (the CLI uses this for side-by-side model runs).
  * opts.fallback: false to never fall back to OpenAI when 0G fails (public runs).
  */
 export async function reviewNow(projectId, { evidence = EVIDENCE_ENABLED, freshEvidence = false, save = true, fallback = true, log, onEvent: hook } = {}) {
@@ -106,6 +101,7 @@ export async function reviewNow(projectId, { evidence = EVIDENCE_ENABLED, freshE
     }
   };
   const job = (async () => {
+    await loadScreenshots(project); // the live test's screenshots, from Arkiv, for the judges and the vision model
     if (evidence) {
       const records = await collectScreenshotEvidence(project, { fresh: freshEvidence, log });
       project.screenshotEvidenceRecords = records;
@@ -157,7 +153,8 @@ router.get("/health", (req, res) => {
     voiceNotes: hasCredentials("0g") ? { model: zgModels.MODELS.transcribe } : null,
     arkiv: { read: canRead(), write: canWrite(), swarm: swarmConfigured(), publisher: publisher() },
     ens: ens.healthInfo(),
-    storage: storageSummary(),
+    database: db.status(),
+    files: filesStatus(),
   });
 });
 
@@ -207,15 +204,11 @@ router.post("/judges/voice-note", requireOrganizer, rateLimit({ max: 30, windowM
       teeVerified: trace.teeVerified === true ? true : trace.teeVerified === false ? false : null,
     };
     const out = { text: text.trim(), ...zgTrace };
-    // Keep the transcript and its 0G trace (archived on 0G Storage). The audio is only
-    // uploaded AES-256 encrypted, and only when ZG_STORAGE_AES_KEY is set.
+    // Keep the transcript and its 0G trace on Arkiv. The audio (a person's voice) is never
+    // stored: Arkiv is public. Only its sha256 and size are kept.
     const id = crypto.randomUUID();
-    voiceNotes.save(
-      id,
-      { id, at: new Date().toISOString(), transcript: out.text, mime, audio: { sha256: crypto.createHash("sha256").update(req.body).digest("hex"), size: req.body.length }, trace: zgTrace },
-      { audio: req.body, mime },
-    );
-    res.json({ ...out, id, zgStorage: zgStatus("voice-note", id) });
+    voiceNotes.save(id, { id, at: new Date().toISOString(), transcript: out.text, mime, audio: { sha256: crypto.createHash("sha256").update(req.body).digest("hex"), size: req.body.length }, trace: zgTrace });
+    res.json({ ...out, id });
   } catch (e) {
     const status = e.status === 402 ? 402 : e.code === "missing_api_key" ? 503 : 502;
     const error = e.status === 402 ? "0G balance empty: top up the account behind ZG_API_KEY, then try again." : `Transcription on 0G failed: ${e.message}`;
@@ -272,7 +265,7 @@ function checkDemo(body) {
   if (!Array.isArray(imgs) || imgs.length > MAX_IMAGES) return `Add up to ${MAX_IMAGES} screenshots.`;
   for (const ref of imgs) {
     const m = IMAGE_REF.exec(String(ref));
-    if (!m || !fs.existsSync(path.join(UPLOAD_DIR, m[1]))) return "One of the screenshots isn't on the server any more. Upload it again.";
+    if (!m || !uploadExists(m[1])) return "One of the screenshots isn't stored any more. Upload it again.";
   }
   if (!body.demoVideoUrl) return imgs.length ? null : "Add a demo video or some screenshots.";
   return checkDemoVideo(body.demoVideoUrl);
@@ -283,7 +276,7 @@ function checkDemoVideo(v) {
   if (!v) return "Add a demo video.";
   if (String(v).startsWith("upload:")) {
     const m = UPLOAD_REF.exec(v);
-    return m && fs.existsSync(path.join(UPLOAD_DIR, m[1])) ? null : "That uploaded video isn't on the server any more. Upload it again.";
+    return m && uploadExists(m[1]) ? null : "That uploaded video isn't stored any more. Upload it again.";
   }
   try {
     return new URL(v).protocol === "https:" ? null : "The demo video link must start with https://.";
@@ -298,7 +291,7 @@ const participantView = ({ review, hasDossier, ...rest }) => rest;
 router.get("/submissions", async (req, res) => {
   const organizer = await isOrganizer(req);
   const all = submissions.list().filter((s) => !req.query.eventId || s.eventId === req.query.eventId);
-  res.json(all.map((s) => ({ ...publicSubmission(s), zgStorage: zgStatus("submission", s.id) })).map((s) => (organizer ? s : participantView(s))));
+  res.json(all.map(publicSubmission).map((s) => (organizer ? s : participantView(s))));
 });
 
 /** Which tabs a wallet sees. The real check happens on every organizer request. */
@@ -331,10 +324,6 @@ router.post("/events", requireOrganizer, (req, res) => {
   events.add(event);
   res.status(201).json(event);
 });
-router.get("/submissions/:id/storage", (req, res) => {
-  if (!submissions.get(req.params.id)) return res.status(404).json({ error: "No such submission." });
-  res.json(zgStatus("submission", req.params.id));
-});
 
 router.post("/submissions", rateLimit({ max: 5, windowMs: 60 * 60 * 1000 }), async (req, res) => {
   const body = req.body ?? {};
@@ -353,7 +342,7 @@ router.post("/submissions", rateLimit({ max: 5, windowMs: 60 * 60 * 1000 }), asy
   if (ens.canWrite()) ens.issueProjectInBackground(loadProject(record.id)); // <project>.hackarena.eth, owned by the team's wallet
   // Into the review queue: fetch, pin, count tests, build the dossier, then the judges score.
   enqueue(record.id, { judge: reviewNow });
-  res.status(201).json({ ...publicSubmission(record), zgStorage: zgStatus("submission", record.id) });
+  res.status(201).json(publicSubmission(record));
 });
 
 router.get("/projects/:id/pipeline", requireOrganizer, (req, res) => {
@@ -447,11 +436,12 @@ router.post("/projects/:id/arkiv", requireOrganizer, async (req, res) => {
 });
 
 /** Live test results for a submitted project; media under /live/files/... */
-router.get("/projects/:id/live", requireOrganizer, (req, res) => res.json({ liveTest: readJSON("smoke.json", null, liveDir(req.params.id)) }));
+router.get("/projects/:id/live", requireOrganizer, (req, res) => res.json({ liveTest: liveTests.get(req.params.id) }));
 
 /**
  * Watch a cloud browser while the live test runs: an MJPEG stream of its newest
- * screen frame (an <img> plays it). Ends when the run stops writing frames.
+ * screen frame (an <img> plays it). Ends when the run stops writing frames. The frames
+ * are the running test's scratch output, gone when the run ends (nothing is stored).
  */
 router.get("/projects/:id/live/stream/:device", (req, res) => {
   const { device } = req.params;
@@ -513,12 +503,11 @@ router.get("/projects/:id/live/now", (req, res) => {
   res.json(out);
 });
 
+/** A recording or step screenshot of the live test, read from 0G Storage. */
 router.get("/projects/:id/live/files/:device/:file", (req, res) => {
-  const { device, file } = req.params;
-  if (!/^(laptop|phone)$/.test(device) || !/^(video\.mp4|smoke-(laptop|phone)-[a-z0-9]+\.jpg)$/.test(file)) return res.status(404).end();
-  const full = path.join(liveDir(req.params.id), device, file);
-  if (!fs.existsSync(full)) return res.status(404).end();
-  res.sendFile(full, { headers: { "cache-control": "private, max-age=3600" } });
+  const name = liveFile(`${req.params.device}/${req.params.file}`);
+  if (!name) return res.status(404).end();
+  sendFile(req, res, String(req.params.id), name, { headers: { "cache-control": "private, max-age=3600" } });
 });
 
 /* ---- Demo videos ---- */
@@ -557,28 +546,25 @@ router.post("/uploads/image", rateLimit({ max: 60, windowMs: 60 * 60 * 1000, mes
   }
 });
 
-const sendVideo = (res, full, ext) =>
-  res.sendFile(full, { headers: { "content-type": MIME[ext], "x-content-type-options": "nosniff", "content-disposition": "inline", "cache-control": "private, max-age=3600" } });
+const MEDIA_HEADERS = { "content-disposition": "inline", "cache-control": "private, max-age=3600" };
 
+/** An uploaded video or screenshot, read from 0G Storage. */
 router.get("/uploads/:file", (req, res) => {
   const { file } = req.params;
   if (!UPLOAD_FILE.test(file)) return res.status(404).end();
-  const full = path.join(UPLOAD_DIR, file);
-  if (!fs.existsSync(full)) return res.status(404).end();
-  sendVideo(res, full, path.extname(file).slice(1));
+  sendFile(req, res, UPLOADS, file, { headers: MEDIA_HEADERS });
 });
 
 router.get("/projects/:id/video", (req, res) => res.json({ video: publicVideo(req.params.id) }));
 
+/** Our copy of the demo video, read from 0G Storage. */
 router.get("/projects/:id/video/file", (req, res) => {
   const v = videos.get(req.params.id);
   if (!v || v.error || !MIME[v.ext]) return res.status(404).end();
-  const full = path.join(mediaDir(req.params.id), `demo.${v.ext}`);
-  if (!fs.existsSync(full)) return res.status(404).end();
-  sendVideo(res, full, v.ext);
+  sendFile(req, res, String(req.params.id), `demo.${v.ext}`, { headers: MEDIA_HEADERS });
 });
 
-// Uploads nobody submitted are removed after a day.
+// Uploads nobody submitted are forgotten after a day.
 const referencedUploads = () =>
   new Set(
     submissions
@@ -618,118 +604,59 @@ router.get("/projects/:id/reviews", requireOrganizer, (req, res) => {
   const id = req.params.id;
   const r = reviews.get(id);
   // Keep the panel polling while the pipeline prepares evidence or waits in line.
-  res.json({ running: running.has(id) || isRunning(id) || queuePosition(id) != null, progress: progress.get(id) ?? null, result: r, zgStorage: r ? zgStatus("review", id) : null });
+  res.json({ running: running.has(id) || isRunning(id) || queuePosition(id) != null, progress: progress.get(id) ?? null, result: r });
 });
 
 router.post("/projects/:id/reviews", requireOrganizer, async (req, res) => {
   try {
-    res.json({ running: false, result: await reviewNow(req.params.id), zgStorage: zgStatus("review", req.params.id) });
+    res.json({ running: false, result: await reviewNow(req.params.id) });
   } catch (e) {
     res.status(e.status ?? 500).json({ error: e.message });
   }
 });
 
-// ---------- 0G Storage ----------
+// ---------- 0G Storage (files) ----------
 
-function storageSummary() {
-  const cfg = storageConfig();
-  const head = archive.loadHead();
-  return {
-    enabled: cfg.enabled,
-    network: cfg.network,
-    chainId: cfg.chainId,
-    head: head ? { rootHash: head.rootHash, txHash: head.txHash, uploadedAt: head.uploadedAt, links: explorerLinks(head, cfg.network) } : null,
-    records: Object.keys(archive.loadManifest().records).length,
-    outbox: archive.counts(),
-    encryption: cfg.hasAesKey,
-  };
-}
+/** Files the arena put on 0G (the index is an Arkiv collection), as the /storage page lists them. */
+const storedFiles = () =>
+  db
+    .entries("files")
+    .filter(([, f]) => f.rootHash)
+    .map(([key, f]) => ({ key, kind: f.kind, id: key, name: f.name, scope: f.scope, size: f.size, mime: f.mime, sha256: f.sha256, rootHash: f.rootHash, txHash: f.txHash ?? null, txSeq: f.txSeq ?? null, uploadedAt: f.storedAt ?? f.savedAt, history: [f.rootHash], links: fileLinks(f) }))
+    .sort((a, b) => String(b.uploadedAt).localeCompare(String(a.uploadedAt)));
 
 router.get("/storage", async (req, res) => {
-  const summary = storageSummary();
-  const wallet = summary.enabled ? await walletInfo() : null;
-  res.json({ ...summary, wallet });
+  const cfg = storageConfig();
+  const st = filesStatus();
+  res.json({ enabled: st.configured, network: cfg.network, chainId: cfg.chainId, files: st.files, outbox: { pending: st.uploading, failed: st.failed.length }, failed: st.failed, wallet: st.configured ? await walletInfo().catch(() => null) : null });
 });
 
-router.get("/storage/status/:kind/:id", (req, res) => {
-  if (!/^[a-z-]{2,20}$/.test(req.params.kind) || req.params.id.length > 200) return res.status(400).json({ error: "Bad record name." });
-  res.json(zgStatus(req.params.kind, req.params.id));
+router.get("/storage/records", (req, res) => res.json({ network: storageConfig().network, records: storedFiles() }));
+
+/* One of our files by root hash (only root hashes in our index, so this is not an open proxy to 0G). */
+router.get("/storage/blob/:rootHash", rateLimit({ max: 60, windowMs: 60 * 1000, message: "Too many downloads. Try again in a minute." }), (req, res) => {
+  const root = String(req.params.rootHash).toLowerCase();
+  const f = db.list("files").find((x) => String(x.rootHash).toLowerCase() === root);
+  if (!f) return res.status(404).json({ error: "That root hash isn't one of this arena's files." });
+  const headers = { "cache-control": "public, max-age=31536000, immutable" };
+  if (req.query.download === "1") headers["content-disposition"] = `attachment; filename="${String(f.name).split("/").pop().replace(/[^a-zA-Z0-9._-]/g, "_")}"`;
+  sendFile(req, res, f.scope, f.name, { headers });
 });
 
-router.get("/storage/records", (req, res) => {
-  const m = archive.loadManifest();
-  const net = storageConfig().network;
-  res.json({
-    network: m.network ?? net,
-    updatedAt: m.updatedAt,
-    head: archive.loadHead(),
-    records: Object.entries(m.records).map(([key, r]) => ({ key, ...r, links: explorerLinks(r, net) })),
-  });
-});
-
-const ROOT_RE = /^0x[0-9a-fA-F]{64}$/;
-const CACHE_DIR = path.join(DATA_DIR, "zg-cache");
-const EXT_TYPES = { json: "application/json", md: "text/markdown; charset=utf-8", html: "text/plain; charset=utf-8", jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", mp4: "video/mp4", vtt: "text/vtt", txt: "text/plain; charset=utf-8" };
-function contentTypeOf(rec) {
-  if (!rec?.file) return "application/json";
-  if (rec.encrypted) return "application/octet-stream";
-  if (rec.contentType) return rec.contentType;
-  return EXT_TYPES[String(rec.id).split(".").pop().toLowerCase()] ?? "application/octet-stream";
-}
-
-/* Serve one stored item. Only root hashes in our manifest, so this is not an open proxy to 0G. */
-router.get("/storage/blob/:rootHash", rateLimit({ max: 60, windowMs: 60 * 1000, message: "Too many downloads. Try again in a minute." }), async (req, res) => {
-  const root = req.params.rootHash.toLowerCase();
-  if (!ROOT_RE.test(root)) return res.status(404).json({ error: "Not a 0G root hash." });
-  const rec = archive.isKnownRoot(root);
-  if (!rec) return res.status(404).json({ error: "That root hash isn't one of this arena's records." });
-  const cached = path.join(CACHE_DIR, root);
-  try {
-    let bytes;
-    // ?fresh=1 skips our cache so the bytes really come from 0G storage nodes this time.
-    if (fs.existsSync(cached) && req.query.fresh !== "1") bytes = fs.readFileSync(cached);
-    else {
-      // The Merkle root of what we downloaded must equal the requested one (checked inside downloadBytes).
-      bytes = Buffer.from(await downloadBytes(root));
-      fs.mkdirSync(CACHE_DIR, { recursive: true });
-      fs.writeFileSync(`${cached}.tmp`, bytes);
-      fs.renameSync(`${cached}.tmp`, cached);
-    }
-    res.set("content-type", contentTypeOf(rec));
-    res.set("x-0g-root-hash", root);
-    if (req.query.download === "1") {
-      const base = rec.kind === "manifest" ? "manifest-head" : `${rec.kind}-${String(rec.id).split("/").pop()}`;
-      const name = `${base.replace(/[^a-zA-Z0-9._-]/g, "_")}${rec.file ? (rec.encrypted ? ".enc" : "") : ".json"}`;
-      res.set("content-disposition", `attachment; filename="${name}"`);
-    }
-    res.set("cache-control", "public, max-age=31536000, immutable");
-    res.send(bytes);
-  } catch (e) {
-    res.status(e.code === "not_found" ? 404 : 502).json({ error: `0G Storage: ${e.message}`, code: e.code ?? null });
-  }
-});
-
-const FIXTURES_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../fixtures");
-/** The local copy of an archived fixture file, for verify (never outside fixtures/). */
-function fixtureBytes(kind, id) {
-  if (kind !== "fixture-file") return undefined;
-  const full = path.resolve(FIXTURES_DIR, id);
-  if (!full.startsWith(FIXTURES_DIR + path.sep) || !fs.existsSync(full)) return undefined;
-  return fs.readFileSync(full);
-}
-
-/* Anyone can check a record against its 0G copy. */
+/* Anyone can check a file against 0G: download it fresh and compare its sha256 with the index on Arkiv. */
 router.post("/storage/verify/:kind/:id", rateLimit({ max: 20, windowMs: 60 * 1000, message: "Too many checks. Try again in a minute." }), async (req, res) => {
-  const { kind, id } = req.params;
-  if (!/^[a-z-]{2,20}$/.test(kind) || String(id).length > 200) return res.status(400).json({ error: "Bad record name." });
+  const f = db.get("files", String(req.params.id));
+  if (!f?.rootHash) return res.status(404).json({ error: "No such file on 0G Storage." });
   try {
-    res.json(await archive.verifyRecord(kind, id, localValue(kind, id), { localBytes: fixtureBytes(kind, id) }));
+    const { downloadBytes } = await import("./zg/storage.mjs");
+    const bytes = Buffer.from(await downloadBytes(f.rootHash)); // checked against the root hash inside
+    const sha = crypto.createHash("sha256").update(bytes).digest("hex");
+    res.json({ match: sha === f.sha256, rootHash: f.rootHash, sha256: sha, expected: f.sha256, size: bytes.length });
   } catch (e) {
     res.status(e.code === "not_found" ? 404 : 502).json({ error: e.message, code: e.code ?? null });
   }
 });
 
-router.post("/storage/flush", requireOrganizer, (req, res) => res.json(archive.flush()));
 // Server start: anything submitted but not finished goes back in line.
 if (process.env.ARENA_SERVER === "1") {
   const n = resumeQueue({ judge: reviewNow });

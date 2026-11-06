@@ -28,13 +28,11 @@
  *   ARENA_PUBLIC_URL        public site URL, for url / agent-endpoint[web] records (optional)
  */
 import crypto from "node:crypto";
-import fs from "node:fs";
-import path from "node:path";
 import { createPublicClient, createWalletClient, encodeFunctionData, http, keccak256, parseAbi, parseEventLogs, toHex } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { sepolia } from "viem/chains";
 import { normalize, packetToBytes } from "viem/ens";
-import { DATA_DIR, submissions } from "../store.mjs";
+import { db, submissions } from "../store.mjs";
 import { loadProject } from "../projects.mjs";
 
 /** ENSv2 on Sepolia (docs.ens.domains/learn/deployments#sepolia-ensv2). */
@@ -172,19 +170,11 @@ export function slugLabel(text, max = 40) {
   return s;
 }
 
-const namesFile = () => path.join(DATA_DIR, "ens", "names.json");
-const setupFile = () => path.join(DATA_DIR, "ens", "setup.json");
-const readJson = (file, fallback) => {
-  try {
-    return JSON.parse(fs.readFileSync(file, "utf8"));
-  } catch {
-    return fallback;
-  }
-};
-const writeJson = (file, value) => {
-  fs.mkdirSync(path.dirname(file), { recursive: true });
-  fs.writeFileSync(file, JSON.stringify(value, null, 2));
-};
+// ENS state is two documents in the Arkiv database (collection "ens"): the names given out, and the setup.
+const namesFile = () => "names";
+const setupFile = () => "setup";
+const readJson = (doc, fallback) => db.get("ens", doc) ?? fallback;
+const writeJson = (doc, value) => db.put("ens", doc, value);
 
 /** Labels already given out: { projects: { id: {label, ...} }, judges: { id: {label, ...} } }. */
 export const names = () => readJson(namesFile(), { projects: {}, judges: {} });

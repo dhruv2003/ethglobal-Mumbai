@@ -8,7 +8,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-process.env.ARENA_DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), "arena-0g-test-"));
+process.env.ARENA_SCRATCH_DIR = fs.mkdtempSync(path.join(os.tmpdir(), "arena-0g-test-"));
 process.env.JUDGE_PROVIDER = "0g";
 delete process.env.JUDGE_MODEL;
 delete process.env.ZG_API_KEY;
@@ -224,7 +224,7 @@ test("screenshot evidence: IDs per device and step, failures recorded, judges se
   assert.equal(records[0].trace.requestId, "vis-1");
   const seen = evidence.forJudges(records);
   assert.equal(seen.length, shots.length - 1);
-  assert.ok(seen.every((o) => !("trace" in o) && !("file" in o)));
+  assert.ok(seen.every((o) => !("trace" in o) && !("file" in o) && !("bytes" in o)));
   assert.match(seen[0].source, /untrusted/);
 });
 
@@ -232,16 +232,14 @@ test("observation validation names bad fields", () => {
   assert.ok(evidence.validateObservation({ seen: "", visibleText: "x", matchesStep: "maybe", problems: [] }).length === 3);
 });
 
-test("submitted-project screenshots are read from the live pipeline output", async () => {
-  const { liveDir } = await import("../src/store.mjs");
+test("submitted-project screenshots are read from the project's stored files", async () => {
+  const { putFile } = await import("../src/zg/files.mjs");
   const id = "submitted-evidence-test";
-  const file = path.join(liveDir(id), "phone", "smoke-phone-d1.jpg");
-  fs.mkdirSync(path.dirname(file), { recursive: true });
-  fs.writeFileSync(file, "test screenshot");
+  putFile(id, "live/phone/smoke-phone-d1.jpg", Buffer.from("test screenshot"), { mime: "image/jpeg", kind: "live-screenshot" });
   const project = { id, kind: "submitted", liveTest: { runs: [{ device: "phone", phases: [{ steps: [
     { id: "d1", title: "Home", status: "passed", screenshot: "phone/smoke-phone-d1.jpg" },
   ] }] }] } };
-  assert.equal(evidence.screenshotsOf(project)[0].file, file);
+  assert.equal(evidence.screenshotsOf(project)[0].name, "live/phone/smoke-phone-d1.jpg");
   let images = 0;
   const trace = { requestId: "submitted-vision", model: "vision-test", costUsdMicro: 1 };
   const client = {

@@ -7,7 +7,7 @@
  */
 import fs from "node:fs";
 import path from "node:path";
-import { MIME, UPLOAD_DIR } from "./media.mjs";
+import { MIME, uploadBytes } from "./media.mjs";
 
 export const VISION_MODEL = process.env.VISION_MODEL ?? "gpt-5.4";
 export const canReadScreens = () => Boolean(process.env.OPENAI_API_KEY);
@@ -21,11 +21,11 @@ Describe only what is visible. Don't judge quality and don't guess what is off s
 export async function describeScreenshots(files) {
   if (!canReadScreens()) throw Object.assign(new Error("Reading screenshots needs an OpenAI key on the server."), { skip: true });
   const content = [{ type: "input_text", text: `There are ${files.length} screenshots. Describe each one.` }];
-  files.forEach((f, i) => {
+  for (const [i, f] of files.entries()) {
     const ext = path.extname(f).slice(1);
-    const b64 = fs.readFileSync(path.join(UPLOAD_DIR, f)).toString("base64");
+    const b64 = (await uploadBytes(f)).toString("base64");
     content.push({ type: "input_text", text: `Screenshot ${i + 1}:` }, { type: "input_image", image_url: `data:${MIME[ext]};base64,${b64}` });
-  });
+  }
   const { default: OpenAI } = await import("openai");
   const res = await new OpenAI({ maxRetries: 5, timeout: 180000 }).responses.create({ model: VISION_MODEL, instructions: SYSTEM, input: [{ role: "user", content }] });
   const text = String(res.output_text ?? "").trim();

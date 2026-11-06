@@ -1,5 +1,6 @@
 # One image for the whole app: builds the web app, then runs the backend, which serves
-# the built app and /api on the same origin. Runtime data lives in ARENA_DATA_DIR (a volume).
+# the built app and /api on the same origin. No volume: records live on Arkiv and files
+# on 0G Storage. The container only writes scratch work under /tmp (removed after use).
 
 FROM node:22-bookworm-slim AS web
 WORKDIR /app
@@ -37,12 +38,8 @@ COPY --from=web /app/frontend/web/dist frontend/web/dist
 
 ENV NODE_ENV=production \
     PORT=8080 \
-    ARENA_DATA_DIR=/data \
     TRUST_PROXY=1
-RUN mkdir -p /data
-# Optional first-boot seed (deploy/seed/data.tgz, gitignored) and the entrypoint that unpacks it.
-COPY deploy /deploy
 EXPOSE 8080
 WORKDIR /app/backend
-ENTRYPOINT ["/usr/bin/tini", "--", "/deploy/entrypoint.sh"]
+ENTRYPOINT ["/usr/bin/tini", "--"]
 CMD ["node", "src/server.js"]

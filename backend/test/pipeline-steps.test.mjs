@@ -5,15 +5,15 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-process.env.ARENA_DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), "arena-pipeline-steps-"));
+process.env.ARENA_SCRATCH_DIR = fs.mkdtempSync(path.join(os.tmpdir(), "arena-pipeline-steps-"));
 process.env.JUDGE_PROVIDER = "openai";
 process.env.OPENAI_API_KEY = crypto.randomUUID(); // never called: the judge is a stub
 process.env.MOZARK_TOKEN = "";
-process.env.MOZARK_ENV_FILE = path.join(process.env.ARENA_DATA_DIR, "no-token.env"); // no live test from tests
+process.env.MOZARK_ENV_FILE = path.join(process.env.ARENA_SCRATCH_DIR, "no-token.env"); // no live test from tests
 delete process.env.ARENA_SERVER;
 const { runPipeline, STEPS } = await import("../src/reviewer/pipeline.mjs");
 const { submissions, pipelines, judges } = await import("../src/store.mjs");
-after(() => fs.rmSync(process.env.ARENA_DATA_DIR, { recursive: true, force: true }));
+after(() => fs.rmSync(process.env.ARENA_SCRATCH_DIR, { recursive: true, force: true }));
 
 test("five steps in order; a failed step is marked and every later step still runs", async () => {
   assert.deepEqual(STEPS.map((s) => s.id), ["code", "demo", "live", "dossier", "judges"]);

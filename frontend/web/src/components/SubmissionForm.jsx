@@ -621,7 +621,7 @@ export function SubmitHeader({ event, savedAt }) {
         </ol>
         <span className="t-caption save-state" data-saved={savedAt ? "true" : "false"}>
           <span className="save-state__dot" aria-hidden="true" />
-          {savedAt ? `Draft saved ${savedAt}` : "Saves as you type"}
+          {savedAt ? `Draft kept ${savedAt} (until you reload)` : "Kept as you type, until you reload"}
         </span>
       </div>
     </header>

@@ -5,8 +5,6 @@
  *
  * It protects the free pack only. It doesn't limit bets, which the contract takes from any wallet.
  */
-import fs from "node:fs";
-import path from "node:path";
 import { getAddress, isAddress } from "viem";
 
 export const ACTION = "claim-starter-filter";
@@ -20,23 +18,13 @@ export class ClaimError extends Error {
   }
 }
 
-/** Who already claimed, kept in a file so a restart can't hand out a second pack. */
-export function claimStore(file) {
-  const load = () => {
-    try {
-      return JSON.parse(fs.readFileSync(file, "utf8"));
-    } catch (e) {
-      if (e.code === "ENOENT") return { byHuman: {}, byWallet: {} };
-      throw e; // never treat a damaged record as "nobody has claimed"
-    }
-  };
-  const data = load();
-  const save = () => {
-    fs.mkdirSync(path.dirname(file), { recursive: true });
-    const tmp = `${file}.${process.pid}.tmp`;
-    fs.writeFileSync(tmp, JSON.stringify(data, null, 2));
-    fs.renameSync(tmp, file);
-  };
+/**
+ * Who already claimed, kept where a restart can't lose it (the server passes the Arkiv
+ * database: { load() -> data|null, save(data) }), so a restart can't hand out a second pack.
+ */
+export function claimStore(persist) {
+  const data = persist.load() ?? { byHuman: {}, byWallet: {} };
+  const save = () => persist.save(data);
   return {
     humanClaimed: (nullifier) => !!data.byHuman[nullifier],
     walletClaim: (wallet) => data.byWallet[wallet] ?? null,

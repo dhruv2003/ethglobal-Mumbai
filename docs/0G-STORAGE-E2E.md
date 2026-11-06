@@ -1,5 +1,8 @@
 # 0G Storage: end-to-end test
 
+> **Outdated (Nov 2026):** this describes the earlier 0G archive of every record, with a local `data/` folder. Now records live in the Arkiv database and only files (uploads, demo videos, live-test recordings and screenshots) go to 0G Storage, with nothing kept on disk. The `zg:*` scripts are gone. See "Where the data lives" in `backend/README.md`.
+
+
 How to check by hand that every arena record lands on 0G Storage, can be downloaded and verified, and can be restored from 0G alone. Results from the run on 2026-11-06 (Galileo testnet, wallet `0x1528…fc1c`) are under each step. Overview: [`0G-STORAGE.md`](0G-STORAGE.md).
 
 ## Real records from this run

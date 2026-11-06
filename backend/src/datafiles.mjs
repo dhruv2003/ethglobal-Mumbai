@@ -1,15 +1,12 @@
 /*
- * Files under backend/data/ (or ARENA_DATA_DIR). Shared by the store and the
- * 0G archive. JSON is written with sorted keys (the same canonical form we
- * upload to 0G), so a folder restored from 0G is byte-identical to the original.
- * Writes go through a temp file + rename so a crash never leaves half a file.
+ * Small helpers shared by the store and the Arkiv records. The arena keeps no data
+ * on disk (records on Arkiv: arkiv/db.mjs; files on 0G Storage: zg/files.mjs). The only files
+ * it writes are scratch work, under the OS temp folder, removed when the work ends:
+ * a cloned repo being read, a video being transcoded, a live test being recorded.
  */
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
-
-const here = path.dirname(fileURLToPath(import.meta.url));
-export const DATA_DIR = process.env.ARENA_DATA_DIR ?? path.resolve(here, "../data");
 
 export function sortKeys(v) {
   if (Array.isArray(v)) return v.map(sortKeys);
@@ -21,21 +18,22 @@ export function sortKeys(v) {
   return v;
 }
 
-export function readJSON(file, fallback, dir = DATA_DIR) {
+/** Read a JSON file from a folder (fixtures, scratch output), or the fallback. */
+export function readJSON(file, fallback, dir) {
   try {
-    return JSON.parse(fs.readFileSync(path.join(dir, file), "utf8"));
+    return JSON.parse(fs.readFileSync(dir ? path.join(dir, file) : file, "utf8"));
   } catch {
     return fallback;
   }
 }
 
-export function writeJSON(file, value, dir = DATA_DIR) {
-  const full = path.join(dir, file);
-  fs.mkdirSync(path.dirname(full), { recursive: true });
-  const tmp = `${full}.${process.pid}.${Math.random().toString(36).slice(2)}.tmp`;
-  fs.writeFileSync(tmp, JSON.stringify(sortKeys(value), null, 2));
-  fs.renameSync(tmp, full);
-  return value;
-}
-
 export const safeId = (id) => String(id).replace(/[^a-zA-Z0-9_-]/g, "");
+
+/** Root of all scratch work (ARENA_SCRATCH_DIR, default <tmp>/arena-scratch). Never holds data that must survive. */
+export const SCRATCH_ROOT = process.env.ARENA_SCRATCH_DIR ?? path.join(os.tmpdir(), "arena-scratch");
+
+/** A scratch folder for one job, e.g. scratch("repos", id). Not created until something writes into it. */
+export const scratch = (...parts) => path.join(SCRATCH_ROOT, ...parts.map(safeId));
+
+/** Remove a scratch folder. */
+export const clearScratch = (dir) => fs.rmSync(dir, { recursive: true, force: true });

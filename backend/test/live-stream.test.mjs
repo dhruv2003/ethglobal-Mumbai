@@ -6,7 +6,7 @@ import os from "node:os";
 import path from "node:path";
 import express from "express";
 
-process.env.ARENA_DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), "arena-live-stream-"));
+process.env.ARENA_SCRATCH_DIR = fs.mkdtempSync(path.join(os.tmpdir(), "arena-live-stream-"));
 delete process.env.ARENA_SERVER;
 const { router } = await import("../src/api.mjs");
 const { liveDir } = await import("../src/store.mjs");
@@ -15,7 +15,7 @@ const server = app.listen(0);
 const port = await new Promise((r) => server.on("listening", () => r(server.address().port)));
 after(() => {
   server.close();
-  fs.rmSync(process.env.ARENA_DATA_DIR, { recursive: true, force: true });
+  fs.rmSync(process.env.ARENA_SCRATCH_DIR, { recursive: true, force: true });
 });
 
 const get = (p) =>

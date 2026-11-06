@@ -11,12 +11,13 @@
  *   npm run arkiv -- get <type> --project <id>        newest record of a type, read back from Arkiv
  *                    (or --judge <id>, --tournament <id> [--match <m>])
  *
- * publish uses the latest saved review (data/reviews/<id>.json).
+ * publish uses the latest saved review (the database on Arkiv).
  */
 import "dotenv/config";
 import { loadProject } from "../projects.mjs";
 import { reviews } from "../store.mjs";
 import { readLatest } from "./arkiv.mjs";
+import { flushFiles } from "../zg/files.mjs";
 import { publishRun } from "./publish.mjs";
 import { readFile } from "./swarm.mjs";
 import { TYPES } from "./records/schemas.mjs";
@@ -55,6 +56,7 @@ try {
     if (!result) throw new Error(`No judged result for ${id}. Run the judges first: npm run judge -- --project ${id}`);
     const record = await publishRun(project, result, { log: (m) => console.log(m) });
     console.log(JSON.stringify(record, null, 2));
+    await flushFiles(); // the publish record itself is a database write
     if (record.arkivError) process.exit(1);
   } else if (cmd === "sync") {
     let failed = false;

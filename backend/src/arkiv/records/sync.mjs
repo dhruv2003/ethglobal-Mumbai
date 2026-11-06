@@ -1,12 +1,12 @@
 /*
- * Push the arena's local records to Arkiv. Each sync* gathers one kind of data
- * from the local store, builds the records (builders.mjs) and writes the ones
- * that changed (store.mjs skips unchanged ones by hash).
+ * The public, queryable view of the arena on Arkiv. The data itself is already on
+ * Arkiv (the database, ../db.mjs; files are on 0G Storage, ../../zg/files.mjs); these typed records add
+ * columns people can filter on (scores, statuses, tracks). Each sync* reads one kind
+ * of data from the store, builds the records (builders.mjs) and writes the ones that
+ * changed (store.mjs skips unchanged ones by hash).
  *
  *   syncProject(id)        project, pipeline, dossier, transcript, livetest, vision,
- *                          the full judging review, then the files: demo screenshots,
- *                          live recordings and step screenshots (the demo video only
- *                          with ARKIV_DEMO_VIDEO=1)
+ *                          the full judging review
  *   syncJudges()           every judge persona
  *   syncTournament(id)     the bracket
  *   syncFight(t, m)        one recorded 1v1 match
@@ -14,15 +14,11 @@
  * The *InBackground versions never throw: Arkiv being down never breaks the app.
  * Scores of a judging run go through ../publish.mjs (panel + scorecards).
  */
-import fs from "node:fs";
-import path from "node:path";
-import { readJSON, safeId } from "../../datafiles.mjs";
 import { loadProject } from "../../projects.mjs";
-import { DATA_DIR, judges, liveDir, mediaDir, pipelines, reviews, submissions, transcripts, videos } from "../../store.mjs";
-import { IMAGE_REF, UPLOAD_DIR } from "../../reviewer/media.mjs";
+import { db, evidence, judges, pipelines, reviews, submissions, transcripts } from "../../store.mjs";
 import { canWrite } from "../arkiv.mjs";
 import * as build from "./builders.mjs";
-import { writeBlob, writeRecord } from "./store.mjs";
+import { writeRecord } from "./store.mjs";
 
 const errorText = (e) => String(e?.shortMessage ?? e?.message ?? e).slice(0, 300);
 
@@ -39,46 +35,6 @@ async function writeAll(records, opts) {
   return out;
 }
 
-/** Every file kept for a project, as { kind, name, path }. Names are what the file is read back by. */
-export function projectFiles(projectId) {
-  const out = [];
-  const add = (kind, name, p) => fs.existsSync(p) && out.push({ kind, name, path: p });
-  // The demo video stays off chain by default: it is most of a project's bytes (a 4-minute
-  // demo is ~70 entities, ~10 min and ~1 testnet ETH), and it still plays from our copy and
-  // the team's link. ARKIV_DEMO_VIDEO=1 puts it on chain too.
-  const v = videos.get(projectId);
-  if (v?.ext && process.env.ARKIV_DEMO_VIDEO === "1") add("demo-video", `demo.${v.ext}`, path.join(mediaDir(projectId), `demo.${v.ext}`));
-  (submissions.get(projectId)?.demoImages ?? []).forEach((ref, i) => {
-    const f = IMAGE_REF.exec(String(ref))?.[1];
-    if (f) add("demo-screenshot", `demo-screenshot-${i + 1}${path.extname(f)}`, path.join(UPLOAD_DIR, f));
-  });
-  for (const device of ["laptop", "phone"]) {
-    const dir = path.join(liveDir(projectId), device);
-    if (!fs.existsSync(dir)) continue;
-    add("live-recording", `live/${device}/video.mp4`, path.join(dir, "video.mp4"));
-    for (const f of fs.readdirSync(dir).filter((x) => /^smoke-.+\.jpg$/.test(x)).sort()) add("live-screenshot", `live/${device}/${f}`, path.join(dir, f));
-  }
-  return out;
-}
-
-/** Write each file's bytes (unchanged files are skipped by hash). */
-export async function syncFiles(projectId, opts = {}) {
-  const project = loadProject(projectId);
-  if (!project) throw new Error(`No such project: ${projectId}`);
-  const out = [];
-  for (const f of projectFiles(projectId)) {
-    try {
-      const buffer = fs.readFileSync(f.path);
-      const r = build.fileRecord(project, { ...f, size: buffer.length });
-      const res = await writeBlob("file", r.attrs, buffer, opts);
-      out.push({ type: `file ${f.name}`, ...res });
-    } catch (e) {
-      out.push({ type: `file ${f.name}`, error: errorText(e) });
-    }
-  }
-  return out;
-}
-
 export async function syncProject(projectId, opts = {}) {
   const project = loadProject(projectId);
   if (!project) throw new Error(`No such project: ${projectId}`);
@@ -90,22 +46,21 @@ export async function syncProject(projectId, opts = {}) {
       build.dossierRecord(project),
       build.transcriptRecord(project, transcripts.get(project.id)),
       build.livetestRecord(project),
-      build.visionRecord(project, readJSON(`evidence/${safeId(projectId)}.json`, null)),
+      build.visionRecord(project, evidence.get(projectId)),
       build.reviewRecord(project, reviews.get(projectId)),
     ],
     opts,
   );
-  if (opts.files === false) return records;
-  return [...records, ...(await syncFiles(projectId, opts))];
+  return records;
 }
 
 export const syncJudges = (opts = {}) => writeAll(judges.list().map(build.judgeRecord), opts);
 
-const tournamentOf = (id) => readJSON(`arena-tournaments/${safeId(id)}.json`, null);
+const tournamentOf = (id) => db.get("tournaments", String(id));
 export const syncTournament = (id, opts = {}) => writeAll([build.tournamentRecord(tournamentOf(id))], opts);
 
 export function syncFight(t, m, opts = {}) {
-  const fight = readJSON(`arena-fights/${safeId(t)}-${Number(m)}.json`, null);
+  const fight = db.get("fights", `${t}-${Number(m)}`);
   return writeAll([build.fightRecord(fight, tournamentOf(t))], opts);
 }
 
@@ -114,12 +69,8 @@ export async function syncAll(opts = {}) {
   const ids = submissions.list().map((s) => s.id);
   const out = { judges: await syncJudges(opts), projects: {}, tournaments: {}, fights: {} };
   for (const id of ids) out.projects[id] = await syncProject(id, opts);
-  const list = (name) => (fs.existsSync(path.join(DATA_DIR, name)) ? fs.readdirSync(path.join(DATA_DIR, name)).filter((f) => f.endsWith(".json")) : []);
-  for (const f of list("arena-tournaments")) out.tournaments[f] = await syncTournament(f.replace(/\.json$/, ""), opts);
-  for (const f of list("arena-fights")) {
-    const m = f.match(/^(.+)-(\d+)\.json$/);
-    if (m) out.fights[f] = await syncFight(m[1], Number(m[2]), opts);
-  }
+  for (const [id] of db.entries("tournaments")) out.tournaments[id] = await syncTournament(id, opts);
+  for (const [id, f] of db.entries("fights")) out.fights[id] = await syncFight(f.tournamentId, f.match, opts);
   return out;
 }
 
