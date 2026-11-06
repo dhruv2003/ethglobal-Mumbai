@@ -990,3 +990,38 @@ fieldset.field { border: 0; margin: 0; padding: 0; min-width: 0; }
 .ens-board__who { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; overflow-wrap: anywhere; }
 .ens-board__stats { display: flex; gap: var(--space-4); margin: 0; }
 .ens-board__stats dd { margin: 0; font-weight: 700; }
+
+/* ---------- /fighters: persona cards ---------- */
+.fighters { display: flex; flex-direction: column; gap: var(--space-5); max-width: 1180px; margin: 0 auto; }
+.fighters__head { display: flex; flex-direction: column; gap: var(--space-2); max-width: 760px; }
+.fighters__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: var(--space-4); margin: 0; padding: 0; list-style: none; }
+.fcard2 {
+  display: flex; flex-direction: column; border: 2px solid var(--ink); border-radius: var(--radius-xl); background: var(--canvas);
+  box-shadow: var(--shadow-pop); overflow: hidden; transition: transform var(--dur-base) var(--ease-pop), box-shadow var(--dur-base) var(--ease-standard);
+}
+.fcard2:hover { transform: translateY(-4px); box-shadow: var(--shadow-pop-lg); }
+.fcard2__link { position: relative; display: flex; flex-direction: column; flex: 1; color: inherit; text-decoration: none; }
+.fcard2__link:focus-visible { outline: 3px solid var(--oracle); outline-offset: -3px; border-radius: var(--radius-xl); }
+.fcard2__rank { position: absolute; top: var(--space-3); left: var(--space-3); z-index: 2; padding: 2px 10px; border: 2px solid var(--ink); border-radius: var(--radius-pill); background: var(--sunny); font: 800 13px/18px var(--font-sans); }
+.fcard2__ring.ring { min-height: 210px; border: 0; border-bottom: 2px solid var(--ink); border-radius: 0; box-shadow: none; }
+.fcard2__body { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-4) var(--space-4) var(--space-3); }
+.fcard2__title { display: flex; flex-direction: column; gap: 2px; }
+.fcard2__persona { font: 600 13px/18px var(--font-sans); }
+.fcard2__as { display: inline-block; padding: 1px 8px; border: 1.5px solid var(--ink); border-radius: var(--radius-pill); background: var(--crush-soft); font-weight: 700; }
+.fcard2__pitch { font: 600 15px/22px var(--font-sans); color: var(--ink); }
+.fcard2__desc { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; font-size: 14px; line-height: 20px; }
+.fcard2__gear { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.fcard2__foot { display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); flex-wrap: wrap; padding: var(--space-3) var(--space-4); border-top: 1.5px dashed var(--line-strong); background: color-mix(in srgb, var(--oracle-soft) 45%, var(--canvas)); }
+.fcard2__stats { display: flex; gap: var(--space-4); margin: 0; }
+.fcard2__stats dd { margin: 0; font: 800 17px/22px var(--font-display); }
+.fcard2__ens { overflow-wrap: anywhere; }
+.fighters__judges { display: flex; flex-direction: column; gap: var(--space-3); }
+.judges-strip { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--space-3); margin: 0; padding: 0; list-style: none; }
+.judge-tile { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: var(--space-3); align-items: center; padding: var(--space-3); border: 2px solid var(--ink); border-radius: var(--radius-lg); background: var(--canvas); box-shadow: var(--shadow-pop-sm); }
+.judge-tile__ring.ring { min-height: 96px; }
+.judge-tile__ring .ring__post { display: none; }
+.judge-tile__text { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.judge-tile__name { text-transform: capitalize; }
+.judge-tile__desc { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+@media (max-width: 560px) { .fighters__grid { grid-template-columns: minmax(0, 1fr); } }
+.judge-tile__model { align-self: flex-start; font-size: 11px; }

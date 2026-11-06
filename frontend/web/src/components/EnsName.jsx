@@ -5,6 +5,10 @@
 import { useEffect, useState } from "react";
 import { ensConfig, resolveTexts, useEnsName, ensAppUrl } from "../lib/ens.js";
 import { Link } from "../lib/router.jsx";
+import { listProjects } from "../lib/projects.js";
+import { trackNameOf } from "../lib/events.js";
+import { Ring } from "./Arena.jsx";
+import { fighterTraitItems, PixelFighter } from "./PixelFighter.jsx";
 
 const ARKIV_EXPLORER = "https://rabdi.explorer.arkiv.network/entity-explorer";
 const arkivLink = (key) => `${ARKIV_EXPLORER}?q=${encodeURIComponent(`$key = key(${key})`)}`;
@@ -85,7 +89,7 @@ export function FighterEnsLine({ projectId }) {
   );
 }
 
-const scoreOf = (f) => Number(f.records["arena.score"]) || -1;
+const scoreOf = (ens) => Number(ens?.records?.["arena.score"]) || -1;
 
 /** /fighters: the leaderboard, ranked from records read straight from ENS. Our server only lists the names. */
 export function FightersPage() {
@@ -94,11 +98,15 @@ export function FightersPage() {
     let live = true;
     (async () => {
       try {
-        const cfg = await ensConfig();
-        if (!cfg) throw new Error("The list of names isn't available right now.");
-        const read = (map, keys) => Promise.all(Object.entries(map ?? {}).map(async ([id, name]) => ({ id, name, records: await resolveTexts(name, keys, cfg) })));
-        const [fighters, judges] = await Promise.all([read(cfg.projects, cfg.fighterKeys), read(cfg.judges, cfg.judgeKeys)]);
-        if (live) setState({ loading: false, fighters: fighters.sort((a, b) => scoreOf(b) - scoreOf(a)), judges, cfg, error: null });
+        const [cfg, projects] = await Promise.all([ensConfig().catch(() => null), listProjects().catch(() => [])]);
+        const read = (map, keys) =>
+          Promise.all(Object.entries(map ?? {}).map(async ([id, name]) => ({ id, name, records: await resolveTexts(name, keys, cfg).catch(() => ({})) })));
+        const [ensFighters, judges] = cfg ? await Promise.all([read(cfg.projects, cfg.fighterKeys), read(cfg.judges, cfg.judgeKeys)]) : [[], []];
+        const ensById = new Map(ensFighters.map((f) => [f.id, f]));
+        // Every project is a fighter; its ENS name adds the on-chain reputation.
+        const fighters = projects.map((p) => ({ id: p.id, project: p, ens: ensById.get(p.id) ?? null }));
+        for (const f of ensFighters) if (!projects.some((p) => p.id === f.id)) fighters.push({ id: f.id, project: null, ens: f });
+        if (live) setState({ loading: false, fighters: fighters.sort((a, b) => scoreOf(b.ens) - scoreOf(a.ens)), judges, cfg, error: !cfg && !projects.length ? "Nothing to show right now." : null });
       } catch (e) {
         if (live) setState((s) => ({ ...s, loading: false, error: e.shortMessage ?? e.message }));
       }
@@ -109,45 +117,119 @@ export function FightersPage() {
   }, []);
   const { loading, fighters, judges, cfg, error } = state;
   return (
-    <div className="ens-board">
-      <h1 className="t-display m0">Fighters</h1>
-      <p className="t-body muted">Every fighter's reputation lives on its ENS name, so it goes with the team and anyone can check it. This page reads it from ENS on Sepolia, not from our server.</p>
-      {loading && <p className="t-caption" aria-busy="true">Reading from ENS…</p>}
-      {error && <p className="t-caption" role="alert">ENS didn't answer: {error}</p>}
-      {!loading && !error && fighters.length === 0 && <p className="t-caption">No fighters on ENS yet. A project gets its name when it's submitted.</p>}
+    <div className="fighters">
+      <header className="fighters__head">
+        <h1 className="t-display m0">Fighters</h1>
+        <p className="t-body muted m0">Every project fights as its own pixel fighter. Their reputation (score, record, titles) lives on their ENS name, so it goes with the team and anyone can check it.</p>
+      </header>
+      {loading && (
+        <div className="fighters__grid" aria-busy="true">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="skeleton skeleton--seat" />
+          ))}
+        </div>
+      )}
+      {error && <p className="t-caption" role="alert">{error}</p>}
+      {!loading && !error && fighters.length === 0 && <p className="t-caption">No fighters yet. A project becomes one when it's submitted.</p>}
       {fighters.length > 0 && (
-        <ol className="ens-board__list">
-          {fighters.map((f) => (
-            <li key={f.id} className="ens-board__row">
-              <div className="ens-board__who">
-                <Link to={`/projects/${encodeURIComponent(f.id)}`} className="t-body-strong">{f.records.name || f.name}</Link>
-                <a className="t-mono-caption" href={ensAppUrl(cfg, f.name)} target="_blank" rel="noopener noreferrer">{f.name} ↗</a>
-              </div>
-              <dl className="ens-board__stats t-num">
-                <div><dt className="t-caption">Score</dt><dd>{f.records["arena.score"] ?? "—"}</dd></div>
-                <div><dt className="t-caption">Record</dt><dd>{f.records["arena.record"] ?? "—"}</dd></div>
-                <div><dt className="t-caption">Titles</dt><dd>{f.records["arena.titles"] ?? "0"}</dd></div>
-              </dl>
-            </li>
+        <ol className="fighters__grid">
+          {fighters.map((f, i) => (
+            <FighterCard key={f.id} f={f} cfg={cfg} rank={i + 1} />
           ))}
         </ol>
       )}
       {judges.length > 0 && (
-        <>
-          <h2 className="t-heading m0">AI judges</h2>
-          <ul className="ens-board__list">
-            {judges.map((j) => (
-              <li key={j.id} className="ens-board__row">
-                <div className="ens-board__who">
-                  <span className="t-body-strong">{j.records.name || j.name}</span>
-                  <a className="t-mono-caption" href={ensAppUrl(cfg, j.name)} target="_blank" rel="noopener noreferrer">{j.name} ↗</a>
-                </div>
-                <span className="t-caption">{j.records["agent-context"] ? "Persona published on ENS (ENSIP-26)" : j.records.description}</span>
-              </li>
-            ))}
+        <section className="fighters__judges" aria-labelledby="judges-h">
+          <h2 id="judges-h" className="t-heading m0">AI judges</h2>
+          <ul className="judges-strip">
+            {judges.map((j) => {
+              const label = j.records.name || j.name.replace(/^judge-/, "").replace(/\.[^.]+\.eth$/, "").replace(/-/g, " ");
+              return (
+                <li key={j.id} className="judge-tile">
+                  <Ring compact className="judge-tile__ring">
+                    <PixelFighter project={{ seed: j.id, name: label, pitch: j.records.description ?? "", description: "", tracks: [] }} scale={4} label={`${label}, judge`} />
+                  </Ring>
+                  <div className="judge-tile__text">
+                    <span className="t-body-strong judge-tile__name">{label}</span>
+                    <span className="t-caption judge-tile__desc">{j.records.description || "AI judge: scores every project in its tournaments."}</span>
+                    {j.records["arena.model"] && <span className="chip chip--tag judge-tile__model">{j.records["arena.model"]}</span>}
+                    <a className="t-mono-caption" href={ensAppUrl(cfg, j.name)} target="_blank" rel="noopener noreferrer">
+                      {j.name} ↗
+                    </a>
+                  </div>
+                </li>
+              );
+            })}
           </ul>
-        </>
+        </section>
       )}
     </div>
+  );
+}
+
+function FighterCard({ f, cfg, rank }) {
+  const p = f.project;
+  const r = f.ens?.records ?? {};
+  const name = p?.name || r.name || f.ens?.name;
+  const persona = p ? fighterTraitItems(p, trackNameOf) : [];
+  const archetype = persona.find((x) => x.id === "archetype");
+  const gear = persona.filter((x) => x.id !== "archetype");
+  const pitch = p?.pitch || r.description || "";
+  const blurb = (p?.description || "").split(/\n{2,}/)[0];
+  return (
+    <li className="fcard2">
+      <Link to={`/projects/${encodeURIComponent(f.id)}`} className="fcard2__link" aria-label={`${name}: open the project`}>
+        {r["arena.score"] != null && <span className="fcard2__rank t-num">#{rank}</span>}
+        <Ring className="fcard2__ring">
+          <PixelFighter project={p ?? { seed: f.id, name, pitch, description: "", tracks: [] }} scale={6} className="fighter--enter" />
+        </Ring>
+        <div className="fcard2__body">
+          <div className="fcard2__title">
+            <h2 className="t-heading m0">{name}</h2>
+            {p?.teamName && <span className="t-caption">by {p.teamName}</span>}
+          </div>
+          {archetype && (
+            <p className="fcard2__persona m0">
+              <span className="fcard2__as">{archetype.label}</span>
+              <span className="t-caption"> · {archetype.why}</span>
+            </p>
+          )}
+          {pitch && <p className="fcard2__pitch m0">{pitch}</p>}
+          {blurb && blurb !== pitch && <p className="t-body muted fcard2__desc m0">{blurb}</p>}
+          {gear.length > 0 && (
+            <ul className="fcard2__gear" aria-label="Gear">
+              {gear.map((g) => (
+                <li key={g.id} className="chip chip--tag" title={g.why}>
+                  {g.label}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </Link>
+      <footer className="fcard2__foot">
+        <dl className="fcard2__stats t-num">
+          <div>
+            <dt className="t-caption">Score</dt>
+            <dd>{r["arena.score"] ?? "—"}</dd>
+          </div>
+          <div>
+            <dt className="t-caption">Record</dt>
+            <dd>{r["arena.record"] ?? "—"}</dd>
+          </div>
+          <div>
+            <dt className="t-caption">Titles</dt>
+            <dd>{r["arena.titles"] ?? "0"}</dd>
+          </div>
+        </dl>
+        {f.ens && cfg ? (
+          <a className="fcard2__ens t-mono-caption" href={ensAppUrl(cfg, f.ens.name)} target="_blank" rel="noopener noreferrer">
+            {f.ens.name} ↗
+          </a>
+        ) : (
+          <span className="t-caption muted">ENS name on its way</span>
+        )}
+      </footer>
+    </li>
   );
 }
