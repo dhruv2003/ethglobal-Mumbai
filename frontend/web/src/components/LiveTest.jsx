@@ -18,9 +18,19 @@ const OUTCOME = {
 const STEP = {
   passed: { mark: "✓", cls: "good", word: "Works" },
   failed: { mark: "✕", cls: "bad", word: "Broken" },
-  blocked: { mark: "–", cls: "skip", word: "Needs sign-in" },
+  blocked: { mark: "–", cls: "skip", word: "Can't run in a browser" },
   missing: { mark: "?", cls: "bad", word: "Not found on the live site" },
 };
+const NEEDS = { "android-device": "an Android phone", "2x-android-device": "two Android phones", nfc: "NFC", wallet: "a wallet", "sign-in": "an account" };
+/** "Needs android-device,nfc; not run." -> "Needs an Android phone + NFC" */
+const needsText = (detail) =>
+  "Needs " +
+  detail
+    .replace(/^Needs /, "")
+    .replace(/; not run\.$/, "")
+    .split(/\s*,\s*/)
+    .map((x) => NEEDS[x] ?? x.replace(/-/g, " "))
+    .join(" + ");
 const fmt = (s) => `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, "0")}`;
 const count = (steps, st) => steps.filter((s) => s.status === st).length;
 
@@ -41,7 +51,7 @@ function PhaseLine({ phase, noun }) {
           {ok} of {checkable} {noun}
           {count(phase.steps, "failed") ? ` · ${count(phase.steps, "failed")} broken` : ""}
           {count(phase.steps, "missing") ? ` · ${count(phase.steps, "missing")} not on the live site` : ""}
-          {skip ? ` · ${skip} need sign-in` : ""}
+          {skip ? ` · ${skip} can't run in a browser` : ""}
         </span>
       </div>
     </div>
@@ -61,7 +71,7 @@ function Steps({ steps, onSeek, demo }) {
             <div className="step__text">
               <span className="t-body">{s.title}</span>
               <span className="t-caption">
-                {s.status === "blocked" && s.detail?.startsWith("Needs ") ? s.detail.replace(/; not run\.$/, "") : st.word}
+                {s.status === "blocked" && s.detail?.startsWith("Needs ") ? needsText(s.detail) : st.word}
                 {demo && s.demoAt ? ` · at ${s.demoAt} in their demo` : ""}
                 {s.status === "failed" && s.detail ? ` · ${s.detail}` : ""}
               </span>
@@ -197,13 +207,13 @@ function LiveTestView({ liveTest }) {
           <summary>
             <span className="t-label">Major flows</span>
             <span className="t-caption">
-              {count(flows.steps, "passed")} work · {count(flows.steps, "failed")} broken · {count(flows.steps, "blocked")} need sign-in
+              {count(flows.steps, "passed")} work · {count(flows.steps, "failed")} broken · {count(flows.steps, "blocked")} can't run here
             </span>
           </summary>
           <Steps steps={flows.steps} onSeek={seek} />
         </details>
       )}
-      <p className="t-caption m0">Never signs in, connects a wallet, stakes or pays. Steps that need an account are marked, not faked.</p>
+      <p className="t-caption m0">Never signs in, connects a wallet, stakes or pays. Steps that need an account, a wallet or a phone app are marked, not faked.</p>
     </section>
   );
 }

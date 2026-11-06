@@ -479,7 +479,7 @@ export function ProjectPage({ id }) {
         </div>
       </header>
 
-      <ViewToggle view={view} onChange={setView} hasDossier={Boolean(p.dossier)} />
+      <ViewToggle view={view} onChange={setView} hasDossier={Boolean(p.dossier) || p.review?.status === "reviewed"} />
 
       {view === "team" ? (
         <section id="panel-team" role="tabpanel" aria-labelledby="tab-team" className="panel panel--team" key="team">
