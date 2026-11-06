@@ -5,7 +5,7 @@
  *
  * Only one fixture exists, so by default this is a mirror match (same project in both
  * corners): it proves the plumbing, not the judging. Pass two fixture folders to compare:
- *   npm run demo:round -- go-health-me other-project [criterionId]
+ *   cd backend && node scripts/demo-round.js go-health-me other-project [criterionId]
  */
 require("dotenv").config({ quiet: true });
 const fs = require("node:fs");

@@ -12,12 +12,10 @@
 import "dotenv/config";
 import fs from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { reviewNow } from "../api.mjs";
 import { zgStatus } from "../store.mjs";
 import * as archive from "../zg/archive.mjs";
 
-const here = path.dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
 const flag = (name) => args.includes(name);
 const value = (name) => {

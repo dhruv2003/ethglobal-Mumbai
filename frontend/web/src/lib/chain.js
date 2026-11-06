@@ -9,6 +9,7 @@ import managerAbi from "@contracts/abi/TournamentManager.json";
 import poolsAbi from "@contracts/abi/BettingPools.json";
 import { CONTRACTS, EVENT } from "../config/event.js";
 import { getProvider } from "./wallet.js";
+import { peek, put, sameData } from "./cache.js";
 
 const n = EVENT.network;
 
@@ -53,7 +54,7 @@ export function loadToken() {
 }
 
 export function useToken() {
-  const { data } = usePoll(loadToken, [], 0);
+  const { data } = usePoll(loadToken, [], 0, { key: "token" });
   return data ?? null;
 }
 
@@ -77,28 +78,59 @@ export function formatAmount(value, decimals = 18, places = 2) {
 
 /* -------------------------------------------------------------- data */
 
-/** Runs an async read now and every `ms` (0 = once). Keeps old data while refreshing. */
-export function usePoll(fn, deps = [], ms = 10000) {
-  const [state, setState] = useState({ data: null, error: null, loading: true });
+/**
+ * Runs an async read now and every `ms` (0 = once). Keeps old data while refreshing.
+ * With `key`, the last answer is cached (lib/cache.js) and shown straight away on the next
+ * visit, before the network answers. `initial()` can supply a first guess when nothing is cached.
+ * When `deps` change, the previous item's data is dropped (never shown under the new one).
+ */
+export function usePoll(fn, deps = [], ms = 10000, { key = null, initial = null, private: isPrivate = false } = {}) {
+  const sig = deps.map(String).join("|");
+  const seed = () => {
+    const data = key != null ? (peek(key) ?? initial?.() ?? null) : (initial?.() ?? null);
+    return { sig, data, error: null, loading: true };
+  };
+  const [stored, setState] = useState(seed);
+  // Deps changed: show the new item's cache (or nothing), never the old item's data.
+  const state = stored.sig === sig ? stored : seed();
   const latest = useRef(0);
+  const retries = useRef(0);
+  const retryTimer = useRef(null);
+  const keyRef = useRef(key);
+  keyRef.current = key;
 
   const refresh = useCallback(async () => {
     const id = ++latest.current;
     try {
       const data = await fn();
-      if (id === latest.current) setState({ data, error: null, loading: false });
+      if (id !== latest.current) return;
+      retries.current = 0;
+      if (keyRef.current != null) put(keyRef.current, data, { private: isPrivate });
+      // Same answer as before (often the cached one): keep the old object so nothing re-renders or re-animates.
+      setState((s) => ({ sig, data: s.sig === sig && sameData(s.data, data) ? s.data : data, error: null, loading: false }));
     } catch (error) {
-      if (id === latest.current) setState((s) => ({ ...s, error, loading: false }));
+      if (id !== latest.current) return;
+      setState((s) => ({ ...(s.sig === sig ? s : seed()), error, loading: false }));
+      // A one-shot read (ms = 0) that failed would otherwise never be tried again: back off and retry.
+      if (!ms && retries.current < 5) {
+        clearTimeout(retryTimer.current);
+        retryTimer.current = setTimeout(refresh, 3000 * 2 ** retries.current++);
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, deps);
+  }, [...deps, ms]);
 
   useEffect(() => {
-    setState((s) => ({ ...s, loading: true }));
+    retries.current = 0;
+    setState((s) => (s.sig === sig ? { ...s, loading: true } : seed()));
     refresh();
-    if (!ms) return undefined;
-    const t = setInterval(refresh, ms);
-    return () => clearInterval(t);
+    const t = ms ? setInterval(refresh, ms) : null;
+    return () => {
+      if (t) clearInterval(t);
+      clearTimeout(retryTimer.current);
+      latest.current++; // an answer for the old deps must not land after they changed
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [refresh, ms]);
 
   return { ...state, refresh };

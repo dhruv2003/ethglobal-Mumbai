@@ -147,6 +147,3 @@ export function compilePrompt(p) {
   ];
   return lines.join("\n");
 }
-
-/** Public view: everything except nothing secret (personas hold no secrets), kept explicit for clarity. */
-export const publicPersona = (p) => ({ ...p });

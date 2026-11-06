@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 
 export function navigate(to) {
-  if (to === location.pathname) return;
+  if (to === location.pathname + location.search) return;
   history.pushState({}, "", to);
   window.dispatchEvent(new PopStateEvent("popstate"));
   window.scrollTo({ top: 0 });
@@ -23,8 +23,10 @@ export function matchRoute(path) {
   const p = path.replace(/\/+$/, "") || "/";
   if (p === "/submit") return { name: "tournaments", rewrite: "/tournaments" }; // you enter through a tournament
   if (p === "/wallet") return { name: "wallet" };
+  if (p === "/wallet/transactions") return { name: "transactions" };
   if (p === "/organizer") return { name: "organizer" };
   if (p === "/arena") return { name: "arena" };
+  if (p === "/graph") return { name: "graph" };
   if (p === "/tournaments") return { name: "tournaments" };
   const entering = p.match(/^\/tournaments\/([^/]+)\/submit$/);
   if (entering) return { name: "form", eventId: decodeURIComponent(entering[1]) };

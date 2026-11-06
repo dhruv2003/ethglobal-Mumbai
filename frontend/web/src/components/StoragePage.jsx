@@ -6,7 +6,7 @@
  */
 import { useEffect, useState } from "react";
 import { StatusPill } from "@ds/ui.jsx";
-import { api } from "../lib/api.js";
+import { api, peekApi } from "../lib/api.js";
 import { CopyId } from "./ZeroGProof.jsx";
 
 const KIND_LABEL = {
@@ -18,6 +18,9 @@ const KIND_LABEL = {
   "voice-audio": "Voice-note audio (encrypted)",
   "evidence-bundle": "Sample evidence bundles",
   "fixture-file": "Sample project files",
+  dossier: "Project dossiers",
+  transcript: "Demo video transcripts",
+  video: "Demo video records",
 };
 const ORDER = Object.keys(KIND_LABEL);
 
@@ -68,17 +71,19 @@ function Row({ r }) {
 }
 
 export function StoragePage() {
-  const [data, setData] = useState(null);
-  const [info, setInfo] = useState(null);
+  const [data, setData] = useState(() => peekApi("/storage/records") ?? null);
+  const [info, setInfo] = useState(() => peekApi("/storage") ?? null);
   const [error, setError] = useState("");
   useEffect(() => {
-    api("/storage/records").then(setData, (e) => setError(e.message));
+    api("/storage/records").then(setData, (e) => !peekApi("/storage/records") && setError(e.message));
     api("/storage").then(setInfo, () => {});
   }, []);
 
   if (error) return <p className="t-body">0G Storage records aren't available: {error}</p>;
   if (!data) return <p className="t-caption">Loading 0G Storage records…</p>;
-  const groups = ORDER.map((k) => [k, data.records.filter((r) => r.kind === k)]).filter(([, rows]) => rows.length);
+  // Kinds this page doesn't know yet still get listed (under their own name), so the count always adds up.
+  const kinds = [...ORDER, ...new Set(data.records.map((r) => r.kind).filter((k) => !KIND_LABEL[k]))];
+  const groups = kinds.map((k) => [k, data.records.filter((r) => r.kind === k)]).filter(([, rows]) => rows.length);
 
   return (
     <div className="zgfiles">
@@ -113,7 +118,7 @@ export function StoragePage() {
       {groups.map(([kind, rows]) => (
         <section key={kind} className="zgfiles__group">
           <h2 className="t-heading m0">
-            {KIND_LABEL[kind]} <span className="t-caption">({rows.length})</span>
+            {KIND_LABEL[kind] ?? kind} <span className="t-caption">({rows.length})</span>
           </h2>
           <ul className="zgfiles__list">
             {rows.map((r) => (

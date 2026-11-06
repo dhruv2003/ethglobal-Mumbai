@@ -3,14 +3,38 @@
  * preview: see vite.config.js). Every call fails soft: callers decide what to
  * show when the judge service is offline.
  */
+import { dropPrivate, peek, put } from "./cache.js";
+
 let organizerSession = null;
 /** Set by lib/organizer.js. Every request then proves this wallet is an organizer. */
 export const setOrganizerSession = (session) => {
+  if (session?.signature !== organizerSession?.signature) dropPrivate();
   organizerSession = session;
 };
+
+/** Organizer-only reads: cached in memory for this tab, never written to localStorage. */
+const PRIVATE = /^\/(judges|projects\/[^/]+\/(pipeline|dossier|arkiv|live|reviews))(\/|\?|$)/;
+const inflight = new Map(); // GET path -> Promise, so parallel callers share one request
+
+/** The last answer the backend gave for GET `path` (undefined if none yet). */
+export const peekApi = (path) => peek(`api:${path}`);
 const organizerHeaders = () => (organizerSession ? { "x-organizer": btoa(JSON.stringify(organizerSession)) } : {});
 
-export async function api(path, { method = "GET", body } = {}) {
+export function api(path, { method = "GET", body } = {}) {
+  if (method !== "GET") return request(path, method, body);
+  const pending = inflight.get(path);
+  if (pending) return pending;
+  const p = request(path, method, body)
+    .then((data) => {
+      put(`api:${path}`, data, { private: PRIVATE.test(path) });
+      return data;
+    })
+    .finally(() => inflight.delete(path));
+  inflight.set(path, p);
+  return p;
+}
+
+async function request(path, method, body) {
   const headers = organizerHeaders();
   if (body) headers["content-type"] = "application/json";
   const res = await fetch(`/api${path}`, {

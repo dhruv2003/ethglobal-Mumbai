@@ -1,6 +1,6 @@
 /*
  * Calls every 0G endpoint the agents use, once, and prints the trace.
- * Run: npm run zg:smoke   (needs ZG_API_KEY in backend/.env)
+ * Run: cd backend && node scripts/zg-smoke.js   (needs ZG_API_KEY in backend/.env)
  */
 require("dotenv").config({ quiet: true });
 const fs = require("node:fs");

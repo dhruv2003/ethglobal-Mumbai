@@ -1,9 +1,8 @@
 /* Connects the auto-run logic to the chain and the fight store. Starts with the server. */
-import fs from "node:fs";
-import { createPublicClient, createWalletClient, defineChain, getAddress, http } from "viem";
-import { privateKeyToAccount } from "viem/accounts";
 import crypto from "node:crypto";
-import { keccak256, stringToHex, parseEventLogs } from "viem";
+import fs from "node:fs";
+import { createPublicClient, createWalletClient, defineChain, getAddress, http, keccak256, parseEventLogs, stringToHex } from "viem";
+import { privateKeyToAccount } from "viem/accounts";
 import { dossiers, pipelines, submissions } from "../store.mjs";
 import { events, OVERALL } from "../events.mjs";
 import { autorunPass } from "./autorun.mjs";
@@ -30,12 +29,17 @@ const needBot = () => {
   if (!botSend) throw Object.assign(new Error("The server has no publishing wallet."), { status: 503 });
 };
 
+/** openMatch args: betting closes `minutes` from now, and never before the tournament's scheduled start. */
+async function openMatchArgs(id, index, minutes) {
+  const [now, t] = await Promise.all([chainNow(), readManager("getTournament", [id])]);
+  const cutoff = now + BigInt(minutes) * 60n;
+  return [id, index, cutoff, cutoff > t.scheduledStart ? cutoff : t.scheduledStart];
+}
+
 /** Actions only a bracket's publisher or organizer may send, for brackets this server runs. */
 export async function openMatchAsBot(id, index, minutes) {
   needBot();
-  const [now, t] = await Promise.all([chainNow(), readManager("getTournament", [BigInt(id)])]);
-  const cutoff = now + BigInt(Math.max(1, Math.floor(Number(minutes)) || 1)) * 60n;
-  return botSend("openMatch", [BigInt(id), BigInt(index), cutoff, cutoff > t.scheduledStart ? cutoff : t.scheduledStart]);
+  return botSend("openMatch", await openMatchArgs(BigInt(id), BigInt(index), Math.max(1, Math.floor(Number(minutes)) || 1)));
 }
 export async function voidMatchAsBot(id, index, reasonHash) {
   needBot();
@@ -116,12 +120,7 @@ export function startAutorun() {
     return botSend("freeze", [BigInt(bracket.id), projects, bracket.matching.seed, `0x${bracket.matching.resultHash}`]);
   };
 
-  const openArgs = async (bracket, i) => {
-    const id = BigInt(bracket.id);
-    const [now, t] = await Promise.all([chainNow(), readManager("getTournament", [id])]);
-    const cutoff = now + BigInt(minutesFor(bracket.eventId)) * 60n;
-    return [id, i, cutoff, cutoff > t.scheduledStart ? cutoff : t.scheduledStart];
-  };
+  const openArgs = (bracket, i) => openMatchArgs(BigInt(bracket.id), i, minutesFor(bracket.eventId));
   const canOpen = async (bracket, i) => {
     try {
       await client.simulateContract({ ...manager, account, functionName: "openMatch", args: await openArgs(bracket, i) });
@@ -173,9 +172,9 @@ export function startAutorun() {
       if (canOrganize) await organizerPass(organizerDeps());
       await autorunPass({
         brackets: listBrackets,
-        readTournament: (id) => client.readContract({ ...manager, functionName: "getTournament", args: [id] }),
-        readMatch: (id, i) => client.readContract({ ...manager, functionName: "getMatch", args: [id, i] }),
-        nowSec: async () => (await client.getBlock()).timestamp,
+        readTournament: (id) => readManager("getTournament", [id]),
+        readMatch: (id, i) => readManager("getMatch", [id, i]),
+        nowSec: chainNow,
         fightOf: statusOf,
         startFight,
         runningFights,

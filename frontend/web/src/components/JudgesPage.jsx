@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { StatusPill } from "@ds/ui.jsx";
 import { SplitWords, bouncy, easeOut } from "./fx.jsx";
-import { api, health } from "../lib/api.js";
+import { api, health, peekApi } from "../lib/api.js";
 import { Ring } from "./Arena.jsx";
 import { PixelFighter } from "./PixelFighter.jsx";
 import { VoiceNote } from "./VoiceNote.jsx";
@@ -272,18 +272,24 @@ function JudgeForm({ criteria, initial, editing, voice, onCancel, onSaved }) {
 }
 
 export function JudgesPage() {
-  const [state, setState] = useState({ loading: true });
+  const [state, setState] = useState(() => {
+    const h = peekApi("/health");
+    const criteria = peekApi("/criteria");
+    const judges = peekApi("/judges");
+    return h && criteria && judges ? { loading: false, health: h, criteria, judges } : { loading: true };
+  });
   const [editor, setEditor] = useState(null); // { editing?: judge }
   const [error, setError] = useState("");
 
   async function load() {
     const h = await health();
-    if (!h) return setState({ loading: false, offline: true });
+    if (!h) return setState((s) => (s.judges ? s : { loading: false, offline: true }));
     const [criteria, judges] = await Promise.all([api("/criteria"), api("/judges")]);
     setState({ loading: false, health: h, criteria, judges });
   }
   useEffect(() => {
-    load().catch((e) => setState({ loading: false, offline: true, error: e.message }));
+    // Only a missing backend is "offline"; a refusal (expired organizer session, 401/403) says so.
+    load().catch((e) => setState((s) => (s.judges ? s : { loading: false, offline: !e.status, denied: e.status === 401 || e.status === 403, error: e.message })));
   }, []);
 
   if (state.loading)
@@ -295,6 +301,17 @@ export function JudgesPage() {
         ))}
       </div>
     );
+  if (!state.offline && !state.judges) {
+    return (
+      <div className="card card--surface stack">
+        <h2 className="t-heading m0">{state.denied ? "Sign in again as an organizer" : "The judges couldn't be loaded"}</h2>
+        <p className="t-body m0 muted">{state.error}</p>
+        <button type="button" className="btn btn--secondary btn--sm" onClick={() => location.reload()}>
+          Try again
+        </button>
+      </div>
+    );
+  }
   if (state.offline) {
     return (
       <>
@@ -325,6 +342,7 @@ export function JudgesPage() {
 
   async function remove(j) {
     if (!window.confirm(`Remove ${j.name} from the panel?`)) return;
+    setError("");
     try {
       await api(`/judges/${j.id}`, { method: "DELETE" });
       await load();

@@ -44,6 +44,8 @@ export function DemoImagesField({ id, error, onProblem }) {
       c.done
         .then((r) => {
           // Uploads can finish together: build on the newest list, not this render's.
+          // The ref is the image's hash: the same screenshot twice is one entry.
+          if (latest.current.some((i) => i.ref === r.ref)) return;
           latest.current = [...latest.current, { ref: r.ref, url: r.url, name: file.name, bytes: r.bytes }];
           set("demo.images", latest.current);
           touch("demo.videoUrl");

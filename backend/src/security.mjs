@@ -61,6 +61,7 @@ export async function organizerWallet(req) {
   }
 }
 
+/** Does the request's bearer token equal ADMIN_TOKEN? (constant time; false when it isn't set) */
 const tokenMatches = (req) => {
   const token = process.env.ADMIN_TOKEN;
   if (!token) return false;
@@ -80,18 +81,14 @@ export function requireOrganizer(req, res, next) {
       next();
     });
   }
-  const token = process.env.ADMIN_TOKEN;
-  if (!token) {
+  if (!process.env.ADMIN_TOKEN) {
     // Fail closed. Local development must opt in explicitly, and a request that
     // came through a proxy (our own Vite proxy included) never counts as local.
     const proxied = Boolean(req.get("x-forwarded-for") || req.get("x-forwarded-host") || req.get("forwarded"));
     if (process.env.ALLOW_LOCAL_ORGANIZER === "1" && !proxied && LOOPBACK.has(req.socket.remoteAddress ?? "")) return next();
     return res.status(403).json({ error: "Organizer actions need ADMIN_TOKEN on the server (or ALLOW_LOCAL_ORGANIZER=1 for local development)." });
   }
-  const given = (req.get("authorization") ?? "").replace(/^Bearer\s+/i, "");
-  const a = Buffer.from(given);
-  const b = Buffer.from(token);
-  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return res.status(401).json({ error: "Organizer key required." });
+  if (!tokenMatches(req)) return res.status(401).json({ error: "Organizer key required." });
   next();
 }
 

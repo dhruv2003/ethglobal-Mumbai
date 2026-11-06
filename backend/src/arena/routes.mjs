@@ -17,6 +17,7 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import express from "express";
+import { safeId } from "../datafiles.mjs";
 import { DATA_DIR, dossiers, judges as judgeStore, submissions } from "../store.mjs";
 import { events } from "../events.mjs";
 import { requireOrganizer } from "../security.mjs";
@@ -26,7 +27,6 @@ import { proposeBracket, verifyProposal } from "./matchmaking.mjs";
 import { syncFightInBackground, syncTournamentInBackground } from "../arkiv/records/sync.mjs";
 import { collectUiImages } from "./ui.mjs";
 
-const safe = (v) => String(v).replace(/[^a-zA-Z0-9_-]/g, "");
 const dir = (name) => {
   const d = path.join(DATA_DIR, name);
   fs.mkdirSync(d, { recursive: true });
@@ -44,8 +44,8 @@ const writeJson = (file, value) => {
   fs.writeFileSync(tmp, JSON.stringify(value, null, 2));
   fs.renameSync(tmp, file);
 };
-const tournamentFile = (id) => path.join(dir("arena-tournaments"), `${safe(id)}.json`);
-const fightFile = (t, m) => path.join(dir("arena-fights"), `${safe(t)}-${Number(m)}.json`);
+const tournamentFile = (id) => path.join(dir("arena-tournaments"), `${safeId(id)}.json`);
+const fightFile = (t, m) => path.join(dir("arena-fights"), `${safeId(t)}-${Number(m)}.json`);
 
 /** What a bracket slot shows publicly: no signatures. */
 const slot = (s, index) => ({
@@ -60,14 +60,14 @@ const slot = (s, index) => ({
   fighterSeed: s.fighterSeed ?? null,
 });
 
-const running = new Map(); // "t-m" -> { startedAt, note, events }
+const running = new Map(); // "t-m" -> { startedAt, note, events, cast, revealAt }
+const refuse = (status, message) => Object.assign(new Error(message), { status });
+/** reasonHash sent on chain when the organizer voids a match or cancels a tournament from this page. */
+const ORGANIZER_REASON = `0x${crypto.createHash("sha256").update("organizer").digest("hex")}`;
 
 export const arenaRouter = express.Router();
 
-arenaRouter.get("/tournaments", (req, res) => {
-  const d = dir("arena-tournaments");
-  res.json(fs.readdirSync(d).filter((f) => f.endsWith(".json")).map((f) => readJson(path.join(d, f))).filter(Boolean));
-});
+arenaRouter.get("/tournaments", (req, res) => res.json(listBrackets()));
 
 arenaRouter.get("/tournaments/:id", (req, res) => {
   const t = readJson(tournamentFile(req.params.id));
@@ -90,7 +90,6 @@ arenaRouter.post("/matchmaking", requireOrganizer, async (req, res) => {
 
 /** Saves a bracket: slot order, project details and how it was drawn. Throws with a status. */
 export function saveBracket(id, { title, track, submissionIds, proposal, eventId, trackId }) {
-  const refuse = (status, message) => Object.assign(new Error(message), { status });
   if (!Array.isArray(submissionIds) || ![2, 4, 8, 16].includes(submissionIds.length)) throw refuse(400, "A bracket holds 2, 4, 8 or 16 projects.");
   if (new Set(submissionIds).size !== submissionIds.length) throw refuse(400, "A project can only appear once.");
   const projects = [];
@@ -123,11 +122,11 @@ arenaRouter.put("/tournaments/:id", requireOrganizer, (req, res) => {
   }
 });
 
-/** Registered brackets, for the auto-run loop. */
-export const listBrackets = () => {
+/** Every registered bracket (the tournaments list, and the auto-run loop). */
+export function listBrackets() {
   const d = dir("arena-tournaments");
   return fs.readdirSync(d).filter((x) => x.endsWith(".json")).map((x) => readJson(path.join(d, x))).filter(Boolean);
-};
+}
 
 export function statusOf(t, m) {
   const live = running.get(`${t}-${m}`);
@@ -148,7 +147,10 @@ arenaRouter.get("/fights/:t/:m", (req, res) => {
   res.json({ ...s, judges: s.cast ?? judgeCast() });
 });
 
-arenaRouter.post("/fights/:t/:m/result", requireOrganizer, (req, res) => { const s = statusOf(req.params.t, req.params.m); res.json({ ...s, judges: s.cast ?? judgeCast() }); });
+arenaRouter.post("/fights/:t/:m/result", requireOrganizer, (req, res) => {
+  const s = statusOf(req.params.t, req.params.m);
+  res.json({ ...s, judges: s.cast ?? judgeCast() });
+});
 
 /** How many fights are running, so several brackets don't all hit 0G at once. */
 export const runningFights = () => running.size;
@@ -164,7 +166,6 @@ function fightJudges(meta) {
 /** Starts a fight in the background. Throws with a status if it can't start. */
 export function startFight(t, m, { a: slotA, b: slotB, revealAt, rerun } = {}) {
   const key = `${t}-${m}`;
-  const refuse = (status, message) => Object.assign(new Error(message), { status });
   if (running.has(key)) throw refuse(409, "This fight is already running.");
   const meta = readJson(tournamentFile(t));
   if (!meta) throw refuse(409, "Register the bracket for this tournament first (organizer page, step 3).");
@@ -227,9 +228,9 @@ const asBot = (action) => async (req, res) => {
   }
 };
 arenaRouter.post("/tournaments/:id/matches/:m/open", requireOrganizer, asBot((s, req) => s.openMatchAsBot(req.params.id, req.params.m, req.body?.minutes)));
-arenaRouter.post("/tournaments/:id/matches/:m/void", requireOrganizer, asBot((s, req) => s.voidMatchAsBot(req.params.id, req.params.m, `0x${crypto.createHash("sha256").update("organizer").digest("hex")}`)));
+arenaRouter.post("/tournaments/:id/matches/:m/void", requireOrganizer, asBot((s, req) => s.voidMatchAsBot(req.params.id, req.params.m, ORGANIZER_REASON)));
 
-arenaRouter.post("/tournaments/:id/cancel", requireOrganizer, asBot((s, req) => s.cancelTournamentAsBot(req.params.id, `0x${crypto.createHash("sha256").update("organizer").digest("hex")}`)));
+arenaRouter.post("/tournaments/:id/cancel", requireOrganizer, asBot((s, req) => s.cancelTournamentAsBot(req.params.id, ORGANIZER_REASON)));
 
 /** Whether the server can run tournaments by itself. */
 arenaRouter.get("/auto", async (req, res) => res.json((await import("./autorunService.mjs")).autoStatus()));

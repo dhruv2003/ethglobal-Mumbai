@@ -375,57 +375,55 @@ async function saveOnce(videoUrl, dir, onProgress) {
 
 /* ---------------- Uploads ---------------- */
 
+const httpError = (status, message) => Object.assign(new Error(message), { status });
+
 /**
- * Store an uploaded video from a request stream. Content-addressed (sha256), so
- * the same file uploaded twice is stored once. Returns { file, bytes, seconds }.
+ * Stream an upload into UPLOAD_DIR, content-addressed (sha256), so the same file
+ * uploaded twice is stored once. check(tmpFile, bytes) validates the bytes and
+ * returns { ext, ...extra } (or throws); the result is { file, bytes, ...extra }.
  */
-export async function storeUpload(stream, { declaredBytes = 0 } = {}) {
-  if (declaredBytes > VIDEO_MAX) throw Object.assign(new Error(`That video is over ${Math.round(VIDEO_MAX / 1048576)} MB.`), { status: 413 });
+async function storeContentAddressed(stream, max, check) {
   fs.mkdirSync(UPLOAD_DIR, { recursive: true });
   const tmp = path.join(UPLOAD_DIR, `.part-${crypto.randomUUID()}`);
   const hash = crypto.createHash("sha256");
-  const c = capped(VIDEO_MAX, hash);
+  const c = capped(max, hash);
   try {
     await pump(stream, c, fs.createWriteStream(tmp));
-    if (c.bytes() < 1000) throw Object.assign(new Error("That file is empty."), { status: 400 });
-    const s = sniffVideo(head(tmp));
-    if (!s || s.ext === "ts") throw Object.assign(new Error("Upload an MP4, MOV or WebM video."), { status: 415 });
-    const seconds = await probeSeconds(tmp, s.demuxer).catch(() => {
-      throw Object.assign(new Error("That file doesn't play as a video."), { status: 415 });
-    });
-    const file = `${hash.digest("hex")}.${s.ext}`;
+    const { ext, ...extra } = await check(tmp, c.bytes());
+    const file = `${hash.digest("hex")}.${ext}`;
     const full = path.join(UPLOAD_DIR, file);
     if (fs.existsSync(full)) fs.rmSync(tmp, { force: true });
     else fs.renameSync(tmp, full);
     fs.utimesSync(full, new Date(), new Date()); // fresh again for the clean-up clock
-    return { file, bytes: c.bytes(), seconds };
+    return { file, bytes: c.bytes(), ...extra };
   } catch (e) {
     fs.rmSync(tmp, { force: true });
     throw e;
   }
 }
 
+/** Store an uploaded video from a request stream. Returns { file, bytes, seconds }. */
+export async function storeUpload(stream, { declaredBytes = 0 } = {}) {
+  if (declaredBytes > VIDEO_MAX) throw httpError(413, `That video is over ${Math.round(VIDEO_MAX / 1048576)} MB.`);
+  return storeContentAddressed(stream, VIDEO_MAX, async (tmp, bytes) => {
+    if (bytes < 1000) throw httpError(400, "That file is empty.");
+    const s = sniffVideo(head(tmp));
+    if (!s || s.ext === "ts") throw httpError(415, "Upload an MP4, MOV or WebM video.");
+    const seconds = await probeSeconds(tmp, s.demuxer).catch(() => {
+      throw httpError(415, "That file doesn't play as a video.");
+    });
+    return { ext: s.ext, seconds };
+  });
+}
+
 /** Store an uploaded screenshot (PNG, JPEG or WebP, max 10 MB). Returns { file, bytes }. */
 export async function storeImageUpload(stream) {
-  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
-  const tmp = path.join(UPLOAD_DIR, `.part-${crypto.randomUUID()}`);
-  const hash = crypto.createHash("sha256");
-  const c = capped(IMAGE_MAX, hash);
-  try {
-    await pump(stream, c, fs.createWriteStream(tmp));
-    if (c.bytes() < 100) throw Object.assign(new Error("That image is empty."), { status: 400 });
+  return storeContentAddressed(stream, IMAGE_MAX, async (tmp, bytes) => {
+    if (bytes < 100) throw httpError(400, "That image is empty.");
     const ext = sniffImage(head(tmp, 16));
-    if (!ext) throw Object.assign(new Error("Upload a PNG, JPEG or WebP image."), { status: 415 });
-    const file = `${hash.digest("hex")}.${ext}`;
-    const full = path.join(UPLOAD_DIR, file);
-    if (fs.existsSync(full)) fs.rmSync(tmp, { force: true });
-    else fs.renameSync(tmp, full);
-    fs.utimesSync(full, new Date(), new Date());
-    return { file, bytes: c.bytes() };
-  } catch (e) {
-    fs.rmSync(tmp, { force: true });
-    throw e;
-  }
+    if (!ext) throw httpError(415, "Upload a PNG, JPEG or WebP image.");
+    return { ext };
+  });
 }
 
 /** Delete uploads older than maxAgeMs that no submission points at. */

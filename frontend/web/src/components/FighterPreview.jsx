@@ -8,7 +8,7 @@ import { EVENT } from "../config/event.js";
 import { Ring } from "./Arena.jsx";
 import { useForm } from "./fields.jsx";
 import { PixelFighter } from "./PixelFighter.jsx";
-import { trackName } from "./Projects.jsx";
+import { trackNameOf } from "../lib/events.js";
 
 const REQUIRED = ["team.name", "project.name", "project.pitch", "project.description", "code.repoUrl", "demo.videoUrl"];
 
@@ -60,13 +60,16 @@ export function FighterPreview({ eventName }) {
   useEffect(() => {
     const added = [...equipped].find((id) => !prev.current.includes(id));
     prev.current = [...equipped];
-    if (!added) return undefined;
-    setFresh(GEAR_RULES.find((r) => r.id === added)?.label ?? null);
-    const timer = setTimeout(() => setFresh(null), 2400);
-    return () => clearTimeout(timer);
+    if (added) setFresh(GEAR_RULES.find((r) => r.id === added)?.label ?? null);
     // equipped is derived from data; the joined ids keep the effect stable
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [[...equipped].join("|")]);
+  // Its own timer, so a gear change inside the 2.4 s can't leave the note stuck on screen.
+  useEffect(() => {
+    if (!fresh) return undefined;
+    const timer = setTimeout(() => setFresh(null), 2400);
+    return () => clearTimeout(timer);
+  }, [fresh]);
 
   const [dir, setDir] = useState(1);
   const cycle = (step) => {
@@ -78,12 +81,12 @@ export function FighterPreview({ eventName }) {
   };
 
   const ready = REQUIRED.filter((k) => !errors[k]).length;
-  const trim = t.jacketFrom ? `${trackName(t.jacketFrom)} trim` : "Grey trim";
+  const trim = t.jacketFrom ? `${trackNameOf(t.jacketFrom)} trim` : "Grey trim";
 
   return (
-    <aside className="fcard" aria-label="Your fighter preview">
-      <div className="fcard__band">
-        <span className="fcard__event">{eventName}</span>
+    <aside className="fightercard" aria-label="Your fighter preview">
+      <div className="fightercard__band">
+        <span className="fightercard__event">{eventName}</span>
         <span className="t-mono-caption">No. {String(t.seed % 1000).padStart(3, "0")}</span>
       </div>
 
@@ -102,11 +105,11 @@ export function FighterPreview({ eventName }) {
           </motion.span>
         )}
       </AnimatePresence>
-      <Ring className="fcard__ring">
+      <Ring className="fightercard__ring">
         <AnimatePresence mode="popLayout" initial={false} custom={dir}>
           <motion.span
             key={t.archetype}
-            className="fcard__fighter"
+            className="fightercard__fighter"
             custom={dir}
             initial={{ opacity: 0, x: dir * 60, scale: 0.85 }}
             animate={{ opacity: 1, x: 0, scale: 1, y: fresh ? [0, -16, 0, -4, 0] : 0 }}
@@ -118,24 +121,24 @@ export function FighterPreview({ eventName }) {
         </AnimatePresence>
       </Ring>
 
-      <div className="fcard__picker">
-        <button type="button" className="fcard__arrow" onClick={() => cycle(-1)} aria-label="Previous character">
+      <div className="fightercard__picker">
+        <button type="button" className="fightercard__arrow" onClick={() => cycle(-1)} aria-label="Previous character">
           ◀
         </button>
-        <div className="fcard__who" aria-live="polite">
+        <div className="fightercard__who" aria-live="polite">
           <span className="t-body-strong">{t.archetypeName}</span>
           <span className="t-caption">{t.archetypeDetail}</span>
         </div>
-        <button type="button" className="fcard__arrow" onClick={() => cycle(1)} aria-label="Next character">
+        <button type="button" className="fightercard__arrow" onClick={() => cycle(1)} aria-label="Next character">
           ▶
         </button>
       </div>
 
-      <div className="fcard__body">
-        <div className="fcard__title">
+      <div className="fightercard__body">
+        <div className="fightercard__title">
           <span className="t-label">Your fighter</span>
           <h2 className="t-display-md m0 preview__name">{project.name}</h2>
-          <span className={`fcard__trim ${t.jacketFrom ? "fcard__trim--on" : ""}`} style={{ "--trim": t.jacket }}>
+          <span className={`fightercard__trim ${t.jacketFrom ? "fightercard__trim--on" : ""}`} style={{ "--trim": t.jacket }}>
             {trim}
             <span className="t-caption"> · {t.jacketFrom ? "from your first track" : "pick a track to colour it"}</span>
           </span>

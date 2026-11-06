@@ -25,21 +25,29 @@ const spec = (type) => {
   return s;
 };
 
-/** sha256 of the payload's JSON (64 hex). */
-export const hashOf = (payload) => crypto.createHash("sha256").update(JSON.stringify(payload)).digest("hex");
+const sha256Hex = (buf) => crypto.createHash("sha256").update(buf).digest("hex");
 
-/** Payload -> gzip JSON split into parts of at most PART_BYTES. */
-export function encode(payload) {
-  const buf = zlib.gzipSync(Buffer.from(JSON.stringify(payload)));
+/** sha256 of the payload's JSON (64 hex). */
+export const hashOf = (payload) => sha256Hex(JSON.stringify(payload));
+
+/** Bytes -> parts of at most PART_BYTES (always at least one, possibly empty). */
+function split(buf) {
   const parts = [];
   for (let i = 0; i < buf.length; i += PART_BYTES) parts.push(new Uint8Array(buf.subarray(i, i + PART_BYTES)));
   return parts.length ? parts : [new Uint8Array()];
 }
 
+/** Parts (hex or bytes, in order) -> one buffer. */
+const join = (parts) => Buffer.concat(parts.map((p) => Buffer.from(typeof p === "string" ? hexToBytes(p) : p)));
+
+/** Payload -> gzip JSON split into parts of at most PART_BYTES. */
+export function encode(payload) {
+  return split(zlib.gzipSync(Buffer.from(JSON.stringify(payload))));
+}
+
 /** Parts (hex or bytes, in order) -> payload. */
 export function decode(parts) {
-  const buf = Buffer.concat(parts.map((p) => Buffer.from(typeof p === "string" ? hexToBytes(p) : p)));
-  return JSON.parse(zlib.gunzipSync(buf).toString("utf8"));
+  return JSON.parse(zlib.gunzipSync(join(parts)).toString("utf8"));
 }
 
 const identityWhere = (type, attrs) => spec(type).identity.map((k) => eq(k, attrs[k]));
@@ -58,10 +66,7 @@ export async function writeRecord(type, attrs, payload, opts = {}) {
  * onPart(i, n) reports progress.
  */
 export async function writeBlob(type, attrs, buf, opts = {}) {
-  const hash = crypto.createHash("sha256").update(buf).digest("hex");
-  const chunks = [];
-  for (let i = 0; i < buf.length; i += PART_BYTES) chunks.push(new Uint8Array(buf.subarray(i, i + PART_BYTES)));
-  return writeParts(type, attrs, hash, chunks.length ? chunks : [new Uint8Array()], "raw", opts);
+  return writeParts(type, attrs, sha256Hex(buf), split(buf), "raw", opts);
 }
 
 async function writeParts(type, attrs, hash, chunks, enc, { client = null, reader = null, onPart = null } = {}) {
@@ -92,6 +97,13 @@ async function writeParts(type, attrs, hash, chunks, enc, { client = null, reade
   return { entityKeys, hash, skipped: false };
 }
 
+/** The publisher wallet whose entities reads trust. */
+function readOwner() {
+  const owner = publisher();
+  if (!owner) throw new Error("Arkiv reads need ARKIV_PRIVATE_KEY or ARKIV_PUBLISHER in backend/.env.");
+  return owner;
+}
+
 const selection = (type, withPayload) => Object.fromEntries([["$key", true], ["$owner", true], ["$expiresAt", true], ...spec(type).columnNames.filter((c) => withPayload || c !== "payload").map((c) => [c, true])]);
 
 /** Row -> plain object of column values. */
@@ -109,16 +121,14 @@ export async function readRecord(type, identity, opts = {}) {
 export async function readBlob(type, identity, opts = {}) {
   const got = await readParts(type, identity, { ...opts, maxParts: 400 });
   if (!got) return null;
-  const buffer = Buffer.concat(got.chunks.map((p) => Buffer.from(typeof p === "string" ? hexToBytes(p) : p)));
-  const sha = crypto.createHash("sha256").update(buffer).digest("hex");
-  if (sha !== got.columns.hash) throw new Error(`Arkiv ${type} ${got.columns.name ?? ""} doesn't match its hash.`);
+  const buffer = join(got.chunks);
+  if (sha256Hex(buffer) !== got.columns.hash) throw new Error(`Arkiv ${type} ${got.columns.name ?? ""} doesn't match its hash.`);
   return { ...got.columns, buffer };
 }
 
 async function readParts(type, identity, { reader = null, maxParts = 100 } = {}) {
   const { schema } = spec(type);
-  const owner = publisher();
-  if (!owner) throw new Error("Arkiv reads need ARKIV_PRIVATE_KEY or ARKIV_PUBLISHER in backend/.env.");
+  const owner = readOwner();
   const r = reader ?? publicClient();
   const { entities } = await r
     .select(selection(type, true))
@@ -160,8 +170,7 @@ async function readParts(type, identity, { reader = null, maxParts = 100 } = {})
 /** First parts (one per record version) matching the filters, newest first, without payloads. */
 export async function listRecords(type, filters = {}, { reader = null, limit = 50 } = {}) {
   const { schema } = spec(type);
-  const owner = publisher();
-  if (!owner) throw new Error("Arkiv reads need ARKIV_PRIVATE_KEY or ARKIV_PUBLISHER in backend/.env.");
+  const owner = readOwner();
   const r = reader ?? publicClient();
   const where = [eq("part", 0), ...Object.entries(filters).map(([k, v]) => eq(k, v))];
   const { entities } = await r.select(selection(type, false)).from(schema).ownedBy(owner).where(and(...where)).orderBy(desc("writtenAt")).limit(limit).fetch();

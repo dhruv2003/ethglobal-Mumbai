@@ -2,7 +2,7 @@
  * Validators for agent output. Each returns a list of problems; empty means valid.
  * These feed chatJSON's one repair attempt (PRD JDG-05, AGT-06).
  */
-const { RULINGS, CLAIM_TYPES } = require("./rubric");
+const { RULINGS, CLAIM_TYPES, WORD_LIMITS } = require("./rubric");
 
 const words = (s) => String(s ?? "").trim().split(/\s+/).filter(Boolean).length;
 const isStr = (s) => typeof s === "string" && s.trim().length > 0;
@@ -17,7 +17,7 @@ function checkEvidence(ids, allowed, path) {
 function fighter(o) {
   const p = [];
   for (const k of ["fighterName", "archetype", "speakingStyle", "catchphrase", "openingPitch", "advocacyBrief"]) if (!isStr(o?.[k])) p.push(`missing ${k}`);
-  if (words(o?.openingPitch) > 60) p.push(`openingPitch is ${words(o.openingPitch)} words; max 60`);
+  if (words(o?.openingPitch) > WORD_LIMITS.pitch) p.push(`openingPitch is ${words(o.openingPitch)} words; max ${WORD_LIMITS.pitch}`);
   if (words(o?.catchphrase) > 8) p.push("catchphrase max 8 words");
   if (words(o?.fighterName) > 4) p.push("fighterName max 4 words");
   return p;
@@ -36,7 +36,7 @@ const turn = (maxWords, allowed, { needsTarget = false } = {}) => (o) => {
   else if (words(o.text) > maxWords) p.push(`text is ${words(o.text)} words; max ${maxWords}`);
   if (!CLAIM_TYPES.includes(o?.claimType)) p.push(`claimType must be one of ${CLAIM_TYPES.join(", ")}`);
   if (!Array.isArray(o?.evidenceIds)) p.push("evidenceIds must be an array (can be empty)");
-  p.push(...checkEvidence(o?.evidenceIds, allowed, "evidenceIds"));
+  else p.push(...checkEvidence(o.evidenceIds, allowed, "evidenceIds"));
   if (needsTarget && !isStr(o?.targetClaim)) p.push("missing targetClaim (the opponent claim you are challenging)");
   return p;
 };

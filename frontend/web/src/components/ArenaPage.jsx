@@ -147,7 +147,7 @@ const SPARKLES = [
 ];
 
 export function ArenaPage() {
-  const { data, error } = usePoll(loadTournaments, [], 15000);
+  const { data, error } = usePoll(loadTournaments, [], 15000, { key: "tournaments" });
   const real = useMemo(() => (data ?? []).map((t) => ({ ...t, prize: "On chain" })), [data]);
   const open = real.flatMap((t) => openPools(t)).length;
 

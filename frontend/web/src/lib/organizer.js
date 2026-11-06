@@ -27,6 +27,7 @@ export function useOrganizer(wallet) {
     async () => (address ? (await api(`/organizer?wallet=${address}`)).isOrganizer : false),
     [address],
     30000,
+    { key: address ? `organizer:${address.toLowerCase()}` : null },
   );
   const [session, setSession] = useState(() => loadSession(address));
   useEffect(() => {

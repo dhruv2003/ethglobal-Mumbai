@@ -13,6 +13,7 @@ import { POOL_LABEL, POOL_STATE, matchMarket, tournamentMarket } from "../lib/po
 import { Link } from "../lib/router.jsx";
 import { AddressLink, AnimatedNumber, TxStatus, WalletGate } from "./ChainBits.jsx";
 import { FreePack } from "./FreePack.jsx";
+import { WalletTabs } from "./TransactionsPage.jsx";
 import { fadeUp, popIn, stagger } from "./fx.jsx";
 
 const BURST = ["#ffd43b", "#ff5c93", "#2f4bf0"];
@@ -161,7 +162,7 @@ async function readPositions(address) {
 }
 
 function Positions({ wallet, info, onChanged }) {
-  const { data, loading, error, refresh } = usePoll(() => (wallet.address ? readPositions(wallet.address) : Promise.resolve([])), [wallet.address], 15000);
+  const { data, loading, error, refresh } = usePoll(() => (wallet.address ? readPositions(wallet.address) : Promise.resolve([])), [wallet.address], 15000, { key: wallet.address ? `positions:${wallet.address.toLowerCase()}` : null });
   const done = async () => {
     await refresh();
     await onChanged?.();
@@ -261,6 +262,8 @@ export function WalletPage({ wallet }) {
           </p>
         </div>
       </header>
+
+      <WalletTabs current="overview" />
 
       <WalletGate wallet={wallet} reason="to buy and bet" />
 

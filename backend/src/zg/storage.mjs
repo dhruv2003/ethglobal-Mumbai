@@ -163,7 +163,7 @@ export async function merkleRoot(bytes) {
  *   address()                      -> "0x..." | null
  *   balance()                      -> bigint (wei) | null
  */
-export function sdkClient(cfg = storageConfig()) {
+function sdkClient(cfg = storageConfig()) {
   let signer = null;
   async function getSigner() {
     if (signer) return signer;

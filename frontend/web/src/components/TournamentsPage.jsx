@@ -7,13 +7,14 @@ import { motion } from "motion/react";
 import confetti from "canvas-confetti";
 import { Card, Chip, StatusPill } from "@ds/ui.jsx";
 import { usePoll } from "../lib/chain.js";
-import { loadTournament, loadTournaments } from "../lib/arena.js";
+import { cachedTournament, loadTournament, loadTournaments } from "../lib/arena.js";
 import { MATCH_LABEL, PHASE_LABEL } from "../lib/labels.js";
 import { POOL_LABEL, matchMarket, tournamentMarket } from "../lib/pools.js";
 import { Link, navigate } from "../lib/router.jsx";
 import { BetModal } from "./BetModal.jsx";
 import { eventIsOpen, listEvents } from "../lib/events.js";
 import { isMatchOpen, openPools } from "../lib/tournamentView.js";
+import { useNow } from "../lib/useNow.js";
 import { BetPanel } from "./BetPanel.jsx";
 import { useCountdown } from "./ChainBits.jsx";
 import { PixelFighter } from "./PixelFighter.jsx";
@@ -130,11 +131,7 @@ function OpenPool({ pool, onBet }) {
 function OpenForBetting({ tournaments, loaded, failed, wallet }) {
   const [betting, setBetting] = useState(null);
   const close = useCallback(() => setBetting(null), []);
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    const t = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(t);
-  }, []);
+  const now = useNow();
   const pools = useMemo(() => tournaments.flatMap((t) => openPools(t, now)), [tournaments, now]);
   return (
     <section className="stack" aria-label="Open for betting">
@@ -160,8 +157,8 @@ function OpenForBetting({ tournaments, loaded, failed, wallet }) {
 
 export function TournamentsPage({ wallet }) {
   const [filter, setFilter] = useState("all");
-  const { data: all, error } = usePoll(loadTournaments, [], 10000);
-  const { data: events } = usePoll(listEvents, [], 30000);
+  const { data: all, error } = usePoll(loadTournaments, [], 10000, { key: "tournaments" });
+  const { data: events } = usePoll(listEvents, [], 30000, { key: "events" });
   // Brackets live inside their tournament. Only ones from before tournaments existed are listed here.
   const list = useMemo(() => [...(all ?? [])].filter((t) => !t.eventId).sort((a, b) => ORDER[a.phase] - ORDER[b.phase]), [all]);
   const shown = filter === "all" ? list : list.filter((t) => t.phase === filter);
@@ -383,7 +380,7 @@ function Lobby({ t, wallet }) {
 }
 
 function ChainLobby({ id, wallet }) {
-  const { data, loading, error } = usePoll(() => loadTournament(id), [id], 10000);
+  const { data, loading, error } = usePoll(() => loadTournament(id), [id], 10000, { key: `tournament:${id}`, initial: () => cachedTournament(id) });
   if (loading && !data) return <div className="skeleton skeleton--seat" aria-label="Loading tournament" />;
   if (error && !data) return <Missing word="Couldn't read this tournament from the chain." />;
   if (!data) return <Missing word={`There's no tournament #${id} on chain.`} />;

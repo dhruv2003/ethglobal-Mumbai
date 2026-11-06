@@ -7,13 +7,11 @@
  */
 import fs from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { safeId } from "../datafiles.mjs";
 import { DATA_DIR, liveDir } from "../store.mjs";
 import { canWrite, publishPanel, publisher } from "./arkiv.mjs";
 import { swarmConfigured, uploadBundle } from "./swarm.mjs";
 
-const here = path.dirname(fileURLToPath(import.meta.url));
-const safeId = (id) => String(id).replace(/[^a-zA-Z0-9_-]/g, "");
 const recordFile = (id) => path.join(DATA_DIR, "arkiv", `${safeId(id)}.json`);
 
 export const publishing = new Map(); // projectId -> Promise

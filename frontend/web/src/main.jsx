@@ -7,6 +7,8 @@ import "./polish.css";
 import "./web3.css";
 import "./submit.css";
 import "./project.css";
+import "./graph.css";
+import "./review.css";
 import App from "./App.jsx";
 
 ReactDOM.createRoot(document.getElementById("root")).render(

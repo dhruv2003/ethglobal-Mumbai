@@ -16,6 +16,7 @@
  */
 import fs from "node:fs";
 import path from "node:path";
+import { readJSON, safeId } from "../../datafiles.mjs";
 import { loadProject } from "../../projects.mjs";
 import { DATA_DIR, judges, liveDir, mediaDir, pipelines, reviews, submissions, transcripts, videos } from "../../store.mjs";
 import { IMAGE_REF, UPLOAD_DIR } from "../../reviewer/media.mjs";
@@ -23,14 +24,7 @@ import { canWrite } from "../arkiv.mjs";
 import * as build from "./builders.mjs";
 import { writeBlob, writeRecord } from "./store.mjs";
 
-const safe = (v) => String(v).replace(/[^a-zA-Z0-9_-]/g, "");
-const readJson = (file) => {
-  try {
-    return JSON.parse(fs.readFileSync(file, "utf8"));
-  } catch {
-    return null;
-  }
-};
+const errorText = (e) => String(e?.shortMessage ?? e?.message ?? e).slice(0, 300);
 
 async function writeAll(records, opts) {
   const out = [];
@@ -39,7 +33,7 @@ async function writeAll(records, opts) {
       const res = await writeRecord(r.type, r.attrs, r.payload, opts);
       out.push({ type: r.type, ...res });
     } catch (e) {
-      out.push({ type: r.type, error: String(e?.shortMessage ?? e?.message ?? e).slice(0, 300) });
+      out.push({ type: r.type, error: errorText(e) });
     }
   }
   return out;
@@ -79,7 +73,7 @@ export async function syncFiles(projectId, opts = {}) {
       const res = await writeBlob("file", r.attrs, buffer, opts);
       out.push({ type: `file ${f.name}`, ...res });
     } catch (e) {
-      out.push({ type: `file ${f.name}`, error: String(e?.shortMessage ?? e?.message ?? e).slice(0, 300) });
+      out.push({ type: `file ${f.name}`, error: errorText(e) });
     }
   }
   return out;
@@ -96,7 +90,7 @@ export async function syncProject(projectId, opts = {}) {
       build.dossierRecord(project),
       build.transcriptRecord(project, transcripts.get(project.id)),
       build.livetestRecord(project),
-      build.visionRecord(project, readJson(path.join(DATA_DIR, "evidence", `${safe(projectId)}.json`))),
+      build.visionRecord(project, readJSON(`evidence/${safeId(projectId)}.json`, null)),
       build.reviewRecord(project, reviews.get(projectId)),
     ],
     opts,
@@ -107,11 +101,11 @@ export async function syncProject(projectId, opts = {}) {
 
 export const syncJudges = (opts = {}) => writeAll(judges.list().map(build.judgeRecord), opts);
 
-const tournamentOf = (id) => readJson(path.join(DATA_DIR, "arena-tournaments", `${safe(id)}.json`));
+const tournamentOf = (id) => readJSON(`arena-tournaments/${safeId(id)}.json`, null);
 export const syncTournament = (id, opts = {}) => writeAll([build.tournamentRecord(tournamentOf(id))], opts);
 
 export function syncFight(t, m, opts = {}) {
-  const fight = readJson(path.join(DATA_DIR, "arena-fights", `${safe(t)}-${Number(m)}.json`));
+  const fight = readJSON(`arena-fights/${safeId(t)}-${Number(m)}.json`, null);
   return writeAll([build.fightRecord(fight, tournamentOf(t))], opts);
 }
 

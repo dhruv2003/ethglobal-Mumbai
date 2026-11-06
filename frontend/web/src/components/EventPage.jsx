@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { Card, StatusPill } from "@ds/ui.jsx";
 import { loadTournaments } from "../lib/arena.js";
 import { usePoll } from "../lib/chain.js";
-import { closeEvent, eventIsOpen, getEvent } from "../lib/events.js";
+import { cachedEvent, closeEvent, eventIsOpen, getEvent } from "../lib/events.js";
 import { useOrganizer } from "../lib/organizer.js";
 import { PHASE_LABEL } from "../lib/labels.js";
 import { Link } from "../lib/router.jsx";
@@ -12,7 +12,7 @@ import { useCountdown } from "./ChainBits.jsx";
 const when = (iso) => new Date(iso).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
 
 export function EventPage({ id, wallet }) {
-  const { data: event, loading, error, refresh } = usePoll(() => getEvent(id), [id], 30000);
+  const { data: event, loading, error, refresh } = usePoll(() => getEvent(id), [id], 30000, { key: `event:${id}`, initial: () => cachedEvent(id) });
   const org = useOrganizer(wallet);
   const [closeError, setCloseError] = useState("");
   const close = async () => {
@@ -25,12 +25,12 @@ export function EventPage({ id, wallet }) {
       setCloseError(e.message);
     }
   };
-  const { data: brackets } = usePoll(loadTournaments, [], 15000);
+  const { data: brackets } = usePoll(loadTournaments, [], 15000, { key: "tournaments" });
   const mine = useMemo(() => (brackets ?? []).filter((b) => b.eventId === id), [brackets, id]);
   const countdown = useCountdown(event && eventIsOpen(event) ? Date.parse(event.deadline) : null);
 
   if (loading && !event) return <div className="skeleton skeleton--seat" aria-label="Loading tournament" />;
-  if (error || !event)
+  if (!event)
     return (
       <Card variant="surface" className="empty">
         <span className="t-body muted">We couldn't find that tournament.</span>

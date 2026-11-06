@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import "./page.css";
 import { Button, Chip, StatusPill, Card, Input, OddsBar, Progress, Avatar } from "./ui.jsx";
 
@@ -137,13 +137,15 @@ const SECTIONS = [
 
 function useCopy() {
   const [msg, setMsg] = useState("");
+  const timer = useRef(0);
+  useEffect(() => () => clearTimeout(timer.current), []);
   const copy = (text) => {
     try {
       navigator.clipboard?.writeText(text);
     } catch {}
     setMsg(`Copied ${text}`);
-    clearTimeout(window.__dsToast);
-    window.__dsToast = setTimeout(() => setMsg(""), 1400);
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => setMsg(""), 1400);
   };
   return [msg, copy];
 }
