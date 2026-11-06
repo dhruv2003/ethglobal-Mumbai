@@ -1,9 +1,9 @@
 /*
  * ENSv2 on Sepolia: every fighter and every AI judge in the arena is a name.
  *
- *   hackarena.eth                      the arena (parent, owned by ENS_PRIVATE_KEY's wallet)
- *   <project-slug>.hackarena.eth       a fighter: owned by the team's wallet, scores written by the arena
- *   judge-<name>.hackarena.eth         an AI judge: ENSIP-26 agent-context / agent-endpoint records
+ *   fightclub.eth                      the arena (parent, owned by ENS_PRIVATE_KEY's wallet)
+ *   <project-slug>.fightclub.eth       a fighter: owned by the team's wallet, scores written by the arena
+ *   judge-<name>.fightclub.eth         an AI judge: ENSIP-26 agent-context / agent-endpoint records
  *
  * How it sits on ENSv2:
  *   - The parent points at its own UserRegistry (subnames live there) and its own
@@ -23,7 +23,7 @@
  *
  *   ENS_PRIVATE_KEY         owner of the parent; signs setup, subname issuance, profile records
  *   ENS_WRITER_PRIVATE_KEY  optional scoped writer for score records (else the owner writes them)
- *   ENS_PARENT              default "hackarena.eth"
+ *   ENS_PARENT              default "fightclub.eth"
  *   ENS_RPC_URL             Sepolia RPC (default: publicnode)
  *   ARENA_PUBLIC_URL        public site URL, for url / agent-endpoint[web] records (optional)
  */
@@ -32,7 +32,7 @@ import { createPublicClient, createWalletClient, encodeFunctionData, http, kecca
 import { privateKeyToAccount } from "viem/accounts";
 import { sepolia } from "viem/chains";
 import { normalize, packetToBytes } from "viem/ens";
-import { db, submissions } from "../store.mjs";
+import { db, judges, reviews, submissions } from "../store.mjs";
 import { loadProject } from "../projects.mjs";
 
 /** ENSv2 on Sepolia (docs.ens.domains/learn/deployments#sepolia-ensv2). */
@@ -109,7 +109,7 @@ const erc20Abi = parseAbi([
 
 /* ------------------------------------------------------------- config */
 
-export const parentName = () => normalize(process.env.ENS_PARENT || "hackarena.eth");
+export const parentName = () => normalize(process.env.ENS_PARENT || "fightclub.eth");
 const parentLabel = () => parentName().replace(/\.eth$/, "");
 const rpcUrl = () => process.env.ENS_RPC_URL || "https://ethereum-sepolia-rpc.publicnode.com";
 export const publicUrl = () => (process.env.ARENA_PUBLIC_URL || "").replace(/\/+$/, "") || null;
@@ -418,7 +418,7 @@ export async function writeScore(project, result, { arkivPanelKey = null } = {})
 /** ENSIP-26 agent-context for a judge: who they are and how they score, as JSON. Pure; tested. */
 export function agentContext(judge) {
   return JSON.stringify({
-    type: "battle-arena.judge",
+    type: "fightclub.judge",
     name: judge.name,
     title: judge.title,
     background: judge.background,
@@ -589,6 +589,56 @@ function configOrThrow() {
     projects: map(all.projects),
     judges: map(all.judges),
   };
+}
+
+/* ------------------------------------------------------------- bootstrap */
+
+/** What's still missing on ENS, given the names already issued. Pure; tested. */
+export function pendingWork(issued, { judgeIds, projectIds, judgedIds }) {
+  return {
+    judges: judgeIds.filter((id) => !issued.judges?.[id]?.profileTx),
+    projects: projectIds.filter((id) => !issued.projects?.[id]?.profileTx),
+    scores: judgedIds.filter((id) => !issued.projects?.[id]?.scoreTx),
+  };
+}
+
+/**
+ * Bring ENS up to date with the database: set up the parent if needed, then issue every judge and
+ * fighter that has no name yet and write missing scores. Safe to run on every start: it only sends
+ * what's missing, and one failure doesn't stop the rest.
+ */
+export async function bootstrap({ panelKeyOf = () => null, model = null, log = () => {} } = {}) {
+  const d = await deployment();
+  const writer = writerAccount();
+  const needsWriter = writer && writer.address.toLowerCase() !== ownerAddress().toLowerCase() && readJson(setupFile(), {}).writer !== writer.address;
+  if (!d.registry || !d.resolver || needsWriter) await setup({ log });
+
+  const projectIds = submissions.list().map((s) => s.id);
+  const todo = pendingWork(names(), { judgeIds: judges.list().map((j) => j.id), projectIds, judgedIds: projectIds.filter((id) => reviews.get(id)) });
+  const attempt = async (what, fn) => {
+    try {
+      const r = await fn();
+      if (r) log(`${what}: ${r.name}`);
+    } catch (e) {
+      console.error(`[ens] ${what} failed: ${e.shortMessage ?? e.message}`);
+    }
+  };
+  for (const id of todo.judges) await attempt(`judge ${id}`, () => issueJudge(judges.list().find((j) => j.id === id), { model }));
+  for (const id of todo.projects) {
+    const project = loadProject(id);
+    if (project) await attempt(`project ${id}`, () => issueProject(project));
+  }
+  for (const id of todo.scores) {
+    const project = loadProject(id);
+    if (project) await attempt(`score ${id}`, () => writeScore(project, reviews.get(id), { arkivPanelKey: panelKeyOf(id) }));
+  }
+  return todo;
+}
+
+/** At server start. Never throws, and does nothing without ENS_PRIVATE_KEY. */
+export function bootstrapInBackground(opts = {}) {
+  if (!canWrite()) return null;
+  return once("bootstrap", () => bootstrap({ log: (m) => console.log(`[ens] ${m}`), ...opts })).catch((e) => console.error(`[ens] bootstrap failed: ${e.shortMessage ?? e.message}`));
 }
 
 /* ------------------------------------------------------------- background hooks */

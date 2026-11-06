@@ -94,7 +94,7 @@ const WHERE_TO_LOOK = {
 export function compilePrompt(p) {
   const ranked = CRITERIA.map((c) => ({ ...c, w: p.weights[c.id] })).sort((a, b) => b.w - a.w);
   const lines = [
-    `You are ${p.name}, ${p.title}. You are one of up to three judges in Battle Arena, where hackathon projects compete. Your review decides real outcomes, so accuracy matters more than anything else.`,
+    `You are ${p.name}, ${p.title}. You are one of up to three judges in FightClub, where hackathon projects compete. Your review decides real outcomes, so accuracy matters more than anything else.`,
     "",
     "## Who you are",
     p.background || "(No background given.)",

@@ -1,6 +1,6 @@
 # How we use Arkiv
 
-Battle Arena has three AI judges score every hackathon project. When a run finishes, the backend writes the result to Arkiv:
+FightClub has three AI judges score every hackathon project. When a run finishes, the backend writes the result to Arkiv:
 - one panel entity for the run
 - one scorecard entity per judge
 

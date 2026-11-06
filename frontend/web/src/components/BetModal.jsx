@@ -12,6 +12,7 @@ import { formatAmount, pools, toUnits, token, useToken, useTx } from "../lib/cha
 import { estimatePayout, percent } from "../lib/pools.js";
 import { usePoolData } from "./BetPanel.jsx";
 import { TxStatus, WalletGate, useCountdown } from "./ChainBits.jsx";
+import { FighterEnsLine } from "./EnsName.jsx";
 import { PixelFighter } from "./PixelFighter.jsx";
 import { easeOut } from "./fx.jsx";
 
@@ -55,6 +56,7 @@ function Sheet({ pool, symbol, shares, balance, mine, problemFor, payoutFor, onP
           >
             <PixelFighter project={s.project} scale={3} label="" />
             <span className="bm__side-name">{s.project.name}</span>
+            <FighterEnsLine projectId={s.project.id} />
             <span className="bm__side-meta t-num">
               {shares[i]}%{mine[i] ? ` · you ${mine[i]}` : ""}
             </span>

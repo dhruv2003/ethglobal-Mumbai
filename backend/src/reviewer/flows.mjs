@@ -26,7 +26,7 @@ const Step = z.object({
 });
 const FlowsSchema = z.object({ demo: z.array(Step), features: z.array(Step) });
 
-const SYSTEM = `You write automated browser checks for Battle Arena, a hackathon judging platform. A cloud browser will run your steps against the project's live web app, on a laptop and a phone, without an account. Judges use the results to see whether the product really works and whether the demo video shows the real product, so every step must test something meaningful and every pass must mean the feature is really there.
+const SYSTEM = `You write automated browser checks for FightClub, a hackathon judging platform. A cloud browser will run your steps against the project's live web app, on a laptop and a phone, without an account. Judges use the results to see whether the product really works and whether the demo video shows the real product, so every step must test something meaningful and every pass must mean the feature is really there.
 
 Two lists:
 1. demo: replay what the team's demo video shows, in order. One step per distinct screen or moment the demo shows working (not every sentence of narration). Put the demo timestamp (like "0:42") in demoAt when the transcript has one. The point is to catch demos that show things the live app doesn't have.

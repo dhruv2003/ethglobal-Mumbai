@@ -1,4 +1,4 @@
-# AI Hackathon Battle Arena
+# FightClub
 
 Hackathon projects become AI fighters, and three AI judges score them. The product spec is in [PRD.md](PRD.md); the code is in [backend/](backend/README.md) and [frontend/](frontend/README.md).
 
@@ -27,9 +27,9 @@ It lists every published panel, newest first. From the repo, `cd backend && npm 
 
 ## ENS (ENSv2 on Sepolia)
 
-Every fighter and every AI judge is a name under **`hackarena.eth`**:
-- **`<project>.hackarena.eth`**: issued when a project is submitted. The subname is owned by the team's wallet, which can only transfer it. After every judged run, the arena writes the score to it, including `arena.score`, `arena.judges` and `arena.ranAt`. It also writes `arena.arkiv`, which links the Arkiv panel entity that backs the score.
-- **`judge-<name>.hackarena.eth`**: each AI judge's persona, published as ENSIP-26 `agent-context` with `agent-endpoint[web]`.
+Every fighter and every AI judge is a name under **`fightclub.eth`**:
+- **`<project>.fightclub.eth`**: issued when a project is submitted. The subname is owned by the team's wallet, which can only transfer it. After every judged run, the arena writes the score to it, including `arena.score`, `arena.judges` and `arena.ranAt`. It also writes `arena.arkiv`, which links the Arkiv panel entity that backs the score.
+- **`judge-<name>.fightclub.eth`**: each AI judge's persona, published as ENSIP-26 `agent-context` with `agent-endpoint[web]`.
 - The project page and the judges' panel read these records in the browser, straight from ENS through the Universal Resolver.
 
 The parent has its own UserRegistry and PermissionedResolver, both made through ENS's VerifiableFactory. Enhanced Access Control decides who can write what. Teams can't re-point their name's resolver. An optional score-writer wallet can set only the `arena.*` keys (`grantSetterRoles`). Fight records (`arena.record` W-L, `arena.titles`, `arena.lastFight`) are tallied from matches the TournamentManager contract finalized, so the winner on ENS is the one the contract derived.

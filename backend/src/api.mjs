@@ -342,7 +342,7 @@ router.post("/submissions", rateLimit({ max: 5, windowMs: 60 * 60 * 1000 }), asy
   const record = { ...body, id: crypto.randomUUID(), submittedAt: new Date().toISOString() };
   submissions.add(record);
   syncProjectInBackground(record.id);
-  if (ens.canWrite()) ens.issueProjectInBackground(loadProject(record.id)); // <project>.hackarena.eth, owned by the team's wallet
+  if (ens.canWrite()) ens.issueProjectInBackground(loadProject(record.id)); // <project>.fightclub.eth, owned by the team's wallet
   // Into the review queue: fetch, pin, count tests, build the dossier, then the judges score.
   enqueue(record.id, { judge: reviewNow });
   res.status(201).json(publicSubmission(record));
@@ -667,5 +667,6 @@ if (process.env.ARENA_SERVER === "1") {
   if (n) console.log(`[pipeline] resumed ${n} unfinished review(s)`);
   startPayouts();
   startAutorun();
+  ens.bootstrapInBackground({ panelKeyOf: (id) => lastPublish(id)?.arkiv?.panelKey ?? null, model: MODEL });
   db.startRefresh(); // pick up records other processes write to Arkiv (another server, a CLI run, a migration)
 }

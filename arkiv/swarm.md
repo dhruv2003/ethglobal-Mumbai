@@ -1,4 +1,4 @@
-# Swarm in Battle Arena
+# Swarm in FightClub
 
 ## What lives where
 

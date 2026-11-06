@@ -50,6 +50,7 @@ export const SUBMIT_PATH = "/tournaments/ethglobal-mumbai/submit";
 const NAV = [
   { to: "/arena", label: "Arena", on: (r) => r.name === "arena" || r.name === "matchFight" || r.name === "tournament" || r.name === "tournaments" },
   { to: "/projects", label: "Projects", on: (r) => r.name === "projects" || r.name === "project" },
+  { to: "/fighters", label: "Fighters", on: (r) => r.name === "fighters" },
   { to: SUBMIT_PATH, label: "Submit", on: (r) => r.name === "form" || r.name === "event" },
 ];
 const ORGANIZER_NAV = [
@@ -132,7 +133,7 @@ export function Header({ wallet, route }) {
         <Link to="/" className="brand">
           <BrandMark />
           <span className="brand__word">
-            Battle&nbsp;<span className="brand__accent">Arena</span>
+            Fight<span className="brand__accent">Club</span>
           </span>
         </Link>
         <nav className="top__nav" aria-label="Main" onPointerLeave={() => setHover(null)}>

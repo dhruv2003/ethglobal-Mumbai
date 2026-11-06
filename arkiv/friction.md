@@ -1,6 +1,6 @@
 # Arkiv friction
 
-What slowed us down while connecting Battle Arena to Arkiv (Rabdi testnet, `@arkiv-network/sdk` 1.0.1, Node 24).
+What slowed us down while connecting FightClub to Arkiv (Rabdi testnet, `@arkiv-network/sdk` 1.0.1, Node 24).
 
 ## What to improve
 

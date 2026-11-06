@@ -41,9 +41,9 @@ const DossierSchema = z.object({
   highlights: z.object({ headline: z.string(), holdsUp: z.array(Point), watch: z.array(Point) }),
 });
 
-const SYSTEM = `You are the reviewer agent for Battle Arena, a hackathon judging platform. You are a senior engineer doing a code review and fact-check of ONE hackathon project: you read its code, check every claim the team makes against it, and find what the team did not mention. Judges score the project from your dossier, so it must be accurate, specific and fair. A wrong "supported" or a wrong "contradicted" misleads every judge.
+const SYSTEM = `You are the reviewer agent for FightClub, a hackathon judging platform. You are a senior engineer doing a code review and fact-check of ONE hackathon project: you read its code, check every claim the team makes against it, and find what the team did not mention. Judges score the project from your dossier, so it must be accurate, specific and fair. A wrong "supported" or a wrong "contradicted" misleads every judge.
 
-Be clear about whose project this is: every field describes the TEAM'S project (its users, its problem, its journey). Battle Arena, judging and judges are never the subject of the dossier.
+Be clear about whose project this is: every field describes the TEAM'S project (its users, its problem, its journey). FightClub, judging and judges are never the subject of the dossier.
 
 ## How to work
 1. List the team's concrete, checkable claims from <submission> (and the README): features, user flows, stack, chains and integrations, sponsor tracks, AI/ML, security and privacy, tests, deployments, scale. Split compound claims ("X and Y") into separate items when the answer differs.
@@ -125,7 +125,7 @@ export function thinDossier(d) {
   if (!norm(d.verdict) || norm(d.verdict) === norm(d.summary)) out.push("verdict must be filled and say something different from summary (how well the claims hold up)");
   if (!norm(d.problem)) out.push("problem is empty");
   if (!norm(d.intendedUsers)) out.push("intendedUsers is empty");
-  if (/\b(hackathon judg|battle arena|judging platform)/.test(`${norm(d.problem)} ${norm(d.intendedUsers)}`)) out.push("problem and intendedUsers must describe the team's project and its users, not Battle Arena or judging");
+  if (/\b(hackathon judg|fightclub|fight club|battle arena|judging platform)/.test(`${norm(d.problem)} ${norm(d.intendedUsers)}`)) out.push("problem and intendedUsers must describe the team's project and its users, not FightClub or judging");
   if (!(d.coreJourney?.length >= 2)) out.push("coreJourney needs the 3-8 steps a user takes through the product");
   if (!(d.evidence?.length >= 6)) out.push("write at least 10 evidence items covering every concrete claim in the submission");
   if (!(d.risks?.length > 0)) out.push("risks is empty: list what would break or harm users or funds first");

@@ -8,7 +8,7 @@
 
 ## Would they use it?
 
-Judging at hackathons is hard to follow: teams rarely see why they placed where they did. Battle Arena gives every project:
+Judging at hackathons is hard to follow: teams rarely see why they placed where they did. FightClub gives every project:
 - a dossier with every claim checked against the code
 - a recorded live test
 - three judges' scores with comments

@@ -24,6 +24,7 @@ import { OrganizerGate } from "./components/OrganizerGate.jsx";
 import { ArenaPage } from "./components/ArenaPage.jsx";
 import { MatchFightPage } from "./components/MatchFightPage.jsx";
 import { GraphPage } from "./components/GraphPage.jsx";
+import { FightersPage } from "./components/EnsName.jsx";
 import { Footer } from "./components/Footer.jsx";
 import { Backdrop, ScrollProgress, easeOut } from "./components/fx.jsx";
 import { AnimatePresence, MotionConfig, motion } from "motion/react";
@@ -34,6 +35,7 @@ const TITLES = {
   home: "The arena",
   form: "Submit a project",
   projects: "Projects",
+  fighters: "Fighters",
   project: "Project",
   judges: "Judges",
   wallet: "Wallet",
@@ -53,7 +55,7 @@ export default function App() {
   const route = matchRoute(usePath());
   useCanonical(route);
   useEffect(() => {
-    document.title = `${TITLES[route.name]} · Battle Arena`;
+    document.title = `${TITLES[route.name]} · FightClub`;
   }, [route.name]);
   const [data, setData] = useState(() => mergeDraft(loadDraft()));
   const [touched, setTouched] = useState({});
@@ -114,7 +116,7 @@ export default function App() {
     const issuedAt = new Date().toISOString();
     try {
       const message = [
-        `Submit "${payload.project.name}" to ${event.name} Battle Arena`,
+        `Submit "${payload.project.name}" to ${event.name} FightClub`,
         `Repository: ${payload.repoUrl}`,
         `Owner: ${wallet.address}`,
         `Submission: ${await submissionDigest(payload)}`,
@@ -208,6 +210,8 @@ export default function App() {
               <ArenaPage />
             ) : route.name === "matchFight" ? (
               <MatchFightPage id={route.id} matchIndex={route.match} wallet={wallet} />
+            ) : route.name === "fighters" ? (
+              <FightersPage />
             ) : route.name === "graph" ? (
               <GraphPage />
             ) : route.name === "projects" ? (

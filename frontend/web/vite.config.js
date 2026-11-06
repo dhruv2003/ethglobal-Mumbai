@@ -28,8 +28,8 @@ export default defineConfig({
       registerType: "autoUpdate",
       includeAssets: ["icons/apple-touch-icon.png", "icons/favicon.svg"],
       manifest: {
-        name: "Battle Arena",
-        short_name: "Arena",
+        name: "FightClub",
+        short_name: "FightClub",
         description: "Submit your hackathon project and turn it into an AI fighter.",
         start_url: "/",
         scope: "/",

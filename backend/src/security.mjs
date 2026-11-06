@@ -15,7 +15,7 @@ import { createPublicClient, http, verifyMessage } from "viem";
 const LOOPBACK = new Set(["127.0.0.1", "::1", "::ffff:127.0.0.1"]);
 
 /** The message an organizer signs once per session (no gas). */
-export const organizerMessage = (wallet, issuedAt) => ["Sign in as a Battle Arena organizer", `Wallet: ${wallet}`, `Issued at: ${issuedAt}`].join("\n");
+export const organizerMessage = (wallet, issuedAt) => ["Sign in as a FightClub organizer", `Wallet: ${wallet}`, `Issued at: ${issuedAt}`].join("\n");
 const SESSION_MS = 12 * 60 * 60 * 1000;
 const ROLE_CACHE_MS = 30 * 1000;
 const roleCache = new Map(); // wallet -> { until, ok }
