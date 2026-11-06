@@ -28,7 +28,7 @@ const PLACEHOLDER = [
 ].map(([id, title, about]) => ({ id, title, about, status: "queued", parts: [], facts: [] }));
 
 /* Layout: x as a share of the width, y in px. */
-const H = 410;
+const H = 436;
 const COLS = [0.12, 0.38, 0.63, 0.88];
 const STAGES = [
   { n: 1, label: "Gather" },
@@ -198,11 +198,6 @@ function Node({ n, s, x, selected, onPick, score, i }) {
             transition={{ type: "spring", stiffness: 90, damping: 20 }}
           />
         </svg>
-        {s.status === "running" && (
-          <svg className="fnode__orbit" viewBox="0 0 116 116" aria-hidden="true">
-            <circle cx="58" cy="58" r="55" />
-          </svg>
-        )}
         <span className="fnode__face">{score != null ? <span className="fnode__score t-num">{score}</span> : <span className="fnode__glyph"><Icon name={n.icon} size={26} /></span>}</span>
         {glyph && (
           <span className={`fnode__badge fnode__badge--${s.status}`} aria-hidden="true">
@@ -222,48 +217,50 @@ function Node({ n, s, x, selected, onPick, score, i }) {
   );
 }
 
-/** Under a running node: one dot per sub-step and what it's doing right now. */
+/** What a running step is doing, in two or three words. */
+const DOING = {
+  clone: "Cloning", pin: "Pinning", history: "Reading history", tests: "Counting tests",
+  download: "Saving video", transcribe: "Transcribing", images: "Reading shots",
+  connect: "Booking devices", explore: "Exploring site", write: "Writing steps", laptop: "Testing", android: "Testing", ios: "Testing", phone: "Testing", save: "Saving runs",
+  pack: "Packing code", ask: "Reading code", verify: "Checking lines",
+};
+
+/** Under a running node: how far along it is, and what it's doing right now. */
 function NowBubble({ s }) {
   const parts = s.parts ?? [];
+  const done = parts.filter((p) => FINISHED.includes(p.status)).length;
   const live = parts.filter((p) => p.status === "running");
-  const text = live.length > 1 ? `${live.length} at once` : live[0] ? live[0].label.replace(/ browser$/, "") : (s.detail ?? "Starting").replace(/…$/, "");
+  const devices = live.filter((p) => DEVICE_OS[p.id]).length;
+  const text = s.id === "judges" ? `${live.length || 3} judges scoring` : devices > 1 ? `Testing on ${devices} devices` : live[0] ? DOING[live[0].id] ?? live[0].label.split(" ").slice(0, 2).join(" ") : "Starting";
   return (
     <motion.span className="fnow" initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} aria-hidden="true">
-      {parts.length > 0 && (
-        <span className="fnow__dots">
-          {parts.map((p) => (
-            <span key={p.id} className={`fnow__dot fnow__dot--${p.status}`} />
-          ))}
+      {parts.length > 1 && (
+        <span className="fnow__bar">
+          <motion.span initial={false} animate={{ width: `${((done + 0.5) / parts.length) * 100}%` }} transition={{ type: "spring", stiffness: 120, damping: 20 }} />
         </span>
       )}
       <AnimatePresence mode="wait" initial={false}>
-        <motion.span key={text} className="fnow__text" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.2 }}>
+        <motion.span key={text} className="fnow__text" initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }} transition={{ duration: 0.18 }}>
           {text}
         </motion.span>
       </AnimatePresence>
-      <span className="fnow__ell">
-        <span />
-        <span />
-        <span />
-      </span>
     </motion.span>
   );
 }
 
-function Edge({ d, state, i }) {
+function Edge({ d, state, i, end }) {
   return (
     <g className={`fedge fedge--${state}`}>
       <path className="fedge__track" d={d} />
       {(state === "done" || state === "active") && (
         <motion.path className="fedge__line" d={d} initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 0.7, delay: 0.25 + i * 0.06, ease: [0.16, 1, 0.3, 1] }} />
       )}
-      {state === "active" && <path className="fedge__flow" d={d} />}
-      {state === "active" &&
-        [0, 0.5].map((b) => (
-          <circle key={b} className="fedge__dot" r="4.5">
-            <animateMotion dur="1.8s" begin={`${b * 1.8}s`} repeatCount="indefinite" path={d} />
-          </circle>
-        ))}
+      {state === "active" && (
+        <circle className="fedge__dot" r="4">
+          <animateMotion dur="1.6s" repeatCount="indefinite" path={d} keyPoints="0;1" keyTimes="0;1" calcMode="spline" keySplines="0.45 0 0.55 1" />
+        </circle>
+      )}
+      {end && <circle className="fedge__end" cx={end[0]} cy={end[1]} r="3.5" />}
       {state === "waiting" && <path className="fedge__wait" d={d} />}
     </g>
   );
@@ -281,8 +278,8 @@ function FlowCanvas({ steps, sel, onPick, verdict }) {
   const path = (a, b) => {
     const [x1, y1] = pos(a);
     const [x2, y2] = pos(b);
-    const sx = x1 + R + 10;
-    const ex = x2 - R - 10;
+    const sx = x1 + R + 6;
+    const ex = x2 - R - 8;
     const mx = (sx + ex) / 2;
     return `M ${sx} ${y1} C ${mx} ${y1}, ${mx} ${y2}, ${ex} ${y2}`;
   };
@@ -308,7 +305,7 @@ function FlowCanvas({ steps, sel, onPick, verdict }) {
         ))}
         <svg className="fcanvas__edges" width={w} height={H} viewBox={`0 0 ${w} ${H}`} aria-hidden="true">
           {EDGES.map(([a, b], i) => (
-            <Edge key={`${a}-${b}`} d={path(a, b)} state={edgeState(by[a], by[b])} i={i} />
+            <Edge key={`${a}-${b}`} d={path(a, b)} state={edgeState(by[a], by[b])} i={i} end={[pos(b)[0] - R - 8, pos(b)[1]]} />
           ))}
         </svg>
         {NODES.map((n, i) => (
