@@ -54,6 +54,39 @@ const R = 38; // node radius
 const FINISHED = ["done", "failed", "skipped"];
 const WORD = { queued: "Waiting", running: "Working", done: "Done", failed: "Failed", skipped: "Skipped" };
 
+/*
+ * Older runs split "Code review" into fetch / pin / tests steps. Fold those
+ * into one "code" step (they become its parts) so the canvas always has its
+ * five known nodes; anything else unknown is dropped from the map.
+ */
+const LEGACY_CODE = ["fetch", "pin", "tests"];
+function normalize(raw) {
+  if (!raw?.length) return PLACEHOLDER;
+  const legacy = raw.filter((s) => LEGACY_CODE.includes(s.id));
+  let steps = raw;
+  if (legacy.length && !raw.some((s) => s.id === "code")) {
+    const st = legacy.map((s) => s.status);
+    const status = st.includes("running") ? "running" : st.every((x) => FINISHED.includes(x)) ? (st.includes("failed") ? "failed" : "done") : st.every((x) => x === "queued") ? "queued" : "running";
+    const starts = legacy.map((s) => s.startedAt).filter(Boolean).sort();
+    const ends = legacy.map((s) => s.finishedAt).filter(Boolean).sort();
+    const code = {
+      id: "code",
+      title: "Code review",
+      about: "Fetch the repo, pin the commit, count the tests",
+      status,
+      detail: legacy.map((s) => s.detail).filter(Boolean).join(" · "),
+      startedAt: starts[0],
+      finishedAt: status === "running" ? null : ends[ends.length - 1],
+      parts: legacy.map((s) => ({ id: s.id, label: s.title ?? s.id, status: s.status, detail: s.detail })),
+      facts: legacy.flatMap((s) => s.facts ?? []),
+    };
+    steps = [code, ...raw.filter((s) => !LEGACY_CODE.includes(s.id))];
+  }
+  const known = new Set(NODES.map((n) => n.id));
+  const out = PLACEHOLDER.map((p) => steps.find((s) => s.id === p.id) ?? p);
+  return out.filter((s) => known.has(s.id));
+}
+
 /* ---------- polling ---------- */
 
 /** Polls the pipeline while it's queued or running. */
@@ -516,7 +549,7 @@ function Detail({ s, n, projectId, verdict, onOpen }) {
 /* ---------- the card ---------- */
 
 export function PipelineView({ project, live, onChanged, panelScore, onOpen }) {
-  const steps = live.state?.steps?.length ? live.state.steps : PLACEHOLDER;
+  const steps = normalize(live.state?.steps);
   const queued = live.review?.status === "queued";
   const running = !queued && (live.running || (live.state && !live.state.finishedAt && live.state.startedAt));
   const finished = Boolean(live.state?.finishedAt) && !running && !queued;
@@ -572,7 +605,7 @@ export function PipelineView({ project, live, onChanged, panelScore, onOpen }) {
   const total = live.state?.startedAt ? fmt(secs(live.state.startedAt, live.state.finishedAt)) : null;
   const all = [...steps, verdict];
   const sel = all.find((s) => s.id === selected) ?? steps[0];
-  const node = NODES.find((n) => n.id === sel.id);
+  const node = NODES.find((n) => n.id === sel.id) ?? NODES[0];
 
   return (
     <div className="flow-wrap">
@@ -630,7 +663,7 @@ export function PipelineView({ project, live, onChanged, panelScore, onOpen }) {
 
 /** A compact 1→4 strip for the overview; opens the full canvas. */
 export function FlowStrip({ live, onOpen }) {
-  const steps = live.state?.steps?.length ? live.state.steps : PLACEHOLDER;
+  const steps = normalize(live.state?.steps);
   const by = Object.fromEntries(steps.map((s) => [s.id, s]));
   const col = (ids) => {
     const st = ids.map((id) => by[id]?.status ?? "queued");
