@@ -105,6 +105,12 @@
 .bet__payouts { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 
 /* ---------- Tournaments ---------- */
+.open-pools { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }
+.open-pool { display: flex; align-items: center; gap: var(--space-4); flex-wrap: wrap; padding: var(--space-3) var(--space-4); background: var(--surface); border-radius: var(--radius-lg); color: inherit; text-decoration: none; transition: transform 120ms; }
+.open-pool:hover { transform: translateY(-2px); }
+.open-pool__fighters { display: flex; gap: var(--space-1); }
+.open-pool__text { display: flex; flex-direction: column; flex: 1 1 200px; min-width: 0; }
+.open-pool__clock { white-space: nowrap; }
 .tgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: var(--space-4); }
 .tcard-tilt { height: 100%; }
 .tcard {
@@ -368,4 +374,29 @@ a.bracket-match:hover { transform: translateY(-2px); box-shadow: var(--shadow-so
   .aer *, .aer, .village * { animation: none !important; }
   .aer--live .aer-f--a { --x: 36px; --y: 29px; }
   .aer--live .aer-f--b { --x: 48px; --y: 29px; }
+}
+
+/* Organizer: pick submitted projects for the bracket */
+.org-pick {
+  display: grid;
+  grid-template-columns: 2rem 1fr;
+  gap: 0.75rem;
+  align-items: center;
+  text-align: left;
+  padding: 0.6rem 0.75rem;
+  border: 2px solid var(--ink, #1c1b1a);
+  border-radius: 0.75rem;
+  background: var(--surface, #fffdf8);
+  cursor: pointer;
+}
+.org-pick[aria-pressed="true"] { background: var(--reward-soft, #fff2b3); }
+.org-pick:disabled { opacity: 0.5; cursor: not-allowed; }
+.org-pick__n {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  font-weight: 700;
 }

@@ -39,6 +39,7 @@ import { checkSubmissionSignature, rateLimit, requireOrganizer } from "./securit
 import { canRead, canWrite, publisher, readLatest } from "./arkiv/arkiv.mjs";
 import { lastPublish, publishInBackground, publishing, publishRun } from "./arkiv/publish.mjs";
 import { swarmConfigured } from "./arkiv/swarm.mjs";
+import { arenaRouter } from "./arena/routes.mjs";
 
 // Seed the example panel the first time only.
 if (!judges.list().length) judges.save(EXAMPLE_FORMS.map((f) => ({ ...validateForm(f).persona, example: true })));
@@ -95,6 +96,7 @@ export async function reviewNow(projectId, { evidence = EVIDENCE_ENABLED, freshE
 }
 
 export const router = express.Router();
+router.use("/arena", arenaRouter);
 
 router.get("/health", (req, res) => {
   res.json({
