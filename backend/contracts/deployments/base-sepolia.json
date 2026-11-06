@@ -1,0 +1,50 @@
+{
+  "network": "base-sepolia",
+  "chainId": 84532,
+  "rpcUrl": "https://sepolia.base.org",
+  "blockExplorerUrl": "https://base-sepolia.blockscout.com",
+  "deployer": "0x4Fb38a974ABf6f3D6a1ffD048F792d37ddEF4b73",
+  "compiler": {
+    "version": "0.8.34+commit.80d5c536",
+    "optimizer": {
+      "enabled": true,
+      "runs": 200
+    },
+    "openzeppelinVersion": "5.0.2"
+  },
+  "verification": {
+    "verifiedAt": "2026-11-05T23:15:03.206Z",
+    "blockNumber": 54993170,
+    "method": "Compiled runtime bytecode matches deployed code after excluding Solidity metadata and constructor immutable values. BettingPools ABI entries and creation bytecode also match the downloaded Remix artifact.",
+    "abiPathsRelativeTo": "this file"
+  },
+  "contracts": {
+    "FilterCoin": {
+      "address": "0x564B51f96406328Ad3dBD6E89b63219938F4fbb7",
+      "abi": "../abi/FilterCoin.json",
+      "transactionHash": "0x63d5a6988c2f5822911f7d76f1c0fc0697d3e008eb6670bf06e4471cc546637d",
+      "blockNumber": 54982583,
+      "constructorArguments": [],
+      "abiSource": "Compiled local source using the deployed compiler and OpenZeppelin versions; runtime checked against the deployed contract."
+    },
+    "TournamentManager": {
+      "address": "0x21b7F85B689d27e0066b95F9cC1a23942861D84d",
+      "abi": "../abi/TournamentManager.json",
+      "transactionHash": "0x79b59235c488013527abef986751bf893841a8f77f7069f781afa086a12b7002",
+      "blockNumber": 54983307,
+      "constructorArguments": [],
+      "abiSource": "Recompiled exact compiler input exported by Remix."
+    },
+    "BettingPools": {
+      "address": "0x3D8aCAE312bFBBE900421d4236d70b62D59A8F5e",
+      "abi": "../abi/BettingPools.json",
+      "transactionHash": "0x1190cb5978baa0de82f7a1cf6103469dac7406323e20f7c10df07d6faee28786",
+      "blockNumber": 54983903,
+      "constructorArguments": [
+        "0x21b7F85B689d27e0066b95F9cC1a23942861D84d",
+        "0x564B51f96406328Ad3dBD6E89b63219938F4fbb7"
+      ],
+      "abiSource": "ABI array from the downloaded Remix compilation artifact."
+    }
+  }
+}

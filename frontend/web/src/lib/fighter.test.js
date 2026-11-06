@@ -1,9 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { fighterLayers, fighterTraits, poseRects } from "./fighter.js";
+import { fighterLayers, fighterTraits, poseRects, POSES } from "./fighter.js";
+import { FIGHTER_ROSTER } from "./fighterRoster.js";
 
 const base = { id: "x", name: "Plain", pitch: "A to-do list", description: "React app", tracks: [] };
 
 describe("fighterTraits", () => {
+  it("assigns a varied, stable cast across project identities", () => {
+    const cast = Array.from({ length: 120 }, (_, i) => fighterTraits({ ...base, id: `mumbai-${i}` }).archetype);
+    expect(new Set(cast).size).toBeGreaterThanOrEqual(12);
+    expect(fighterTraits({ ...base, archetype: "babu-bhaiya" }).archetype).toBe("babu-bhaiya");
+    expect(fighterTraits({ ...base, archetype: "unknown" }).archetype).toBe(fighterTraits(base).archetype);
+  });
+
   it("is stable for the same project", () => {
     expect(fighterTraits(base)).toEqual(fighterTraits({ ...base }));
   });
@@ -77,5 +85,41 @@ describe("poseRects", () => {
   it("extends the arm only when punching", () => {
     const reach = (pose) => Math.max(...poseRects(t, pose).map((r) => r.x + r.w));
     expect(reach("punch")).toBeGreaterThan(reach("idle") + 3);
+  });
+  it("keeps the extended fist filled after removing the resting arm", () => {
+    const pixels = poseRects(t, "punch");
+    expect(pixels.some((r) => r.y === 12 && r.x <= 22 && r.x + r.w > 22 && r.fill === t.skin)).toBe(true);
+  });
+});
+
+describe("Mumbai roster", () => {
+  it.each(FIGHTER_ROSTER.map((s) => [s.id]))("keeps %s and its accessories drawable in every pose", (archetype) => {
+    for (const description of ["", "health AI payments", "VR privacy", "music agents"]) {
+      const traits = fighterTraits({ ...base, archetype, description });
+      const layers = fighterLayers(traits);
+      for (const r of [layers.upper, layers.legs, layers.eyesOpen, layers.eyesClosed, ...Object.values(layers.gearById)].flat()) {
+        expect(r.fill).toMatch(/^#[0-9a-f]{6}$/i);
+        expect(r.x).toBeGreaterThanOrEqual(0);
+        expect(r.x + r.w).toBeLessThanOrEqual(16);
+        expect(r.y).toBeGreaterThanOrEqual(0);
+        expect(r.y).toBeLessThan(20);
+      }
+      for (const pose of POSES) {
+        for (const r of poseRects(traits, pose)) {
+          expect(r.fill).toMatch(/^#[0-9a-f]{6}$/i);
+          expect(r.x).toBeGreaterThanOrEqual(0);
+          expect(r.x + r.w).toBeLessThanOrEqual(24);
+          expect(r.y).toBeGreaterThanOrEqual(0);
+          expect(r.y).toBeLessThan(20);
+        }
+      }
+    }
+  });
+  it("changes silhouettes, not just colours", () => {
+    const silhouettes = FIGHTER_ROSTER.map(({ id }) => {
+      const pixels = poseRects(fighterTraits({ ...base, archetype: id }));
+      return pixels.flatMap((r) => Array.from({ length: r.w }, (_, i) => `${r.x + i},${r.y}`)).sort().join(";");
+    });
+    expect(new Set(silhouettes).size).toBeGreaterThanOrEqual(10);
   });
 });
