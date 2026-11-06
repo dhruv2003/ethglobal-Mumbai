@@ -75,7 +75,11 @@ export async function submissionDigest(p) {
   return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-/** Save to the backend (POST /api/submissions), which also starts the review. */
+/**
+ * Save to the backend (POST /api/submissions), which also starts the review and
+ * archives the signed record on 0G Storage. The returned record carries `zgStorage`
+ * ({ status: pending | stored | failed | off, rootHash, ... }).
+ */
 export async function saveSubmission(payload) {
   let res;
   try {

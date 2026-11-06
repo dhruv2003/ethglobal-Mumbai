@@ -170,7 +170,7 @@ export function contextPack(dir, files, { maxChars = 180000, maxLinesPerFile = 3
     used += block.length;
     included.push(f.path);
   }
-  return { text: parts.join(""), included, notIncluded: truncated.length, chars: used };
+  return { text: parts.join(""), included, notIncluded: truncated.length, notShown: truncated, chars: used };
 }
 
 /** Is "path:line" a real line in the clone? */
