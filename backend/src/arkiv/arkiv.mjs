@@ -37,6 +37,7 @@ export const Panels = defineSchema("battle-arena.panel", {
   provider: str(),
   model: str(),
   swarmRef: str().optional(), // Swarm collection reference (64 hex, unencrypted)
+  projectName: str().indexed().optional(),
 });
 
 export const Scorecards = defineSchema("battle-arena.scorecard", {
@@ -47,6 +48,7 @@ export const Scorecards = defineSchema("battle-arena.scorecard", {
   overall: dec().indexed().optional(), // only when scored
   judgeName: str(),
   headline: str().optional(),
+  projectName: str().indexed().optional(),
 });
 
 /** Integer hundredths -> exact decimal string ("7233" -> "72.33"), no floats. */
@@ -96,12 +98,23 @@ export const canWrite = () => Boolean(signingKey());
 export const canRead = () => Boolean(publisher());
 
 let pub;
-const publicClient = () => (pub ??= createPublicClient({ chain: chain(), transport: http() }));
+export const publicClient = () => (pub ??= createPublicClient({ chain: chain(), transport: http() }));
 let wal;
-const walletClient = () => (wal ??= createWalletClient({ chain: chain(), transport: http(), account: account() }));
+// One wallet, one queue: writes from parallel background jobs would otherwise race for the same nonce.
+let tail = Promise.resolve();
+const serial = (fn) => {
+  const run = tail.then(fn, fn);
+  tail = run.catch(() => {});
+  return run;
+};
+export const walletClient = () => {
+  wal ??= createWalletClient({ chain: chain(), transport: http(), account: account() });
+  return { createEntity: (...args) => serial(() => wal.createEntity(...args)) };
+};
+export const ttlDays = () => TTL_DAYS;
 
 /** Entity values for one run (pure; tested). */
-export function panelValues(projectId, result, swarmRef) {
+export function panelValues(projectId, result, swarmRef, projectName) {
   return {
     projectId: clip128(projectId),
     runAt: u64(BigInt(Math.floor(new Date(result.ranAt).getTime() / 1000))),
@@ -111,10 +124,11 @@ export function panelValues(projectId, result, swarmRef) {
     provider: clip128(result.provider),
     model: clip128(result.model),
     ...(swarmRef ? { swarmRef } : {}),
+    ...(projectName ? { projectName: clip128(projectName) } : {}),
   };
 }
 
-export function scorecardValues(projectId, panelKey, r) {
+export function scorecardValues(projectId, panelKey, r, projectName) {
   return {
     panel: key(panelKey),
     projectId: clip128(projectId),
@@ -123,6 +137,7 @@ export function scorecardValues(projectId, panelKey, r) {
     ...(r.status === "scored" ? { overall: dec(hundredthsToDec(r.overallHundredths)) } : {}),
     judgeName: clip128(r.judge.name),
     ...(r.review?.headline ? { headline: clip128(r.review.headline) } : {}),
+    ...(projectName ? { projectName: clip128(projectName) } : {}),
   };
 }
 
@@ -130,15 +145,15 @@ export function scorecardValues(projectId, panelKey, r) {
  * Write one panel entity and one scorecard per judge. Returns the keys and tx hashes.
  * opts.client replaces the wallet client (tests).
  */
-export async function publishPanel(projectId, result, { swarmRef = null, client = null } = {}) {
+export async function publishPanel(projectId, result, { swarmRef = null, projectName = null, client = null } = {}) {
   if (!client && !canWrite()) throw new Error("Arkiv is not set up: set ARKIV_PRIVATE_KEY or PUBLISHER_PRIVATE_KEY in backend/.env.");
   if (result.panelHundredths == null) throw new Error("Nothing to publish: no judge scored this run.");
   const w = client ?? walletClient();
   const options = { expiration: ExpirationTime.fromDays(TTL_DAYS), flags: { readonly: true } };
-  const panel = await w.createEntity(Panels, panelValues(projectId, result, swarmRef), options);
+  const panel = await w.createEntity(Panels, panelValues(projectId, result, swarmRef, projectName), options);
   const scorecards = [];
   for (const r of result.reviews) {
-    const s = await w.createEntity(Scorecards, scorecardValues(projectId, panel.entityKey, r), options);
+    const s = await w.createEntity(Scorecards, scorecardValues(projectId, panel.entityKey, r, projectName), options);
     scorecards.push({ judgeId: r.judge.id, entityKey: s.entityKey, txHash: s.txHash });
   }
   return { panelKey: panel.entityKey, txHash: panel.txHash, expiresAt: String(panel.expiresAt), scorecards };

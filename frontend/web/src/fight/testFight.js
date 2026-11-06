@@ -1,6 +1,5 @@
 /*
- * DEMO FIGHT: a complete scripted match. Used only as the labelled fallback when no recorded
- * fight can be reached (and by the tests). Contract (every event): { seq, ts, type, ...payload }
+ * TEST FIGHT: a complete scripted match, used only by the tests. Contract (every event): { seq, ts, type, ...payload }
  *   intro        {}
  *   pitch        { actor, text }
  *   round_start  { round }

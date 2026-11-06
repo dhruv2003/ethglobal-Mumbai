@@ -1,56 +1,101 @@
 # Arkiv schema
 
-Network: Arkiv **Rabdi** testnet (chain ID 7794095). Code: [backend/src/arkiv/arkiv.mjs](../backend/src/arkiv/arkiv.mjs).
+Network: Arkiv **Rabdi** testnet (chain ID 7794095).
 
-Every judged run of a project writes **one panel** and **one scorecard per judge** (three).
+Everything the arena records goes to Arkiv. Files (recordings, screenshots, the demo video) go to Swarm instead ([swarm.md](swarm.md)).
 
-## `battle-arena.panel`
+Code:
+- [backend/src/arkiv/arkiv.mjs](../backend/src/arkiv/arkiv.mjs): panel and scorecards
+- [backend/src/arkiv/records/](../backend/src/arkiv/records/): every other record
 
-One per judged run.
-
-| Field | Type | Indexed | Holds |
-| --- | --- | --- | --- |
-| `projectId` | str | yes | Project ID, for example `go-health-me` |
-| `runAt` | u64 | yes | When the judges ran (unix seconds). We sort on it to find the latest run. |
-| `panelScore` | dec | yes | Panel average from 0.00 to 100.00, computed from integer hundredths |
-| `complete` | bool | yes | True when all three judges scored |
-| `judges` | i32 | no | Number of judges on the panel |
-| `provider` | str | no | Inference provider, `0g` by default |
-| `model` | str | no | Model ID |
-| `swarmRef` | str, optional | no | **Swarm reference** (64 hex characters, unencrypted) of the run's evidence bundle. See [swarm.md](swarm.md). |
-
-## `battle-arena.scorecard`
-
-One per judge per run.
-
-| Field | Type | Indexed | Holds |
-| --- | --- | --- | --- |
-| `panel` | key | yes | Key of this run's `battle-arena.panel` entity |
-| `projectId` | str | yes | Project ID |
-| `judgeId` | str | yes | Judge persona ID |
-| `status` | str | yes | `scored`, `invalid`, `declined` or `error` |
-| `overall` | dec, optional | yes | The judge's weighted score from 0.00 to 100.00; set only when `scored` |
-| `judgeName` | str | no | Judge's public name |
-| `headline` | str, optional | no | The judge's one-line verdict, cut to 128 bytes |
-
-## Owner, edits, expiry
-
-| | Panel | Scorecard |
+| Schema | One per | Written when |
 | --- | --- | --- |
-| Owner | The arena's publisher wallet (`ARKIV_PRIVATE_KEY`) | Same |
-| Who can edit | Nobody. Created with `flags: { readonly: true }`. | Same |
-| Expires | 120 days after the run (`ARKIV_TTL_DAYS`). The PRD (DAT-05) keeps scorecards at least 90 days after an event. | Same |
+| `battle-arena.project` | project | submitted (and `sync`) |
+| `battle-arena.pipeline` | project | the review pipeline finishes |
+| `battle-arena.dossier` | project | the pipeline finishes (the reviewer's evidence report / bug report) |
+| `battle-arena.transcript` | project | the pipeline finishes (demo video transcript) |
+| `battle-arena.livetest` | project | the pipeline finishes (live-test report; media on Swarm) |
+| `battle-arena.vision` | project | after judging, if screenshot notes exist (judge context) |
+| `battle-arena.panel` | judging run | the judges finish |
+| `battle-arena.scorecard` | judge per run | the judges finish |
+| `battle-arena.judge` | judge persona | a judge is added or edited |
+| `battle-arena.tournament` | tournament | the bracket is registered |
+| `battle-arena.fight` | 1v1 match | the fight is recorded |
 
-Readers only trust entities owned by the publisher wallet. Anyone can write entities with our schema tag, so every query filters with `ownedBy(publisher)`.
+## Columns every record shares (all except panel and scorecard)
 
-## Queries the app runs
+| Field | Type | Indexed | Holds |
+| --- | --- | --- | --- |
+| `projectId` | str, optional | yes | Project ID, for example `go-health-me` (all project records) |
+| `projectName` | str, optional | yes | Project name, for example `Go Health Me` |
+| `writtenAt` | u64 | yes | When it was written (unix seconds). The newest one is current. |
+| `hash` | str | yes | sha256 of the payload. An unchanged record is never written twice. |
+| `part` / `parts` | i32 | `part` yes | A payload over 120 KB compressed is split across entities |
+| `enc` | str | no | `gzip-json` |
+| `payload` | bytes | no | The full record as gzip-compressed JSON |
 
-Latest panel for a project:
+## Columns of each type (indexed unless noted)
+
+| Schema | Columns |
+| --- | --- |
+| `project` | `teamName`, `kind` (sample / submitted), `ownerWallet` (addr), `tracks` (count, not indexed) |
+| `pipeline` | `status` (done / failed); `steps` and `failedSteps` (not indexed) |
+| `dossier` | `commit`, `claims`, `contradicted`; `supported` and `unverified` (not indexed) |
+| `transcript` | `source` (loom / openai / fixture) |
+| `livetest` | `laptop` and `phone` (passed / issues / failed / error), `failedSteps`; `target` (not indexed) |
+| `vision` | `model`; `shots` (not indexed) |
+| `judge` | `judgeId`, `judgeName`, `version`, `promptVersion`; `tone` (not indexed) |
+| `tournament` | `tournamentId`, `track`, `bracketHash`; `title` and `size` (not indexed) |
+| `fight` | `tournamentId`, `match`, `projectA`, `projectB`, `projectAName`, `projectBName`, `winner` (a / b / review / failed), `scoreA`, `scoreB`, `resultHash` |
+
+## `battle-arena.panel` (one per judged run)
+
+| Field | Type | Indexed | Holds |
+| --- | --- | --- | --- |
+| `projectId` / `projectName` | str | yes | The project (`projectName` is optional) |
+| `runAt` | u64 | yes | When the judges ran. Sorted on to find the latest run. |
+| `panelScore` | dec | yes | Panel average, 0 to 100 |
+| `complete` | bool | yes | All three judges scored |
+| `judges`, `provider`, `model` | i32, str, str | no | Panel size and the model used |
+| `swarmRef` | str, optional | no | **Swarm reference** of the run's evidence bundle |
+
+## `battle-arena.scorecard` (one per judge per run)
+
+| Field | Type | Indexed | Holds |
+| --- | --- | --- | --- |
+| `panel` | key | yes | This run's panel entity |
+| `projectId` / `projectName` | str | yes | The project |
+| `judgeId`, `status` | str | yes | Who scored, and `scored` / `invalid` / `declined` / `error` |
+| `overall` | dec, optional | yes | The judge's weighted score (only when scored) |
+| `judgeName`, `headline` | str | no | Name and one-line verdict (cut to 128 bytes) |
+
+## Owner, edits, expiry (all schemas)
+
+- **Owner:** the arena's publisher wallet (`ARKIV_PRIVATE_KEY`).
+- **Edits:** none. Every entity is created `readonly`. A change is written as a new record with a newer `writtenAt`, and older ones stay readable.
+- **Expires:** 120 days after it's written (`ARKIV_TTL_DAYS`). The PRD (DAT-05) keeps records at least 90 days.
+- **Trust:** readers only accept entities owned by the publisher wallet, so every query has `$owner = addr(<publisher>)`.
+
+## Queries you can run
+
+Paste these at https://rabdi.explorer.arkiv.network/entity-explorer.
+
+Everything about one project:
 ```
-arkiv.schema = str('battle-arena.panel') AND projectId = str('go-health-me') AND $owner = addr(<publisher>) ORDER BY runAt:u64 DESC
+projectId = str('go-health-me') AND $owner = addr(<publisher>)
 ```
 
-That run's scorecards:
+The latest dossier of a project:
 ```
-arkiv.schema = str('battle-arena.scorecard') AND panel = key(<panel entity key>) AND $owner = addr(<publisher>)
+arkiv.schema = str('battle-arena.dossier') AND projectId = str('go-health-me') AND part = i32(0) AND $owner = addr(<publisher>) ORDER BY writtenAt:u64 DESC
+```
+
+Every fight a project was in:
+```
+arkiv.schema = str('battle-arena.fight') AND (projectA = str('<id>') OR projectB = str('<id>')) AND $owner = addr(<publisher>)
+```
+
+Projects whose live test had issues on phone:
+```
+arkiv.schema = str('battle-arena.livetest') AND phone = str('issues') AND $owner = addr(<publisher>)
 ```

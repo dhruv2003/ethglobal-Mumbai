@@ -95,12 +95,10 @@ export default function App() {
       startOver();
       const q = saved.review;
       toast(
-        saved.savedLocallyOnly
-          ? `${payload.project.name} saved on this device only: the review service is offline.`
-          : q?.status === "queued" && q.ahead > 0
+        q?.status === "queued" && q.ahead > 0
             ? `${payload.project.name} submitted. It's #${q.position} in the review queue.`
             : `${payload.project.name} submitted. The reviewer is on it.`,
-        { tone: saved.savedLocallyOnly ? "warning" : "success", ms: 6000 },
+        { tone: "success", ms: 6000 },
       );
       navigate("/projects");
     } catch (e) {

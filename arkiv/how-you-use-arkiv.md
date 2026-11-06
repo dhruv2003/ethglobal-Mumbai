@@ -44,3 +44,27 @@ Entities live **120 days**. Scorecards matter while an event and its follow-up r
 | [backend/src/api.mjs](../backend/src/api.mjs) | `GET` / `POST /api/projects/:id/arkiv` |
 | [backend/src/arkiv/run.mjs](../backend/src/arkiv/run.mjs) | CLI: `npm run arkiv -- publish\|read --project <id>` |
 | [backend/test/arkiv.test.mjs](../backend/test/arkiv.test.mjs) | Tests with a fake chain and a fake Bee node |
+| [backend/src/arkiv/records/](../backend/src/arkiv/records/) | `schemas.mjs` (one schema per record type), `builders.mjs` (local data → record), `store.mjs` (write/read: dedup by hash, gzip, split big payloads), `sync.mjs` (what to push when) |
+| [backend/test/arkiv-records.test.mjs](../backend/test/arkiv-records.test.mjs) | Every record checked against the SDK's own schema validation, round trips, dedup |
+
+## Every arena record, not only scores
+
+Besides the panel and scorecards, the backend writes the arena's other records to Arkiv as they happen. Each one carries `projectId` and `projectName`; a fight carries both projects.
+
+| Record | Written when |
+| --- | --- |
+| Project details | Submitted |
+| Review pipeline, dossier (bug report), demo transcript, live-test report | The review pipeline finishes |
+| Screenshot notes | After judging |
+| Judge personas | Added or edited |
+| Tournament bracket | Registered |
+| 1v1 fight result | Recorded |
+
+Files stay on Swarm. Details are in [schema.md](schema.md).
+
+Read them back from Arkiv:
+- `GET /api/arkiv/<type>?projectId=<id>`: list
+- `GET /api/arkiv/<type>/latest?projectId=<id>`: the newest one with its full payload
+- `npm run arkiv -- get <type> --project <id>`
+
+Backfill everything on a server: `npm run arkiv -- sync --all`.

@@ -12,7 +12,6 @@ import { Dossier } from "./Dossier.jsx";
 import { Spinner, toast } from "./Feedback.jsx";
 import { api } from "../lib/api.js";
 import { navigate } from "../lib/router.jsx";
-import { removeLocalSubmission } from "../lib/storage.js";
 import { rerunReview } from "../lib/review.js";
 import { JudgesPanel } from "./JudgesPanel.jsx";
 import { PipelineView, usePipeline } from "./PipelineView.jsx";
@@ -24,8 +23,8 @@ export const trackName = (id) => EVENT.tracks.find((t) => t.id === id)?.name ?? 
 const GHOST = { id: "your-fighter", name: "Your fighter", pitch: "", description: "", tracks: [] };
 const ROSTER_MAX = 6;
 
-function KindPill({ kind }) {
-  return kind === "sample" ? null : <StatusPill tone="success">✓ Submitted</StatusPill>;
+function KindPill() {
+  return <StatusPill tone="success">✓ Submitted</StatusPill>;
 }
 
 /** Where the project was built. Prominent: it frames everything else on the card. */
@@ -248,7 +247,7 @@ function HowItWorks() {
 export function LandingPage() {
   const [projects, setProjects] = useState(null);
   useEffect(() => {
-    listProjects().then(setProjects);
+    listProjects().then(setProjects, () => setProjects([]));
   }, []);
   const parade = (projects ?? []).slice(0, 4);
   return (
@@ -297,7 +296,10 @@ export function ProjectsPage() {
   const [projects, setProjects] = useState(null);
   const [filters, setFilters] = useFilters();
   useEffect(() => {
-    listProjects().then(setProjects);
+    listProjects().then(setProjects, () => {
+      setProjects([]);
+      toast("Couldn't reach the server, so projects can't be listed.", { tone: "warning", ms: 6000 });
+    });
   }, []);
   // "/" jumps to search, like most dashboards.
   useEffect(() => {
@@ -513,13 +515,11 @@ function DeleteProject({ project }) {
     setBusy(true);
     setError("");
     try {
-      if (!project.savedLocallyOnly) await api(`/projects/${encodeURIComponent(project.id)}`, { method: "DELETE" });
-      removeLocalSubmission(project.id);
+      await api(`/projects/${encodeURIComponent(project.id)}`, { method: "DELETE" });
       toast(`${project.name} deleted.`);
       navigate("/projects");
     } catch (e) {
       if (e.status === 404) {
-        removeLocalSubmission(project.id);
         toast(`${project.name} deleted.`);
         navigate("/projects");
         return;
@@ -594,7 +594,10 @@ export function ProjectPage({ id }) {
   const [view, setView] = useView();
   const [state, setState] = useState({ loading: true, project: null });
   useEffect(() => {
-    getProject(id).then((project) => setState({ loading: false, project }));
+    getProject(id).then(
+      (project) => setState({ loading: false, project }),
+      () => setState({ loading: false, project: null }),
+    );
   }, [id]);
 
   const back = (

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { catchUp, foldEvents, initialFightState, reduceFight, scoreSoFar, stateAt } from "./reducer.js";
 import { fmtHealth, fmtScore, healthThousandths, pointsKept, rulingLabel, scoreHundredths } from "./score.js";
-import { MOCK_EVENTS } from "./demoFight.js";
+import { MOCK_EVENTS } from "./testFight.js";
 import { choreograph, eventDuration } from "./choreo.js";
 
 const sealProduct = { seq: 1, type: "round_sealed", round: "product", scores: { a: [72, 70, 74], b: [64, 66, 61] } };

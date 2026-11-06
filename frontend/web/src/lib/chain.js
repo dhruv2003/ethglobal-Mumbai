@@ -41,7 +41,7 @@ export function loadToken() {
     const [symbol, decimals, rate] = await Promise.all([
       read(token, "symbol"),
       read(token, "decimals"),
-      // The official USDT on Whitechain has no RATE, so buying and selling are hidden there.
+      // A token without RATE hides buying and selling.
       read(token, "RATE").catch(() => null),
     ]);
     return { symbol, decimals, rate };
@@ -146,7 +146,7 @@ const REVERTS = {
   AlreadyPaid: "This has already been paid.",
   ClaimsOutstanding: "Some winners still haven't claimed.",
   EnforcedPause: "Betting is paused right now.",
-  InvalidCapacity: "A tournament needs exactly 4, 8 or 16 projects.",
+  InvalidCapacity: "A tournament needs exactly 2, 4, 8 or 16 projects.",
   InvalidSchedule: "Those times don't work. Betting must close in the future and before the start.",
   DeadlineTooSoon: "The resolution deadline is too soon.",
   InvalidAddress: "One of the wallet addresses is empty.",

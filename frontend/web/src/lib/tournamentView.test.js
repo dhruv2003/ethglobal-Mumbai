@@ -101,3 +101,13 @@ describe("viewOfChain with a registered bracket", () => {
     expect(v.registered).toBe(false);
   });
 });
+
+describe("a two-project tournament", () => {
+  it("is one match, and it opens for bets", () => {
+    const m = (status, a, b, cutoff, start) => ({ status, source: 0, projectA: a, projectB: b, winner: 0, scoreA: 0, scoreB: 0, tieA: 0, tieB: 0, cutoff, scheduledStart: start });
+    const view = viewOfChain({ id: 3, status: 2, bettingCutoff: 9000000000n, scheduledStart: 9000000060n, resolutionDeadline: 9000900000n, projectCount: 2, capacity: 2, count: 2, matches: [m(1, 0, 1, 9000000000n, 9000000060n)] });
+    expect(view.matches).toHaveLength(1);
+    expect(view.rounds.flatMap((r) => r.matches)).toEqual([0]);
+    expect(openPools(view).map((p) => p.to)).toEqual(["/tournaments/3", "/fights/3/0"]);
+  });
+});

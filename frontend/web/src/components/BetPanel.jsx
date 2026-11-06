@@ -7,6 +7,7 @@ import { useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { Button, Card, Chip, Input, OddsBar, Progress, StatusPill } from "@ds/ui.jsx";
 import { formatAmount, manager, pools, read, toUnits, token, usePoll, useToken, useTx } from "../lib/chain.js";
+import { usePayouts } from "../lib/payouts.js";
 import { OUTCOME, POOL_LABEL, POOL_STATE, estimatePayout, percent } from "../lib/pools.js";
 import { Link } from "../lib/router.jsx";
 import { TESTNET_NOTE, TxStatus, WalletGate, useCountdown } from "./ChainBits.jsx";
@@ -91,6 +92,8 @@ export function usePoolData(wallet, tournamentId, market, selections) {
 export function BetPanel({ wallet, tournamentId, market, selections, title }) {
   const info = useToken();
   const address = wallet.address;
+  const payouts = usePayouts();
+  const auto = payouts.enabled;
   const { data, error, refresh } = usePoolData(wallet, tournamentId, market, selections);
   const countdown = useCountdown(data?.state === "OPEN" ? Number(data.view.cutoff) * 1000 : null);
   const { tx, run, reset, busy } = useTx(wallet, refresh);
@@ -252,11 +255,13 @@ export function BetPanel({ wallet, tournamentId, market, selections, title }) {
         </>
       )}
 
-      {data.state === "LOCKED" && (
+      {data.state === "LOCKED" && total === 0n && <p className="t-body m0 muted">Betting is closed. Nobody bet in this pool.</p>}
+
+      {data.state === "LOCKED" && total > 0n && (
         <div className="stack">
-          <p className="t-body m0 muted">Betting is closed. This pool pays out once it's settled.</p>
-          <WalletGate wallet={wallet} reason="to settle" />
-          {wallet.onTargetNetwork && address && (
+          <p className="t-body m0 muted">{auto ? "Betting is closed. Winners are paid automatically as soon as the result is published." : "Betting is closed. This pool pays out once it's settled."}</p>
+          {!auto && <WalletGate wallet={wallet} reason="to settle" />}
+          {!auto && wallet.onTargetNetwork && address && (
             <Button variant="secondary" disabled={busy} onClick={() => collect("settle", "Settle")}>
               Settle this pool
             </Button>
@@ -271,20 +276,21 @@ export function BetPanel({ wallet, tournamentId, market, selections, title }) {
           <p className="t-body m0">
             <b>{selections.find((s) => s.id === data.pool.winner)?.project.name ?? `Project ${data.pool.winner + 1}`} won.</b> Bettors share 70%, the project gets 20% and the platform 10%.
           </p>
-          <WalletGate wallet={wallet} reason="to collect" />
-          {wallet.onTargetNetwork && address && data.claimable > 0n && (
+          {!auto && <WalletGate wallet={wallet} reason="to collect" />}
+          {auto && address && data.claimable > 0n && <p className="t-body m0">Sending {fmt(data.claimable)} {symbol} to your wallet automatically…</p>}
+          {!auto && wallet.onTargetNetwork && address && data.claimable > 0n && (
             <Button variant="crush" full disabled={busy} onClick={() => collect("claim", "Claim", true)}>
               Claim {fmt(data.claimable)} {symbol}
             </Button>
           )}
           {data.paid && <StatusPill tone="success">You've been paid</StatusPill>}
-          {wallet.onTargetNetwork && address && (
+          {(auto || (wallet.onTargetNetwork && address)) && (
             <div className="bet__payouts">
-              <Button variant="ghost" size="sm" disabled={busy || data.pool.projectPaid} onClick={() => collect("claimProject", "Project payout")}>
-                {data.pool.projectPaid ? "Project paid" : `Pay project ${fmt(data.pool.projectBucket)}`}
+              <Button variant="ghost" size="sm" disabled={auto || busy || data.pool.projectPaid} onClick={() => collect("claimProject", "Project payout")}>
+                {data.pool.projectPaid ? "Project paid" : `${auto ? "Paying" : "Pay"} project ${fmt(data.pool.projectBucket)}`}
               </Button>
-              <Button variant="ghost" size="sm" disabled={busy || data.pool.platformPaid} onClick={() => collect("claimPlatform", "Platform payout")}>
-                {data.pool.platformPaid ? "Platform paid" : `Pay platform ${fmt(data.pool.platformBucket)}`}
+              <Button variant="ghost" size="sm" disabled={auto || busy || data.pool.platformPaid} onClick={() => collect("claimPlatform", "Platform payout")}>
+                {data.pool.platformPaid ? "Platform paid" : `${auto ? "Paying" : "Pay"} platform ${fmt(data.pool.platformBucket)}`}
               </Button>
             </div>
           )}
@@ -294,8 +300,9 @@ export function BetPanel({ wallet, tournamentId, market, selections, title }) {
       {outcome === "Void" && (
         <div className="stack">
           <p className="t-body m0">This pool is void, so every stake is refunded in full.</p>
-          <WalletGate wallet={wallet} reason="to get your refund" />
-          {wallet.onTargetNetwork && address && data.refundable > 0n && (
+          {!auto && <WalletGate wallet={wallet} reason="to get your refund" />}
+          {auto && address && data.refundable > 0n && <p className="t-body m0">Sending your {fmt(data.refundable)} {symbol} back automatically…</p>}
+          {!auto && wallet.onTargetNetwork && address && data.refundable > 0n && (
             <Button variant="primary" full disabled={busy} onClick={() => collect("refund", "Refund")}>
               Refund {fmt(data.refundable)} {symbol}
             </Button>
@@ -310,29 +317,3 @@ export function BetPanel({ wallet, tournamentId, market, selections, title }) {
   );
 }
 
-/** The same panel for demo (fallback) tournaments: nothing can be bet. */
-export function SamplePool({ title, total, selections, shares }) {
-  return (
-    <Card className="bet">
-      <div className="section-head">
-        <h2 className="t-heading m0">{title}</h2>
-      </div>
-      <div className="bet__total">
-        <span className="t-caption">Pool total</span>
-        <span className="bet__total-value t-num">{total.toLocaleString("en-US")} FILTER</span>
-      </div>
-      {selections.length === 2 && <OddsBar yesPct={shares[0]} yesLabel={selections[0].project.name} noLabel={selections[1].project.name} />}
-      <motion.div className="bet-picks" variants={stagger(0.05)} initial="hidden" animate="show">
-        {selections.map((s, i) => (
-          <div key={s.id} className="bet-pick-wrap">
-            <Selection selection={s} share={shares[i]} stakeText={`${Math.round((total * shares[i]) / 100).toLocaleString("en-US")} FILTER`} disabled onSelect={() => {}} />
-            {selections.length !== 2 && <Progress value={shares[i]} label={`${s.project.name} has ${shares[i]}% of the pool`} tone="reward" />}
-          </div>
-        ))}
-      </motion.div>
-      <p className="t-caption m0">
-        Live data is unavailable, so this is demo data and betting is off.
-      </p>
-    </Card>
-  );
-}

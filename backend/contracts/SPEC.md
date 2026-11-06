@@ -6,8 +6,8 @@ Draft for review. Nothing here is implemented yet. It implements `PRD.md` v1.1, 
 
 | Topic | Choice | Why |
 | --- | --- | --- |
-| Network | Base Sepolia (84532) for testing, Whitechain Sepolia (1874) for the prize submission | The team has Base Sepolia ETH now. The Whitechain Scale prize needs Whitechain |
-| Betting token | FilterCoin on Base Sepolia, official test USDT on Whitechain | `BettingPools` takes the token address at deployment. Whitechain does not accept self-minted tokens |
+| Network | Base Sepolia (84532) | The team has Base Sepolia ETH |
+| Betting token | FilterCoin | `BettingPools` takes the token address at deployment |
 | Tooling | Remix IDE, OpenZeppelin Contracts v5 | Nothing to install. Compiles, tests and deploys in the browser through MetaMask |
 | Upgrades | None; contracts are immutable | No admin path can redirect user funds (SEC-07). New version means new deployment |
 | Testing | Remix unit tests on the Remix VM first, then a rehearsal on Base Sepolia | Catches contract bugs before spending test ETH, then proves the full flow on the real network |
@@ -49,7 +49,7 @@ The price is fixed at 0.00001 test ETH for 1,000 FILTER, which is `RATE = 100,00
 | `buy()` | Anyone | Payable. Mints `msg.value × RATE` base units to the caller. Reverts on zero value |
 | `sell(amount)` | Any holder | Sends the caller `floor(amount / RATE)` wei and burns exactly the FILTER that pays for. Any remainder stays with the caller. Reverts if the payout is zero |
 | `isFullyBacked()` | Anyone | Returns whether the ETH held covers every FILTER in existence |
-| `permit(...)` | Anyone with a holder's signature | Standard EIP-2612 gasless approval, matching the flow used with USDT |
+| `permit(...)` | Anyone with a holder's signature | Standard EIP-2612 gasless approval |
 
 - Tokens exist only through `buy()`. There is no owner mint and no pre-mine.
 - The price cannot change after deployment.
@@ -217,11 +217,10 @@ Constraints from the Arkiv docs (Rabdi testnet, chain ID 7794095):
 
 - The owner's wallet is the platform recipient for demo tournaments, so the owner can sell back that FILTER after the event.
 - On Base Sepolia, deploy in this order: `FilterCoin`, `TournamentManager`, `BettingPools`.
-- On Whitechain Sepolia, skip `FilterCoin` and give `BettingPools` the USDT address `0xcedfB56113143d55b2358b8CFbB0dEB5Ad2f55a7`. USDT has 6 decimals, so bet limits must be set for 6 decimals.
 
 ## Gasless flow
 
-1. The user's wallet signs a `BetIntent` and, if needed, a USDT or FilterCoin `permit`.
+1. The user's wallet signs a `BetIntent` and, if needed, a FilterCoin `permit`.
 2. The relayer submits both in one `betFor` call and pays the gas.
 3. The relayer can trigger `claimFor` and `refundFor` later, and funds only go to the bettor.
 
@@ -232,9 +231,7 @@ Signing details:
 | Signature | EIP-712 name | Version | Verifying contract |
 | --- | --- | --- | --- |
 | `BetIntent` | `BettingPools` | `1` | The deployed `BettingPools` |
-| Whitechain USDT `permit` | `Tether USD` | `1` | The USDT address above, chain ID 1874 |
 | FilterCoin `permit` | `FilterCoin` | `1` | The deployed `FilterCoin` |
 
-The USDT values were worked out by matching the contract's published `DOMAIN_SEPARATOR`. They have not been tried with a real signature yet.
 
 The `BetIntent` fields signed are `bettor`, `market`, `project`, `amount`, `nonce` and `deadline`. Read `nonce` from `betNonces(bettor)`.

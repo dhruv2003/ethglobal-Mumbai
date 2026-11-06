@@ -1,10 +1,7 @@
 /*
- * Projects shown on /projects: whatever teams submitted (the backend's store, plus anything
- * saved only in this browser when the backend was offline). No built-in projects.
+ * Projects shown on /projects: whatever teams submitted, from the backend's store.
  */
 import { api } from "./api.js";
-import { DEMO_ENABLED, isOutage } from "./demo.js";
-import { listSubmissions } from "./storage.js";
 import { uploadUrl } from "./video.js";
 
 function fromSubmission(r) {
@@ -23,7 +20,6 @@ function fromSubmission(r) {
     // Screenshots instead of (or as well as) a video: playable URLs, in the team's order.
     demoImages: (r.demoImages ?? []).map(uploadUrl).filter(Boolean),
     liveUrl: r.liveUrl ?? null,
-    savedLocallyOnly: Boolean(r.savedLocallyOnly),
     tracks: r.tracks ?? [],
     pinnedCommit: null,
     event: null,
@@ -37,26 +33,9 @@ function fromSubmission(r) {
   };
 }
 
-/** Labelled demo projects, shown only when the backend can't be reached. */
-const DEMO_PROJECTS = [
-  { id: "demo-stepquest", project: { name: "StepQuest", pitch: "A fitness game that rewards daily steps", description: "Demo project shown because the backend could not be reached." }, team: { name: "Demo team" }, tracks: ["base"] },
-  { id: "demo-splitpay", project: { name: "SplitPay", pitch: "AI agents that split USDC payments", description: "Demo project shown because the backend could not be reached." }, team: { name: "Demo team" }, tracks: ["uniswap"] },
-].map((r) => ({ ...fromSubmission(r), kind: "sample" }));
-
 export async function listProjects() {
-  let remote = [];
-  let demo = [];
-  try {
-    remote = await api("/submissions");
-  } catch (e) {
-    // Backend unreachable: keep what was saved in this browser and add the labelled demo projects.
-    if (DEMO_ENABLED && isOutage(e)) demo = DEMO_PROJECTS;
-  }
-  const byId = new Map([...listSubmissions(), ...remote].map((r) => [r.id, r]));
-  const submitted = [...byId.values()]
-    .map(fromSubmission)
-    .sort((a, b) => String(b.submittedAt).localeCompare(String(a.submittedAt)));
-  return [...submitted, ...demo];
+  const remote = await api("/submissions");
+  return remote.map(fromSubmission).sort((a, b) => String(b.submittedAt).localeCompare(String(a.submittedAt)));
 }
 
 export async function getProject(id) {

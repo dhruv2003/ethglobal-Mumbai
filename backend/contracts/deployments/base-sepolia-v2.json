@@ -1,0 +1,21 @@
+{
+  "chainId": 84532,
+  "token": "0x564B51f96406328Ad3dBD6E89b63219938F4fbb7",
+  "manager": "0x45cdb8fc0b250f70f56675e8b6c0c25ac6bd6c03",
+  "pools": "0xb73e35494272ec09044893c585b40e0cedb7eb95",
+  "transactions": {
+    "manager": "0xea28d72e6e2475c09155199940b54000bc4826a3a5e8b057ab6a23ef733e4858",
+    "pools": "0x2ef50a94470d3b27b4a2ae61f2caef61513f395dadce7dfd087f58a7ce9cafe0",
+    "organizerRole": "0xa3b2227b86a7569545ee76334d24463d293389a10a9e29b9d24d6d371238229a",
+    "publisherRole": "0x954207c5766ea0a1688d9064ff35c0f0eee0e0c9de63964468a423e6c7149bdf"
+  },
+  "compiler": "0.8.34+commit.80d5c536",
+  "optimizer": {
+    "enabled": true,
+    "runs": 200
+  },
+  "evmVersion": "shanghai",
+  "previousDeployment": "base-sepolia.json",
+  "localVerification": "Two-project 100+100 stake, 90/75 result, 140/40/20 payouts, pool balance zero.",
+  "sourceHash": "0x88f0c4992cd11fa2a16839148ce0f29297204f2f4570c77ae2a46b83b950c37b"
+}

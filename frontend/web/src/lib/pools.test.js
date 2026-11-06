@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { bracketRounds, estimatePayout, feeders, matchMarket, matchRound, parseScore, roundName, tournamentMarket } from "./pools.js";
+import { bracketRounds, estimatePayout, feeders, matchMarket, matchRound, parseScore, roundName, tournamentMarket, settledResult } from "./pools.js";
 
 const T = 10n ** 18n;
 
@@ -65,5 +65,23 @@ describe("parseScore", () => {
     expect(parseScore("abc")).toBeNull();
     expect(parseScore("")).toBeNull();
     expect(parseScore("1.234")).toBeNull();
+  });
+});
+
+describe("settledResult", () => {
+  it("pays the winner 70% of the pool", () => {
+    expect(settledResult({ stakes: [100n, 100n], mine: [100n, 0n], winnerIndex: 0 })).toEqual({ kind: "won", amount: 140n });
+  });
+  it("splits by stake on the winning side", () => {
+    expect(settledResult({ stakes: [300n, 100n], mine: [100n, 0n], winnerIndex: 0 })).toEqual({ kind: "won", amount: 93n });
+  });
+  it("a losing bet gets nothing", () => {
+    expect(settledResult({ stakes: [100n, 100n], mine: [0n, 100n], winnerIndex: 0 })).toEqual({ kind: "lost", amount: 0n });
+  });
+  it("a one-sided pool refunds", () => {
+    expect(settledResult({ stakes: [100n, 0n], mine: [100n, 0n], winnerIndex: 1 })).toEqual({ kind: "refund", amount: 100n });
+  });
+  it("a wallet that didn't bet has no result", () => {
+    expect(settledResult({ stakes: [100n, 100n], mine: [0n, 0n], winnerIndex: 0 })).toBeNull();
   });
 });

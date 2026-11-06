@@ -22,6 +22,7 @@ import { requireOrganizer } from "../security.mjs";
 import { hasCredentials } from "../judges/review.mjs";
 import { judgeCast, runFight } from "./fight.mjs";
 import { proposeBracket, verifyProposal } from "./matchmaking.mjs";
+import { syncFightInBackground, syncTournamentInBackground } from "../arkiv/records/sync.mjs";
 import { collectUiImages } from "./ui.mjs";
 
 const safe = (v) => String(v).replace(/[^a-zA-Z0-9_-]/g, "");
@@ -86,34 +87,50 @@ arenaRouter.post("/matchmaking", requireOrganizer, async (req, res) => {
   }
 });
 
-/** Body: { title, track?, submissionIds: [...] in bracket order (slot 0, 1, 2...) }. */
-arenaRouter.put("/tournaments/:id", requireOrganizer, (req, res) => {
-  const { title, track, submissionIds, proposal } = req.body ?? {};
-  if (!Array.isArray(submissionIds) || ![2, 4, 8, 16].includes(submissionIds.length)) return res.status(400).json({ error: "A bracket holds 2, 4, 8 or 16 projects." });
-  if (new Set(submissionIds).size !== submissionIds.length) return res.status(400).json({ error: "A project can only appear once." });
+/** Saves a bracket: slot order, project details and how it was drawn. Throws with a status. */
+export function saveBracket(id, { title, track, submissionIds, proposal }) {
+  const refuse = (status, message) => Object.assign(new Error(message), { status });
+  if (!Array.isArray(submissionIds) || ![2, 4, 8, 16].includes(submissionIds.length)) throw refuse(400, "A bracket holds 2, 4, 8 or 16 projects.");
+  if (new Set(submissionIds).size !== submissionIds.length) throw refuse(400, "A project can only appear once.");
   const projects = [];
   for (const [i, sid] of submissionIds.entries()) {
     const s = submissions.get(sid);
-    if (!s) return res.status(400).json({ error: `Slot ${i + 1}: no such submitted project.` });
-    if (!dossiers.get(sid)) return res.status(409).json({ error: `Slot ${i + 1} (${s.project?.name}): the review hasn't produced a dossier yet, so it can't fight.` });
+    if (!s) throw refuse(400, `Slot ${i + 1}: no such submitted project.`);
+    if (!dossiers.get(sid)) throw refuse(409, `Slot ${i + 1} (${s.project?.name}): the review hasn't produced a dossier yet, so it can't fight.`);
     projects.push(slot(s, i));
   }
   // Either the exact bracket matchmaking proposed, or an order the organizer chose by hand (recorded as such).
   let matching = { manual: true };
   if (proposal) {
     const b = verifyProposal(proposal, submissionIds);
-    if (!b) return res.status(400).json({ error: "This bracket order doesn't match the matchmaking result. Run matchmaking again." });
+    if (!b) throw refuse(400, "This bracket order doesn't match the matchmaking result. Run matchmaking again.");
     matching = { manual: false, algorithmVersion: b.algorithmVersion, seed: b.seed, embeddingModel: b.embeddingModel, weights: b.weights, inputHash: b.inputHash, resultHash: b.resultHash, firstRound: b.firstRound };
   }
-  const prior = readJson(tournamentFile(req.params.id));
-  const record = { id: String(req.params.id), title: String(title || `Tournament #${req.params.id}`).slice(0, 80), track: String(track || "Open").slice(0, 40), matching, createdAt: prior?.createdAt ?? new Date().toISOString(), projects };
-  writeJson(tournamentFile(req.params.id), record);
-  res.json(record);
+  const prior = readJson(tournamentFile(id));
+  const record = { id: String(id), title: String(title || `Tournament #${id}`).slice(0, 80), track: String(track || "Open").slice(0, 40), matching, createdAt: prior?.createdAt ?? new Date().toISOString(), projects };
+  writeJson(tournamentFile(id), record);
+  syncTournamentInBackground(id);
+  return record;
+}
+
+/** Body: { title, track?, submissionIds: [...] in bracket order (slot 0, 1, 2...) }. */
+arenaRouter.put("/tournaments/:id", requireOrganizer, (req, res) => {
+  try {
+    res.json(saveBracket(req.params.id, req.body ?? {}));
+  } catch (e) {
+    res.status(e.status ?? 500).json({ error: e.message });
+  }
 });
 
-function statusOf(t, m) {
+/** Registered brackets, for the auto-run loop. */
+export const listBrackets = () => {
+  const d = dir("arena-tournaments");
+  return fs.readdirSync(d).filter((x) => x.endsWith(".json")).map((x) => readJson(path.join(d, x))).filter(Boolean);
+};
+
+export function statusOf(t, m) {
   const live = running.get(`${t}-${m}`);
-  if (live) return { status: "running", note: live.note, startedAt: live.startedAt, eventCount: live.events.length };
+  if (live) return { status: "running", note: live.note, startedAt: live.startedAt, eventCount: live.events.length, events: live.events };
   const saved = readJson(fightFile(t, m));
   if (saved?.error) return { status: "failed", error: saved.error, ranAt: saved.ranAt };
   if (saved) return { status: "done", ...saved };
@@ -130,18 +147,19 @@ arenaRouter.get("/fights/:t/:m", (req, res) => {
 
 arenaRouter.post("/fights/:t/:m/result", requireOrganizer, (req, res) => res.json({ ...statusOf(req.params.t, req.params.m), judges: judgeCast() }));
 
-arenaRouter.post("/fights/:t/:m", requireOrganizer, async (req, res) => {
-  const { t, m } = req.params;
+/** Starts a fight in the background. Throws with a status if it can't start. */
+export function startFight(t, m, { a: slotA, b: slotB, revealAt, rerun } = {}) {
   const key = `${t}-${m}`;
-  if (running.has(key)) return res.status(409).json({ error: "This fight is already running." });
+  const refuse = (status, message) => Object.assign(new Error(message), { status });
+  if (running.has(key)) throw refuse(409, "This fight is already running.");
   const meta = readJson(tournamentFile(t));
-  if (!meta) return res.status(409).json({ error: "Register the bracket for this tournament first (organizer page, step 3)." });
-  const a = meta.projects[Number(req.body?.a)];
-  const b = meta.projects[Number(req.body?.b)];
-  if (!a || !b || a === b) return res.status(400).json({ error: "Both fighters must be projects in this bracket." });
-  if (!hasCredentials("0g")) return res.status(503).json({ error: "The fight service has no 0G key (set ZG_API_KEY in backend/.env)." });
+  if (!meta) throw refuse(409, "Register the bracket for this tournament first (organizer page, step 3).");
+  const a = meta.projects[Number(slotA)];
+  const b = meta.projects[Number(slotB)];
+  if (!a || !b || a === b) throw refuse(400, "Both fighters must be projects in this bracket.");
+  if (!hasCredentials("0g")) throw refuse(503, "The fight service has no 0G key (set ZG_API_KEY in backend/.env).");
   const prior = readJson(fightFile(t, m));
-  if (prior && !prior.error && !req.body?.rerun) return res.status(409).json({ error: "This fight was already run and its result is recorded. It can't be run twice." });
+  if (prior && !prior.error && !rerun) throw refuse(409, "This fight was already run and its result is recorded. It can't be run twice.");
 
   const corners = {};
   for (const [side, p] of [["A", a], ["B", b]]) {
@@ -150,9 +168,9 @@ arenaRouter.post("/fights/:t/:m", requireOrganizer, async (req, res) => {
   }
   const live = { startedAt: new Date().toISOString(), note: "Starting", events: [] };
   running.set(key, live);
-  res.status(202).json({ status: "running", startedAt: live.startedAt });
 
   (async () => {
+    // The UI face-off needs each project's screenshots and demo frames before the fight starts.
     live.note = "Collecting screenshots and demo frames";
     for (const side of ["A", "B"]) {
       const sub = corners[side].submission;
@@ -161,11 +179,47 @@ arenaRouter.post("/fights/:t/:m", requireOrganizer, async (req, res) => {
     return runFight({ corners, onProgress: (note, events) => Object.assign(live, { note, events }) });
   })()
     .then((result) => {
-      writeJson(fightFile(t, m), { tournamentId: String(t), match: Number(m), a: a.index, b: b.index, revealAt: Number(req.body?.revealAt) || 0, ranAt: new Date().toISOString(), id: crypto.randomUUID(), ...result });
+      writeJson(fightFile(t, m), { tournamentId: String(t), match: Number(m), a: a.index, b: b.index, revealAt: Number(revealAt) || 0, ranAt: new Date().toISOString(), id: crypto.randomUUID(), ...result });
     })
     .catch((e) => {
       console.error(`[fight ${key}] failed: ${e.message}`);
       writeJson(fightFile(t, m), { tournamentId: String(t), match: Number(m), error: String(e.message ?? e).slice(0, 300), ranAt: new Date().toISOString() });
     })
-    .finally(() => running.delete(key));
+    .finally(() => {
+      running.delete(key);
+      syncFightInBackground(t, m);
+    });
+  return live;
+}
+
+arenaRouter.post("/fights/:t/:m", requireOrganizer, async (req, res) => {
+  try {
+    const live = startFight(req.params.t, req.params.m, req.body ?? {});
+    res.status(202).json({ status: "running", startedAt: live.startedAt });
+  } catch (e) {
+    res.status(e.status ?? 500).json({ error: e.message });
+  }
+});
+
+/** For tournaments this server publishes: the organizer opens or voids a match through it. */
+const asBot = (action) => async (req, res) => {
+  try {
+    const service = await import("./autorunService.mjs");
+    res.json({ hash: await action(service, req) });
+  } catch (e) {
+    res.status(e.status ?? 502).json({ error: e.shortMessage ?? e.message });
+  }
+};
+arenaRouter.post("/tournaments/:id/matches/:m/open", requireOrganizer, asBot((s, req) => s.openMatchAsBot(req.params.id, req.params.m, req.body?.minutes)));
+arenaRouter.post("/tournaments/:id/matches/:m/void", requireOrganizer, asBot((s, req) => s.voidMatchAsBot(req.params.id, req.params.m, `0x${crypto.createHash("sha256").update("organizer").digest("hex")}`)));
+
+/** Whether the server can run tournaments by itself, and starting one by hand with chosen projects. */
+arenaRouter.get("/auto", async (req, res) => res.json((await import("./autorunService.mjs")).autoStatus()));
+arenaRouter.post("/auto/start", requireOrganizer, async (req, res) => {
+  try {
+    const service = await import("./autorunService.mjs");
+    res.status(201).json({ tournamentId: await service.startTournamentNow(req.body?.submissionIds) });
+  } catch (e) {
+    res.status(e.status ?? 502).json({ error: e.shortMessage ?? e.message });
+  }
 });
