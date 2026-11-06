@@ -177,7 +177,7 @@ export function BetPanel({ wallet, tournamentId, market, selections, title }) {
                 share={share}
                 stakeText={`${fmt(data.stakes[i])} ${symbol}`}
                 mine={data.mine[i] > 0n ? `${fmt(data.mine[i])} ${symbol}` : null}
-                disabled={!open}
+                disabled={!open || data.blocked}
                 onSelect={() => setPicked(s.id)}
               />
               {!two && <Progress value={share} label={`${s.project.name} has ${share}% of the pool`} tone="reward" />}
@@ -190,7 +190,7 @@ export function BetPanel({ wallet, tournamentId, market, selections, title }) {
         <>
           <WalletGate wallet={wallet} reason="to bet" />
           {data.blocked ? (
-            <p className="t-body m0 bet__blocked">This wallet is taking part in the tournament, so it can't bet here.</p>
+            <p className="t-body m0 bet__blocked">This wallet is running or competing in this tournament, so it can't bet here. Switch to a different MetaMask account to bet.</p>
           ) : wallet.onTargetNetwork && address ? (
             <div className="stack">
               {data.balance === 0n ? (
@@ -304,13 +304,12 @@ export function BetPanel({ wallet, tournamentId, market, selections, title }) {
   );
 }
 
-/** The same panel for sample tournaments: nothing can be bet. */
+/** The same panel for demo (fallback) tournaments: nothing can be bet. */
 export function SamplePool({ title, total, selections, shares }) {
   return (
     <Card className="bet">
       <div className="section-head">
         <h2 className="t-heading m0">{title}</h2>
-        <StatusPill tone="neutral">Sample</StatusPill>
       </div>
       <div className="bet__total">
         <span className="t-caption">Pool total</span>
@@ -326,7 +325,7 @@ export function SamplePool({ title, total, selections, shares }) {
         ))}
       </motion.div>
       <p className="t-caption m0">
-        Sample data, so betting is off here.{" "}
+        Demo data shown because live data could not be reached, so betting is off.{" "}
         <Link to="/organizer" className="link">
           Create a real tournament
         </Link>{" "}

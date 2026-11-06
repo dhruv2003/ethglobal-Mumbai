@@ -21,13 +21,15 @@
  *   POST   /api/uploads/image          upload a demo screenshot (raw body; PNG, JPEG or WebP, max 10 MB)
  *   GET    /api/uploads/:file          play an uploaded video
  *   GET    /api/projects/:id/video     our saved copy of the demo video (+ /video/file to play it)
+ *   GET    /api/projects/:id/arkiv     the result as published on Arkiv (read from Arkiv) + Swarm links
+ *   POST   /api/projects/:id/arkiv     publish the latest result to Swarm + Arkiv again   (organizer)
  *   POST   /api/projects/:id/reviews/public   anyone: re-judge a sample project on 0G (rate limited, capped per day)
  */
 import crypto from "node:crypto";
 import express from "express";
 import { CRITERIA } from "./judges/criteria.mjs";
 import { MAX_JUDGES, validateForm } from "./judges/persona.mjs";
-import { hasCredentials, missingCredentialsError, MODEL, PROVIDER, PROVIDER_LABEL, runPanel } from "./judges/review.mjs";
+import { callPrimary, fallbackTarget, hasCredentials, missingCredentialsError, MODEL, PROVIDER, PROVIDER_LABEL, runPanel } from "./judges/review.mjs";
 import { collectScreenshotEvidence, EVIDENCE_ENABLED, forJudges, hasCachedEvidence } from "./judges/evidence.mjs";
 import zg from "./zg/client.js";
 import zgModels from "./zg/models.js";
@@ -39,6 +41,10 @@ import { deleteProject, dossiers, judges, liveDir, mediaDir, pipelines, reviews,
 import { cleanUploads, IMAGE_MAX, IMAGE_REF, MAX_IMAGES, MIME, storeImageUpload, storeUpload, UPLOAD_DIR, UPLOAD_FILE, UPLOAD_REF, VIDEO_MAX } from "./reviewer/media.mjs";
 import { dequeue, enqueue, isRunning, queueLength, queuePosition, resumeQueue } from "./reviewer/pipeline.mjs";
 import { checkSubmissionSignature, rateLimit, requireOrganizer } from "./security.mjs";
+import { canRead, canWrite, publisher, readLatest } from "./arkiv/arkiv.mjs";
+import { lastPublish, publishInBackground, publishing, publishRun } from "./arkiv/publish.mjs";
+import { swarmConfigured } from "./arkiv/swarm.mjs";
+import { arenaRouter } from "./arena/routes.mjs";
 
 // Seed the example panel the first time only.
 if (!judges.list().length) judges.save(EXAMPLE_FORMS.map((f) => ({ ...validateForm(f).persona, example: true })));
@@ -52,8 +58,9 @@ const lastRun = new Map(); // projectId -> ms timestamp of the last public run
  * Run the panel on one project and save the result.
  * opts.evidence: first let a vision model on 0G read the live-test screenshots (default JUDGE_EVIDENCE).
  * opts.save: false to skip saving to data/reviews (the CLI uses this for side-by-side model runs).
+ * opts.fallback: false to never fall back to OpenAI when 0G fails (public runs).
  */
-export async function reviewNow(projectId, { evidence = EVIDENCE_ENABLED, freshEvidence = false, save = true, log } = {}) {
+export async function reviewNow(projectId, { evidence = EVIDENCE_ENABLED, freshEvidence = false, save = true, fallback = true, log } = {}) {
   if (running.has(projectId)) return running.get(projectId);
   const project = loadProject(projectId);
   if (!project) throw Object.assign(new Error("No such project."), { status: 404 });
@@ -70,13 +77,16 @@ export async function reviewNow(projectId, { evidence = EVIDENCE_ENABLED, freshE
       project.screenshotEvidenceRecords = records;
       project.screenshotEvidence = forJudges(records);
     }
-    const result = await runPanel(panel, project, { onEvent });
+    const result = await runPanel(panel, project, { onEvent, call: fallback ? undefined : callPrimary });
     // A run where no judge scored never replaces the last good result: the page keeps showing it.
     if (!result.reviews.some((r) => r.status === "scored")) {
       const why = [...new Set(result.reviews.map((r) => r.detail).filter(Boolean))].join(" ");
       throw Object.assign(new Error(`No judge could score this time (${why || "unknown error"}). The last result is still shown.`), { status: 502, result });
     }
-    return save ? reviews.save(projectId, result) : result;
+    if (!save) return result;
+    const saved = reviews.save(projectId, result);
+    publishInBackground(project, saved); // Swarm + Arkiv, when set up; never fails the review
+    return saved;
   })()
     .catch((e) => {
       prog.error = e.message;
@@ -91,6 +101,7 @@ export async function reviewNow(projectId, { evidence = EVIDENCE_ENABLED, freshE
 }
 
 export const router = express.Router();
+router.use("/arena", arenaRouter);
 
 router.get("/health", (req, res) => {
   res.json({
@@ -102,7 +113,9 @@ router.get("/health", (req, res) => {
     providerLabel: PROVIDER_LABEL[PROVIDER],
     keyName: PROVIDER === "0g" ? "ZG_API_KEY" : PROVIDER === "openai" ? "OPENAI_API_KEY" : "ANTHROPIC_API_KEY",
     model: MODEL,
+    fallback: fallbackTarget(),
     voiceNotes: hasCredentials("0g") ? { model: zgModels.MODELS.transcribe } : null,
+    arkiv: { read: canRead(), write: canWrite(), swarm: swarmConfigured(), publisher: publisher() },
   });
 });
 
@@ -242,6 +255,39 @@ router.get("/projects/:id/pipeline", (req, res) => {
 router.get("/projects/:id/dossier", (req, res) => res.json({ dossier: dossiers.get(req.params.id) }));
 
 /** Live test results for a submitted project; media under /live/files/... */
+/*
+ * The judged result as published on Arkiv, read back from Arkiv itself (not from
+ * the local store), with links to the evidence bundle on Swarm.
+ */
+router.get("/projects/:id/arkiv", async (req, res) => {
+  const id = req.params.id;
+  const last = lastPublish(id);
+  const out = { configured: { read: canRead(), write: canWrite(), swarm: swarmConfigured() }, publishing: publishing.has(id), last, onchain: null };
+  if (!canRead()) return res.json(out);
+  try {
+    out.onchain = await readLatest(id);
+    // Only link the files this bundle really holds (a project may have no dossier or videos).
+    const s = out.onchain?.swarm;
+    const files = s && last?.swarm?.reference === s.reference ? last.swarm.files : null;
+    if (s && files) {
+      const has = { dossier: "dossier.json", liveTest: "live/smoke.json", laptopVideo: "live/laptop/video.mp4", phoneVideo: "live/phone/video.mp4" };
+      for (const [k, f] of Object.entries(has)) if (!files.includes(f)) delete s[k];
+    }
+  } catch (e) {
+    out.error = `Arkiv read failed: ${String(e?.shortMessage ?? e?.message ?? e).slice(0, 200)}`;
+  }
+  res.json(out);
+});
+
+/** Publish the latest saved review again (organizer). */
+router.post("/projects/:id/arkiv", requireOrganizer, async (req, res) => {
+  const project = loadProject(req.params.id);
+  const result = reviews.get(req.params.id);
+  if (!project || !result) return res.status(404).json({ error: "No judged result to publish." });
+  if (!canWrite()) return res.status(503).json({ error: "Arkiv is not set up: set ARKIV_PRIVATE_KEY in backend/.env." });
+  res.json(await publishRun(project, result));
+});
+
 router.get("/projects/:id/live", (req, res) => {
   try {
     res.json({ liveTest: JSON.parse(fs.readFileSync(path.join(liveDir(req.params.id), "smoke.json"), "utf8")) });
@@ -382,7 +428,8 @@ router.post(
     publicDay.n++;
     lastRun.set(id, Date.now());
     // Reuse screenshot observations already read on 0G (free); never pay for new ones from a public click.
-    reviewNow(id, { evidence: EVIDENCE_ENABLED || hasCachedEvidence(project) }).catch((e) => console.error(`[judges] public review of ${id} failed: ${e.message}`));
+    // Public runs show real 0G inference, so they never fall back to (and pay for) OpenAI.
+    reviewNow(id, { evidence: EVIDENCE_ENABLED || hasCachedEvidence(project), fallback: false }).catch((e) => console.error(`[judges] public review of ${id} failed: ${e.message}`));
     res.status(202).json({ running: true, progress: progress.get(id) ?? null });
   },
 );

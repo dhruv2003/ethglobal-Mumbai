@@ -12,7 +12,6 @@ import { useWallet } from "./lib/wallet.js";
 import { matchRoute, navigate, useCanonical, usePath } from "./lib/router.jsx";
 import { LandingPage, ProjectPage, ProjectsPage } from "./components/Projects.jsx";
 import { JudgesPage } from "./components/JudgesPage.jsx";
-import { FightDemo } from "./components/FightDemo.jsx";
 import { WalletPage } from "./components/WalletPage.jsx";
 import { OrganizerPage } from "./components/OrganizerPage.jsx";
 import { TournamentPage, TournamentsPage } from "./components/TournamentsPage.jsx";
@@ -30,7 +29,6 @@ const TITLES = {
   projects: "Projects",
   project: "Project",
   judges: "Judges",
-  fight: "Fight demo",
   wallet: "Wallet",
   organizer: "Organizer",
   tournaments: "Tournaments",
@@ -119,7 +117,7 @@ export default function App() {
 
   const ctx = { data, get, set, errors, touched, touch, showAll };
 
-  const pageClass = `page ${route.name === "form" ? "solo solo--form" : route.name === "fight" ? "solo solo--fight" : route.name === "arena" ? "village-main" : route.name === "matchFight" || route.name === "tournament" ? "solo solo--arena" : "solo solo--wide"}`;
+  const pageClass = `page ${route.name === "form" ? "solo solo--form" : route.name === "arena" ? "village-main" : route.name === "matchFight" || route.name === "tournament" ? "solo solo--arena" : "solo solo--wide"}`;
 
   return (
     <MotionConfig reducedMotion="user">
@@ -162,8 +160,6 @@ export default function App() {
               <LandingPage />
             ) : route.name === "judges" ? (
               <JudgesPage />
-            ) : route.name === "fight" ? (
-              <FightDemo />
             ) : route.name === "wallet" ? (
               <WalletPage wallet={wallet} />
             ) : route.name === "organizer" ? (

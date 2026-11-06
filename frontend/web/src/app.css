@@ -673,7 +673,7 @@ fieldset.field { border: 0; margin: 0; padding: 0; min-width: 0; }
 .delete-row { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
 .rerun-banner { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4); border-radius: var(--radius-md); background: var(--oracle-soft); }
 /* =====================================================================
-   Fight player (/fight-demo). Tokens only. Scene fills map pixel-art
+   Fight player (/fights). Tokens only. Scene fills map pixel-art
    roles to design tokens; fighter colours stay in fighter.js.
    ===================================================================== */
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }

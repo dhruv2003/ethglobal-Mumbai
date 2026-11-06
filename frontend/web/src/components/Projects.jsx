@@ -22,7 +22,7 @@ const GHOST = { id: "your-fighter", name: "Your fighter", pitch: "", description
 const ROSTER_MAX = 6;
 
 function KindPill({ kind }) {
-  return kind === "sample" ? <StatusPill tone="neutral">Sample</StatusPill> : <StatusPill tone="success">✓ Submitted</StatusPill>;
+  return kind === "sample" ? null : <StatusPill tone="success">✓ Submitted</StatusPill>;
 }
 
 /** Where the project was built. Prominent: it frames everything else on the card. */
@@ -316,7 +316,6 @@ export function ProjectsPage() {
   const leaders = inPlay.filter((t) => counts[t.id] === most);
   const plural = (n) => `${n} ${n === 1 ? "project" : "projects"}`;
   const submitted = all.filter((p) => p.kind === "submitted").length;
-  const samples = all.length - submitted;
 
   const needle = filters.q.trim().toLowerCase();
   const shown = all.filter(
@@ -349,7 +348,7 @@ export function ProjectsPage() {
           i={4}
           label="Submitted by teams"
           value={submitted}
-          note={samples ? `Plus ${samples} sample ${samples === 1 ? "project" : "projects"}` : "No samples"}
+          note="Entered by their own teams"
         />
         <StatTile i={5} label="Tracks in play" value={inPlay.length} note={`of ${EVENT.tracks.length} sponsor tracks`}>
           <Progress value={inPlay.length} max={EVENT.tracks.length} label="Tracks with at least one entry" />
@@ -458,7 +457,7 @@ export function ProjectsPage() {
                 <div className="fighter-card__body">
                   <div className="fighter-card__badges">
                     <EventBadge project={p} />
-                    {p.kind === "sample" && <StatusPill tone="neutral">Sample</StatusPill>}
+                    
                     <ReviewBadge review={p.review} />
                   </div>
                   <div>
