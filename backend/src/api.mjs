@@ -18,6 +18,7 @@
  *   GET    /api/projects/:id/dossier   the reviewer's dossier for a submitted project
  *   GET    /api/projects/:id/live      live test results (+ /live/files/<device>/<file> for media)
  *   GET    /api/projects/:id/live/stream/:device   watch a cloud browser live (MJPEG) while the test runs
+ *   GET    /api/projects/:id/contracts smart contract test results (forge, sandboxed)
  *   DELETE /api/projects/:id           delete a submitted project and its data   (organizer)
  *   POST   /api/uploads/video          upload a demo video file (raw body; MP4, MOV or WebM, max 300 MB)
  *   POST   /api/uploads/image          upload a demo screenshot (raw body; PNG, JPEG or WebP, max 10 MB)
@@ -47,7 +48,7 @@ import zg from "./zg/client.js";
 import zgModels from "./zg/models.js";
 import { EXAMPLE_FORMS } from "./judges/seed.mjs";
 import { loadProject } from "./projects.mjs";
-import { db, deleteProject, dossiers, judges, liveDir, liveFile, liveTests, pipelines, reviews, submissions, videos, voiceNotes } from "./store.mjs";
+import { contractTests, db, deleteProject, dossiers, judges, liveDir, liveFile, liveTests, pipelines, reviews, submissions, videos, voiceNotes } from "./store.mjs";
 import { fileInfo, fileLinks, filesStatus, sendFile } from "./zg/files.mjs";
 import { storageConfig, walletInfo } from "./zg/storage.mjs";
 import { cleanUploads, IMAGE_MAX, IMAGE_REF, MAX_IMAGES, MIME, storeImageUpload, storeUpload, UPLOAD_FILE, UPLOAD_REF, UPLOADS, uploadExists, VIDEO_MAX } from "./reviewer/media.mjs";
@@ -441,6 +442,9 @@ router.post("/projects/:id/arkiv", requireOrganizer, async (req, res) => {
 
 /** Live test results for a submitted project (public, like the rest of the review data); media under /live/files/... */
 router.get("/projects/:id/live", (req, res) => res.json({ liveTest: liveTests.get(req.params.id) }));
+
+/** Smart contract test results for a submitted project (public, like the live test). */
+router.get("/projects/:id/contracts", (req, res) => res.json({ contractTests: contractTests.get(req.params.id) ?? null }));
 
 /**
  * Watch a cloud browser while the live test runs: an MJPEG stream of its newest

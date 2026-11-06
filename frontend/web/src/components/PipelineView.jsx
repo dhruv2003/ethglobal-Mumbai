@@ -21,14 +21,15 @@ import { LiveScreen } from "./review/LiveScreen.jsx";
 
 const PLACEHOLDER = [
   ["code", "Code review", "Fetch the repo, pin the commit, count the tests"],
+  ["contracts", "Run the smart contract tests", "Compile and test the contracts with Foundry, sandboxed"],
   ["demo", "Process the demo", "Save the video, transcribe it, read the screenshots"],
-  ["live", "Test the live app", "Replay the demo, then the main flows, on a laptop and a phone"],
+  ["live", "Test the live app", "Replay the demo, the main flows and a MetaMask wallet, on a laptop and a phone"],
   ["dossier", "Fact-check the claims", "Check what the team says against the code"],
   ["judges", "Judges score it", "Every judge scores it with all of the above"],
 ].map(([id, title, about]) => ({ id, title, about, status: "queued", parts: [], facts: [] }));
 
 /* Layout: x as a share of the width, y in px. */
-const H = 410;
+const H = 490;
 const COLS = [0.12, 0.38, 0.63, 0.88];
 const STAGES = [
   { n: 1, label: "Gather" },
@@ -37,16 +38,19 @@ const STAGES = [
   { n: 4, label: "Verdict" },
 ];
 const NODES = [
-  { id: "code", col: 0, y: 124, icon: "code", short: "Code", tone: "oracle" },
-  { id: "demo", col: 0, y: 300, icon: "play", short: "Demo", tone: "crush" },
-  { id: "live", col: 1, y: 124, icon: "browser", short: "Live app", tone: "sunny" },
-  { id: "dossier", col: 1, y: 300, icon: "search", short: "Fact-check", tone: "mint" },
-  { id: "judges", col: 2, y: 212, icon: "gavel", short: "Judges", tone: "oracle" },
-  { id: "verdict", col: 3, y: 212, icon: "trophy", short: "Verdict", tone: "sunny" },
+  { id: "code", col: 0, y: 160, icon: "code", short: "Code", tone: "oracle" },
+  { id: "demo", col: 0, y: 356, icon: "play", short: "Demo", tone: "crush" },
+  { id: "live", col: 1, y: 118, icon: "browser", short: "Live app", tone: "sunny" },
+  { id: "contracts", col: 1, y: 258, icon: "contract", short: "Contracts", tone: "oracle" },
+  { id: "dossier", col: 1, y: 398, icon: "search", short: "Fact-check", tone: "mint" },
+  { id: "judges", col: 2, y: 258, icon: "gavel", short: "Judges", tone: "oracle" },
+  { id: "verdict", col: 3, y: 258, icon: "trophy", short: "Verdict", tone: "sunny" },
 ];
 const EDGES = [
   ["code", "live"],
   ["code", "dossier"],
+  ["code", "contracts"],
+  ["contracts", "judges"],
   ["demo", "live"],
   ["demo", "dossier"],
   ["live", "judges"],
@@ -61,7 +65,8 @@ const GLYPH = { done: "✓", failed: "✕", skipped: "–" };
 /*
  * Older runs split "Code review" into fetch / pin / tests steps. Fold those
  * into one "code" step (they become its parts) so the canvas always has its
- * five known nodes; anything else unknown is dropped from the map.
+ * known nodes; anything else unknown is dropped from the map. Runs from before the
+ * contracts step existed show it as waiting.
  */
 const LEGACY_CODE = ["fetch", "pin", "tests"];
 function normalize(raw) {
@@ -87,7 +92,9 @@ function normalize(raw) {
     steps = [code, ...raw.filter((s) => !LEGACY_CODE.includes(s.id))];
   }
   const known = new Set(NODES.map((n) => n.id));
-  const out = PLACEHOLDER.map((p) => steps.find((s) => s.id === p.id) ?? p);
+  // A finished run from before a step existed: that step was never part of it, not still waiting.
+  const finished = raw.every((s) => FINISHED.includes(s.status));
+  const out = PLACEHOLDER.map((p) => steps.find((s) => s.id === p.id) ?? (finished ? { ...p, status: "skipped", detail: "Not part of this review: it ran before this step existed." } : p));
   return out.filter((s) => known.has(s.id));
 }
 
@@ -573,7 +580,7 @@ export function FlowStrip({ live, onOpen }) {
     if (st.every((x) => FINISHED.includes(x))) return "done";
     return "queued";
   };
-  const cols = [col(["code", "demo"]), col(["live", "dossier"]), col(["judges"]), by.judges?.status === "done" ? "done" : "queued"];
+  const cols = [col(["code", "demo"]), col(["live", "contracts", "dossier"]), col(["judges"]), by.judges?.status === "done" ? "done" : "queued"];
   return (
     <button type="button" className="fstrip" onClick={onOpen} aria-label="Open the review pipeline">
       {STAGES.map((g, i) => (

@@ -336,7 +336,7 @@ export function liveTestForJudges(lt) {
     target: lt.target,
     ranAt: lt.ranAt,
     howToRead:
-      "passed = the browser saw the expected text or page; failed = it did not (detail says what was missing); blocked/requires = the step needs a sign-in, wallet, device or payment, so it was not attempted (that is a limit of the test, not proof the feature is broken). d* steps replay the team's demo video; f* steps are the app's main flows.",
+      "passed = the browser saw the expected text or page; failed = it did not (detail says what was missing); blocked/requires = the step needs a sign-in, wallet, device or payment, so it was not attempted (that is a limit of the test, not proof the feature is broken). d* steps replay the team's demo video; f* steps are the app's main flows; w* steps use the app with a connected MetaMask-compatible test wallet (a throwaway key with no funds: it signs messages, and every transaction is simulated then rejected, never sent, so a simulated revert for lack of funds is expected and not the app's fault).",
     runs: lt.runs.map((r) => ({
       device: r.device,
       viewport: r.viewport ? `${r.viewport.width}x${r.viewport.height}` : undefined,
@@ -344,6 +344,23 @@ export function liveTestForJudges(lt) {
       home: r.home && { httpStatus: r.home.status, loadMs: r.home.loadMs, title: r.home.title, h1: r.home.h1, horizontalScroll: r.home.horizontalScroll, viewportMeta: r.home.viewportMeta, brokenImages: r.home.brokenImages },
       consoleErrors: r.consoleErrors?.length ? { count: r.consoleErrors.length, distinct: uniq(r.consoleErrors.map((e) => clipText(e, 160))).slice(0, 5) } : undefined,
       failedRequests: uniq((r.failedRequests ?? []).map((f) => `${pathOf(f.url)} -> ${f.status ?? f.error}`)).slice(0, 12),
+      ...(r.wallet
+        ? {
+            wallet: {
+              connected: r.wallet.connected,
+              network: r.wallet.endChain?.name,
+              whatTheAppAskedFor: (r.wallet.events ?? []).slice(0, 12).map((e) =>
+                e.type === "transaction"
+                  ? `transaction${e.to ? ` to ${e.to}` : ""}${e.selector ? ` (${e.selector})` : ""}: simulation ${e.simulation?.ok ? "would succeed" : `would revert (${e.simulation?.reason ?? "?"})`}`
+                  : e.type === "signature"
+                    ? `signature: ${e.what}`
+                    : e.type === "switch-chain"
+                      ? `switch network to ${e.toName ?? `chain ${e.to}`}`
+                      : e.type,
+              ),
+            },
+          }
+        : {}),
       phases: (r.phases ?? []).map((p) => ({
         id: p.id,
         title: p.title,
@@ -358,6 +375,30 @@ export function liveTestForJudges(lt) {
         })),
       })),
     })),
+  };
+}
+
+/** The smart contract test run, for a judge: totals, every failing test with its reason, a sample of passing names. */
+export function contractTestsForJudges(ct) {
+  if (!ct || ct.status === "none") return null;
+  const all = (ct.projects ?? []).flatMap((p) => (p.suites ?? []).flatMap((s) => s.tests.map((t) => ({ ...t, contract: s.contract, file: s.file }))));
+  return {
+    id: "CT",
+    howToRead:
+      "Run by the platform with Foundry (forge) in a sandbox: no FFI, no file access, network only to public hosts, fuzz runs capped at 1000. Tests that need FFI, local files or private RPCs fail here for that reason; say so rather than blaming the code. Passing tests are verified evidence of what the contracts do.",
+    status: ct.status,
+    tool: ct.tool,
+    totals: ct.totals,
+    projects: (ct.projects ?? []).map((p) => ({
+      root: p.root,
+      compiled: p.build?.ok ?? false,
+      ...(p.build?.ok === false ? { compileError: clipText(p.build.error, 600) } : {}),
+      ...(p.error ? { error: clipText(p.error, 300) } : {}),
+      dependencies: (p.dependencies ?? []).filter((d) => !d.ok).map((d) => `${d.name}: ${d.detail}`),
+    })),
+    failing: all.filter((t) => t.status === "failed").slice(0, 25).map((t) => `${t.contract}.${t.name}: ${clipText(t.reason ?? "failed", 200)}`),
+    passing: all.filter((t) => t.status === "passed").slice(0, 40).map((t) => `${t.contract}.${t.name}${t.kind !== "unit" ? ` (${t.kind}${t.runs ? `, ${t.runs} runs` : ""})` : ""}`),
+    ...(ct.hardhat?.length ? { hardhatNotRun: ct.hardhat.map((h) => `${h.root}: ${h.testFiles} JS test files, not run (needs a container sandbox)`) } : {}),
   };
 }
 
@@ -445,6 +486,7 @@ export function citableIds(project) {
         ids.add(`V-${r.device}-${s.id}`);
       }
   for (const o of project.screenshotEvidence ?? []) ids.add(o.id);
+  if (contractTestsForJudges(project.contractTests)) ids.add("CT");
   return ids;
 }
 
@@ -455,6 +497,7 @@ function materials(project, images) {
     reviewerDossier: dossierForJudges(project.dossier) ?? "No dossier: the code was not fact-checked. Judge from the other materials, treat every technical claim as unverified, and lower your certainty.",
     demoTranscript: transcript ? clipText(transcript, 9000) : "No demo transcript available.",
     liveTest: liveTestForJudges(project.liveTest) ?? "The live app was not tested. Judge UI/UX and the product journey from the demo and the code only, and say so.",
+    contractTests: contractTestsForJudges(project.contractTests) ?? "No smart contract tests were run (no Foundry project, or not a contracts project). Judge contract quality from the code only.",
   };
   if (project.screenshotEvidence?.length) out.screenshotObservations = project.screenshotEvidence;
   if (images.length) out.attachedScreenshots = images.map((i) => i.id);

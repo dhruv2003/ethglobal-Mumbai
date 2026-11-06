@@ -3,6 +3,12 @@
 const ICONS = {
   code: <path d="M9 7 4 12l5 5M15 7l5 5-5 5" />,
   play: <path d="M8 5.5v13l10.5-6.5z" />,
+  contract: (
+    <>
+      <path d="M12 3 20 7.5v9L12 21l-8-4.5v-9z" />
+      <path d="m8.5 12 2.5 2.5 4.5-5" />
+    </>
+  ),
   browser: (
     <>
       <rect x="3" y="4.5" width="18" height="15" rx="2.5" />

@@ -3,9 +3,9 @@
  * another failed (a step that truly needs an earlier result says so and is
  * skipped). Steps run in parallel wherever nothing depends on it:
  *
- *   code ─┐
- *   demo ─┼─> fact-check ─┐
- *         └─> live (explores from the start; writes steps once the demo is read) ─┴─> judges
+ *   code ─┬─> contracts ─────────────────────────────────────────────────────┐
+ *   demo ─┼─> fact-check ──────────────────────────────────────────────────────┼─> judges
+ *         └─> live (explores from the start; writes steps once the demo is read) ┘
  *
  * The web app polls GET /api/projects/:id/pipeline.
  *
@@ -13,8 +13,11 @@
  *            count the tests by reading files (not run: no sandbox yet)
  *   demo     Process the demo: keep our copy of the video, transcribe it,
  *            check the screenshots
+ *   contracts Run the smart contract tests: Foundry projects compiled and tested with
+ *            forge in a sandbox (reviewer/contracts.mjs); Hardhat tests counted only
  *   live     Test the live app on cloud browsers: explore, write the steps
- *            (demo replay + major flows), run on a laptop and a phone, recorded
+ *            (demo replay + major flows, and a MetaMask wallet phase for dapps), run on
+ *            a laptop and a phone, recorded
  *   dossier  Fact-check the claims: the reviewer agent checks the team's claims
  *            against the code; every reference is verified against the clone
  *   judges   The panel scores it with everything above
@@ -38,20 +41,22 @@ import { countSteps, discoverSite, onRunnerLog, runLiveTest } from "../../tester
 import { hasCredentials, MODEL } from "../llm.mjs";
 import { filesOf, putFile, removeFile } from "../zg/files.mjs";
 import { clearScratch, scratch } from "../datafiles.mjs";
-import { dossiers, judges as judgesStore, liveDir, liveFile, liveTests, pipelines, repoDir, submissions, transcripts, videos, workDir } from "../store.mjs";
+import { contractTests, dossiers, judges as judgesStore, liveDir, liveFile, liveTests, pipelines, repoDir, submissions, transcripts, videos, workDir } from "../store.mjs";
 import { demoTranscript, describeDuration } from "./demo.mjs";
 import { IMAGE_REF, imageInfo, keepDemoVideo, probeInfo, reason, saveDemoVideo, shrinkVideo, uploadExists } from "./media.mjs";
 import { canReadScreens, describeScreenshots, VISION_MODEL } from "./screens.mjs";
 import { writeDossier } from "./dossier.mjs";
 import { writeFlows } from "./flows.mjs";
+import { findContractProjects, runContractTests } from "./contracts.mjs";
 import { readCapped, safeFetch } from "./net.mjs";
 import { syncProjectInBackground } from "../arkiv/records/sync.mjs";
 import { GITHUB_REPO, cloneRepo, contextPack, countTests, historyFacts, inventory } from "./repo.mjs";
 
 export const STEPS = [
   { id: "code", title: "Code review", about: "Fetch the repo, pin the commit, count the tests" },
+  { id: "contracts", title: "Run the smart contract tests", about: "Compile and test the contracts with Foundry, sandboxed" },
   { id: "demo", title: "Process the demo", about: "Save the video, transcribe it, check the screenshots" },
-  { id: "live", title: "Test the live app on cloud browsers", about: "Replay the demo, then the main flows, on a laptop and a phone" },
+  { id: "live", title: "Test the live app on cloud browsers", about: "Replay the demo, the main flows and (for dapps) a MetaMask wallet, on a laptop and a phone" },
   { id: "dossier", title: "Fact-check the claims", about: "Check what the team says against the code" },
   { id: "judges", title: "Judges score it", about: "Every judge on the panel scores it with all of the above" },
 ];
@@ -162,7 +167,7 @@ async function execute(projectId, judge) {
     return await executeSteps(projectId, judge);
   } finally {
     // Scratch only: everything worth keeping is on Arkiv / 0G by now.
-    for (const d of [repoDir(projectId), liveDir(projectId), workDir(projectId), scratch("media", projectId)]) clearScratch(d);
+    for (const d of [repoDir(projectId), liveDir(projectId), workDir(projectId), scratch("media", projectId), scratch("contracts", projectId)]) clearScratch(d);
   }
 }
 
@@ -295,7 +300,7 @@ async function executeSteps(projectId, judge) {
         claimed: "",
         found: { vitestFiles: t.jsFiles, vitestCases: t.jsCases, forgeFiles: t.solFiles, forgeTests: t.solTests, pyFiles: t.pyFiles, pyTests: t.pyTests },
         method: "Counted it()/test() in *.test/*.spec files, function test* in *.t.sol, def test_ in Python tests. Read only.",
-        note: "Counted, not run: running a submission's code needs the isolated sandbox, which isn't built yet.",
+        note: "Counted here. Foundry (Solidity) tests are run in the sandboxed contract-test step; JavaScript and Python tests are not run.",
       };
       const total = t.jsCases + t.solTests + t.pyTests;
       part(s, "tests", "done", `${kinds.join(" · ") || "No tests found"} · counted, not run`);
@@ -431,7 +436,8 @@ async function executeSteps(projectId, judge) {
         const nice = what
           .replace(/^connecting to Mozark…$/, "Starting a cloud browser…")
           .replace(/^loading (.*)$/, (_, u) => `Loading ${u.replace("https://", "")}`)
-          .replace(/^(d|f)(\d+) (\w+)\s+(.*)$/, (_, k, n, st, t) => `${k === "d" ? "Demo replay" : "Main flow"} ${n} · ${t}: ${st === "passed" ? "works" : st === "blocked" ? "needs a device or sign-in" : st}`)
+          .replace(/^(d|f|w)(\d+) (\w+)\s+(.*)$/, (_, k, n, st, t) => `${k === "d" ? "Demo replay" : k === "w" ? "Wallet" : "Main flow"} ${n} · ${t}: ${st === "passed" ? "works" : st === "blocked" ? "needs a device or sign-in" : st}`)
+          .replace(/^wallet (.*)$/, (_, m) => `MetaMask test wallet ${m}`)
           .replace(/^cloud browser problem.*$/, "Cloud browser problem; retrying once in a fresh session");
         cur = who;
         part(s, who, "running", nice, { quiet: true });
@@ -450,7 +456,7 @@ async function executeSteps(projectId, judge) {
         fs.writeFileSync(path.join(out, "discovery.json"), JSON.stringify(discovery, null, 2));
         fs.writeFileSync(path.join(out, "flows.json"), JSON.stringify(flows, null, 2));
         const count = (id) => flows.phases.find((ph) => ph.id === id)?.steps.length ?? 0;
-        part(s, "write", "done", `${count("demo")} demo replay steps · ${count("features")} main flows`);
+        part(s, "write", "done", `${count("demo")} demo replay steps · ${count("features")} main flows${count("wallet") ? ` · ${count("wallet")} wallet steps (MetaMask test wallet)` : ""}`);
         cur = "laptop";
         // Laptop and phone run at the same time.
         part(s, "laptop", "running", "Starting a cloud browser…");
@@ -476,7 +482,8 @@ async function executeSteps(projectId, judge) {
           { label: "Live app", value: host },
           { label: "Found from", value: live.from },
           { label: "Pages explored", value: discovery.pages.length },
-          { label: "Steps written", value: `${count("demo")} demo + ${count("features")} flows` },
+          { label: "Steps written", value: `${count("demo")} demo + ${count("features")} flows${count("wallet") ? ` + ${count("wallet")} wallet` : ""}` },
+          { label: "Wallet", value: summary.runs.some((r) => r.wallet) ? (summary.runs.some((r) => r.wallet?.connected) ? "MetaMask test wallet connected" : "MetaMask test wallet: didn't connect") : null },
           { label: "Laptop", value: words.laptop },
           { label: "Phone", value: words.phone },
         ]);
@@ -488,6 +495,81 @@ async function executeSteps(projectId, judge) {
       } finally {
         stop();
       }
+    }
+  };
+
+  /** 2b. Run the smart contract tests (needs the code; works on its own copy) */
+  const contractStep = async () => {
+    if (!commit) return skipStep("contracts", "Needs the code: the code review couldn't fetch the repository.");
+    const found = findContractProjects(files ?? []);
+    if (!found.foundry.length && !found.hardhat.length) {
+      contractTests.save(projectId, { ranAt: new Date().toISOString(), commit: commit.sha, status: "none", projects: [], hardhat: [] });
+      return skipStep("contracts", "No smart contract project in the repo (no foundry.toml or hardhat.config).");
+    }
+    const s = begin("contracts", [
+      ["find", "Find the contract projects"],
+      ["deps", "Fetch the dependencies"],
+      ["build", "Compile (forge build)"],
+      ["test", "Run the tests (forge test)"],
+      ["save", "Save the results"],
+    ]);
+    const where = [...found.foundry.map((r) => `Foundry at ${r === "." ? "the root" : r}`), ...found.hardhat.map((h) => `Hardhat at ${h.root === "." ? "the root" : h.root}`)];
+    part(s, "find", "done", where.join(" · "));
+    try {
+      let cur = null;
+      const report = await runContractTests({
+        projectId,
+        repoDir: dir,
+        files,
+        commit: commit.sha,
+        onPart: (id, st, d) => {
+          if (cur && cur !== id && s.parts.find((p) => p.id === cur)?.status === "running") part(s, cur, "done");
+          cur = id;
+          part(s, id, st, d, { quiet: true });
+        },
+      });
+      const projects = report.projects ?? [];
+      const deps = projects.flatMap((p) => p.dependencies ?? []);
+      const badDeps = deps.filter((d) => !d.ok);
+      if (!found.foundry.length) {
+        for (const id of ["deps", "build", "test"]) part(s, id, "skipped", "Hardhat tests are JavaScript with full Node access: they need a container sandbox, not built yet.");
+      } else if (report.status === "error" && !projects.length) {
+        part(s, "deps", "skipped", report.error);
+      } else {
+        part(s, "deps", badDeps.length ? "failed" : "done", deps.length ? `${deps.length - badDeps.length} of ${deps.length} fetched${badDeps.length ? ` · missing: ${badDeps.map((d) => d.name).slice(0, 3).join(", ")}` : ""}` : "None needed");
+        const built = projects.filter((p) => p.build?.ok);
+        part(s, "build", built.length === projects.length ? "done" : "failed", built.length === projects.length ? `Compiled${built[0]?.build?.seconds != null ? ` in ${built.map((p) => p.build.seconds).reduce((a, b) => a + b, 0).toFixed(1)} s` : ""}` : (projects.find((p) => !p.build?.ok)?.build?.error ?? "Didn't compile").split("\n").filter(Boolean).slice(-1)[0]);
+        const t = report.totals ?? { passed: 0, failed: 0, skipped: 0 };
+        const ran = t.passed + t.failed;
+        const err = projects.find((p) => p.error)?.error;
+        part(s, "test", err && !ran ? "failed" : built.length ? "done" : "skipped", ran ? `${t.passed} passed · ${t.failed} failed${t.skipped ? ` · ${t.skipped} skipped` : ""}${t.fuzz ? ` · ${t.fuzz} fuzz` : ""}` : err ?? (built.length ? "No tests found" : "Needs a successful compile."));
+      }
+      part(s, "save", "running");
+      contractTests.save(projectId, report);
+      part(s, "save", "done", "Stored with the project");
+      const t = report.totals ?? { passed: 0, failed: 0 };
+      const ran = t.passed + t.failed;
+      const summary = !found.foundry.length
+        ? `Hardhat project: ${found.hardhat.reduce((n, h) => n + h.testFiles, 0)} JS test files found, not run`
+        : report.status === "error" && !projects.length
+          ? report.error
+          : ran
+            ? `${t.passed} of ${ran} contract tests pass${t.failed ? ` · ${t.failed} fail` : ""}`
+            : projects.some((p) => p.build && !p.build.ok)
+              ? "The contracts don't compile"
+              : "No Foundry tests found";
+      const failed = s.parts.some((p) => p.status === "failed");
+      end(s, !found.foundry.length || (report.status === "error" && !projects.length) ? "skipped" : failed ? "failed" : "done", summary, [
+        { label: "Tool", value: report.tool },
+        { label: "Projects", value: where.join(", ") },
+        { label: "Passed", value: ran ? t.passed : null },
+        { label: "Failed", value: ran ? t.failed : null },
+        { label: "Fuzz / invariant tests", value: t.fuzz || t.invariant ? `${t.fuzz ?? 0} / ${t.invariant ?? 0}` : null },
+        { label: "Sandbox", value: report.sandbox ? (report.sandbox.user.startsWith("nobody") ? "Locked down, as nobody" : "Locked down") : null },
+      ]);
+    } catch (e) {
+      for (const p of s.parts) if (p.status === "running") Object.assign(p, { status: "failed", detail: reason(e) });
+      end(s, "failed", reason(e));
     }
   };
 
@@ -561,7 +643,8 @@ async function executeSteps(projectId, judge) {
       const s = begin("judges", panel.map((j) => [j.id, j.name]));
       // Each judge's lane shows who they are and what they weigh most.
       for (const j of panel) Object.assign(s.parts.find((p) => p.id === j.id), { role: j.title ?? "", focus: focusOf(j) });
-      const had = [dossiers.get(projectId) && "fact-check", liveTests.get(projectId) && "live test", transcript && "demo", commit && "code review"].filter(Boolean);
+      const ct = contractTests.get(projectId);
+      const had = [dossiers.get(projectId) && "fact-check", liveTests.get(projectId) && "live test", ct?.totals && ct.totals.passed + ct.totals.failed > 0 && "contract tests", transcript && "demo", commit && "code review"].filter(Boolean);
       for (const j of panel) part(s, j.id, "running", `Reading the ${had.join(", ") || "submission"}`);
       try {
         const r = await judge(projectId, {
@@ -604,7 +687,9 @@ async function executeSteps(projectId, judge) {
   const codeReady = codeStep();
   const liveDone = liveStep();
   const factDone = Promise.all([codeReady, demoReady]).then(factStep);
-  await Promise.all([liveDone, factDone]);
+  // Contract tests work on their own copy of the clone, so they run beside the fact-check.
+  const contractsDone = codeReady.then(contractStep);
+  await Promise.all([liveDone, factDone, contractsDone]);
   await judgeStep();
 
   state.finishedAt = new Date().toISOString();
