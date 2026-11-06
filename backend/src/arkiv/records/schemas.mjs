@@ -88,6 +88,29 @@ export const RECORDS = {
     }),
     identity: ["projectId"],
   },
+  // A judging run in full: every judge's comment, per-criterion scores and reasoning,
+  // headline, status, certainty. The panel/scorecard entities (../arkiv.mjs) hold only the numbers.
+  review: {
+    ...record("review", {
+      runAt: u64().indexed(), // unix seconds of the run
+      panelScore: dec().indexed().optional(),
+      judges: i32(),
+      scored: i32().indexed(),
+      model: str().indexed(),
+    }),
+    identity: ["projectId"],
+  },
+  // A file kept on chain as raw bytes split into parts: demo video, demo screenshots,
+  // live-test recordings and step screenshots. hash = sha256 of the file itself.
+  file: {
+    ...record("file", {
+      kind: str().indexed(), // demo-video | demo-screenshot | live-recording | live-screenshot
+      name: str().indexed(), // e.g. "demo.mp4", "live/laptop/video.mp4", "live/phone/smoke-phone-f3.jpg"
+      mime: str(),
+      size: u64(), // file size in bytes ("bytes" is reserved by the query language)
+    }),
+    identity: ["projectId", "name"],
+  },
   // A judge persona: who they are, weights, deal-breakers, the compiled system prompt.
   judge: {
     ...record("judge", {

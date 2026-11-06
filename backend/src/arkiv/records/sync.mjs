@@ -3,7 +3,9 @@
  * from the local store, builds the records (builders.mjs) and writes the ones
  * that changed (store.mjs skips unchanged ones by hash).
  *
- *   syncProject(id)        project, pipeline, dossier, transcript, livetest, vision
+ *   syncProject(id)        project, pipeline, dossier, transcript, livetest, vision,
+ *                          the full judging review, then every file (demo video,
+ *                          demo screenshots, live recordings and step screenshots)
  *   syncJudges()           every judge persona
  *   syncTournament(id)     the bracket
  *   syncFight(t, m)        one recorded 1v1 match
@@ -14,10 +16,11 @@
 import fs from "node:fs";
 import path from "node:path";
 import { loadProject } from "../../projects.mjs";
-import { DATA_DIR, judges, pipelines, submissions, transcripts } from "../../store.mjs";
+import { DATA_DIR, judges, liveDir, mediaDir, pipelines, reviews, submissions, transcripts, videos } from "../../store.mjs";
+import { IMAGE_REF, UPLOAD_DIR } from "../../reviewer/media.mjs";
 import { canWrite } from "../arkiv.mjs";
 import * as build from "./builders.mjs";
-import { writeRecord } from "./store.mjs";
+import { writeBlob, writeRecord } from "./store.mjs";
 
 const safe = (v) => String(v).replace(/[^a-zA-Z0-9_-]/g, "");
 const readJson = (file) => {
@@ -41,11 +44,48 @@ async function writeAll(records, opts) {
   return out;
 }
 
+/** Every file kept for a project, as { kind, name, path }. Names are what the file is read back by. */
+export function projectFiles(projectId) {
+  const out = [];
+  const add = (kind, name, p) => fs.existsSync(p) && out.push({ kind, name, path: p });
+  const v = videos.get(projectId);
+  if (v?.ext) add("demo-video", `demo.${v.ext}`, path.join(mediaDir(projectId), `demo.${v.ext}`));
+  (submissions.get(projectId)?.demoImages ?? []).forEach((ref, i) => {
+    const f = IMAGE_REF.exec(String(ref))?.[1];
+    if (f) add("demo-screenshot", `demo-screenshot-${i + 1}${path.extname(f)}`, path.join(UPLOAD_DIR, f));
+  });
+  for (const device of ["laptop", "phone"]) {
+    const dir = path.join(liveDir(projectId), device);
+    if (!fs.existsSync(dir)) continue;
+    add("live-recording", `live/${device}/video.mp4`, path.join(dir, "video.mp4"));
+    for (const f of fs.readdirSync(dir).filter((x) => /^smoke-.+\.jpg$/.test(x)).sort()) add("live-screenshot", `live/${device}/${f}`, path.join(dir, f));
+  }
+  return out;
+}
+
+/** Write each file's bytes (unchanged files are skipped by hash). */
+export async function syncFiles(projectId, opts = {}) {
+  const project = loadProject(projectId);
+  if (!project) throw new Error(`No such project: ${projectId}`);
+  const out = [];
+  for (const f of projectFiles(projectId)) {
+    try {
+      const buffer = fs.readFileSync(f.path);
+      const r = build.fileRecord(project, { ...f, size: buffer.length });
+      const res = await writeBlob("file", r.attrs, buffer, opts);
+      out.push({ type: `file ${f.name}`, ...res });
+    } catch (e) {
+      out.push({ type: `file ${f.name}`, error: String(e?.shortMessage ?? e?.message ?? e).slice(0, 300) });
+    }
+  }
+  return out;
+}
+
 export async function syncProject(projectId, opts = {}) {
   const project = loadProject(projectId);
   if (!project) throw new Error(`No such project: ${projectId}`);
   const raw = submissions.get(projectId);
-  return writeAll(
+  const records = await writeAll(
     [
       build.projectRecord(project, raw),
       build.pipelineRecord(project, pipelines.get(projectId)),
@@ -53,9 +93,12 @@ export async function syncProject(projectId, opts = {}) {
       build.transcriptRecord(project, transcripts.get(project.id)),
       build.livetestRecord(project),
       build.visionRecord(project, readJson(path.join(DATA_DIR, "evidence", `${safe(projectId)}.json`))),
+      build.reviewRecord(project, reviews.get(projectId)),
     ],
     opts,
   );
+  if (opts.files === false) return records;
+  return [...records, ...(await syncFiles(projectId, opts))];
 }
 
 export const syncJudges = (opts = {}) => writeAll(judges.list().map(build.judgeRecord), opts);
@@ -83,8 +126,8 @@ export async function syncAll(opts = {}) {
 }
 
 const quiet = (label, fn) => {
-  if (!canWrite()) return;
-  Promise.resolve()
+  if (!canWrite()) return Promise.resolve();
+  return Promise.resolve()
     .then(fn)
     .then((res) => {
       const errs = (Array.isArray(res) ? res : []).filter((r) => r.error);
@@ -92,7 +135,26 @@ const quiet = (label, fn) => {
     })
     .catch((e) => console.error(`[arkiv] ${label} failed: ${e.message}`));
 };
-export const syncProjectInBackground = (id) => quiet(`project ${id}`, () => syncProject(id));
+// One sync per project at a time; a request while one runs queues exactly one more
+// (so files are never uploaded twice in parallel, and nothing new is missed).
+const projectSync = new Map(); // id -> { again: boolean }
+export const syncProjectInBackground = (id) => {
+  const cur = projectSync.get(id);
+  if (cur) {
+    cur.again = true;
+    return;
+  }
+  const state = { again: false };
+  projectSync.set(id, state);
+  const loop = async () => {
+    do {
+      state.again = false;
+      await quiet(`project ${id}`, () => syncProject(id));
+    } while (state.again);
+    projectSync.delete(id);
+  };
+  loop();
+};
 export const syncJudgesInBackground = () => quiet("judges", () => syncJudges());
 export const syncTournamentInBackground = (id) => quiet(`tournament ${id}`, () => syncTournament(id));
 export const syncFightInBackground = (t, m) => quiet(`fight ${t}-${m}`, () => syncFight(t, m));
