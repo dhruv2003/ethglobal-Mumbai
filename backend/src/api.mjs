@@ -667,4 +667,5 @@ if (process.env.ARENA_SERVER === "1") {
   if (n) console.log(`[pipeline] resumed ${n} unfinished review(s)`);
   startPayouts();
   startAutorun();
+  db.startRefresh(); // pick up records other processes write to Arkiv (another server, a CLI run, a migration)
 }

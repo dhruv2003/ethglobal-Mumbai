@@ -14,9 +14,17 @@ if (process.env.TRUST_PROXY) {
     app.set("trust proxy", Number.isInteger(n) ? n : process.env.TRUST_PROXY);
 }
 
-// Only our own web app may call the API from a browser (CORS_ORIGIN, comma-separated).
-const allowed = (process.env.CORS_ORIGIN || "http://localhost:5173,http://localhost:4173,http://127.0.0.1:5173,http://127.0.0.1:4173").split(",").map((s) => s.trim());
-app.use(cors({ origin: allowed }));
+// Only our own web app may call the API from a browser. CORS_ORIGIN: comma-separated origins,
+// "*" wildcards allowed (https://*.vercel.app), or "*" for any. Defaults: local dev and preview,
+// and Vercel deployments (the web app's host; set CORS_ORIGIN to its custom domain if it has one).
+// No cookies are used: organizer requests carry their own signed header.
+const DEFAULT_ORIGINS = "http://localhost:5173,http://localhost:4173,http://127.0.0.1:5173,http://127.0.0.1:4173,https://*.vercel.app";
+const patterns = (process.env.CORS_ORIGIN || DEFAULT_ORIGINS)
+    .split(",")
+    .map((s) => s.trim().replace(/\/+$/, ""))
+    .filter(Boolean)
+    .map((o) => (o === "*" ? /^.*$/ : new RegExp(`^${o.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\*/g, "[^/]+")}$`)));
+app.use(cors({ origin: (origin, cb) => cb(null, !origin || patterns.some((re) => re.test(origin))), maxAge: 600 }));
 app.use(express.json({ limit: "1mb" }));
 
 

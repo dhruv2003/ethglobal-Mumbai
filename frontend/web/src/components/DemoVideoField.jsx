@@ -5,7 +5,7 @@
  */
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { uploadVideo, VIDEO_MAX_MB } from "../lib/api.js";
+import { apiUrl, uploadVideo, VIDEO_MAX_MB } from "../lib/api.js";
 import { embedUrl, fmtBytes, fmtSeconds, linkPlan } from "../lib/video.js";
 import { fieldId, Msg, useForm } from "./fields.jsx";
 import { DemoImagesField } from "./DemoImagesField.jsx";
@@ -50,7 +50,7 @@ export function DemoVideoField() {
     ctl.current = c;
     try {
       const r = await c.done;
-      set("demo.upload", { ref: r.ref, url: r.url, name: file.name, bytes: r.bytes, seconds: r.seconds });
+      set("demo.upload", { ref: r.ref, url: apiUrl(r.url), name: file.name, bytes: r.bytes, seconds: r.seconds });
       touch("demo.videoUrl");
     } catch (e) {
       if (!e.aborted) {

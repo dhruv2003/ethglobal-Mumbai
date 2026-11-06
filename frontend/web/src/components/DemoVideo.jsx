@@ -6,7 +6,7 @@
  * original is taken down.
  */
 import { useEffect, useState } from "react";
-import { api } from "../lib/api.js";
+import { api, apiUrl } from "../lib/api.js";
 import { embedUrl, fmtBytes, fmtSeconds, isUploadRef, uploadUrl } from "../lib/video.js";
 import { Spinner } from "./Feedback.jsx";
 
@@ -101,7 +101,7 @@ function VideoPlayer({ project: p }) {
   const { saved, waiting } = useSavedVideo(p);
   const uploaded = isUploadRef(p.videoUrl);
   const embed = uploaded ? null : embedUrl(p.videoUrl);
-  const ours = saved?.saved ? saved.url : uploaded ? uploadUrl(p.videoUrl) : null;
+  const ours = saved?.saved ? apiUrl(saved.url) : uploaded ? uploadUrl(p.videoUrl) : null;
   const [mode, setMode] = useState(embed ? "embed" : "ours");
   const showEmbed = embed && (mode === "embed" || !ours);
   const provider = uploaded ? null : providerOf(p.videoUrl);

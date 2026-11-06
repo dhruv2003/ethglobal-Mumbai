@@ -4,7 +4,7 @@
  */
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { IMAGE_MAX_MB, MAX_IMAGES, uploadImage } from "../lib/api.js";
+import { apiUrl, IMAGE_MAX_MB, MAX_IMAGES, uploadImage } from "../lib/api.js";
 import { fmtBytes } from "../lib/video.js";
 import { bouncy } from "./fx.jsx";
 import { useForm } from "./fields.jsx";
@@ -46,7 +46,7 @@ export function DemoImagesField({ id, error, onProblem }) {
           // Uploads can finish together: build on the newest list, not this render's.
           // The ref is the image's hash: the same screenshot twice is one entry.
           if (latest.current.some((i) => i.ref === r.ref)) return;
-          latest.current = [...latest.current, { ref: r.ref, url: r.url, name: file.name, bytes: r.bytes }];
+          latest.current = [...latest.current, { ref: r.ref, url: apiUrl(r.url), name: file.name, bytes: r.bytes }];
           set("demo.images", latest.current);
           touch("demo.videoUrl");
         })

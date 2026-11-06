@@ -6,7 +6,7 @@
  */
 import { useEffect, useState } from "react";
 import { StatusPill } from "@ds/ui.jsx";
-import { api, peekApi } from "../lib/api.js";
+import { api, apiUrl, peekApi } from "../lib/api.js";
 import { CopyId } from "./ZeroGProof.jsx";
 import { API } from "../lib/apiBase.js";
 
@@ -42,7 +42,7 @@ function Row({ r }) {
       </div>
       <CopyId value={r.rootHash} label="0G Storage root hash" />
       <div className="zgstore__links">
-        <a className="btn btn--secondary btn--sm" href={`${API}/storage/blob/${r.rootHash}?download=1`}>
+        <a className="btn btn--secondary btn--sm" href={apiUrl(`/api/storage/blob/${r.rootHash}?download=1`)}>
           Download from 0G
         </a>
         {r.links?.file && (

@@ -11,7 +11,7 @@
  */
 import { useEffect, useRef, useState } from "react";
 import { motion } from "motion/react";
-import { api } from "../../lib/api.js";
+import { api, apiUrl } from "../../lib/api.js";
 import { Icon } from "../Icon.jsx";
 import { Device, LiveStage } from "./TestDevices.jsx";
 import { Steps } from "./TestSteps.jsx";
@@ -32,7 +32,7 @@ function useLiveTest(project, pending) {
       const r = await api(`/projects/${encodeURIComponent(project.id)}/live`).catch(() => null);
       if (!alive) return;
       if (r?.liveTest) {
-        const base = `${API}/projects/${encodeURIComponent(project.id)}/live/files`;
+        const base = apiUrl(`/api/projects/${encodeURIComponent(project.id)}/live/files`);
         setRemote({ id: project.id, lt: {
           ...r.liveTest,
           runs: r.liveTest.runs.map((run) => ({
