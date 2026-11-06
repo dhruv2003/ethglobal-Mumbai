@@ -4,8 +4,9 @@
  * that changed (store.mjs skips unchanged ones by hash).
  *
  *   syncProject(id)        project, pipeline, dossier, transcript, livetest, vision,
- *                          the full judging review, then every file (demo video,
- *                          demo screenshots, live recordings and step screenshots)
+ *                          the full judging review, then the files: demo screenshots,
+ *                          live recordings and step screenshots (the demo video only
+ *                          with ARKIV_DEMO_VIDEO=1)
  *   syncJudges()           every judge persona
  *   syncTournament(id)     the bracket
  *   syncFight(t, m)        one recorded 1v1 match
@@ -48,8 +49,11 @@ async function writeAll(records, opts) {
 export function projectFiles(projectId) {
   const out = [];
   const add = (kind, name, p) => fs.existsSync(p) && out.push({ kind, name, path: p });
+  // The demo video stays off chain by default: it is most of a project's bytes (a 4-minute
+  // demo is ~70 entities, ~10 min and ~1 testnet ETH), and it still plays from our copy and
+  // the team's link. ARKIV_DEMO_VIDEO=1 puts it on chain too.
   const v = videos.get(projectId);
-  if (v?.ext) add("demo-video", `demo.${v.ext}`, path.join(mediaDir(projectId), `demo.${v.ext}`));
+  if (v?.ext && process.env.ARKIV_DEMO_VIDEO === "1") add("demo-video", `demo.${v.ext}`, path.join(mediaDir(projectId), `demo.${v.ext}`));
   (submissions.get(projectId)?.demoImages ?? []).forEach((ref, i) => {
     const f = IMAGE_REF.exec(String(ref))?.[1];
     if (f) add("demo-screenshot", `demo-screenshot-${i + 1}${path.extname(f)}`, path.join(UPLOAD_DIR, f));

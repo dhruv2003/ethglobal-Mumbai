@@ -57,12 +57,12 @@ Besides the panel and scorecards, the backend writes the arena's other records t
 | Review pipeline, dossier (bug report), demo transcript, live-test report | The review pipeline finishes |
 | Screenshot notes | After judging |
 | Full judging review: every judge's comment, per-criterion scores and reasoning | After judging |
-| Files: demo video, demo screenshots, live-test recordings and step screenshots (raw bytes in 120 KB parts, checked by sha256) | After the review pipeline and after judging |
+| Files: demo screenshots, live-test recordings and step screenshots (raw bytes in 120 KB parts, checked by sha256). The demo video only with `ARKIV_DEMO_VIDEO=1`. | After the review pipeline and after judging |
 | Judge personas | Added or edited |
 | Tournament bracket | Registered |
 | 1v1 fight result | Recorded |
 
-Files are on Arkiv too (and on Swarm when it is set up). Each one is split into parts of at most 120 KB, one entity per part, so a 4-minute demo video is about 70 entities and takes several minutes to write. Download one straight from the chain with `GET /api/arkiv-file?projectId=<id>&name=demo.mp4` (the parts are reassembled and the sha256 checked). Details are in [schema.md](schema.md).
+Files are on Arkiv too (and on Swarm when it is set up). Each one is split into parts of at most 120 KB, one entity per part. The demo video is left off by default: a 4-minute demo is about 70 entities, ~10 minutes and ~1 testnet ETH, and it still plays from our copy and the team's link. Set `ARKIV_DEMO_VIDEO=1` to include it. Download one straight from the chain with `GET /api/arkiv-file?projectId=<id>&name=demo.mp4` (the parts are reassembled and the sha256 checked). Details are in [schema.md](schema.md).
 
 Read them back from Arkiv:
 - `GET /api/arkiv/<type>?projectId=<id>`: list

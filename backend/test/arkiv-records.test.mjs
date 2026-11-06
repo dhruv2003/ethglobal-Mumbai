@@ -174,3 +174,16 @@ test("the full judging review is its own record, with every judge's comment and 
   assert.equal(r.payload.reviews[0].review.criteria[0].comment, "because");
   assert.equal(build.reviewRecord(sample, null), null);
 });
+
+test("the demo video stays off chain unless ARKIV_DEMO_VIDEO=1", async () => {
+  const { projectFiles } = await import("../src/arkiv/records/sync.mjs");
+  const { mediaDir, videos } = await import("../src/store.mjs");
+  fs.mkdirSync(mediaDir("vid-1"), { recursive: true });
+  fs.writeFileSync(path.join(mediaDir("vid-1"), "demo.mp4"), "x");
+  videos.save("vid-1", { ext: "mp4", bytes: 1, seconds: 1 });
+  delete process.env.ARKIV_DEMO_VIDEO;
+  assert.ok(!projectFiles("vid-1").some((f) => f.kind === "demo-video"));
+  process.env.ARKIV_DEMO_VIDEO = "1";
+  assert.ok(projectFiles("vid-1").some((f) => f.kind === "demo-video" && f.name === "demo.mp4"));
+  delete process.env.ARKIV_DEMO_VIDEO;
+});
