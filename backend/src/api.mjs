@@ -55,7 +55,7 @@ import { checkSubmissionSignature, rateLimit, requireOrganizer } from "./securit
 import { canRead, canWrite, explorerEntity, publisher, readLatest } from "./arkiv/arkiv.mjs";
 import { lastPublish, publishInBackground, publishing, publishRun } from "./arkiv/publish.mjs";
 import { syncJudgesInBackground, syncProjectInBackground } from "./arkiv/records/sync.mjs";
-import { listRecords, readRecord } from "./arkiv/records/store.mjs";
+import { listRecords, readBlob, readRecord } from "./arkiv/records/store.mjs";
 import { TYPES } from "./arkiv/records/schemas.mjs";
 import { swarmConfigured } from "./arkiv/swarm.mjs";
 import { arenaRouter } from "./arena/routes.mjs";
@@ -344,8 +344,28 @@ router.get("/arkiv/:type", async (req, res) => {
     res.status(502).json({ error: `Arkiv read failed: ${String(e?.shortMessage ?? e?.message ?? e).slice(0, 200)}` });
   }
 });
+/**
+ * A file's bytes read back from Arkiv (reassembled from its parts, checked against
+ * its sha256): GET /api/arkiv-file?projectId=...&name=live/laptop/video.mp4
+ * List a project's files with GET /api/arkiv/file?projectId=...
+ */
+router.get("/arkiv-file", async (req, res) => {
+  const { projectId, name } = req.query;
+  if (typeof projectId !== "string" || typeof name !== "string" || !/^[\w./-]{1,128}$/.test(name) || name.includes("..")) return res.status(400).json({ error: "Give projectId and a file name." });
+  if (!canRead()) return res.status(503).json({ error: "Arkiv is not set up on this server." });
+  try {
+    const f = await readBlob("file", { projectId, name });
+    if (!f) return res.status(404).json({ error: "That file isn't on Arkiv (yet)." });
+    res.set({ "content-type": f.mime || "application/octet-stream", "content-length": String(f.buffer.length), "x-content-type-options": "nosniff", "content-disposition": "inline", "x-arkiv-sha256": f.hash, "cache-control": "public, max-age=3600" });
+    res.end(f.buffer);
+  } catch (e) {
+    res.status(502).json({ error: `Arkiv read failed: ${String(e?.shortMessage ?? e?.message ?? e).slice(0, 200)}` });
+  }
+});
+
 router.get("/arkiv/:type/latest", async (req, res) => {
   if (!TYPES.includes(req.params.type)) return res.status(404).json({ error: `Unknown record type. One of: ${TYPES.join(", ")}.` });
+  if (req.params.type === "file") return res.status(400).json({ error: "Files are binary: read one with /api/arkiv-file?projectId=...&name=..." });
   if (!canRead()) return res.status(503).json({ error: "Arkiv is not set up on this server." });
   try {
     const r = await readRecord(req.params.type, arkivFilters(req.query));
