@@ -9,7 +9,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { Card, StatusPill } from "@ds/ui.jsx";
-import { formatAmount, usePoll, useToken } from "../lib/chain.js";
+import { formatAmount, pools, usePoll, useToken, useTx } from "../lib/chain.js";
+import { usePayouts } from "../lib/payouts.js";
 import { cachedTournament, getFight, loadTournament } from "../lib/arena.js";
 import { listProjects } from "../lib/projects.js";
 import { previewTournament } from "./ArenaPage.jsx";
@@ -20,7 +21,8 @@ import { chainBetPool, isMatchOpen } from "../lib/tournamentView.js";
 import { myBet, usePoolData } from "./BetPanel.jsx";
 import { PixelFighter } from "./PixelFighter.jsx";
 import { BetModal } from "./BetModal.jsx";
-import { useCountdown } from "./ChainBits.jsx";
+import { TxStatus, useCountdown } from "./ChainBits.jsx";
+import { celebrate } from "./WalletPage.jsx";
 import { Player, Verdict, WaitingRing, canPlay, matchFor } from "./FightPlayer.jsx";
 import { Theater } from "./FightTheater.jsx";
 import { StartCountdown } from "./StartCountdown.jsx";
@@ -141,8 +143,14 @@ function PredictionCard({ wallet, tournament, match, a, b, onBet }) {
   const info = useToken();
   const selections = useMemo(() => [{ id: match.a, project: a }, { id: match.b, project: b }], [match.a, match.b, a, b]);
   const market = matchMarket(tournament.id, match.index);
-  const { data } = usePoolData(wallet, tournament.id, market, selections);
+  const { data, refresh } = usePoolData(wallet, tournament.id, market, selections);
+  const { tx, run, reset, busy } = useTx(wallet, refresh);
+  const payouts = usePayouts();
+  const collect = async (functionName, word) => {
+    if ((await run({ ...pools, functionName, args: [market], label: word }, `${word} confirmed.`)) && functionName === "claim") celebrate();
+  };
   const open = isMatchOpen(tournament, match);
+  const decided = match.status === "finalized" || match.status === "void";
   const countdown = useCountdown(open ? match.cutoffMs : null);
   if (!match.opened) return null;
   const total = data?.pool?.total ?? 0n;
@@ -192,6 +200,25 @@ function PredictionCard({ wallet, tournament, match, a, b, onBet }) {
           {bet ? "Add to your bet" : "Place a bet"}
         </button>
       ) : null}
+      {/* After the fight: winnings and refunds. The payout bot sends them by itself when it's on. */}
+      {data?.claimable > 0n ? (
+        <button type="button" className="btn btn--crush pcard__go" disabled={busy} onClick={() => collect("claim", "Claim")}>
+          Claim {fmt(data.claimable)} {info?.symbol}
+        </button>
+      ) : data?.refundable > 0n ? (
+        <button type="button" className="btn btn--secondary pcard__go" disabled={busy} onClick={() => collect("refund", "Refund")}>
+          Refund {fmt(data.refundable)} {info?.symbol}
+        </button>
+      ) : data?.state === "LOCKED" && decided && data.walletTotal > 0n && !payouts.enabled ? (
+        <button type="button" className="btn btn--secondary pcard__go" disabled={busy} onClick={() => collect("settle", "Settle")}>
+          Settle to collect your winnings
+        </button>
+      ) : data?.paid ? (
+        <p className="pcard__mine m0">Paid out to your wallet.</p>
+      ) : data?.state === "RESOLVED" && data.walletTotal > 0n ? (
+        <p className="pcard__soon m0">Your pick didn't win this one.</p>
+      ) : null}
+      <TxStatus tx={tx} onDismiss={reset} />
     </aside>
   );
 }
