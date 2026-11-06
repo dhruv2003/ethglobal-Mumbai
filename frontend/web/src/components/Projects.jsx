@@ -8,6 +8,10 @@ import { Link } from "../lib/router.jsx";
 import { shortAddress } from "../lib/wallet.js";
 import { Ring } from "./Arena.jsx";
 import { Dossier } from "./Dossier.jsx";
+import { Spinner, toast } from "./Feedback.jsx";
+import { api } from "../lib/api.js";
+import { navigate } from "../lib/router.jsx";
+import { removeLocalSubmission } from "../lib/storage.js";
 import { JudgesPanel } from "./JudgesPanel.jsx";
 import { fighterTraitItems, PixelFighter } from "./PixelFighter.jsx";
 import { FloatSticker, Magnetic, Marquee, Reveal, SplitWords, Squiggle, Tilt, bouncy, easeOut, fadeUp, stagger } from "./fx.jsx";
@@ -23,6 +27,28 @@ function KindPill({ kind }) {
 /** Where the project was built. Prominent: it frames everything else on the card. */
 function EventBadge({ project }) {
   return <span className="event-badge">{project.event ?? EVENT.name}</span>;
+}
+
+/** Where a submitted project's review stands, on its card. */
+function ReviewBadge({ review }) {
+  if (!review) return null;
+  if (review.status === "queued")
+    return (
+      <span className="review-badge">
+        <Spinner size={14} label="Queued" />
+        <StatusPill tone="neutral">{review.position ? `In queue · #${review.position}` : "In queue"}</StatusPill>
+      </span>
+    );
+  if (review.status === "reviewing")
+    return (
+      <span className="review-badge">
+        <Spinner size={14} label="Reviewing" />
+        <StatusPill tone="live">Reviewing</StatusPill>
+      </span>
+    );
+  if (review.status === "stopped") return <StatusPill tone="danger">✕ Review stopped</StatusPill>;
+  if (review.status === "reviewed") return <StatusPill tone="success">✓ Reviewed</StatusPill>;
+  return null;
 }
 
 function Tracks({ ids }) {
@@ -432,6 +458,7 @@ export function ProjectsPage() {
                   <div className="fighter-card__badges">
                     <EventBadge project={p} />
                     {p.kind === "sample" && <StatusPill tone="neutral">Sample</StatusPill>}
+                    <ReviewBadge review={p.review} />
                   </div>
                   <div>
                     <h3 className="t-display-md m0 fighter-card__name">{p.name}</h3>
@@ -455,6 +482,40 @@ export function ProjectsPage() {
 }
 
 /* --------------------------------------------------------- project page */
+
+/** Delete a submitted project (organizer). Local-only drafts just leave this browser. */
+function DeleteProject({ project }) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  async function remove() {
+    if (!window.confirm(`Delete ${project.name}? Its review, dossier, live test and judge scores go too. This can't be undone.`)) return;
+    setBusy(true);
+    setError("");
+    try {
+      if (!project.savedLocallyOnly) await api(`/projects/${encodeURIComponent(project.id)}`, { method: "DELETE" });
+      removeLocalSubmission(project.id);
+      toast(`${project.name} deleted.`);
+      navigate("/projects");
+    } catch (e) {
+      if (e.status === 404) {
+        removeLocalSubmission(project.id);
+        toast(`${project.name} deleted.`);
+        navigate("/projects");
+        return;
+      }
+      setError(e.status === 401 || e.status === 403 ? "Deleting needs the organizer key (set it on the Judges page)." : e.message);
+      setBusy(false);
+    }
+  }
+  return (
+    <div className="delete-row">
+      {error && <span className="field__error">✕ {error}</span>}
+      <button type="button" className="btn btn--danger btn--sm" onClick={remove} disabled={busy}>
+        {busy ? "Deleting…" : "Delete project"}
+      </button>
+    </div>
+  );
+}
 
 /** Which side of a project page is showing; kept in ?view= so it can be linked. */
 function useView() {
@@ -565,6 +626,7 @@ export function ProjectPage({ id }) {
           </h1>
           <p className="t-prompt m0">{p.pitch}</p>
           <p className="t-caption m0">by {p.teamName}</p>
+          {p.kind === "submitted" && <DeleteProject project={p} />}
           <motion.div className="gear-row" aria-label="Fighter gear" initial="hidden" animate="show" variants={stagger(0.06, 0.45)}>
             {fighterTraitItems(p, trackName).map((t) => (
               <motion.span key={t.id} className="chip chip--tag chip--gear" title={t.why} variants={{ hidden: { opacity: 0, scale: 0.6, y: 8 }, show: { opacity: 1, scale: 1, y: 0, transition: bouncy } }}>
@@ -575,7 +637,7 @@ export function ProjectPage({ id }) {
         </div>
       </header>
 
-      <ViewToggle view={view} onChange={setView} hasDossier={Boolean(p.dossier)} />
+      <ViewToggle view={view} onChange={setView} hasDossier={Boolean(p.dossier) || p.review?.status === "reviewed"} />
 
       <AnimatePresence mode="wait" initial={false}>
       {view === "team" ? (

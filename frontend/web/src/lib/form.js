@@ -5,7 +5,7 @@ export function emptyForm() {
     team: { name: "" },
     project: { name: "", pitch: "", description: "" },
     code: { repoUrl: "" },
-    demo: { videoUrl: "" },
+    demo: { videoUrl: "", liveUrl: "" },
     tracks: { selected: [] },
     // Stable look for this draft's fighter, so the preview matches the published card.
     fighter: { seed: newSeed() },

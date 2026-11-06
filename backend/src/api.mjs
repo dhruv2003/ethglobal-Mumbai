@@ -12,6 +12,11 @@
  *   POST   /api/submissions            save a signed submission; the panel reviews it in the background
  *   GET    /api/projects/:id/reviews   latest panel review
  *   POST   /api/projects/:id/reviews   run the panel now   (organizer)
+ *   GET    /api/projects/:id/pipeline  live status: fetch, pin, tests, dossier, judges
+ *   POST   /api/projects/:id/pipeline  run the whole review again   (organizer)
+ *   GET    /api/projects/:id/dossier   the reviewer's dossier for a submitted project
+ *   GET    /api/projects/:id/live      live test results (+ /live/files/<device>/<file> for media)
+ *   DELETE /api/projects/:id           delete a submitted project and its data   (organizer)
  *   POST   /api/projects/:id/reviews/public   anyone: re-judge a sample project on 0G (rate limited, capped per day)
  */
 import crypto from "node:crypto";
@@ -24,7 +29,10 @@ import zg from "./zg/client.js";
 import zgModels from "./zg/models.js";
 import { EXAMPLE_FORMS } from "./judges/seed.mjs";
 import { loadProject } from "./projects.mjs";
-import { judges, reviews, submissions } from "./store.mjs";
+import fs from "node:fs";
+import path from "node:path";
+import { deleteProject, dossiers, judges, liveDir, pipelines, reviews, submissions } from "./store.mjs";
+import { dequeue, enqueue, isRunning, queueLength, queuePosition, resumeQueue } from "./reviewer/pipeline.mjs";
 import { checkSubmissionSignature, rateLimit, requireOrganizer } from "./security.mjs";
 
 // Seed the example panel the first time only.
@@ -155,8 +163,20 @@ router.delete("/judges/:id", requireOrganizer, (req, res) => {
   res.status(204).end();
 });
 
+/** Where a project's review stands: queued (with place in line), reviewing, reviewed, stopped. */
+function reviewStatus(id) {
+  const position = queuePosition(id);
+  if (position) return { status: "queued", position, ahead: position - 1 };
+  if (isRunning(id)) return { status: "reviewing" };
+  const p = pipelines.get(id);
+  if (!p) return { status: "not_started" };
+  // Started but not finished and not in this server's line: running elsewhere (e.g. the CLI).
+  if (!p.finishedAt) return p.startedAt ? { status: "reviewing" } : { status: "queued", position: null };
+  return { status: p.steps.some((x) => x.status === "failed") ? "stopped" : "reviewed" };
+}
+
 /** Submissions as the public sees them: no signature material. */
-const publicSubmission = ({ auth, ...rest }) => ({ ...rest, signed: Boolean(auth?.signature) });
+const publicSubmission = ({ auth, ...rest }) => ({ ...rest, signed: Boolean(auth?.signature), review: reviewStatus(rest.id) });
 
 router.get("/submissions", (req, res) => res.json(submissions.list().map(publicSubmission)));
 
@@ -169,18 +189,55 @@ router.post("/submissions", rateLimit({ max: 5, windowMs: 60 * 60 * 1000 }), asy
   if (sigError) return res.status(401).json({ error: sigError });
   const record = { ...body, id: crypto.randomUUID(), submittedAt: new Date().toISOString() };
   submissions.add(record);
-  // The panel reviews every new submission in the background when it can.
-  let review = "skipped";
-  if (hasCredentials() && judges.list().length === MAX_JUDGES) {
-    review = "started";
-    reviewNow(record.id).catch((e) => console.error(`[judges] review of ${record.id} failed: ${e.message}`));
+  // Into the review queue: fetch, pin, count tests, build the dossier, then the judges score.
+  enqueue(record.id, { judge: reviewNow });
+  res.status(201).json(publicSubmission(record));
+});
+
+router.get("/projects/:id/pipeline", (req, res) => {
+  res.json({ running: isRunning(req.params.id), review: reviewStatus(req.params.id), queueLength: queueLength(), state: pipelines.get(req.params.id) });
+});
+
+router.get("/projects/:id/dossier", (req, res) => res.json({ dossier: dossiers.get(req.params.id) }));
+
+/** Live test results for a submitted project; media under /live/files/... */
+router.get("/projects/:id/live", (req, res) => {
+  try {
+    res.json({ liveTest: JSON.parse(fs.readFileSync(path.join(liveDir(req.params.id), "smoke.json"), "utf8")) });
+  } catch {
+    res.json({ liveTest: null });
   }
-  res.status(201).json({ ...publicSubmission(record), review });
+});
+
+router.get("/projects/:id/live/files/:device/:file", (req, res) => {
+  const { device, file } = req.params;
+  if (!/^(laptop|phone)$/.test(device) || !/^(video\.mp4|smoke-(laptop|phone)-[a-z0-9]+\.jpg)$/.test(file)) return res.status(404).end();
+  const full = path.join(liveDir(req.params.id), device, file);
+  if (!fs.existsSync(full)) return res.status(404).end();
+  res.sendFile(full, { headers: { "cache-control": "private, max-age=3600" } });
+});
+
+/** Delete a submitted project and everything stored for it. */
+router.delete("/projects/:id", requireOrganizer, (req, res) => {
+  const id = req.params.id;
+  if (!submissions.get(id)) return res.status(404).json({ error: "No such submitted project." });
+  if (isRunning(id)) return res.status(409).json({ error: "Its review is running right now. Try again when it finishes." });
+  dequeue(id);
+  deleteProject(id);
+  res.status(204).end();
+});
+
+router.post("/projects/:id/pipeline", requireOrganizer, (req, res) => {
+  if (!submissions.get(req.params.id)) return res.status(404).json({ error: "No such submitted project." });
+  enqueue(req.params.id, { judge: reviewNow });
+  res.status(202).json({ review: reviewStatus(req.params.id), state: pipelines.get(req.params.id) });
 });
 
 router.get("/projects/:id/reviews", (req, res) => {
-  const r = reviews.get(req.params.id);
-  res.json({ running: running.has(req.params.id), progress: progress.get(req.params.id) ?? null, result: r });
+  const id = req.params.id;
+  const r = reviews.get(id);
+  // Keep the panel polling while the pipeline prepares evidence or waits in line.
+  res.json({ running: running.has(id) || isRunning(id) || queuePosition(id) != null, progress: progress.get(id) ?? null, result: r });
 });
 
 /*
@@ -223,3 +280,9 @@ router.post("/projects/:id/reviews", requireOrganizer, async (req, res) => {
     res.status(e.status ?? 500).json({ error: e.message });
   }
 });
+
+// Server start: anything submitted but not finished goes back in line.
+if (process.env.ARENA_SERVER === "1") {
+  const n = resumeQueue({ judge: reviewNow });
+  if (n) console.log(`[pipeline] resumed ${n} unfinished review(s)`);
+}

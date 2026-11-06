@@ -5,7 +5,10 @@
  * generation, judge prompts). This view reads dossier.highlights plus two
  * numbers. Every status carries a word, never colour alone.
  */
+import { useEffect, useState } from "react";
 import { Progress, StatusPill } from "@ds/ui.jsx";
+import { api, health } from "../lib/api.js";
+import { Spinner } from "./Feedback.jsx";
 import { LiveTest } from "./LiveTest.jsx";
 
 const TALLY = [
@@ -15,23 +18,101 @@ const TALLY = [
   ["submitted_claim", "neutral", "can't check from code"],
 ];
 
-export function DossierPending({ project }) {
-  const steps = ["Fetch the repository", "Pin the commit", "Run the tests in a sandbox", "Build the evidence dossier"];
+const STEP_STATE = {
+  queued: { tone: "neutral", word: "Queued" },
+  running: { tone: "live", word: "Working" },
+  done: { tone: "success", word: "✓ Done" },
+  failed: { tone: "danger", word: "✕ Failed" },
+  skipped: { tone: "neutral", word: "Skipped" },
+};
+const DEFAULT_STEPS = ["Fetch the repository", "Pin the commit", "Count the tests", "Read the demo video", "Build the evidence dossier", "Test the live app on cloud browsers", "Judges score it"].map((title, i) => ({ id: `s${i}`, title, status: "queued" }));
+
+export function DossierPending({ project, state, running, review, offline, onRerun, rerunError }) {
+  const steps = state?.steps ?? DEFAULT_STEPS;
+  const failed = steps.some((s) => s.status === "failed");
+  const done = Boolean(state?.finishedAt) && !running;
+  const queued = review?.status === "queued";
+  const head = offline
+    ? { tone: "neutral", word: "Review service offline" }
+    : queued
+      ? { tone: "neutral", word: review.position ? `In the review queue · #${review.position}` : "In the review queue" }
+      : running
+        ? { tone: "live", word: "Reviewing now" }
+        : failed
+          ? { tone: "danger", word: "✕ Review stopped" }
+          : done
+            ? { tone: "neutral", word: "Review finished without a dossier" }
+            : { tone: "neutral", word: "Waiting for the reviewer" };
+  const busy = !offline && (queued || running);
   return (
     <div className="card stack">
-      <StatusPill tone="neutral">Waiting for the reviewer</StatusPill>
-      <p className="t-body m0">The reviewer agent checks {project.name}'s claims against its code. The main findings show up here.</p>
+      <div className="review-head">
+        {busy && <Spinner size={22} label={head.word} />}
+        <StatusPill tone={head.tone}>{head.word}</StatusPill>
+      </div>
+      <p className="t-body m0">
+        {queued && review.ahead > 0
+          ? `Reviews run one at a time. ${review.ahead} ${review.ahead === 1 ? "project is" : "projects are"} ahead of ${project.name}. `
+          : ""}
+        The reviewer fetches {project.name}'s repo, pins the commit and checks the team's claims against the code. Nothing from the repo is ever run.
+      </p>
       <ol className="pending-steps">
-        {steps.map((s, i) => (
-          <li key={s} className="rise" style={{ "--i": i }}>
-            <span className="pending-steps__num t-num">{i + 1}</span>
-            <span className="t-body">{s}</span>
-            <StatusPill tone="neutral">Queued</StatusPill>
-          </li>
-        ))}
+        {steps.map((s, i) => {
+          const st = STEP_STATE[s.status] ?? STEP_STATE.queued;
+          return (
+            <li key={s.id} className={`rise pending-steps__item pending-steps__item--${s.status}`} style={{ "--i": i }}>
+              <span className="pending-steps__num t-num">{i + 1}</span>
+              <span className="stack-xs pending-steps__text">
+                <span className="t-body">{s.title}</span>
+                {s.detail && <span className="t-caption">{s.detail}</span>}
+              </span>
+              <span className="pending-steps__state">
+                {s.status === "running" && <Spinner size={16} label={`${s.title}: working`} />}
+                <StatusPill tone={st.tone}>{st.word}</StatusPill>
+              </span>
+            </li>
+          );
+        })}
       </ol>
+      {(failed || done) && onRerun && (
+        <div className="judges__foot">
+          {rerunError && <span className="field__error">✕ {rerunError}</span>}
+          <button type="button" className="btn btn--secondary btn--sm" onClick={onRerun}>
+            Run the review again
+          </button>
+        </div>
+      )}
     </div>
   );
+}
+
+/** For submitted projects: follow the backend pipeline live until the dossier exists. */
+function useLiveDossier(project) {
+  const [live, setLive] = useState({ dossier: project.dossier ?? null, state: null, running: false, review: null, offline: false });
+  const [tick, setTick] = useState(0);
+  useEffect(() => {
+    if (project.kind !== "submitted") return undefined;
+    let alive = true;
+    let timer;
+    const started = Date.now();
+    const load = async () => {
+      const h = await health();
+      if (!h) return alive && setLive((l) => ({ ...l, offline: true }));
+      const id = encodeURIComponent(project.id);
+      const [p, d] = await Promise.all([api(`/projects/${id}/pipeline`).catch(() => null), api(`/projects/${id}/dossier`).catch(() => null)]);
+      if (!alive) return;
+      const running = Boolean(p?.running) || (!p?.state && Date.now() - Date.parse(project.submittedAt ?? 0) < 5 * 60 * 1000);
+      setLive({ dossier: d?.dossier ?? null, state: p?.state ?? null, running, review: p?.review ?? null, offline: false });
+      const waiting = running || p?.review?.status === "queued" || (p?.state && !p.state.finishedAt);
+      if (waiting && Date.now() - started < 30 * 60 * 1000) timer = setTimeout(load, 3000);
+    };
+    load();
+    return () => {
+      alive = false;
+      clearTimeout(timer);
+    };
+  }, [project.id, project.dossier, project.kind, project.submittedAt, tick]);
+  return [live, () => setTick((t) => t + 1)];
 }
 
 function Findings({ title, tone, items, i }) {
@@ -50,15 +131,42 @@ function Findings({ title, tone, items, i }) {
 }
 
 export function Dossier({ project }) {
-  const d = project.dossier;
-  if (!d?.highlights) return <DossierPending project={project} />;
+  const [live, refresh] = useLiveDossier(project);
+  const [rerunError, setRerunError] = useState("");
+  const d = project.dossier ?? live.dossier;
+  if (!d?.highlights) {
+    const rerun = async () => {
+      setRerunError("");
+      try {
+        await api(`/projects/${encodeURIComponent(project.id)}/pipeline`, { method: "POST" });
+        refresh();
+      } catch (e) {
+        setRerunError(e.status === 401 || e.status === 403 ? "Needs the organizer key (set it on /judge)." : e.message);
+      }
+    };
+    return (
+      <>
+        <DossierPending project={project} state={live.state} running={live.running} review={live.review} offline={live.offline} onRerun={project.kind === "submitted" ? rerun : undefined} rerunError={rerunError} />
+        <LiveTest project={project} pending={live.running || live.review?.status === "queued"} />
+      </>
+    );
+  }
   const h = d.highlights;
   const count = (s) => d.evidence.filter((e) => e.status === s).length;
   const c = d.continuity;
   const total = (c?.commitsBefore ?? 0) + (c?.commitsDuringEvent ?? 0);
+  const rerun = live.state && !live.state.finishedAt ? live.state.steps.findIndex((x) => x.status === "running") : -1;
 
   return (
     <div className="judge">
+      {rerun >= 0 && (
+        <div className="rerun-banner" role="status">
+          <Spinner size={18} label="A new review is running" />
+          <span className="t-body">
+            A new review is running · step {rerun + 1} of {live.state.steps.length}: {live.state.steps[rerun].title}. These results update when it finishes.
+          </span>
+        </div>
+      )}
       <section className="card stack judge__verdict rise" style={{ "--i": 0 }} aria-label="Verdict">
         <span className="t-label">Verdict</span>
         <p className="t-prompt m0">{h.headline}</p>
@@ -71,7 +179,7 @@ export function Dossier({ project }) {
         </div>
       </section>
 
-      <LiveTest liveTest={project.liveTest} />
+      <LiveTest project={project} />
 
       <div className="judge__pair">
         <Findings title="What holds up" tone="good" items={h.holdsUp} i={1} />
@@ -86,9 +194,9 @@ export function Dossier({ project }) {
           </div>
           <p className="m0">
             <span className="stat__value t-num">{d.tests.found.vitestCases.toLocaleString()}</span>{" "}
-            <span className="t-body">vitest + {d.tests.found.forgeTests} forge found</span>
+            <span className="t-body">JS/TS + {d.tests.found.forgeTests} Solidity tests found</span>
           </p>
-          <span className="t-caption">Team says {d.tests.claimed}.</span>
+          <span className="t-caption">{d.tests.claimed ? `Team says ${d.tests.claimed}. ` : ""}Counted from the code, not run.</span>
         </section>
         {c && (
           <section className="card stack rise" style={{ "--i": 4 }} aria-label="Built at the event">
@@ -97,7 +205,7 @@ export function Dossier({ project }) {
               <span className="stat__value t-num">{c.commitsDuringEvent}</span> <span className="t-body">of {total} commits</span>
             </p>
             <Progress value={c.commitsDuringEvent} max={total || 1} label="Commits made during the event" />
-            <span className="t-caption">Earlier work ends at commit {c.boundaryCommit}.</span>
+            <span className="t-caption">{c.boundaryCommit ? `Earlier work ends at commit ${c.boundaryCommit}.` : `Counted from ${c.boundaryLabel ?? "the event start"}${c.historyTruncated ? "; only recent history was fetched" : ""}.`}</span>
           </section>
         )}
       </div>

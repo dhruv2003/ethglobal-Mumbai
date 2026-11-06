@@ -8,6 +8,7 @@ import { motion } from "motion/react";
 import { StatusPill } from "@ds/ui.jsx";
 import { api, health } from "../lib/api.js";
 import { useCountUp } from "../lib/motion.js";
+import { Spinner } from "./Feedback.jsx";
 import { Ring } from "./Arena.jsx";
 import { judgeAsFighter } from "./JudgesPage.jsx";
 import { PixelFighter } from "./PixelFighter.jsx";
@@ -135,7 +136,12 @@ export function JudgesPanel({ project }) {
   useEffect(() => {
     if (!state.running) return undefined;
     let live = true;
+    const startedAt = Date.now();
     const tick = async () => {
+      if (Date.now() - startedAt >= 10 * 60 * 1000) {
+        clearInterval(t);
+        return;
+      }
       try {
         const r = await api(path);
         if (!live) return;
@@ -200,11 +206,7 @@ export function JudgesPanel({ project }) {
 
       {busy && (
         <div className="judges__busy" role="status">
-          <div className="judges__thinking" aria-hidden="true">
-            {[0, 1, 2].map((k) => (
-              <span key={k} style={{ "--k": k }} />
-            ))}
-          </div>
+          <Spinner size={22} label="Judges at work" />
           <span className="t-body">
             The judges are reading the dossier and the live test{h?.provider === "0g" ? " on 0G" : ""}. This takes a minute or two.
           </span>

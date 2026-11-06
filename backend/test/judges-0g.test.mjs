@@ -230,6 +230,28 @@ test("observation validation names bad fields", () => {
   assert.ok(evidence.validateObservation({ seen: "", visibleText: "x", matchesStep: "maybe", problems: [] }).length === 3);
 });
 
+test("submitted-project screenshots are read from the live pipeline output", async () => {
+  const { liveDir } = await import("../src/store.mjs");
+  const id = "submitted-evidence-test";
+  const file = path.join(liveDir(id), "phone", "smoke-phone-d1.jpg");
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.writeFileSync(file, "test screenshot");
+  const project = { id, kind: "submitted", liveTest: { runs: [{ device: "phone", phases: [{ steps: [
+    { id: "d1", title: "Home", status: "passed", screenshot: "phone/smoke-phone-d1.jpg" },
+  ] }] }] } };
+  assert.equal(evidence.screenshotsOf(project)[0].file, file);
+  let images = 0;
+  const trace = { requestId: "submitted-vision", model: "vision-test", costUsdMicro: 1 };
+  const client = {
+    imagePart: (bytes) => { assert.equal(bytes.toString(), "test screenshot"); images++; return { type: "image_url" }; },
+    chatJSON: async () => ({ data: { seen: "Home", visibleText: ["Home"], matchesStep: "yes", problems: [] }, trace, traces: [trace] }),
+  };
+  const records = await evidence.collectScreenshotEvidence(project, { client, fresh: true });
+  assert.equal(images, 1);
+  assert.equal(records[0].id, "V-phone-d1");
+  assert.equal(records[0].trace.requestId, "submitted-vision");
+});
+
 test("runPanel reports each 0G request ID as it arrives, then each judge's result", async () => {
   const judges = EXAMPLE_FORMS.map((f) => validateForm(f).persona);
   let n = 0;
