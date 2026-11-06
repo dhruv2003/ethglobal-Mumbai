@@ -25,6 +25,7 @@ import { Player, Verdict, WaitingRing, canPlay, matchFor } from "./FightPlayer.j
 import { Theater } from "./FightTheater.jsx";
 import { StartCountdown } from "./StartCountdown.jsx";
 import { CrowdChat } from "./CrowdChat.jsx";
+import { FighterIntro } from "./FighterIntro.jsx";
 import { useRecentBets } from "../lib/bets.js";
 
 function Stage({ tournament, match, fight, a, b, covered }) {
@@ -294,6 +295,7 @@ function Layout({ tournament, match, fight, theater, wallet, onBet }) {
         <div className={`fight-grid ${isMatchOpen(tournament, match) || match.opened ? "" : "fight-grid--solo"}`}>
           <div className="fight-grid__main">
             <Stage tournament={tournament} match={match} fight={fight} a={a} b={b} covered={theater.open} />
+            <FighterIntro a={a} b={b} />
           </div>
           <div className="fight-side">
             {tournament.preview ? (

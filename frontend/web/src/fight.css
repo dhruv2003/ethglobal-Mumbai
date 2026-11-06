@@ -195,3 +195,41 @@
 .pside__fav { margin-left: 6px; font-size: 9.5px; padding: 1px 6px; vertical-align: 1px; }
 .theater__ringwrap { position: relative; flex: 1; min-height: 0; width: 100%; display: flex; flex-direction: column; }
 .theater__ringwrap .fs-wrap--fit { flex: 1; min-height: 0; height: auto; justify-content: center; }
+
+/* ---------- Meet the fighters (under the ring) ---------- */
+.fintro { display: flex; flex-direction: column; gap: 10px; margin-top: var(--space-3); }
+.fintro__h { font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-secondary); }
+.fintro__row { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: var(--space-3); }
+.fintro__vs { font: 800 italic 16px/1 var(--font-sans); color: var(--ink-secondary); }
+.fi { position: relative; min-width: 0; }
+.fi--b { justify-self: end; }
+.fi__btn { font: inherit; color: inherit; display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 14px 8px 8px; border-radius: var(--radius-pill); border: 1.5px solid var(--line); background: var(--canvas); text-align: left; cursor: pointer; transition: border-color .15s, transform .15s, box-shadow .15s; }
+.fi--b .fi__btn { flex-direction: row-reverse; text-align: right; padding: 8px 8px 8px 14px; }
+.fi__btn:hover, .fi__btn[aria-expanded="true"] { transform: translateY(-1px); box-shadow: 0 4px 0 var(--ink); border-color: var(--ink); }
+.fi__btn:focus-visible { outline: 3px solid var(--focus, #2f4bf0); outline-offset: 2px; }
+.fi__avatar { flex: none; width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; overflow: hidden; background: var(--surface-sunken); border: 3px solid #2f4bf0; }
+.fi--b .fi__avatar { border-color: #ff8a1f; }
+.fi__avatar svg, .fi__avatar canvas, .fi__avatar img { max-width: 40px; max-height: 40px; }
+.fi__who { display: flex; flex-direction: column; min-width: 0; }
+.fi__who b { font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fi__who small { font-size: 12px; color: var(--ink-secondary); }
+.fi__pop { position: absolute; z-index: 30; bottom: calc(100% + 10px); left: 0; width: min(360px, 86vw); display: flex; flex-direction: column; gap: 8px; padding: 16px; border-radius: var(--radius-lg); background: var(--canvas); border: 2px solid var(--ink); box-shadow: 0 6px 0 var(--ink); }
+.fi--b .fi__pop { left: auto; right: 0; }
+.fi__side { align-self: flex-start; font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; padding: 3px 9px; border-radius: var(--radius-pill); color: #fff; background: #2f4bf0; }
+.fi--b .fi__side { background: #ff8a1f; }
+.fi__pop h3 { font: 800 18px/1.2 var(--font-sans); }
+.fi__team { font-size: 13px; color: var(--ink-secondary); }
+.fi__pitch { font-weight: 600; font-size: 14px; line-height: 1.4; }
+.fi__about { font-size: 13px; line-height: 1.5; color: var(--ink-secondary); }
+.fi__persona { font-size: 12.5px; padding: 8px 10px; border-radius: 10px; background: var(--surface-sunken); }
+.fi__tracks { display: flex; flex-wrap: wrap; gap: 6px; padding: 0; list-style: none; }
+.fi__tracks li { font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: var(--radius-pill); background: var(--surface-sunken); }
+.fi__link { font-size: 13px; font-weight: 700; }
+@media (max-width: 640px) {
+  .fintro__row { grid-template-columns: minmax(0, 1fr); }
+  .fintro__vs { display: none; }
+  .fi--b { justify-self: stretch; }
+  .fi--b .fi__btn { flex-direction: row; text-align: left; padding: 8px 14px 8px 8px; }
+  .fi__pop, .fi--b .fi__pop { left: 0; right: auto; }
+}
+@media (prefers-reduced-motion: reduce) { .fi__btn { transition: none; } }
