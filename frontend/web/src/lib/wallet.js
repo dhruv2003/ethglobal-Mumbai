@@ -108,7 +108,7 @@ export function useWallet() {
                 chainName: n.name,
                 rpcUrls: [n.rpcUrl],
                 blockExplorerUrls: [n.explorerUrl],
-                nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+                nativeCurrency: { name: n.symbol, symbol: n.symbol, decimals: 18 },
               },
             ],
           });

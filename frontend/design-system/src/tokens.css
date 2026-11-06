@@ -47,6 +47,18 @@
   --danger: #c4291c;
   --danger-soft: #fde7e4;
 
+  /* ---------- The arena map (8-bit world on /arena only) ---------- */
+  --world-ground-dot: #d7ddff;
+  --world-ground-dot-strong: #c4cdfb;
+  --world-floor: var(--oracle-soft);
+  --world-floor-stripe: #dfe4ff;
+  --world-path: #d7ddff;
+  --world-path-edge: #aab5f5;
+  --world-stone: var(--canvas);
+  --world-stone-dark: #aab5f5;
+  --world-stone-light: #ffffff;
+  --world-wood: var(--ink-secondary);
+
   /* ---------- Utility ---------- */
   --focus: var(--oracle);
   --scrim: rgba(23, 20, 31, 0.5);
