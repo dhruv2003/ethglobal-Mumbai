@@ -17,6 +17,7 @@ import { api } from "../lib/api.js";
 import { navigate } from "../lib/router.jsx";
 import { rerunReview } from "../lib/review.js";
 import { JudgesPanel } from "./JudgesPanel.jsx";
+import { FighterEns } from "./EnsName.jsx";
 import { PipelineView, usePipeline } from "./PipelineView.jsx";
 import { ReviewHero } from "./ReviewHero.jsx";
 import { fighterTraitItems, PixelFighter } from "./PixelFighter.jsx";
@@ -847,6 +848,7 @@ function EntryCard({ project: p }) {
           </div>
         )}
       </dl>
+      <FighterEns projectId={p.id} />
       {p.kind === "submitted" && <StorageProof kind="submission" id={p.id} />}
     </aside>
   );

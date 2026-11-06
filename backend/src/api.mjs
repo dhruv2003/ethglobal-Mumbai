@@ -3,6 +3,7 @@
  *
  *   GET    /api/health                 judge service status (credentials, judge count)
  *   GET    /api/criteria               what judges score
+ *   GET    /api/ens                    ENSv2 parent name, and the name of each fighter and judge
  *   GET    /api/judges                 the panel (max 3)
  *   POST   /api/judges                 add a judge from the form   (organizer)
  *   POST   /api/judges/voice-note      audio -> transcript (whisper on 0G, TEE-checked)   (organizer)
@@ -61,6 +62,7 @@ import { TYPES } from "./arkiv/records/schemas.mjs";
 import { swarmConfigured } from "./arkiv/swarm.mjs";
 import { arenaRouter } from "./arena/routes.mjs";
 import { worldRouter } from "./world/routes.mjs";
+import * as ens from "./ens/ens.mjs";
 import { payoutStatus, startPayouts } from "./payouts/index.mjs";
 import { startAutorun } from "./arena/autorunService.mjs";
 
@@ -113,7 +115,8 @@ export async function reviewNow(projectId, { evidence = EVIDENCE_ENABLED, freshE
     }
     if (!save) return result;
     const saved = reviews.save(projectId, result);
-    publishInBackground(project, saved); // Swarm + Arkiv, when set up; never fails the review
+    const arkivJob = publishInBackground(project, saved); // Swarm + Arkiv, when set up; never fails the review
+    ens.scoreInBackground(project, saved, arkivJob); // the score on the fighter's ENS name, with the Arkiv panel key
     syncProjectInBackground(projectId); // judge context (dossier, live test, screenshot notes) on Arkiv
     return saved;
   })()
@@ -148,11 +151,15 @@ router.get("/health", (req, res) => {
     fallback: fallbackTarget(),
     voiceNotes: hasCredentials("0g") ? { model: zgModels.MODELS.transcribe } : null,
     arkiv: { read: canRead(), write: canWrite(), swarm: swarmConfigured(), publisher: publisher() },
+    ens: ens.healthInfo(),
     storage: storageSummary(),
   });
 });
 
 router.get("/criteria", (req, res) => res.json(CRITERIA));
+
+/** ENSv2: the parent and which name each fighter and judge has. Records are read from ENS by the client, not from here. */
+router.get("/ens", (req, res) => res.json(ens.publicConfig()));
 
 router.get("/judges", requireOrganizer, (req, res) => res.json(judges.list()));
 
@@ -163,6 +170,7 @@ router.post("/judges", requireOrganizer, (req, res) => {
   if (errors) return res.status(400).json({ errors });
   judges.save([...all, persona]);
   syncJudgesInBackground();
+  ens.issueJudgeInBackground(persona, { model: MODEL });
   res.status(201).json(persona);
 });
 
@@ -215,6 +223,7 @@ router.put("/judges/:id", requireOrganizer, (req, res) => {
   if (errors) return res.status(400).json({ errors });
   judges.save(all.map((j) => (j.id === existing.id ? persona : j)));
   syncJudgesInBackground();
+  ens.issueJudgeInBackground(persona, { model: MODEL });
   res.json(persona);
 });
 
@@ -333,6 +342,7 @@ router.post("/submissions", rateLimit({ max: 5, windowMs: 60 * 60 * 1000 }), asy
   const record = { ...body, id: crypto.randomUUID(), submittedAt: new Date().toISOString() };
   submissions.add(record);
   syncProjectInBackground(record.id);
+  if (ens.canWrite()) ens.issueProjectInBackground(loadProject(record.id)); // <project>.hackarena.eth, owned by the team's wallet
   // Into the review queue: fetch, pin, count tests, build the dossier, then the judges score.
   enqueue(record.id, { judge: reviewNow });
   res.status(201).json({ ...publicSubmission(record), zgStorage: zgStatus("submission", record.id) });

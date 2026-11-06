@@ -163,3 +163,32 @@ Smart contracts go in `contracts/` in this folder.
 | --- | --- |
 | `scoring/` | Rubric, fixed-point scoring, tie-breaks and organizer review (`PRD.md` section 9). See its README. |
 | `matching/` | Similarity-based round-one pairing and bracket placement (`PRD.md` ORG-05). See its README. |
+
+## ENS (ENSv2 on Sepolia)
+
+Fighters and judges get names under `hackarena.eth` (`src/ens/ens.mjs`). Contract addresses are the ENSv2 Sepolia deployment. The parent's registry and resolver are read from the .eth registry on chain; they aren't configured anywhere.
+
+| Env var | What it does |
+|---|---|
+| `ENS_PRIVATE_KEY` | Owner of the parent. It signs setup, subname issuance and profile records, and needs Sepolia ETH. The registration fee is paid in Sepolia MockUSDC, which setup mints itself. |
+| `ENS_WRITER_PRIVATE_KEY` | Optional. A scoped wallet that writes only the `arena.*` score keys. If it isn't set, the owner writes them. |
+| `ENS_PARENT` | Default `hackarena.eth`. |
+| `ENS_RPC_URL` | Sepolia RPC. Default: publicnode. |
+| `ARENA_PUBLIC_URL` | The public site URL, used for the `url` and `agent-endpoint[web]` records. |
+
+```
+npm run ens -- setup                 # once: deploy resolver + subname registry, commit/register the parent (~2 min)
+npm run ens -- judges                # judge names + ENSIP-26 agent records
+npm run ens -- issue --all           # names for every submitted project (+ latest score)
+npm run ens -- fights               # W-L / titles from finalized matches on the TournamentManager
+npm run ens -- status                # parent, registry, resolver, names given out
+npm run ens -- read <name>           # what any ENS client sees
+```
+
+Once setup has run, everything is automatic:
+- A new submission gets its name.
+- A saved review writes the score, after the Arkiv publish so it can link the panel entity.
+- Creating or editing a judge refreshes its agent records.
+- The autorun loop tallies wins, losses and titles from finalized matches on the TournamentManager contract (at most once a minute). It maps each bracket slot back to its submission and writes only the records that changed.
+
+None of these background writes can fail the request that started them. `GET /api/ens` returns the id-to-name map, and the web app reads every record from ENS itself. Names given out are kept in `data/ens/names.json`.

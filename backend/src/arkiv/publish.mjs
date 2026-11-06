@@ -64,8 +64,11 @@ export async function publishRun(project, result, { upload = uploadBundle, publi
   return job;
 }
 
-/** Called after every saved review: publish in the background when Arkiv is set up. */
+/** Called after every saved review: publish in the background when Arkiv is set up. Returns the job (or null), never a rejection. */
 export function publishInBackground(project, result) {
-  if (!canWrite()) return;
-  publishRun(project, result).catch((e) => console.error(`[arkiv] publish of ${project.id} failed: ${e.message}`));
+  if (!canWrite()) return null;
+  return publishRun(project, result).catch((e) => {
+    console.error(`[arkiv] publish of ${project.id} failed: ${e.message}`);
+    return null;
+  });
 }

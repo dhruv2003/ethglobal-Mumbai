@@ -590,6 +590,7 @@ a.brand:hover .brand__mark { transform: rotate(-8deg) scale(1.08); }
 .jcard__ring .ring__post { display: none; }
 .jcard__name, .jcard__who > div { display: flex; flex-direction: column; min-width: 0; }
 .jcard__title { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.jcard__ens { display: block; overflow-wrap: anywhere; }
 .jcard__comment { color: var(--ink-secondary); }
 .jcard__more > summary { cursor: pointer; padding: var(--space-1) 0; }
 .crit { list-style: none; margin: var(--space-2) 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-3); }

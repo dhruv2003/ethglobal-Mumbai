@@ -11,6 +11,7 @@
     "review": "node src/reviewer/run.mjs",
     "videos": "node src/reviewer/save-videos.mjs",
     "arkiv": "node src/arkiv/run.mjs",
+    "ens": "node src/ens/run.mjs",
     "zg:status": "node scripts/zg.mjs status",
     "zg:seed-fixtures": "node scripts/zg.mjs seed-fixtures",
     "zg:restore": "node scripts/zg.mjs restore",

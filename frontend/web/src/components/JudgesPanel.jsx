@@ -13,6 +13,7 @@ import { judgeAsFighter } from "./JudgesPage.jsx";
 import { PixelFighter } from "./PixelFighter.jsx";
 import { EvidenceList, JudgeTraces, LiveCalls, PanelProof, StorageProof } from "./ZeroGProof.jsx";
 import { ArkivRecord } from "./ArkivRecord.jsx";
+import { JudgeEns } from "./EnsName.jsx";
 
 const LABELS = {
   product_journey: "Product journey",
@@ -50,6 +51,7 @@ function JudgeCard({ r, i }) {
           <div>
             <span className="t-body-strong">{j.name}</span>
             <span className="t-caption jcard__title">{j.title}</span>
+            <JudgeEns judgeId={j.id} />
           </div>
         </div>
         <StatusPill tone="neutral">{STATUS_WORD[r.status] ?? r.status}</StatusPill>
@@ -79,6 +81,7 @@ function ScoredCard({ r, i, j, rv, rows }) {
         <span className="jcard__id">
           <span className="t-body-strong">{j.name}</span>
           <span className="t-caption jcard__title">{j.title}</span>
+          <JudgeEns judgeId={j.id} />
         </span>
         <span className={`jcard__score jcard__score--${band(r.overallHundredths / 100)}`}>
           <Score hundredths={r.overallHundredths} />

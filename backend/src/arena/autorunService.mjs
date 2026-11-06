@@ -10,6 +10,7 @@ import { autorunPass } from "./autorun.mjs";
 import { organizerPass, schedule } from "./autoOrganizer.mjs";
 import { proposeBracket } from "./matchmaking.mjs";
 import { listBrackets, runningFights, saveBracket, startFight, statusOf } from "./routes.mjs";
+import { syncFightsInBackground } from "../ens/ens.mjs";
 
 const abi = JSON.parse(fs.readFileSync(new URL("../../contracts/abi/TournamentManager.json", import.meta.url), "utf8"));
 const MANAGER_ABI = abi.abi ?? abi;
@@ -181,6 +182,12 @@ export function startAutorun() {
         publish,
         botAddress: account?.address ?? null,
         log: (line) => console.log(`[autorun] ${line}`),
+      });
+      // Win/loss records on each fighter's ENS name, from what the contract finalized (at most once a minute).
+      syncFightsInBackground({
+        brackets: listBrackets,
+        readTournament: (id) => client.readContract({ ...manager, functionName: "getTournament", args: [id] }),
+        readMatch: (id, i) => client.readContract({ ...manager, functionName: "getMatch", args: [id, i] }),
       });
     } catch (e) {
       console.error(`[autorun] ${e.shortMessage ?? e.message}`);
