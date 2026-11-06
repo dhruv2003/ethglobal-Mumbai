@@ -16,7 +16,12 @@
  *   POST   /api/projects/:id/pipeline  run the whole review again   (organizer)
  *   GET    /api/projects/:id/dossier   the reviewer's dossier for a submitted project
  *   GET    /api/projects/:id/live      live test results (+ /live/files/<device>/<file> for media)
+ *   GET    /api/projects/:id/live/stream/:device   watch a cloud browser live (MJPEG) while the test runs
  *   DELETE /api/projects/:id           delete a submitted project and its data   (organizer)
+ *   POST   /api/uploads/video          upload a demo video file (raw body; MP4, MOV or WebM, max 300 MB)
+ *   POST   /api/uploads/image          upload a demo screenshot (raw body; PNG, JPEG or WebP, max 10 MB)
+ *   GET    /api/uploads/:file          play an uploaded video
+ *   GET    /api/projects/:id/video     our saved copy of the demo video (+ /video/file to play it)
  *   GET    /api/projects/:id/arkiv     the result as published on Arkiv (read from Arkiv) + Swarm links
  *   POST   /api/projects/:id/arkiv     publish the latest result to Swarm + Arkiv again   (organizer)
  *   POST   /api/projects/:id/reviews/public   anyone: re-judge a sample project on 0G (rate limited, capped per day)
@@ -25,7 +30,7 @@ import crypto from "node:crypto";
 import express from "express";
 import { CRITERIA } from "./judges/criteria.mjs";
 import { MAX_JUDGES, validateForm } from "./judges/persona.mjs";
-import { hasCredentials, missingCredentialsError, MODEL, PROVIDER, PROVIDER_LABEL, runPanel } from "./judges/review.mjs";
+import { callPrimary, fallbackTarget, hasCredentials, missingCredentialsError, MODEL, PROVIDER, PROVIDER_LABEL, runPanel } from "./judges/review.mjs";
 import { collectScreenshotEvidence, EVIDENCE_ENABLED, forJudges, hasCachedEvidence } from "./judges/evidence.mjs";
 import zg from "./zg/client.js";
 import zgModels from "./zg/models.js";
@@ -33,12 +38,14 @@ import { EXAMPLE_FORMS } from "./judges/seed.mjs";
 import { loadProject } from "./projects.mjs";
 import fs from "node:fs";
 import path from "node:path";
-import { deleteProject, dossiers, judges, liveDir, pipelines, reviews, submissions } from "./store.mjs";
+import { deleteProject, dossiers, judges, liveDir, mediaDir, pipelines, reviews, submissions, videos } from "./store.mjs";
+import { cleanUploads, IMAGE_MAX, IMAGE_REF, MAX_IMAGES, MIME, storeImageUpload, storeUpload, UPLOAD_DIR, UPLOAD_FILE, UPLOAD_REF, VIDEO_MAX } from "./reviewer/media.mjs";
 import { dequeue, enqueue, isRunning, queueLength, queuePosition, resumeQueue } from "./reviewer/pipeline.mjs";
 import { checkSubmissionSignature, rateLimit, requireOrganizer } from "./security.mjs";
 import { canRead, canWrite, publisher, readLatest } from "./arkiv/arkiv.mjs";
 import { lastPublish, publishInBackground, publishing, publishRun } from "./arkiv/publish.mjs";
 import { swarmConfigured } from "./arkiv/swarm.mjs";
+import { arenaRouter } from "./arena/routes.mjs";
 
 // Seed the example panel the first time only.
 if (!judges.list().length) judges.save(EXAMPLE_FORMS.map((f) => ({ ...validateForm(f).persona, example: true })));
@@ -52,25 +59,34 @@ const lastRun = new Map(); // projectId -> ms timestamp of the last public run
  * Run the panel on one project and save the result.
  * opts.evidence: first let a vision model on 0G read the live-test screenshots (default JUDGE_EVIDENCE).
  * opts.save: false to skip saving to data/reviews (the CLI uses this for side-by-side model runs).
+ * opts.fallback: false to never fall back to OpenAI when 0G fails (public runs).
  */
-export async function reviewNow(projectId, { evidence = EVIDENCE_ENABLED, freshEvidence = false, save = true, log } = {}) {
+export async function reviewNow(projectId, { evidence = EVIDENCE_ENABLED, freshEvidence = false, save = true, fallback = true, log, onEvent: hook } = {}) {
   if (running.has(projectId)) return running.get(projectId);
   const project = loadProject(projectId);
   if (!project) throw Object.assign(new Error("No such project."), { status: 404 });
   const panel = judges.list();
-  if (panel.length !== MAX_JUDGES) throw Object.assign(new Error(`The panel needs ${MAX_JUDGES} judges; it has ${panel.length}.`), { status: 409 });
+  // Whoever is on the panel judges: one, two or three seats filled all work. Only an empty panel can't.
+  if (!panel.length) throw Object.assign(new Error("There are no judges on the panel yet. Add one on /judge."), { status: 409 });
   if (!hasCredentials()) throw missingCredentialsError();
   if (evidence && !hasCredentials("0g")) throw missingCredentialsError("0g");
   const prog = { startedAt: new Date().toISOString(), events: [] };
   progress.set(projectId, prog);
-  const onEvent = (e) => prog.events.push({ at: new Date().toISOString(), ...e });
+  const onEvent = (e) => {
+    prog.events.push({ at: new Date().toISOString(), ...e });
+    try {
+      hook?.(e); // the pipeline ticks judges off as they finish
+    } catch {
+      /* a progress hook never breaks the review */
+    }
+  };
   const job = (async () => {
     if (evidence) {
       const records = await collectScreenshotEvidence(project, { fresh: freshEvidence, log });
       project.screenshotEvidenceRecords = records;
       project.screenshotEvidence = forJudges(records);
     }
-    const result = await runPanel(panel, project, { onEvent });
+    const result = await runPanel(panel, project, { onEvent, call: fallback ? undefined : callPrimary });
     // A run where no judge scored never replaces the last good result: the page keeps showing it.
     if (!result.reviews.some((r) => r.status === "scored")) {
       const why = [...new Set(result.reviews.map((r) => r.detail).filter(Boolean))].join(" ");
@@ -94,6 +110,7 @@ export async function reviewNow(projectId, { evidence = EVIDENCE_ENABLED, freshE
 }
 
 export const router = express.Router();
+router.use("/arena", arenaRouter);
 
 router.get("/health", (req, res) => {
   res.json({
@@ -105,6 +122,7 @@ router.get("/health", (req, res) => {
     providerLabel: PROVIDER_LABEL[PROVIDER],
     keyName: PROVIDER === "0g" ? "ZG_API_KEY" : PROVIDER === "openai" ? "OPENAI_API_KEY" : "ANTHROPIC_API_KEY",
     model: MODEL,
+    fallback: fallbackTarget(),
     voiceNotes: hasCredentials("0g") ? { model: zgModels.MODELS.transcribe } : null,
     arkiv: { read: canRead(), write: canWrite(), swarm: swarmConfigured(), publisher: publisher() },
   });
@@ -181,17 +199,54 @@ function reviewStatus(id) {
   if (!p) return { status: "not_started" };
   // Started but not finished and not in this server's line: running elsewhere (e.g. the CLI).
   if (!p.finishedAt) return p.startedAt ? { status: "reviewing" } : { status: "queued", position: null };
-  return { status: p.steps.some((x) => x.status === "failed") ? "stopped" : "reviewed" };
+  // Every step runs even when one fails: the review is done, with the failures shown.
+  return { status: "reviewed", failed: p.steps.filter((x) => x.status === "failed").length };
 }
 
 /** Submissions as the public sees them: no signature material. */
-const publicSubmission = ({ auth, ...rest }) => ({ ...rest, signed: Boolean(auth?.signature), review: reviewStatus(rest.id) });
+const publicSubmission = ({ auth, ...rest }) => ({ ...rest, signed: Boolean(auth?.signature), review: reviewStatus(rest.id), video: publicVideo(rest.id) });
+
+/** What the web app needs to play our copy of the demo video. */
+function publicVideo(id) {
+  const v = videos.get(id);
+  if (!v) return null;
+  if (v.error) return { saved: false, reason: v.error };
+  return { saved: true, url: `/api/projects/${encodeURIComponent(id)}/video/file`, seconds: v.seconds, bytes: v.bytes, source: v.source };
+}
+
+/** A demo needs a video or at least one screenshot. Returns an error string or null. */
+function checkDemo(body) {
+  const imgs = body.demoImages ?? [];
+  if (!Array.isArray(imgs) || imgs.length > MAX_IMAGES) return `Add up to ${MAX_IMAGES} screenshots.`;
+  for (const ref of imgs) {
+    const m = IMAGE_REF.exec(String(ref));
+    if (!m || !fs.existsSync(path.join(UPLOAD_DIR, m[1]))) return "One of the screenshots isn't on the server any more. Upload it again.";
+  }
+  if (!body.demoVideoUrl) return imgs.length ? null : "Add a demo video or some screenshots.";
+  return checkDemoVideo(body.demoVideoUrl);
+}
+
+/** Is this an acceptable demo video value? Returns an error string or null. */
+function checkDemoVideo(v) {
+  if (!v) return "Add a demo video.";
+  if (String(v).startsWith("upload:")) {
+    const m = UPLOAD_REF.exec(v);
+    return m && fs.existsSync(path.join(UPLOAD_DIR, m[1])) ? null : "That uploaded video isn't on the server any more. Upload it again.";
+  }
+  try {
+    return new URL(v).protocol === "https:" ? null : "The demo video link must start with https://.";
+  } catch {
+    return "The demo video link isn't a valid URL.";
+  }
+}
 
 router.get("/submissions", (req, res) => res.json(submissions.list().map(publicSubmission)));
 
 router.post("/submissions", rateLimit({ max: 5, windowMs: 60 * 60 * 1000 }), async (req, res) => {
   const body = req.body ?? {};
   if (!body.project?.name || !body.repoUrl || !body.ownerWallet) return res.status(400).json({ error: "Missing project name, repo or owner wallet." });
+  const videoError = checkDemo(body);
+  if (videoError) return res.status(400).json({ error: videoError });
   const sigError = await checkSubmissionSignature(body, {
     seen: (sig) => submissions.list().some((s) => String(s.auth?.signature ?? "").toLowerCase() === sig),
   });
@@ -251,6 +306,70 @@ router.get("/projects/:id/live", (req, res) => {
   }
 });
 
+/**
+ * Watch a cloud browser while the live test runs: an MJPEG stream of its newest
+ * screen frame (an <img> plays it). Ends when the run stops writing frames.
+ */
+router.get("/projects/:id/live/stream/:device", (req, res) => {
+  const { device } = req.params;
+  if (!/^(laptop|phone)$/.test(device)) return res.status(404).end();
+  const file = path.join(liveDir(req.params.id), device, "live.jpg");
+  const B = "arenaframe";
+  res.writeHead(200, {
+    "content-type": `multipart/x-mixed-replace; boundary=${B}`,
+    "cache-control": "no-store, no-cache, must-revalidate",
+    pragma: "no-cache",
+    connection: "close",
+    "x-content-type-options": "nosniff",
+  });
+  let last = 0;
+  let idleSince = Date.now();
+  const started = Date.now();
+  const send = () => {
+    let st;
+    try {
+      st = fs.statSync(file);
+    } catch {
+      st = null;
+    }
+    if (st && st.mtimeMs !== last) {
+      last = st.mtimeMs;
+      idleSince = Date.now();
+      let jpg;
+      try {
+        jpg = fs.readFileSync(file);
+      } catch {
+        return;
+      }
+      res.write(`--${B}\r\ncontent-type: image/jpeg\r\ncontent-length: ${jpg.length}\r\n\r\n`);
+      res.write(jpg);
+      res.write("\r\n");
+    }
+    // No new frame for 30 s (run finished or not started), or 20 min overall: stop.
+    if (Date.now() - idleSince > 30000 || Date.now() - started > 20 * 60 * 1000) stop();
+  };
+  const timer = setInterval(send, 200);
+  const stop = () => {
+    clearInterval(timer);
+    res.end();
+  };
+  req.on("close", () => clearInterval(timer));
+  send();
+});
+
+/** Is a device being watched right now? (a fresh live frame exists) */
+router.get("/projects/:id/live/now", (req, res) => {
+  const out = {};
+  for (const d of ["laptop", "phone"]) {
+    try {
+      out[d] = Date.now() - fs.statSync(path.join(liveDir(req.params.id), d, "live.jpg")).mtimeMs < 15000;
+    } catch {
+      out[d] = false;
+    }
+  }
+  res.json(out);
+});
+
 router.get("/projects/:id/live/files/:device/:file", (req, res) => {
   const { device, file } = req.params;
   if (!/^(laptop|phone)$/.test(device) || !/^(video\.mp4|smoke-(laptop|phone)-[a-z0-9]+\.jpg)$/.test(file)) return res.status(404).end();
@@ -258,6 +377,79 @@ router.get("/projects/:id/live/files/:device/:file", (req, res) => {
   if (!fs.existsSync(full)) return res.status(404).end();
   res.sendFile(full, { headers: { "cache-control": "private, max-age=3600" } });
 });
+
+/* ---- Demo videos ---- */
+
+const VIDEO_TYPES = new Set(["video/mp4", "video/quicktime", "video/webm", "application/octet-stream"]);
+
+/** Upload a demo video before signing: the returned ref goes into the signed submission. */
+router.post("/uploads/video", rateLimit({ max: 10, windowMs: 60 * 60 * 1000, message: "Too many uploads from here. Try again later." }), async (req, res) => {
+  const type = String(req.headers["content-type"] ?? "").split(";")[0].trim().toLowerCase();
+  if (!VIDEO_TYPES.has(type)) return res.status(415).json({ error: "Upload an MP4, MOV or WebM video." });
+  const declared = Number(req.headers["content-length"] ?? 0);
+  if (declared > VIDEO_MAX) return res.status(413).json({ error: `That video is over ${Math.round(VIDEO_MAX / 1048576)} MB.` });
+  try {
+    const up = await storeUpload(req, { declaredBytes: declared });
+    res.status(201).json({ ref: `upload:${up.file}`, url: `/api/uploads/${up.file}`, bytes: up.bytes, seconds: up.seconds });
+  } catch (e) {
+    if (!res.headersSent) res.status(e.status ?? 500).json({ error: e.status ? e.message : "The upload failed. Try again." });
+    req.resume();
+  }
+});
+
+router.post("/uploads/image", rateLimit({ max: 60, windowMs: 60 * 60 * 1000, message: "Too many uploads from here. Try again later." }), async (req, res) => {
+  const type = String(req.headers["content-type"] ?? "").split(";")[0].trim().toLowerCase();
+  if (!["image/png", "image/jpeg", "image/webp", "application/octet-stream"].includes(type)) return res.status(415).json({ error: "Upload a PNG, JPEG or WebP image." });
+  if (Number(req.headers["content-length"] ?? 0) > IMAGE_MAX) return res.status(413).json({ error: "That image is over 10 MB." });
+  try {
+    const up = await storeImageUpload(req);
+    res.status(201).json({ ref: `upload:${up.file}`, url: `/api/uploads/${up.file}`, bytes: up.bytes });
+  } catch (e) {
+    if (!res.headersSent) res.status(e.status ?? 500).json({ error: e.status ? e.message : "The upload failed. Try again." });
+    req.resume();
+  }
+});
+
+const sendVideo = (res, full, ext) =>
+  res.sendFile(full, { headers: { "content-type": MIME[ext], "x-content-type-options": "nosniff", "content-disposition": "inline", "cache-control": "private, max-age=3600" } });
+
+router.get("/uploads/:file", (req, res) => {
+  const { file } = req.params;
+  if (!UPLOAD_FILE.test(file)) return res.status(404).end();
+  const full = path.join(UPLOAD_DIR, file);
+  if (!fs.existsSync(full)) return res.status(404).end();
+  sendVideo(res, full, path.extname(file).slice(1));
+});
+
+router.get("/projects/:id/video", (req, res) => res.json({ video: publicVideo(req.params.id) }));
+
+router.get("/projects/:id/video/file", (req, res) => {
+  const v = videos.get(req.params.id);
+  if (!v || v.error || !MIME[v.ext]) return res.status(404).end();
+  const full = path.join(mediaDir(req.params.id), `demo.${v.ext}`);
+  if (!fs.existsSync(full)) return res.status(404).end();
+  sendVideo(res, full, v.ext);
+});
+
+// Uploads nobody submitted are removed after a day.
+const referencedUploads = () =>
+  new Set(
+    submissions
+      .list()
+      .flatMap((s) => [UPLOAD_REF.exec(s.demoVideoUrl ?? "")?.[1], ...(s.demoImages ?? []).map((r) => IMAGE_REF.exec(String(r))?.[1])])
+      .filter(Boolean),
+  );
+if (process.env.ARENA_SERVER === "1") {
+  const sweep = () => {
+    try {
+      cleanUploads(referencedUploads());
+    } catch (e) {
+      console.warn("[uploads] clean-up failed:", e.message);
+    }
+  };
+  sweep();
+  setInterval(sweep, 60 * 60 * 1000).unref();
+}
 
 /** Delete a submitted project and everything stored for it. */
 router.delete("/projects/:id", requireOrganizer, (req, res) => {
@@ -310,7 +502,8 @@ router.post(
     publicDay.n++;
     lastRun.set(id, Date.now());
     // Reuse screenshot observations already read on 0G (free); never pay for new ones from a public click.
-    reviewNow(id, { evidence: EVIDENCE_ENABLED || hasCachedEvidence(project) }).catch((e) => console.error(`[judges] public review of ${id} failed: ${e.message}`));
+    // Public runs show real 0G inference, so they never fall back to (and pay for) OpenAI.
+    reviewNow(id, { evidence: EVIDENCE_ENABLED || hasCachedEvidence(project), fallback: false }).catch((e) => console.error(`[judges] public review of ${id} failed: ${e.message}`));
     res.status(202).json({ running: true, progress: progress.get(id) ?? null });
   },
 );

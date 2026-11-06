@@ -9,6 +9,7 @@
     "test": "node --test test/",
     "judge": "node src/judges/run.mjs",
     "review": "node src/reviewer/run.mjs",
+    "videos": "node src/reviewer/save-videos.mjs",
     "arkiv": "node src/arkiv/run.mjs"
   },
   "keywords": [],

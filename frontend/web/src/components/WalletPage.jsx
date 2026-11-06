@@ -11,7 +11,7 @@ import { CONTRACTS, EVENT } from "../config/event.js";
 import { formatAmount, listTournaments, pools, publicClient, read, toUnits, token, usePoll, useToken, useTx } from "../lib/chain.js";
 import { POOL_LABEL, POOL_STATE, matchMarket, tournamentMarket } from "../lib/pools.js";
 import { Link } from "../lib/router.jsx";
-import { AddressLink, AnimatedNumber, TESTNET_NOTE, TxStatus, WalletGate } from "./ChainBits.jsx";
+import { AddressLink, AnimatedNumber, TxStatus, WalletGate } from "./ChainBits.jsx";
 import { fadeUp, popIn, stagger } from "./fx.jsx";
 
 const BURST = ["#ffd43b", "#ff5c93", "#2f4bf0"];
@@ -103,7 +103,7 @@ function BuySell({ wallet, info, data, onChanged }) {
         </Button>
       </form>
       <TxStatus tx={tx} onDismiss={reset} />
-      <p className="t-caption m0">{`Fixed price: 0.00001 ${native} buys 1,000 ${symbol}. Gas is extra and doesn't come back. ${TESTNET_NOTE}`}</p>
+      <p className="t-caption m0">{`0.00001 ${native} = 1,000 ${symbol}, plus gas.`}</p>
     </Card>
   );
 }
@@ -113,17 +113,17 @@ function BackingCard({ info, data }) {
   return (
     <Card variant="surface" className="backing">
       <div className="section-head">
-        <h2 className="t-heading m0">Escrow proof</h2>
+        <h2 className="t-heading m0">Reserves</h2>
         {backed == null ? <StatusPill>Checking…</StatusPill> : <StatusPill tone={backed ? "success" : "danger"}>{backed ? "Fully backed" : "Not backed"}</StatusPill>}
       </div>
-      <p className="t-body m0 muted">Every {info.symbol} is backed by {EVENT.network.symbol} in the contract. No admin can withdraw it, and it only leaves when someone sells back.</p>
+      <p className="t-body m0 muted">Every {info.symbol} is backed by {EVENT.network.symbol} held in the contract. It only leaves when someone sells back.</p>
       <dl className="backing__rows">
         <div>
           <dt className="t-caption">{EVENT.network.symbol} held</dt>
           <dd className="t-num t-body-strong">{data ? formatAmount(data.heldEth, 18, 6) : "—"}</dd>
         </div>
         <div>
-          <dt className="t-caption">{info.symbol} in existence</dt>
+          <dt className="t-caption">{info.symbol} supply</dt>
           <dd className="t-num t-body-strong">{data ? formatAmount(data.supply, info.decimals) : "—"}</dd>
         </div>
         <div>
@@ -187,7 +187,7 @@ function Positions({ wallet, info, onChanged }) {
         <div className="skeleton positions__skeleton" aria-label="Loading positions" />
       ) : !data?.length ? (
         <Card variant="surface" className="empty">
-          <span className="t-body muted">No bets yet. Pick a tournament and back a fighter.</span>
+          <span className="t-body muted">No bets yet.</span>
           <Link className="btn btn--secondary btn--sm" to="/tournaments">
             See tournaments
           </Link>
@@ -252,12 +252,13 @@ export function WalletPage({ wallet }) {
     <div className="stack stack--page">
       <header className="intro intro--row">
         <div className="intro">
-          <span className="eyebrow rise">Your corner</span>
           <h1 className="t-display-lg m0 rise" style={{ "--i": 1 }}>
-            Your <span className="hl hl--sunny">wallet</span>
+            Wallet
           </h1>
+          <p className="t-body m0 muted rise" style={{ "--i": 2 }}>
+            Buy FILTER to bet on fights. Testnet only, no real value.
+          </p>
         </div>
-        <StatusPill tone="neutral">Testnet · no real value</StatusPill>
       </header>
 
       <WalletGate wallet={wallet} reason="to buy and bet" />

@@ -56,11 +56,11 @@ function Header({ title, state }) {
   );
 }
 
-export function BetPanel({ wallet, tournamentId, market, selections, title }) {
-  const info = useToken();
+/** Live chain reads for one pool and this wallet: stakes, limits, balance, allowance. */
+export function usePoolData(wallet, tournamentId, market, selections) {
   const address = wallet.address;
   const key = `${market}:${selections.map((s) => s.id).join(",")}:${address}`;
-  const { data, error, refresh } = usePoll(
+  return usePoll(
     async () => {
       const [pool, stateIndex, view, limits] = await Promise.all([
         read(pools, "getPool", [market]),
@@ -86,6 +86,12 @@ export function BetPanel({ wallet, tournamentId, market, selections, title }) {
     [key],
     8000,
   );
+}
+
+export function BetPanel({ wallet, tournamentId, market, selections, title }) {
+  const info = useToken();
+  const address = wallet.address;
+  const { data, error, refresh } = usePoolData(wallet, tournamentId, market, selections);
   const countdown = useCountdown(data?.state === "OPEN" ? Number(data.view.cutoff) * 1000 : null);
   const { tx, run, reset, busy } = useTx(wallet, refresh);
   const [picked, setPicked] = useState(null);
@@ -177,7 +183,7 @@ export function BetPanel({ wallet, tournamentId, market, selections, title }) {
                 share={share}
                 stakeText={`${fmt(data.stakes[i])} ${symbol}`}
                 mine={data.mine[i] > 0n ? `${fmt(data.mine[i])} ${symbol}` : null}
-                disabled={!open}
+                disabled={!open || data.blocked}
                 onSelect={() => setPicked(s.id)}
               />
               {!two && <Progress value={share} label={`${s.project.name} has ${share}% of the pool`} tone="reward" />}
@@ -190,7 +196,7 @@ export function BetPanel({ wallet, tournamentId, market, selections, title }) {
         <>
           <WalletGate wallet={wallet} reason="to bet" />
           {data.blocked ? (
-            <p className="t-body m0 bet__blocked">This wallet is taking part in the tournament, so it can't bet here.</p>
+            <p className="t-body m0 bet__blocked">This wallet is running or competing in this tournament, so it can't bet here. Switch to a different MetaMask account to bet.</p>
           ) : wallet.onTargetNetwork && address ? (
             <div className="stack">
               {data.balance === 0n ? (
@@ -304,13 +310,12 @@ export function BetPanel({ wallet, tournamentId, market, selections, title }) {
   );
 }
 
-/** The same panel for sample tournaments: nothing can be bet. */
+/** The same panel for demo (fallback) tournaments: nothing can be bet. */
 export function SamplePool({ title, total, selections, shares }) {
   return (
     <Card className="bet">
       <div className="section-head">
         <h2 className="t-heading m0">{title}</h2>
-        <StatusPill tone="neutral">Sample</StatusPill>
       </div>
       <div className="bet__total">
         <span className="t-caption">Pool total</span>
@@ -326,11 +331,7 @@ export function SamplePool({ title, total, selections, shares }) {
         ))}
       </motion.div>
       <p className="t-caption m0">
-        Sample data, so betting is off here.{" "}
-        <Link to="/organizer" className="link">
-          Create a real tournament
-        </Link>{" "}
-        to bet with FILTER.
+        Live data is unavailable, so this is demo data and betting is off.
       </p>
     </Card>
   );

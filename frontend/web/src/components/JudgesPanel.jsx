@@ -4,7 +4,7 @@
  * backend is offline. Scores are integer hundredths computed by the backend.
  */
 import { useEffect, useState } from "react";
-import { motion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import { StatusPill } from "@ds/ui.jsx";
 import { api, health } from "../lib/api.js";
 import { useCountUp } from "../lib/motion.js";
@@ -61,44 +61,73 @@ function JudgeCard({ r, i }) {
   }
   const rv = r.review;
   const rows = rv.criteria.map((c) => ({ ...c, w: j.weights?.[c.id] ?? 0 })).sort((a, b) => b.w - a.w);
+  return <ScoredCard r={r} i={i} j={j} rv={rv} rows={rows} />;
+}
+
+const band = (n) => (n >= 70 ? "high" : n >= 50 ? "mid" : "low");
+
+/** A judge who scored: who, score, headline, the comment (expandable), and a compact per-criterion breakdown. */
+function ScoredCard({ r, i, j, rv, rows }) {
+  const [more, setMore] = useState(false);
+  const [open, setOpen] = useState(null);
+  const long = rv.comment.length > 260;
   return (
-    <article className="card jcard rise" style={{ "--i": i }}>
-      <div className="jcard__who">
-        <Ring compact className="jcard__ring">
+    <article className={`card jcard jcard--${["crush", "oracle", "sunny"][i % 3]} rise`} style={{ "--i": i }}>
+      <header className="jcard__top">
+        <span className="jcard__face">
           <PixelFighter project={judgeAsFighter(j)} scale={3} label={`${j.name}, judge`} />
-        </Ring>
-        <div className="jcard__name">
+        </span>
+        <span className="jcard__id">
           <span className="t-body-strong">{j.name}</span>
           <span className="t-caption jcard__title">{j.title}</span>
-        </div>
-        <Score hundredths={r.overallHundredths} />
+        </span>
+        <span className={`jcard__score jcard__score--${band(r.overallHundredths / 100)}`}>
+          <Score hundredths={r.overallHundredths} />
+        </span>
+      </header>
+      <p className="jcard__headline m0">{rv.headline}</p>
+      <div className="jcard__say">
+        <p className={`t-body m0 jcard__comment ${more || !long ? "jcard__comment--open" : ""}`}>{rv.comment}</p>
+        {long && (
+          <button type="button" className="jcard__toggle" onClick={() => setMore((m) => !m)} aria-expanded={more}>
+            {more ? "Show less" : "Read more"}
+          </button>
+        )}
       </div>
-      <p className="t-body-strong m0">{rv.headline}</p>
-      <p className="t-body m0 jcard__comment">{rv.comment}</p>
       {rv.dealBreakerHit && <StatusPill tone="danger">✕ Deal-breaker: {rv.dealBreakerNote}</StatusPill>}
-      <JudgeTraces traces={r.traces} />
-      <details className="jcard__more">
-        <summary className="t-label">How {j.name.split(" ")[0]} scored each part</summary>
-        <ul className="crit">
-          {rows.map((c) => (
-            <li key={c.id}>
-              <div className="crit__head">
-                <span className="t-caption">
-                  <span className="t-body-strong">{LABELS[c.id]}</span> · counts {c.w}%
-                </span>
-                <span className="t-caption t-num">{c.score}</span>
-              </div>
-              <span className="crit__track" aria-hidden="true">
-                <motion.span initial={{ width: 0 }} whileInView={{ width: `${c.score}%` }} viewport={{ once: true }} transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }} />
-              </span>
-              <span className="t-caption">{c.comment}</span>
-            </li>
-          ))}
+      <div className="jcard__parts">
+        <span className="t-label">How {j.name.split(" ")[0]} scored each part</span>
+        <ul className="jcrit">
+          {rows.map((c) => {
+            const isOpen = open === c.id;
+            return (
+              <li key={c.id} className={`jcrit__row ${isOpen ? "jcrit__row--open" : ""}`}>
+                <button type="button" className="jcrit__btn" onClick={() => setOpen(isOpen ? null : c.id)} aria-expanded={isOpen} title="Show why">
+                  <span className="jcrit__name">
+                    {LABELS[c.id]}
+                    <span className="jcrit__w"> {c.w}%</span>
+                  </span>
+                  <span className="jcrit__track" aria-hidden="true">
+                    <motion.span className={`jcrit__fill jcrit__fill--${band(c.score)}`} initial={{ width: 0 }} whileInView={{ width: `${c.score}%` }} viewport={{ once: true }} transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }} />
+                  </span>
+                  <span className="jcrit__n t-num">{c.score}</span>
+                </button>
+                <AnimatePresence initial={false}>
+                  {isOpen && (
+                    <motion.p className="jcrit__why m0" initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}>
+                      {c.comment}
+                    </motion.p>
+                  )}
+                </AnimatePresence>
+              </li>
+            );
+          })}
         </ul>
-        <p className="t-mono-caption m0">
-          {rv.certainty} certainty · persona v{j.version} · {Math.round((r.ms ?? 0) / 1000)} s
-        </p>
-      </details>
+      </div>
+      <JudgeTraces traces={r.traces} />
+      <p className="t-mono-caption m0 jcard__meta">
+        {rv.certainty} certainty · persona v{j.version} · {Math.round((r.ms ?? 0) / 1000)} s
+      </p>
     </article>
   );
 }
@@ -186,7 +215,7 @@ export function JudgesPanel({ project }) {
 
   return (
     <section className="card stack judges rise" style={{ "--i": 1 }} aria-labelledby="judges-h">
-      <div className="verdict__head">
+      <div className="verdict__head judges__head">
         <div className="stack-xs">
           <span className="t-label" id="judges-h">
             Judges' panel
@@ -219,7 +248,7 @@ export function JudgesPanel({ project }) {
       {h && <ArkivRecord projectId={project.id} ranAt={result?.ranAt} />}
 
       {result ? (
-        <div className="jcards">
+        <div className="jcards" style={{ "--n": Math.min(3, result.reviews.length) }}>
           {result.reviews.map((r, i) => (
             <JudgeCard key={r.judge.id} r={r} i={i} />
           ))}

@@ -18,7 +18,7 @@ export function usePath() {
   return path;
 }
 
-/** "/" landing, "/projects" dashboard, "/projects/:id" one project, "/submit" the form, "/judge" the judges, "/fight-demo" the fight player, plus the arena and betting pages below. Unknown paths land home. */
+/** "/" landing, "/projects" dashboard, "/projects/:id" one project, "/submit" the form, "/judge" the judges, plus the arena and betting pages below. Unknown paths land home. */
 export function matchRoute(path) {
   const p = path.replace(/\/+$/, "") || "/";
   if (p === "/submit") return { name: "form" };
@@ -31,7 +31,6 @@ export function matchRoute(path) {
   const fight = p.match(/^\/fights\/([^/]+)\/(\d+)$/);
   if (fight) return { name: "matchFight", id: decodeURIComponent(fight[1]), match: Number(fight[2]) };
   if (p === "/judge" || p === "/judges") return { name: "judges" };
-  if (p === "/fight-demo") return { name: "fight" };
   if (p === "/projects") return { name: "projects" };
   const m = p.match(/^\/projects\/([^/]+)$/);
   if (m) return { name: "project", id: decodeURIComponent(m[1]) };

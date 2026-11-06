@@ -408,6 +408,7 @@ contract TournamentManager is AccessControl {
     }
 
     function _roundsFor(uint256 count) private pure returns (uint256) {
+        if (count == 2) return 1; // a single final: two projects, one fight
         if (count == 4) return 2;
         if (count == 8) return 3;
         if (count == 16) return 4;

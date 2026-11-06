@@ -48,5 +48,6 @@ test("review polling stays active for both running and queued pipelines, retaini
   }
   assert.equal(status(ids[0]).running, false);
   assert.equal(status(ids[1]).running, false);
-  assert.deepEqual(judgeOptions, [{ freshEvidence: true }, { freshEvidence: true }]);
+  assert.deepEqual(judgeOptions.map(({ onEvent, log, ...rest }) => rest), [{ freshEvidence: true }, { freshEvidence: true }]);
+  assert.ok(judgeOptions.every((o) => typeof o.onEvent === "function"), "the pipeline listens for each judge finishing");
 });

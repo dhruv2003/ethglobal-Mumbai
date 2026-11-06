@@ -8,83 +8,8 @@
 import { useEffect, useState } from "react";
 import { Progress, StatusPill } from "@ds/ui.jsx";
 import { api, health } from "../lib/api.js";
-import { Spinner } from "./Feedback.jsx";
 import { LiveTest } from "./LiveTest.jsx";
 
-const TALLY = [
-  ["supported_by_code", "success", "supported by code"],
-  ["contradicted", "danger", "contradicted"],
-  ["unverified", "neutral", "unverified"],
-  ["submitted_claim", "neutral", "can't check from code"],
-];
-
-const STEP_STATE = {
-  queued: { tone: "neutral", word: "Queued" },
-  running: { tone: "live", word: "Working" },
-  done: { tone: "success", word: "✓ Done" },
-  failed: { tone: "danger", word: "✕ Failed" },
-  skipped: { tone: "neutral", word: "Skipped" },
-};
-const DEFAULT_STEPS = ["Fetch the repository", "Pin the commit", "Count the tests", "Read the demo video", "Build the evidence dossier", "Test the live app on cloud browsers", "Judges score it"].map((title, i) => ({ id: `s${i}`, title, status: "queued" }));
-
-export function DossierPending({ project, state, running, review, offline, onRerun, rerunError }) {
-  const steps = state?.steps ?? DEFAULT_STEPS;
-  const failed = steps.some((s) => s.status === "failed");
-  const done = Boolean(state?.finishedAt) && !running;
-  const queued = review?.status === "queued";
-  const head = offline
-    ? { tone: "neutral", word: "Review service offline" }
-    : queued
-      ? { tone: "neutral", word: review.position ? `In the review queue · #${review.position}` : "In the review queue" }
-      : running
-        ? { tone: "live", word: "Reviewing now" }
-        : failed
-          ? { tone: "danger", word: "✕ Review stopped" }
-          : done
-            ? { tone: "neutral", word: "Review finished without a dossier" }
-            : { tone: "neutral", word: "Waiting for the reviewer" };
-  const busy = !offline && (queued || running);
-  return (
-    <div className="card stack">
-      <div className="review-head">
-        {busy && <Spinner size={22} label={head.word} />}
-        <StatusPill tone={head.tone}>{head.word}</StatusPill>
-      </div>
-      <p className="t-body m0">
-        {queued && review.ahead > 0
-          ? `Reviews run one at a time. ${review.ahead} ${review.ahead === 1 ? "project is" : "projects are"} ahead of ${project.name}. `
-          : ""}
-        The reviewer fetches {project.name}'s repo, pins the commit and checks the team's claims against the code. Nothing from the repo is ever run.
-      </p>
-      <ol className="pending-steps">
-        {steps.map((s, i) => {
-          const st = STEP_STATE[s.status] ?? STEP_STATE.queued;
-          return (
-            <li key={s.id} className={`rise pending-steps__item pending-steps__item--${s.status}`} style={{ "--i": i }}>
-              <span className="pending-steps__num t-num">{i + 1}</span>
-              <span className="stack-xs pending-steps__text">
-                <span className="t-body">{s.title}</span>
-                {s.detail && <span className="t-caption">{s.detail}</span>}
-              </span>
-              <span className="pending-steps__state">
-                {s.status === "running" && <Spinner size={16} label={`${s.title}: working`} />}
-                <StatusPill tone={st.tone}>{st.word}</StatusPill>
-              </span>
-            </li>
-          );
-        })}
-      </ol>
-      {(failed || done) && onRerun && (
-        <div className="judges__foot">
-          {rerunError && <span className="field__error">✕ {rerunError}</span>}
-          <button type="button" className="btn btn--secondary btn--sm" onClick={onRerun}>
-            Run the review again
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}
 
 /** For submitted projects: follow the backend pipeline live until the dossier exists. */
 function useLiveDossier(project) {
@@ -118,7 +43,13 @@ function useLiveDossier(project) {
 function Findings({ title, tone, items, i }) {
   return (
     <section className={`card stack findings findings--${tone} rise`} style={{ "--i": i }}>
-      <h3 className="t-heading m0">{title}</h3>
+      <h3 className="findings__title m0">
+        <span className="findings__badge" aria-hidden="true">
+          {tone === "good" ? "✓" : "!"}
+        </span>
+        {title}
+        <span className="findings__n t-num">{items.length}</span>
+      </h3>
       <ul className="findings__list">
         {items.map((x) => (
           <li key={x.text} className="t-body">
@@ -131,75 +62,45 @@ function Findings({ title, tone, items, i }) {
 }
 
 export function Dossier({ project }) {
-  const [live, refresh] = useLiveDossier(project);
-  const [rerunError, setRerunError] = useState("");
+  const [live] = useLiveDossier(project);
   const d = project.dossier ?? live.dossier;
-  if (!d?.highlights) {
-    const rerun = async () => {
-      setRerunError("");
-      try {
-        await api(`/projects/${encodeURIComponent(project.id)}/pipeline`, { method: "POST" });
-        refresh();
-      } catch (e) {
-        setRerunError(e.status === 401 || e.status === 403 ? "Needs the organizer key (set it on /judge)." : e.message);
-      }
-    };
-    return (
-      <>
-        <DossierPending project={project} state={live.state} running={live.running} review={live.review} offline={live.offline} onRerun={project.kind === "submitted" ? rerun : undefined} rerunError={rerunError} />
-        <LiveTest project={project} pending={live.running || live.review?.status === "queued"} />
-      </>
-    );
-  }
+  // No fact-check yet (or it couldn't run): the pipeline view above says why.
+  if (!d?.highlights) return <LiveTest project={project} pending={live.running || live.review?.status === "queued"} />;
   const h = d.highlights;
-  const count = (s) => d.evidence.filter((e) => e.status === s).length;
   const c = d.continuity;
   const total = (c?.commitsBefore ?? 0) + (c?.commitsDuringEvent ?? 0);
-  const rerun = live.state && !live.state.finishedAt ? live.state.steps.findIndex((x) => x.status === "running") : -1;
 
   return (
     <div className="judge">
-      {rerun >= 0 && (
-        <div className="rerun-banner" role="status">
-          <Spinner size={18} label="A new review is running" />
-          <span className="t-body">
-            A new review is running · step {rerun + 1} of {live.state.steps.length}: {live.state.steps[rerun].title}. These results update when it finishes.
-          </span>
-        </div>
-      )}
-      <section className="card stack judge__verdict rise" style={{ "--i": 0 }} aria-label="Verdict">
-        <span className="t-label">Verdict</span>
-        <p className="t-prompt m0">{h.headline}</p>
-        <div className="tally" aria-label={`${d.evidence.length} claims checked`}>
-          {TALLY.filter(([s]) => count(s)).map(([s, tone, word]) => (
-            <StatusPill key={s} tone={tone}>
-              <span className="t-num">{count(s)}</span> {word}
-            </StatusPill>
-          ))}
-        </div>
-      </section>
-
       <LiveTest project={project} />
 
+      <div className="sect-head">
+        <span className="t-label">What the fact-check found</span>
+        <span className="t-caption">
+          {d.evidence.length} claims checked against the code at {d.commit.slice(0, 7)}
+        </span>
+      </div>
       <div className="judge__pair">
         <Findings title="What holds up" tone="good" items={h.holdsUp} i={1} />
         <Findings title="What to watch" tone="watch" items={h.watch} i={2} />
       </div>
 
       <div className="judge__pair">
-        <section className="card stack rise" style={{ "--i": 3 }} aria-label="Tests">
+        <section className="card stack ftile ftile--oracle rise" style={{ "--i": 3 }} aria-label="Tests">
           <div className="verdict__head">
             <span className="t-label">Tests</span>
             <StatusPill tone="neutral">{d.tests.status === "not_run" ? "Not run yet" : d.tests.status}</StatusPill>
           </div>
           <p className="m0">
             <span className="stat__value t-num">{d.tests.found.vitestCases.toLocaleString()}</span>{" "}
-            <span className="t-body">JS/TS + {d.tests.found.forgeTests} Solidity tests found</span>
+            <span className="t-body">
+              JS/TS + {d.tests.found.forgeTests} Solidity{d.tests.found.pyTests ? ` + ${d.tests.found.pyTests} Python` : ""} tests found
+            </span>
           </p>
           <span className="t-caption">{d.tests.claimed ? `Team says ${d.tests.claimed}. ` : ""}Counted from the code, not run.</span>
         </section>
         {c && (
-          <section className="card stack rise" style={{ "--i": 4 }} aria-label="Built at the event">
+          <section className="card stack ftile ftile--sunny rise" style={{ "--i": 4 }} aria-label="Built at the event">
             <span className="t-label">Built at the event</span>
             <p className="m0">
               <span className="stat__value t-num">{c.commitsDuringEvent}</span> <span className="t-body">of {total} commits</span>

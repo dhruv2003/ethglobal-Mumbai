@@ -74,7 +74,7 @@ The contract works out participants itself, so nobody can place an invented oppo
 | Function | Caller | What it does |
 | --- | --- | --- |
 | `createTournament(config)` | Organizer | Stores `configHash`, capacity, schedule, wallets and bet limits. Validates ORG-02, including the resolution deadline being at least `(rounds + 1) × 24h` after start |
-| `freeze(id, projects, seed, bracketHash)` | Organizer | Stores seeded projects (owner wallet, reward wallet, snapshot hash). Count must be 4, 8 or 16 and within capacity. Fixes recipients, blocks participant wallets from betting, and opens the tournament pool |
+| `freeze(id, projects, seed, bracketHash)` | Organizer | Stores seeded projects (owner wallet, reward wallet, snapshot hash). Count must be 2, 4, 8 or 16 and within capacity (2 = a single final). Fixes recipients, blocks participant wallets from betting, and opens the tournament pool |
 | `openMatch(id, match, cutoff, start)` | Publisher | Opens a match pool. Requires `now < cutoff ≤ start`, `start` at or after the tournament cutoff and before its deadline. Deadline is `min(start + 24h, tournament deadline)` |
 | `publishResult(id, match, scoreA, scoreB, tieA, tieB, resultHash)` | Publisher | Requires `now ≥ cutoff`, `now < deadline`, scores ≤ 10000. Contract applies the tie rule below |
 | `resolveHumanReview(id, match, winner, rationaleHash)` | Reviewer | Only in human review, only before the deadline, and the winner must be one of the two participants |

@@ -15,17 +15,21 @@ import { MUMBAI_SCENES, sceneryForMatch, sceneryIdentity } from "./scenery.js";
 const GY = SCENE.ground;
 const OUTCOME_WORD = { hit: "Hit", graze: "Graze", block: "Block", clash: "Clash" };
 
-/** Largest whole-number scale that fits the container (integer pixels only). */
-function useIntegerScale(min = 2, max = 12) {
+/** Largest whole-number scale that fits the container (integer pixels only). `fit` also respects its height. */
+function useIntegerScale(min = 2, max = 12, fit = false) {
   const ref = useRef(null);
   const [scale, setScale] = useState(min);
   useEffect(() => {
     const el = ref.current;
     if (!el) return undefined;
-    const ro = new ResizeObserver(([e]) => setScale(Math.max(min, Math.min(max, Math.floor(e.contentRect.width / SCENE.w)))));
+    const ro = new ResizeObserver(([e]) => {
+      const { width, height } = e.contentRect;
+      const byWidth = width / SCENE.w;
+      setScale(Math.max(min, Math.min(max, Math.floor(fit && height > 0 ? Math.min(byWidth, height / SCENE.h) : byWidth))));
+    });
     ro.observe(el);
     return () => ro.disconnect();
-  }, [min, max]);
+  }, [min, max, fit]);
   return [ref, scale];
 }
 
@@ -190,8 +194,8 @@ export function captionFor(match, state, event) {
   }
 }
 
-export function FightStage({ match, state, event, ms, reduced = false, captions = true, typing = true }) {
-  const [wrap, scale] = useIntegerScale();
+export function FightStage({ match, state, event, ms, reduced = false, captions = true, typing = true, fit = false }) {
+  const [wrap, scale] = useIntegerScale(2, fit ? 24 : 12, fit);
   const traits = useMemo(() => ({ a: fighterTraits(match.fighters.a), b: fighterTraits(match.fighters.b) }), [match]);
   const [sceneChoice, setSceneChoice] = useState(null);
   const sceneKey = sceneryIdentity(match);
@@ -208,7 +212,7 @@ export function FightStage({ match, state, event, ms, reduced = false, captions 
   const review = state.review?.status === "pending";
 
   return (
-    <div ref={wrap} className="fs-wrap">
+    <div ref={wrap} className={`fs-wrap ${fit ? "fs-wrap--fit" : ""}`}>
       <div className="fs" style={{ width: w, height: h }}>
         <svg className="fs__scene" viewBox={`0 0 ${SCENE.w} ${SCENE.h}`} width={w} height={h} shapeRendering="crispEdges" aria-hidden="true">
           <g transform={`translate(${shakeX} 0)`}>
@@ -265,21 +269,17 @@ export function FightStage({ match, state, event, ms, reduced = false, captions 
           </div>
         )}
       </div>
-      <div className="fs-locations">
-        <div className="fs-locations__heading">
-          <span className="t-label">Mumbai stages</span>
-          <span className="t-caption">{scenery.detail}</span>
-        </div>
-        <div className="fs-locations__options" role="group" aria-label="Arena scenery">
+      {!fit && <div className="fs-locations">
+        <span className="t-label fs-locations__heading">Stage</span>
+        <div className="fs-locations__options" role="group" aria-label="Stage">
           {MUMBAI_SCENES.map((scene) => (
-            <button key={scene.id} type="button" aria-pressed={scenery.id === scene.id} onClick={() => setSceneChoice({ key: sceneKey, scene })}>
+            <button key={scene.id} type="button" aria-pressed={scenery.id === scene.id} title={scene.detail} onClick={() => setSceneChoice({ key: sceneKey, scene })}>
               <span className="fs-locations__swatch" style={{ background: scene.color }} aria-hidden="true" />
               {scene.name}
             </button>
           ))}
         </div>
-        <p className="fs-locations__cast t-caption">Local legends: <b>{traits.a.archetypeName}</b> <span aria-hidden="true">×</span><span className="sr-only">versus</span> <b>{traits.b.archetypeName}</b></p>
-      </div>
+      </div>}
       <p className="sr-only" aria-live="polite">{cap.who ? `${cap.who}: ${cap.text}` : cap.text}</p>
     </div>
   );
