@@ -8,6 +8,7 @@ import { prefersReducedMotion } from "../lib/motion.js";
 import { PixelFighter } from "./PixelFighter.jsx";
 import { Link } from "../lib/router.jsx";
 import { shortAddress } from "../lib/wallet.js";
+import { StorageProof } from "./ZeroGProof.jsx";
 
 /* The celebration palette: the three brand colours plus ink. */
 const BURST = ["#ff5c93", "#2f4bf0", "#ffd43b", "#17141f", "#ffe3ec"];
@@ -73,8 +74,13 @@ export function Success({ record, onStartOver }) {
           </div>
         </dl>
         <p className="t-mono-caption m0">
-          id {record.id} · signed {new Date(record.auth.issuedAt).toLocaleString()}
+          id {record.id} · signed {new Date(record.auth?.issuedAt ?? record.submittedAt).toLocaleString()}
         </p>
+        {record.savedLocallyOnly ? (
+          <p className="t-caption m0">Saved in this browser only: the server was offline, so it isn't on 0G Storage yet.</p>
+        ) : (
+          record.zgStorage && <StorageProof kind="submission" id={record.id} initial={record.zgStorage} />
+        )}
       </motion.div>
       <motion.div className="success__actions" initial="hidden" animate="show" variants={stagger(0.08, 0.5)}>
         <motion.span variants={fadeUp}>

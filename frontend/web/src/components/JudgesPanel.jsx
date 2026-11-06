@@ -11,7 +11,7 @@ import { useCountUp } from "../lib/motion.js";
 import { Ring } from "./Arena.jsx";
 import { judgeAsFighter } from "./JudgesPage.jsx";
 import { PixelFighter } from "./PixelFighter.jsx";
-import { EvidenceList, JudgeTraces, LiveCalls, PanelProof } from "./ZeroGProof.jsx";
+import { EvidenceList, JudgeTraces, LiveCalls, PanelProof, StorageProof } from "./ZeroGProof.jsx";
 
 const LABELS = {
   product_journey: "Product journey",
@@ -114,17 +114,19 @@ export function JudgesPanel({ project }) {
       let result = null;
       let running = false;
       let progress = null;
+      let zgStorage = null;
       if (h) {
         try {
           const r = await api(path);
           result = r.result;
           running = r.running;
           progress = r.progress;
+          zgStorage = r.zgStorage ?? null;
         } catch {
           /* keep the stored one */
         }
       }
-      if (live) setState({ loading: false, health: h, result: result ?? project.reviews ?? null, running, progress });
+      if (live) setState({ loading: false, health: h, result: result ?? project.reviews ?? null, running, progress, zgStorage });
     })();
     return () => {
       live = false;
@@ -139,7 +141,7 @@ export function JudgesPanel({ project }) {
       try {
         const r = await api(path);
         if (!live) return;
-        setState((s) => ({ ...s, running: r.running, progress: r.progress, result: r.running ? s.result : (r.result ?? s.result) }));
+        setState((s) => ({ ...s, running: r.running, progress: r.progress, result: r.running ? s.result : (r.result ?? s.result), zgStorage: r.zgStorage ?? s.zgStorage }));
         if (!r.running && r.progress?.error) setError(r.progress.error);
       } catch {
         /* try again next tick */
@@ -164,7 +166,7 @@ export function JudgesPanel({ project }) {
         setState((s) => ({ ...s, running: true, progress: r.progress }));
       } else {
         const r = await api(path, { method: "POST" });
-        setState((s) => ({ ...s, result: r.result, running: false }));
+        setState((s) => ({ ...s, result: r.result, running: false, zgStorage: r.zgStorage ?? s.zgStorage }));
       }
     } catch (e) {
       setError(e.message);
@@ -213,6 +215,7 @@ export function JudgesPanel({ project }) {
       {state.running && <LiveCalls progress={state.progress} />}
 
       <PanelProof result={result} />
+      {h && state.zgStorage && <StorageProof kind="review" id={project.id} initial={state.zgStorage} />}
 
       {result ? (
         <div className="jcards">

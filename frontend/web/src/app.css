@@ -866,6 +866,10 @@ fieldset.field { border: 0; margin: 0; padding: 0; min-width: 0; }
 .zgpanel__head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
 .zgpanel__ids > summary, .zgevidence > summary { cursor: pointer; padding: var(--space-1) 0; }
 .zgpanel__ids .zgtrace__list { margin-top: var(--space-2); }
+.zgstore { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-3); border-radius: var(--radius-md); background: var(--surface-sunken); min-width: 0; }
+.zgstore__row { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+.zgstore__links { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+.zgstore__verify { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
 .zgevidence { display: flex; flex-direction: column; gap: var(--space-2); }
 .zgevidence__list { list-style: none; margin: var(--space-2) 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: var(--space-3); }
 .zgevidence__item { display: flex; flex-direction: column; gap: var(--space-1); padding: var(--space-3); border: 1px solid var(--line); border-radius: var(--radius-md); min-width: 0; }

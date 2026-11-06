@@ -82,7 +82,10 @@ export function listSubmissions() {
 
 /**
  * Save to the backend (POST /api/submissions), which also starts the judges'
- * review. If the backend is offline, keep it in this browser instead.
+ * review and archives the signed record on 0G Storage. The returned record
+ * carries `zgStorage` ({ status: pending | stored | failed | off, rootHash, ... }),
+ * which the success screen shows. If the backend is offline, keep it in this
+ * browser instead (marked savedLocallyOnly, never on 0G).
  */
 export async function saveSubmission(payload) {
   let record;
