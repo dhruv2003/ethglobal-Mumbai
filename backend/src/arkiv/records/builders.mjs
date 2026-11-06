@@ -3,7 +3,7 @@
  * Pure functions (no I/O), so they are easy to test. A builder returns null when
  * there is nothing to record yet.
  */
-import { addr, dec } from "@arkiv-network/sdk/schema";
+import { addr, dec, u64 } from "@arkiv-network/sdk/schema";
 import { clip128, hundredthsToDec } from "../arkiv.mjs";
 
 const who = (projectId, projectName) => ({ projectId: clip128(projectId), ...(projectName ? { projectName: clip128(projectName) } : {}) });
@@ -136,5 +136,40 @@ export function fightRecord(f, tournament) {
       ...(f.resultHash ? { resultHash: clip128(f.resultHash) } : {}),
     },
     payload: f,
+  };
+}
+
+/**
+ * review: a judging run in full (data/reviews/<id>.json): each judge's comment,
+ * per-criterion scores and reasoning, headline, status. Panel/scorecards hold only numbers.
+ */
+export function reviewRecord(project, result) {
+  if (!result?.reviews?.length) return null;
+  const scored = result.reviews.filter((r) => r.status === "scored").length;
+  return {
+    type: "review",
+    attrs: {
+      ...who(project.id, project.submission?.name),
+      runAt: u64(BigInt(Math.floor(new Date(result.ranAt ?? Date.now()).getTime() / 1000))),
+      ...(Number.isInteger(result.panelHundredths) ? { panelScore: dec(hundredthsToDec(result.panelHundredths)) } : {}),
+      judges: result.reviews.length,
+      scored,
+      model: clip128(result.model ?? "unknown"),
+    },
+    payload: result,
+  };
+}
+
+export const FILE_KINDS = ["demo-video", "demo-screenshot", "live-recording", "live-screenshot"];
+const MIMES = { mp4: "video/mp4", mov: "video/quicktime", webm: "video/webm", jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", webp: "image/webp" };
+export const mimeOf = (name) => MIMES[String(name).split(".").pop().toLowerCase()] ?? "application/octet-stream";
+
+/** file: one file's columns (the bytes are written with writeBlob). file = { kind, name, size, buffer? } */
+export function fileRecord(project, file) {
+  if (!file || !FILE_KINDS.includes(file.kind)) return null;
+  return {
+    type: "file",
+    attrs: { ...who(project.id, project.submission?.name), kind: file.kind, name: clip128(file.name), mime: mimeOf(file.name), size: u64(BigInt(file.size ?? file.buffer?.length ?? 0)) },
+    payload: file.buffer ?? null,
   };
 }
