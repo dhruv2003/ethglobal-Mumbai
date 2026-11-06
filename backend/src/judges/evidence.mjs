@@ -15,12 +15,10 @@
  */
 import fs from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import zg from "../zg/client.js";
 import zgModels from "../zg/models.js";
 import { evidence as evidenceStore, liveDir } from "../store.mjs";
 
-const here = path.dirname(fileURLToPath(import.meta.url));
 export const EVIDENCE_ENABLED = process.env.JUDGE_EVIDENCE === "1" || process.env.JUDGE_EVIDENCE === "true";
 const MATCHES = ["yes", "partly", "no", "unclear"];
 
@@ -121,11 +119,11 @@ async function pool(items, n, fn) {
   return out;
 }
 
-/** True when every screenshot of this project already has a cached observation (reusing them is free). */
-export function hasCachedEvidence(project, model = zgModels.MODELS.vision) {
-  const shots = screenshotsOf(project).filter((s) => fs.existsSync(s.file));
+/** The cached records when every one of these screenshots already has an observation from this model, else null. */
+function cachedRecords(project, shots, model) {
   const cached = evidenceStore.get(project.id);
-  return Boolean(shots.length > 0 && cached && cached.model === model && cached.records?.length === shots.length && cached.records.every((r) => r.observation));
+  const complete = cached && cached.model === model && cached.records?.length === shots.length && cached.records.every((r) => r.observation);
+  return complete ? cached.records : null;
 }
 
 /**
@@ -135,11 +133,9 @@ export function hasCachedEvidence(project, model = zgModels.MODELS.vision) {
 export async function collectScreenshotEvidence(project, { fresh = false, client = zg, model = zgModels.MODELS.vision, concurrency = 4, log = () => {} } = {}) {
   const shots = screenshotsOf(project).filter((s) => fs.existsSync(s.file));
   if (!shots.length) return [];
-  if (!fresh) {
-    const cached = evidenceStore.get(project.id);
-    // Marked cached: a later run reuses them without paying again, so its cost total must not count them.
-    if (cached && cached.model === model && cached.records?.length === shots.length && cached.records.every((r) => r.observation)) return cached.records.map((r) => ({ ...r, cached: true }));
-  }
+  const cached = fresh ? null : cachedRecords(project, shots, model);
+  // Marked cached: a later run reuses them without paying again, so its cost total must not count them.
+  if (cached) return cached.map((r) => ({ ...r, cached: true }));
   const records = await pool(shots, concurrency, async (s) => {
     const base = { id: s.id, device: s.device, stepId: s.stepId, stepTitle: s.stepTitle };
     try {

@@ -38,14 +38,16 @@
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import express from "express";
 import { CRITERIA } from "./judges/criteria.mjs";
 import { MAX_JUDGES, validateForm } from "./judges/persona.mjs";
-import { callPrimary, fallbackTarget, hasCredentials, missingCredentialsError, MODEL, PROVIDER, PROVIDER_LABEL, runPanel } from "./judges/review.mjs";
-import { collectScreenshotEvidence, EVIDENCE_ENABLED, forJudges, hasCachedEvidence } from "./judges/evidence.mjs";
+import { callPrimary, fallbackTarget, hasCredentials, KEY_NAME, missingCredentialsError, MODEL, PROVIDER, PROVIDER_LABEL, runPanel } from "./judges/review.mjs";
+import { collectScreenshotEvidence, EVIDENCE_ENABLED, forJudges } from "./judges/evidence.mjs";
 import zg from "./zg/client.js";
 import zgModels from "./zg/models.js";
 import { EXAMPLE_FORMS } from "./judges/seed.mjs";
+import { readJSON } from "./datafiles.mjs";
 import { loadProject } from "./projects.mjs";
 import { DATA_DIR, deleteProject, dossiers, judges, liveDir, localValue, mediaDir, pipelines, reviews, startArchive, submissions, videos, voiceNotes, zgStatus } from "./store.mjs";
 import * as archive from "./zg/archive.mjs";
@@ -53,7 +55,7 @@ import { downloadBytes, explorerLinks, storageConfig, walletInfo } from "./zg/st
 import { cleanUploads, IMAGE_MAX, IMAGE_REF, MAX_IMAGES, MIME, storeImageUpload, storeUpload, UPLOAD_DIR, UPLOAD_FILE, UPLOAD_REF, VIDEO_MAX } from "./reviewer/media.mjs";
 import { dequeue, enqueue, isRunning, queueLength, queuePosition, resumeQueue } from "./reviewer/pipeline.mjs";
 import { checkSubmissionSignature, isOrganizer, isOrganizerWallet, rateLimit, requireOrganizer } from "./security.mjs";
-import { events, submissionProblem, validateEvent } from "./events.mjs";
+import { events, JUDGES_PER_EVENT, submissionProblem, validateEvent } from "./events.mjs";
 import { canRead, canWrite, explorerEntity, publisher, readLatest } from "./arkiv/arkiv.mjs";
 import { lastPublish, publishInBackground, publishing, publishRun } from "./arkiv/publish.mjs";
 import { syncJudgesInBackground, syncProjectInBackground } from "./arkiv/records/sync.mjs";
@@ -86,7 +88,7 @@ export async function reviewNow(projectId, { evidence = EVIDENCE_ENABLED, freshE
   const project = loadProject(projectId);
   if (!project) throw Object.assign(new Error("No such project."), { status: 404 });
   const event = events.get(submissions.get(projectId)?.eventId);
-  const panel = event ? judges.list().filter((j) => event.judgeIds.includes(j.id)) : judges.list().slice(0, 3);
+  const panel = event ? judges.list().filter((j) => event.judgeIds.includes(j.id)) : judges.list().slice(0, JUDGES_PER_EVENT);
   // Whoever is on the panel judges: one, two or three seats filled all work. Only an empty panel can't.
   if (!panel.length) throw Object.assign(new Error("There are no judges on the panel yet. Add one on /judge."), { status: 409 });
   if (!hasCredentials()) throw missingCredentialsError();
@@ -146,7 +148,7 @@ router.get("/health", (req, res) => {
     maxJudges: MAX_JUDGES,
     provider: PROVIDER,
     providerLabel: PROVIDER_LABEL[PROVIDER],
-    keyName: PROVIDER === "0g" ? "ZG_API_KEY" : PROVIDER === "openai" ? "OPENAI_API_KEY" : "ANTHROPIC_API_KEY",
+    keyName: KEY_NAME[PROVIDER],
     model: MODEL,
     fallback: fallbackTarget(),
     voiceNotes: hasCredentials("0g") ? { model: zgModels.MODELS.transcribe } : null,
@@ -169,6 +171,9 @@ router.post("/judges", requireOrganizer, (req, res) => {
   res.status(201).json(persona);
 });
 
+/** The request's media type, without parameters, lowercased. */
+const mimeOf = (req) => String(req.headers["content-type"] ?? "").split(";")[0].trim().toLowerCase();
+
 /*
  * Voice note for the persona form: the browser sends the raw recording or upload,
  * whisper on 0G transcribes it, and the form puts the text into a free-text field.
@@ -180,26 +185,26 @@ const audioBody = express.raw({ type: (req) => /^(audio|video)\//.test(req.heade
 
 router.post("/judges/voice-note", requireOrganizer, rateLimit({ max: 30, windowMs: 60 * 60 * 1000 }), audioBody, async (req, res) => {
   if (!hasCredentials("0g")) return res.status(503).json({ error: missingCredentialsError("0g").message });
-  const mime = String(req.headers["content-type"] ?? "").split(";")[0].trim().toLowerCase();
+  const mime = mimeOf(req);
   const ext = AUDIO_EXT[mime];
   if (!ext) return res.status(415).json({ error: "Send audio as webm, ogg, m4a, mp3, wav or flac." });
   if (!Buffer.isBuffer(req.body) || req.body.length < 1000) return res.status(400).json({ error: "That recording is empty or too short." });
   try {
     const { text, trace } = await zg.transcribe({ audio: req.body, filename: `voice-note.${ext}`, mime, model: zgModels.MODELS.transcribe, verifyTee: true });
-    const out = {
-      text: text.trim(),
+    const zgTrace = {
       model: trace.model,
       requestId: trace.requestId,
       provider: trace.provider,
       costUsdMicro: trace.costUsdMicro,
       teeVerified: trace.teeVerified === true ? true : trace.teeVerified === false ? false : null,
     };
+    const out = { text: text.trim(), ...zgTrace };
     // Keep the transcript and its 0G trace (archived on 0G Storage). The audio is only
     // uploaded AES-256 encrypted, and only when ZG_STORAGE_AES_KEY is set.
     const id = crypto.randomUUID();
     voiceNotes.save(
       id,
-      { id, at: new Date().toISOString(), transcript: out.text, mime, audio: { sha256: crypto.createHash("sha256").update(req.body).digest("hex"), size: req.body.length }, trace: { model: out.model, requestId: out.requestId, provider: out.provider, costUsdMicro: out.costUsdMicro, teeVerified: out.teeVerified } },
+      { id, at: new Date().toISOString(), transcript: out.text, mime, audio: { sha256: crypto.createHash("sha256").update(req.body).digest("hex"), size: req.body.length }, trace: zgTrace },
       { audio: req.body, mime },
     );
     res.json({ ...out, id, zgStorage: zgStatus("voice-note", id) });
@@ -347,7 +352,8 @@ router.get("/projects/:id/pipeline", requireOrganizer, (req, res) => {
 
 router.get("/projects/:id/dossier", requireOrganizer, (req, res) => res.json({ dossier: dossiers.get(req.params.id) }));
 
-/** Live test results for a submitted project; media under /live/files/... */
+const arkivReadFailed = (e) => `Arkiv read failed: ${String(e?.shortMessage ?? e?.message ?? e).slice(0, 200)}`;
+
 /*
  * The judged result as published on Arkiv, read back from Arkiv itself (not from
  * the local store), with links to the evidence bundle on Swarm.
@@ -367,7 +373,7 @@ router.get("/projects/:id/arkiv", requireOrganizer, async (req, res) => {
       for (const [k, f] of Object.entries(has)) if (!files.includes(f)) delete s[k];
     }
   } catch (e) {
-    out.error = `Arkiv read failed: ${String(e?.shortMessage ?? e?.message ?? e).slice(0, 200)}`;
+    out.error = arkivReadFailed(e);
   }
   res.json(out);
 });
@@ -386,7 +392,7 @@ router.get("/arkiv/:type", async (req, res) => {
   try {
     res.json(await listRecords(req.params.type, arkivFilters(req.query)));
   } catch (e) {
-    res.status(502).json({ error: `Arkiv read failed: ${String(e?.shortMessage ?? e?.message ?? e).slice(0, 200)}` });
+    res.status(502).json({ error: arkivReadFailed(e) });
   }
 });
 /**
@@ -404,7 +410,7 @@ router.get("/arkiv-file", async (req, res) => {
     res.set({ "content-type": f.mime || "application/octet-stream", "content-length": String(f.buffer.length), "x-content-type-options": "nosniff", "content-disposition": "inline", "x-arkiv-sha256": f.hash, "cache-control": "public, max-age=3600" });
     res.end(f.buffer);
   } catch (e) {
-    res.status(502).json({ error: `Arkiv read failed: ${String(e?.shortMessage ?? e?.message ?? e).slice(0, 200)}` });
+    res.status(502).json({ error: arkivReadFailed(e) });
   }
 });
 
@@ -417,7 +423,7 @@ router.get("/arkiv/:type/latest", async (req, res) => {
     if (!r) return res.status(404).json({ error: "Nothing published on Arkiv for that yet." });
     res.json({ ...r, explorer: explorerEntity(r.$key) });
   } catch (e) {
-    res.status(502).json({ error: `Arkiv read failed: ${String(e?.shortMessage ?? e?.message ?? e).slice(0, 200)}` });
+    res.status(502).json({ error: arkivReadFailed(e) });
   }
 });
 
@@ -430,13 +436,8 @@ router.post("/projects/:id/arkiv", requireOrganizer, async (req, res) => {
   res.json(await publishRun(project, result));
 });
 
-router.get("/projects/:id/live", requireOrganizer, (req, res) => {
-  try {
-    res.json({ liveTest: JSON.parse(fs.readFileSync(path.join(liveDir(req.params.id), "smoke.json"), "utf8")) });
-  } catch {
-    res.json({ liveTest: null });
-  }
-});
+/** Live test results for a submitted project; media under /live/files/... */
+router.get("/projects/:id/live", requireOrganizer, (req, res) => res.json({ liveTest: readJSON("smoke.json", null, liveDir(req.params.id)) }));
 
 /**
  * Watch a cloud browser while the live test runs: an MJPEG stream of its newest
@@ -512,11 +513,17 @@ router.get("/projects/:id/live/files/:device/:file", (req, res) => {
 
 /* ---- Demo videos ---- */
 
+/** An upload went wrong: say why (or a generic message for unexpected errors) and drain the request. */
+function uploadFailed(req, res, e) {
+  if (!res.headersSent) res.status(e.status ?? 500).json({ error: e.status ? e.message : "The upload failed. Try again." });
+  req.resume();
+}
+
 const VIDEO_TYPES = new Set(["video/mp4", "video/quicktime", "video/webm", "application/octet-stream"]);
 
 /** Upload a demo video before signing: the returned ref goes into the signed submission. */
 router.post("/uploads/video", rateLimit({ max: 10, windowMs: 60 * 60 * 1000, message: "Too many uploads from here. Try again later." }), async (req, res) => {
-  const type = String(req.headers["content-type"] ?? "").split(";")[0].trim().toLowerCase();
+  const type = mimeOf(req);
   if (!VIDEO_TYPES.has(type)) return res.status(415).json({ error: "Upload an MP4, MOV or WebM video." });
   const declared = Number(req.headers["content-length"] ?? 0);
   if (declared > VIDEO_MAX) return res.status(413).json({ error: `That video is over ${Math.round(VIDEO_MAX / 1048576)} MB.` });
@@ -524,21 +531,19 @@ router.post("/uploads/video", rateLimit({ max: 10, windowMs: 60 * 60 * 1000, mes
     const up = await storeUpload(req, { declaredBytes: declared });
     res.status(201).json({ ref: `upload:${up.file}`, url: `/api/uploads/${up.file}`, bytes: up.bytes, seconds: up.seconds });
   } catch (e) {
-    if (!res.headersSent) res.status(e.status ?? 500).json({ error: e.status ? e.message : "The upload failed. Try again." });
-    req.resume();
+    uploadFailed(req, res, e);
   }
 });
 
 router.post("/uploads/image", rateLimit({ max: 60, windowMs: 60 * 60 * 1000, message: "Too many uploads from here. Try again later." }), async (req, res) => {
-  const type = String(req.headers["content-type"] ?? "").split(";")[0].trim().toLowerCase();
+  const type = mimeOf(req);
   if (!["image/png", "image/jpeg", "image/webp", "application/octet-stream"].includes(type)) return res.status(415).json({ error: "Upload a PNG, JPEG or WebP image." });
   if (Number(req.headers["content-length"] ?? 0) > IMAGE_MAX) return res.status(413).json({ error: "That image is over 10 MB." });
   try {
     const up = await storeImageUpload(req);
     res.status(201).json({ ref: `upload:${up.file}`, url: `/api/uploads/${up.file}`, bytes: up.bytes });
   } catch (e) {
-    if (!res.headersSent) res.status(e.status ?? 500).json({ error: e.status ? e.message : "The upload failed. Try again." });
-    req.resume();
+    uploadFailed(req, res, e);
   }
 });
 
@@ -694,7 +699,7 @@ router.get("/storage/blob/:rootHash", rateLimit({ max: 60, windowMs: 60 * 1000, 
   }
 });
 
-const FIXTURES_DIR = path.resolve(path.dirname(new URL(import.meta.url).pathname), "../fixtures");
+const FIXTURES_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../fixtures");
 /** The local copy of an archived fixture file, for verify (never outside fixtures/). */
 function fixtureBytes(kind, id) {
   if (kind !== "fixture-file") return undefined;

@@ -23,7 +23,6 @@ import { chromium } from "playwright";
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 
 // Progress lines go to the console and, during a pipeline run, to the review page.
 let listener = null;
@@ -42,7 +41,6 @@ function say(msg) {
   }
 }
 
-const here = path.dirname(fileURLToPath(import.meta.url));
 const HUB = "wss://cdp-hub.preprod.mozark.ai/playwright";
 const PROJECT_ID = process.env.MOZARK_PROJECT_ID ?? "b0ceec50-63c5-4a57-902b-c21046ee7cf2";
 const STEP_TIMEOUT = 12000;
@@ -87,11 +85,11 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 // ---------- Mozark ----------
-async function connect(device) {
+async function connect(device, bearer = token) {
   const cfg = { projectId: PROJECT_ID, ...DEVICES[device].hub, video: true, consoleLogs: true, networkLogs: true };
   const url = `${HUB}?config=${encodeURIComponent(JSON.stringify(cfg))}`;
   try {
-    return await chromium.connectOverCDP(url, { headers: { Authorization: `Bearer ${token}` }, timeout: 90000 });
+    return await chromium.connectOverCDP(url, { headers: { Authorization: `Bearer ${bearer}` }, timeout: 90000 });
   } catch (e) {
     const msg = String(e.message || e);
     if (/401/.test(msg)) throw new Error("Mozark said 401: the token expired. Copy a new one from the portal and save it again.");
@@ -425,10 +423,10 @@ async function runLiveTestNow({ project: id, target: url, flows: f, outDir: dir,
  * only loads pages and reads them; it clicks nothing.
  */
 export async function discoverSite({ target: url, token: t, maxPages = 6 }) {
-  token = t;
+  // Not under runLiveTest's lock, so it must not touch the run context: pass the token directly.
   const base = new URL(url);
   say("[explore] connecting to Mozark…");
-  const browser = await connect("laptop");
+  const browser = await connect("laptop", t);
   say("[explore] connected; reading the home page");
   try {
     const ctx = await browser.newContext(DEVICES.laptop.context);

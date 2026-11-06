@@ -29,7 +29,7 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { discoverSite, onRunnerLog, runLiveTest } from "../../tester/runner.mjs";
+import { countSteps, discoverSite, onRunnerLog, runLiveTest } from "../../tester/runner.mjs";
 import { hasCredentials, MODEL } from "../llm.mjs";
 import { dossiers, judges as judgesStore, liveDir, mediaDir, pipelines, repoDir, submissions, transcripts, videos, workDir } from "../store.mjs";
 import { demoTranscript, describeDuration } from "./demo.mjs";
@@ -60,20 +60,35 @@ export function mozarkToken() {
   }
 }
 
+/**
+ * The GitHub API's record of a repo link: { status, meta } (meta is null unless the
+ * request succeeded), or null when the link isn't a GitHub repo.
+ */
+async function githubRepoMeta(repoUrl) {
+  const m = GITHUB_REPO.exec(repoUrl ?? "");
+  if (!m) return null;
+  const res = await safeFetch(`https://api.github.com/repos/${m[1]}/${m[2].replace(/\.git$/, "")}`, { headers: { accept: "application/vnd.github+json" } });
+  if (!res.ok) {
+    res.body.resume?.();
+    return { status: res.status, meta: null };
+  }
+  return { status: res.status, meta: JSON.parse((await readCapped(res, 512 * 1024)).toString("utf8")) };
+}
+
 /** Live URL: the team's optional field, else the GitHub repo's homepage. */
 async function liveUrlFor(sub) {
   if (sub.liveUrl) return { url: sub.liveUrl, from: "the submission" };
-  const m = GITHUB_REPO.exec(sub.repoUrl ?? "");
-  if (!m) return null;
   try {
-    const res = await safeFetch(`https://api.github.com/repos/${m[1]}/${m[2]}`, { headers: { accept: "application/vnd.github+json" } });
-    if (!res.ok) return null;
-    const home = JSON.parse((await readCapped(res, 512 * 1024)).toString("utf8")).homepage;
+    const home = (await githubRepoMeta(sub.repoUrl))?.meta?.homepage;
     return home && /^https:\/\//.test(home) ? { url: home, from: "the repo's GitHub homepage" } : null;
   } catch {
     return null;
   }
 }
+
+const wordCount = (text) => text.split(/\s+/).length;
+const plural = (n, word) => `${n} ${word}${n === 1 ? "" : "s"}`;
+
 const EVENT_START = process.env.EVENT_START ?? "2026-11-06T00:00:00+05:30";
 const CONCURRENCY = Math.max(1, Number(process.env.REVIEW_CONCURRENCY ?? 1));
 const running = new Map();
@@ -193,262 +208,246 @@ async function execute(projectId, judge) {
 
   /** 1. Code review */
   const codeStep = async () => {
-    /* ---------- 1. Code review ---------- */
-    {
-      const s = begin("code", [
-        ["check", "Check the repo on GitHub"],
-        ["clone", "Clone the code (never run)"],
-        ["pin", "Pin the exact commit"],
-        ["history", "Read the commit history"],
-        ["files", "List the files"],
-        ["tests", "Count the tests"],
-      ]);
-      let cur = "check";
-      let meta = null;
+    const s = begin("code", [
+      ["check", "Check the repo on GitHub"],
+      ["clone", "Clone the code (never run)"],
+      ["pin", "Pin the exact commit"],
+      ["history", "Read the commit history"],
+      ["files", "List the files"],
+      ["tests", "Count the tests"],
+    ]);
+    let cur = "check";
+    let meta = null;
+    try {
+      const m = GITHUB_REPO.exec(sub.repoUrl ?? "");
+      if (!m) throw new Error("Only public https://github.com/<owner>/<repo> links can be reviewed.");
+      part(s, "check", "running", `Looking up ${m[1]}/${m[2]}`);
       try {
-        const m = GITHUB_REPO.exec(sub.repoUrl ?? "");
-        if (!m) throw new Error("Only public https://github.com/<owner>/<repo> links can be reviewed.");
-        part(s, "check", "running", `Looking up ${m[1]}/${m[2]}`);
-        try {
-          const res = await safeFetch(`https://api.github.com/repos/${m[1]}/${m[2].replace(/\.git$/, "")}`, { headers: { accept: "application/vnd.github+json" } });
-          if (res.status === 404) throw Object.assign(new Error("The repository isn't public or doesn't exist."), { fatal: true });
-          if (res.ok) meta = JSON.parse((await readCapped(res, 512 * 1024)).toString("utf8"));
-          else res.body.resume?.();
-        } catch (e) {
-          if (e.fatal) throw e;
-        }
-        part(s, "check", "done", meta ? `Public · ${meta.language ?? "mixed languages"} · ${meta.size ? `${Math.round(meta.size / 1024)} MB` : "size unknown"} · default branch ${meta.default_branch}` : "GitHub's details weren't available; cloning anyway");
-        cur = "clone";
-        part(s, "clone", "running", "Shallow clone, hooks and submodules off, big files skipped");
-        commit = await cloneRepo(sub.repoUrl, dir);
-        part(s, "clone", "done", commit.url.replace("https://", ""));
-        cur = "pin";
-        part(s, "pin", "running");
-        part(s, "pin", "done", `${commit.sha.slice(0, 7)} · committed ${commit.committedAt.slice(0, 10)}`);
-        cur = "history";
-        part(s, "history", "running", `Counting commits since ${EVENT_START.slice(0, 10)}`);
-        facts.continuity = await historyFacts(dir, EVENT_START);
-        const c = facts.continuity;
-        part(s, "history", "done", `${c.commitsDuringEvent} of ${c.commitsSeen}${c.historyTruncated ? "+" : ""} commits made since the event began`);
-        cur = "files";
-        part(s, "files", "running");
-        files = await inventory(dir);
-        part(s, "files", "done", `${files.length} files`);
-        cur = "tests";
-        part(s, "tests", "running", "Reading test files (it(), test(), function test*, def test_)");
-        const t = countTests(dir, files);
-        const kinds = [t.jsCases && `${t.jsCases} JS/TS`, t.solTests && `${t.solTests} Solidity`, t.pyTests && `${t.pyTests} Python`].filter(Boolean);
-        facts.tests = {
-          status: "not_run",
-          claimed: "",
-          found: { vitestFiles: t.jsFiles, vitestCases: t.jsCases, forgeFiles: t.solFiles, forgeTests: t.solTests, pyFiles: t.pyFiles, pyTests: t.pyTests },
-          method: "Counted it()/test() in *.test/*.spec files, function test* in *.t.sol, def test_ in Python tests. Read only.",
-          note: "Counted, not run: running a submission's code needs the isolated sandbox, which isn't built yet.",
-        };
-        const total = t.jsCases + t.solTests + t.pyTests;
-        part(s, "tests", "done", `${kinds.join(" · ") || "No tests found"} · counted, not run`);
-        end(s, "done", `${commit.sha.slice(0, 7)} · ${total} tests found · ${files.length} files`, [
-          { label: "Repository", value: commit.url.replace("https://github.com/", "") },
-          { label: "Main language", value: meta?.language },
-          { label: "Commit", value: commit.sha.slice(0, 7) },
-          { label: "Last commit", value: commit.committedAt.slice(0, 10) },
-          { label: "Commits since the event began", value: `${c.commitsDuringEvent} of ${c.commitsSeen}${c.historyTruncated ? "+" : ""}` },
-          { label: "Tests found", value: `${total}${kinds.length ? ` (${kinds.join(", ")})` : ""}` },
-          { label: "Files", value: files.length },
-        ]);
+        const gh = await githubRepoMeta(sub.repoUrl);
+        if (gh.status === 404) throw Object.assign(new Error("The repository isn't public or doesn't exist."), { fatal: true });
+        meta = gh.meta;
       } catch (e) {
-        part(s, cur, "failed", reason(e));
-        for (const p of s.parts) if (p.status === "queued") Object.assign(p, { status: "skipped", detail: "Needs the repository." });
-        commit = null;
-        end(s, "failed", reason(e));
+        if (e.fatal) throw e;
       }
+      part(s, "check", "done", meta ? `Public · ${meta.language ?? "mixed languages"} · ${meta.size ? `${Math.round(meta.size / 1024)} MB` : "size unknown"} · default branch ${meta.default_branch}` : "GitHub's details weren't available; cloning anyway");
+      cur = "clone";
+      part(s, "clone", "running", "Shallow clone, hooks and submodules off, big files skipped");
+      commit = await cloneRepo(sub.repoUrl, dir);
+      part(s, "clone", "done", commit.url.replace("https://", ""));
+      cur = "pin";
+      part(s, "pin", "running");
+      part(s, "pin", "done", `${commit.sha.slice(0, 7)} · committed ${commit.committedAt.slice(0, 10)}`);
+      cur = "history";
+      part(s, "history", "running", `Counting commits since ${EVENT_START.slice(0, 10)}`);
+      facts.continuity = await historyFacts(dir, EVENT_START);
+      const c = facts.continuity;
+      part(s, "history", "done", `${c.commitsDuringEvent} of ${c.commitsSeen}${c.historyTruncated ? "+" : ""} commits made since the event began`);
+      cur = "files";
+      part(s, "files", "running");
+      files = await inventory(dir);
+      part(s, "files", "done", `${files.length} files`);
+      cur = "tests";
+      part(s, "tests", "running", "Reading test files (it(), test(), function test*, def test_)");
+      const t = countTests(dir, files);
+      const kinds = [t.jsCases && `${t.jsCases} JS/TS`, t.solTests && `${t.solTests} Solidity`, t.pyTests && `${t.pyTests} Python`].filter(Boolean);
+      facts.tests = {
+        status: "not_run",
+        claimed: "",
+        found: { vitestFiles: t.jsFiles, vitestCases: t.jsCases, forgeFiles: t.solFiles, forgeTests: t.solTests, pyFiles: t.pyFiles, pyTests: t.pyTests },
+        method: "Counted it()/test() in *.test/*.spec files, function test* in *.t.sol, def test_ in Python tests. Read only.",
+        note: "Counted, not run: running a submission's code needs the isolated sandbox, which isn't built yet.",
+      };
+      const total = t.jsCases + t.solTests + t.pyTests;
+      part(s, "tests", "done", `${kinds.join(" · ") || "No tests found"} · counted, not run`);
+      end(s, "done", `${commit.sha.slice(0, 7)} · ${total} tests found · ${files.length} files`, [
+        { label: "Repository", value: commit.url.replace("https://github.com/", "") },
+        { label: "Main language", value: meta?.language },
+        { label: "Commit", value: commit.sha.slice(0, 7) },
+        { label: "Last commit", value: commit.committedAt.slice(0, 10) },
+        { label: "Commits since the event began", value: `${c.commitsDuringEvent} of ${c.commitsSeen}${c.historyTruncated ? "+" : ""}` },
+        { label: "Tests found", value: `${total}${kinds.length ? ` (${kinds.join(", ")})` : ""}` },
+        { label: "Files", value: files.length },
+      ]);
+    } catch (e) {
+      part(s, cur, "failed", reason(e));
+      for (const p of s.parts) if (p.status === "queued") Object.assign(p, { status: "skipped", detail: "Needs the repository." });
+      commit = null;
+      end(s, "failed", reason(e));
     }
   };
 
   /** 2. Process the demo: video and screenshots */
   const demoStep = async () => {
-    /* ---------- 2. Process the demo: video and screenshots ---------- */
-    {
-      const shots = sub.demoImages ?? [];
-      if (!sub.demoVideoUrl && !shots.length) skipStep("demo", "No demo video or screenshots were submitted.");
-      else {
-        const plan = [];
-        if (sub.demoVideoUrl) plan.push(["download", "Download our copy of the video"], ["analyse", "Analyse the video"], ["transcribe", "Transcribe the speech"]);
-        if (shots.length) plan.push(["images", "Check the screenshots"], ["vision", "Read the screenshots (vision model)"]);
-        const s = begin("demo", plan);
-        let video = null;
-        let info = null;
-        let screens = null;
-        if (sub.demoVideoUrl) {
-          part(s, "download", "running");
-          try {
-            video = await saveDemoVideo(sub.demoVideoUrl, mediaDir(projectId), { onProgress: (m) => part(s, "download", "running", m, { quiet: true }) });
-            videos.save(projectId, { ext: video.ext, bytes: video.bytes, seconds: video.seconds, source: video.source, savedAt: new Date().toISOString() });
-            part(s, "download", "done", `${mb(video.bytes)} · ${video.source}`);
-          } catch (e) {
-            videos.save(projectId, { error: reason(e).slice(0, 240), skipped: Boolean(e.skip), savedAt: new Date().toISOString() });
-            part(s, "download", e.skip ? "skipped" : "failed", reason(e));
-          }
-          if (video) {
-            part(s, "analyse", "running", "Reading length, picture size and sound");
-            try {
-              info = await probeInfo(video.file, video.demuxer);
-              part(s, "analyse", "done", `${describeDuration(info.seconds)} · ${info.width && info.height ? `${info.width}×${info.height}` : "unknown size"} · ${info.audio ? "has sound" : "no sound"}`);
-            } catch (e) {
-              part(s, "analyse", "failed", reason(e));
-            }
-          } else part(s, "analyse", "skipped", "No copy of the video to analyse.");
-          part(s, "transcribe", "running", video ? "Sending the audio to the transcription model" : "Looking for captions");
-          try {
-            transcript = await demoTranscript(sub.demoVideoUrl, { video, workDir: workDir(projectId) });
-            transcripts.save(projectId, { ...transcript, videoUrl: sub.demoVideoUrl, at: new Date().toISOString() });
-            part(s, "transcribe", "done", `${transcript.text.split(/\s+/).length} words · ${transcript.source}`);
-          } catch (e) {
-            part(s, "transcribe", e.skip ? "skipped" : "failed", reason(e));
-          } finally {
-            fs.rmSync(workDir(projectId), { recursive: true, force: true });
-          }
+    const shots = sub.demoImages ?? [];
+    if (!sub.demoVideoUrl && !shots.length) skipStep("demo", "No demo video or screenshots were submitted.");
+    else {
+      const plan = [];
+      if (sub.demoVideoUrl) plan.push(["download", "Download our copy of the video"], ["analyse", "Analyse the video"], ["transcribe", "Transcribe the speech"]);
+      if (shots.length) plan.push(["images", "Check the screenshots"], ["vision", "Read the screenshots (vision model)"]);
+      const s = begin("demo", plan);
+      let video = null;
+      let info = null;
+      let screens = null;
+      if (sub.demoVideoUrl) {
+        part(s, "download", "running");
+        try {
+          video = await saveDemoVideo(sub.demoVideoUrl, mediaDir(projectId), { onProgress: (m) => part(s, "download", "running", m, { quiet: true }) });
+          videos.save(projectId, { ext: video.ext, bytes: video.bytes, seconds: video.seconds, source: video.source, savedAt: new Date().toISOString() });
+          part(s, "download", "done", `${mb(video.bytes)} · ${video.source}`);
+        } catch (e) {
+          videos.save(projectId, { error: reason(e).slice(0, 240), skipped: Boolean(e.skip), savedAt: new Date().toISOString() });
+          part(s, "download", e.skip ? "skipped" : "failed", reason(e));
         }
-        if (shots.length) {
-          part(s, "images", "running", `Opening ${shots.length} screenshot${shots.length === 1 ? "" : "s"}`);
-          const filesIn = shots.map((r) => IMAGE_REF.exec(String(r))?.[1]).filter((f) => f && fs.existsSync(path.join(UPLOAD_DIR, f)));
-          const sizes = [];
-          for (const f of filesIn) sizes.push(await imageInfo(f).catch(() => null));
-          const ok = sizes.filter(Boolean);
-          const missing = shots.length - filesIn.length;
-          part(s, "images", missing ? "failed" : "done", `${ok.length} readable${ok[0]?.width ? ` · ${[...new Set(ok.map((x) => `${x.width}×${x.height}`))].slice(0, 3).join(", ")}` : ""}${missing ? ` · ${missing} missing on the server` : ""}`);
-          if (!filesIn.length) part(s, "vision", "skipped", "No screenshots to read.");
-          else if (!canReadScreens()) part(s, "vision", "skipped", "Reading screenshots needs an OpenAI key on the server.");
-          else {
-            part(s, "vision", "running", `${VISION_MODEL} is looking at ${filesIn.length} screen${filesIn.length === 1 ? "" : "s"}`);
-            try {
-              screens = await describeScreenshots(filesIn);
-              part(s, "vision", "done", `${screens.lines.length} screens described`);
-              if (!transcript) {
-                // No video speech: the screenshots stand in as "what the demo shows".
-                transcript = { source: `screenshots read by ${VISION_MODEL}`, text: screens.text, seconds: null };
-                transcripts.save(projectId, { ...transcript, at: new Date().toISOString() });
-              }
-            } catch (e) {
-              part(s, "vision", e.skip ? "skipped" : "failed", reason(e));
-            }
+        if (video) {
+          part(s, "analyse", "running", "Reading length, picture size and sound");
+          try {
+            info = await probeInfo(video.file, video.demuxer);
+            part(s, "analyse", "done", `${describeDuration(info.seconds)} · ${info.width && info.height ? `${info.width}×${info.height}` : "unknown size"} · ${info.audio ? "has sound" : "no sound"}`);
+          } catch (e) {
+            part(s, "analyse", "failed", reason(e));
           }
+        } else part(s, "analyse", "skipped", "No copy of the video to analyse.");
+        part(s, "transcribe", "running", video ? "Sending the audio to the transcription model" : "Looking for captions");
+        try {
+          transcript = await demoTranscript(sub.demoVideoUrl, { video, workDir: workDir(projectId) });
+          transcripts.save(projectId, { ...transcript, videoUrl: sub.demoVideoUrl, at: new Date().toISOString() });
+          part(s, "transcribe", "done", `${wordCount(transcript.text)} words · ${transcript.source}`);
+        } catch (e) {
+          part(s, "transcribe", e.skip ? "skipped" : "failed", reason(e));
+        } finally {
+          fs.rmSync(workDir(projectId), { recursive: true, force: true });
         }
-        const failed = s.parts.some((x) => x.status === "failed");
-        const out = [video && `${describeDuration(video.seconds)} video saved`, transcript && !screens && `${transcript.text.split(/\s+/).length}-word transcript`, shots.length && `${shots.length} screenshot${shots.length === 1 ? "" : "s"}${screens ? " read" : ""}`].filter(Boolean);
-        end(s, failed ? "failed" : "done", out.join(" · ") || s.parts.find((x) => x.status === "failed")?.detail || "Nothing could be read.", [
-          { label: "Video", value: video ? `${describeDuration(video.seconds)}, ${mb(video.bytes)}` : sub.demoVideoUrl ? "No copy" : null },
-          { label: "Picture", value: info?.width ? `${info.width}×${info.height}${info.audio ? ", with sound" : ", no sound"}` : null },
-          { label: "Source", value: video?.source },
-          { label: "Transcript", value: sub.demoVideoUrl ? (transcript && !screens ? `${transcript.text.split(/\s+/).length} words` : "None") : null },
-          { label: "Screenshots", value: shots.length ? `${shots.length}${screens ? `, ${screens.lines.length} described` : ""}` : null },
-        ]);
       }
+      if (shots.length) {
+        part(s, "images", "running", `Opening ${plural(shots.length, "screenshot")}`);
+        const filesIn = shots.map((r) => IMAGE_REF.exec(String(r))?.[1]).filter((f) => f && fs.existsSync(path.join(UPLOAD_DIR, f)));
+        const sizes = [];
+        for (const f of filesIn) sizes.push(await imageInfo(f).catch(() => null));
+        const ok = sizes.filter(Boolean);
+        const missing = shots.length - filesIn.length;
+        part(s, "images", missing ? "failed" : "done", `${ok.length} readable${ok[0]?.width ? ` · ${[...new Set(ok.map((x) => `${x.width}×${x.height}`))].slice(0, 3).join(", ")}` : ""}${missing ? ` · ${missing} missing on the server` : ""}`);
+        if (!filesIn.length) part(s, "vision", "skipped", "No screenshots to read.");
+        else if (!canReadScreens()) part(s, "vision", "skipped", "Reading screenshots needs an OpenAI key on the server.");
+        else {
+          part(s, "vision", "running", `${VISION_MODEL} is looking at ${plural(filesIn.length, "screen")}`);
+          try {
+            screens = await describeScreenshots(filesIn);
+            part(s, "vision", "done", `${screens.lines.length} screens described`);
+            if (!transcript) {
+              // No video speech: the screenshots stand in as "what the demo shows".
+              transcript = { source: `screenshots read by ${VISION_MODEL}`, text: screens.text, seconds: null };
+              transcripts.save(projectId, { ...transcript, at: new Date().toISOString() });
+            }
+          } catch (e) {
+            part(s, "vision", e.skip ? "skipped" : "failed", reason(e));
+          }
+        }
+      }
+      const failed = s.parts.some((x) => x.status === "failed");
+      const out = [video && `${describeDuration(video.seconds)} video saved`, transcript && !screens && `${wordCount(transcript.text)}-word transcript`, shots.length && `${plural(shots.length, "screenshot")}${screens ? " read" : ""}`].filter(Boolean);
+      end(s, failed ? "failed" : "done", out.join(" · ") || s.parts.find((x) => x.status === "failed")?.detail || "Nothing could be read.", [
+        { label: "Video", value: video ? `${describeDuration(video.seconds)}, ${mb(video.bytes)}` : sub.demoVideoUrl ? "No copy" : null },
+        { label: "Picture", value: info?.width ? `${info.width}×${info.height}${info.audio ? ", with sound" : ", no sound"}` : null },
+        { label: "Source", value: video?.source },
+        { label: "Transcript", value: sub.demoVideoUrl ? (transcript && !screens ? `${wordCount(transcript.text)} words` : "None") : null },
+        { label: "Screenshots", value: shots.length ? `${shots.length}${screens ? `, ${screens.lines.length} described` : ""}` : null },
+      ]);
     }
   };
 
   /** 3. Live app on cloud browsers (explores right away; writes steps once the demo is read) */
   const liveStep = async () => {
-    /* ---------- 3. Live app on cloud browsers ---------- */
-    {
-      const token = mozarkToken();
-      const live = await liveUrlFor(sub);
-      if (!live) skipStep("live", "No live app: none was submitted and the repo has no homepage.");
-      else if (!token) skipStep("live", "The cloud browser token isn't set on the server (MOZARK_TOKEN).");
-      else if (!hasCredentials()) skipStep("live", "Writing the test steps needs an LLM key on the server.");
-      else {
-        const s = begin("live", [
-          ["connect", "Sign in to the Mozark cloud"],
-          ["explore", "Explore the site"],
-          ["write", "Write the test steps"],
-          ["laptop", "Laptop browser"],
-          ["phone", "Phone browser"],
-          ["save", "Save the recordings"],
-        ]);
-        const host = live.url.replace("https://", "");
-        let cur = "connect";
-        const stop = onRunnerLog((line) => {
-          const m = /^\[(\w+)\] (.*)$/.exec(line);
-          if (!m) return;
-          const [, who, what] = m;
-          if (who === "explore") {
-            if (/connected/.test(what)) {
-              part(s, "connect", "done", "Signed in; a cloud browser is up");
-              cur = "explore";
-              part(s, "explore", "running", `Reading the home page of ${host}`);
-            } else if (/^reading /.test(what)) part(s, "explore", "running", `Reading ${what.slice(8)}`, { quiet: true });
-            return;
-          }
-          if (who !== "laptop" && who !== "phone") return;
-          const nice = what
-            .replace(/^connecting to Mozark…$/, "Starting a cloud browser…")
-            .replace(/^loading (.*)$/, (_, u) => `Loading ${u.replace("https://", "")}`)
-            .replace(/^(d|f)(\d+) (\w+)\s+(.*)$/, (_, k, n, st, t) => `${k === "d" ? "Demo replay" : "Main flow"} ${n} · ${t}: ${st === "passed" ? "works" : st === "blocked" ? "needs a device or sign-in" : st}`)
-            .replace(/^cloud browser problem.*$/, "Cloud browser problem; retrying once in a fresh session");
-          cur = who;
-          part(s, who, "running", nice, { quiet: true });
-        });
-        try {
-          part(s, "connect", "running", "Using the Mozark CDP hub");
-          const discovery = await discoverSite({ target: live.url, token });
-          part(s, "explore", "done", `${discovery.pages.length} page${discovery.pages.length === 1 ? "" : "s"} at ${host} (from ${live.from})`);
-          cur = "write";
-          if (!demoReady.settled) part(s, "write", "running", "Waiting for the demo to be read (it's being processed in parallel)…");
-          await demoReady;
-          part(s, "write", "running", transcript ? `Reading ${transcript.source.startsWith("screenshots") ? "the screenshots" : "the transcript"} and what the explorer found` : "No demo to replay: writing the main flows from what the explorer found");
-          const flows = await writeFlows({ target: live.url, transcript, dossier: null, discovery });
-          const out = liveDir(projectId);
-          fs.mkdirSync(out, { recursive: true });
-          fs.writeFileSync(path.join(out, "discovery.json"), JSON.stringify(discovery, null, 2));
-          fs.writeFileSync(path.join(out, "flows.json"), JSON.stringify(flows, null, 2));
-          const count = (id) => flows.phases.find((ph) => ph.id === id)?.steps.length ?? 0;
-          part(s, "write", "done", `${count("demo")} demo replay steps · ${count("features")} main flows`);
-          cur = "laptop";
-          // Laptop and phone run at the same time.
-          part(s, "laptop", "running", "Starting a cloud browser…");
-          part(s, "phone", "running", "Starting a cloud browser…");
-          const summary = await runLiveTest({ project: projectId, target: live.url, flows, outDir: out, token, flowsSource: "written automatically by the reviewer agent" });
-          const tally = (r) => {
-            const c = { passed: 0, failed: 0, missing: 0, blocked: 0 };
-            for (const ph of r.phases ?? []) for (const x of ph.steps) c[x.status] = (c[x.status] ?? 0) + 1;
-            return c;
-          };
-          const words = {};
-          for (const dev of ["laptop", "phone"]) {
-            const r = summary.runs.find((x) => x.device === dev);
-            if (!r) {
-              part(s, dev, "skipped", "Not run.");
-              continue;
-            }
-            const c = tally(r);
-            words[dev] = `${c.passed} work${c.failed ? ` · ${c.failed} broken` : ""}${c.missing ? ` · ${c.missing} demo screens missing` : ""}${c.blocked ? ` · ${c.blocked} can't run in a browser` : ""}`;
-            part(s, dev, r.outcome.status === "error" ? "failed" : "done", r.outcome.status === "error" ? (r.error ?? "The cloud browser failed.") : words[dev]);
-          }
-          part(s, "save", "running");
-          const vids = summary.runs.filter((r) => r.video).map((r) => `${r.label.toLowerCase()} ${Math.round(r.video.seconds)} s`);
-          part(s, "save", "done", vids.length ? `Recordings: ${vids.join(", ")} · screenshot for every step` : "No recordings");
-          const failed = s.parts.some((x) => x.status === "failed");
-          end(s, failed ? "failed" : "done", `${host} · laptop: ${words.laptop ?? "—"} · phone: ${words.phone ?? "—"}`, [
-            { label: "Live app", value: host },
-            { label: "Found from", value: live.from },
-            { label: "Pages explored", value: discovery.pages.length },
-            { label: "Steps written", value: `${count("demo")} demo + ${count("features")} flows` },
-            { label: "Laptop", value: words.laptop },
-            { label: "Phone", value: words.phone },
-          ]);
-        } catch (e) {
-          part(s, cur, "failed", reason(e));
-          end(s, "failed", reason(e));
-        } finally {
-          stop();
+    const token = mozarkToken();
+    const live = await liveUrlFor(sub);
+    if (!live) skipStep("live", "No live app: none was submitted and the repo has no homepage.");
+    else if (!token) skipStep("live", "The cloud browser token isn't set on the server (MOZARK_TOKEN).");
+    else if (!hasCredentials()) skipStep("live", "Writing the test steps needs an LLM key on the server.");
+    else {
+      const s = begin("live", [
+        ["connect", "Sign in to the Mozark cloud"],
+        ["explore", "Explore the site"],
+        ["write", "Write the test steps"],
+        ["laptop", "Laptop browser"],
+        ["phone", "Phone browser"],
+        ["save", "Save the recordings"],
+      ]);
+      const host = live.url.replace("https://", "");
+      let cur = "connect";
+      const stop = onRunnerLog((line) => {
+        const m = /^\[(\w+)\] (.*)$/.exec(line);
+        if (!m) return;
+        const [, who, what] = m;
+        if (who === "explore") {
+          if (/connected/.test(what)) {
+            part(s, "connect", "done", "Signed in; a cloud browser is up");
+            cur = "explore";
+            part(s, "explore", "running", `Reading the home page of ${host}`);
+          } else if (/^reading /.test(what)) part(s, "explore", "running", `Reading ${what.slice(8)}`, { quiet: true });
+          return;
         }
+        if (who !== "laptop" && who !== "phone") return;
+        const nice = what
+          .replace(/^connecting to Mozark…$/, "Starting a cloud browser…")
+          .replace(/^loading (.*)$/, (_, u) => `Loading ${u.replace("https://", "")}`)
+          .replace(/^(d|f)(\d+) (\w+)\s+(.*)$/, (_, k, n, st, t) => `${k === "d" ? "Demo replay" : "Main flow"} ${n} · ${t}: ${st === "passed" ? "works" : st === "blocked" ? "needs a device or sign-in" : st}`)
+          .replace(/^cloud browser problem.*$/, "Cloud browser problem; retrying once in a fresh session");
+        cur = who;
+        part(s, who, "running", nice, { quiet: true });
+      });
+      try {
+        part(s, "connect", "running", "Using the Mozark CDP hub");
+        const discovery = await discoverSite({ target: live.url, token });
+        part(s, "explore", "done", `${plural(discovery.pages.length, "page")} at ${host} (from ${live.from})`);
+        cur = "write";
+        if (!demoReady.settled) part(s, "write", "running", "Waiting for the demo to be read (it's being processed in parallel)…");
+        await demoReady;
+        part(s, "write", "running", transcript ? `Reading ${transcript.source.startsWith("screenshots") ? "the screenshots" : "the transcript"} and what the explorer found` : "No demo to replay: writing the main flows from what the explorer found");
+        const flows = await writeFlows({ target: live.url, transcript, dossier: null, discovery });
+        const out = liveDir(projectId);
+        fs.mkdirSync(out, { recursive: true });
+        fs.writeFileSync(path.join(out, "discovery.json"), JSON.stringify(discovery, null, 2));
+        fs.writeFileSync(path.join(out, "flows.json"), JSON.stringify(flows, null, 2));
+        const count = (id) => flows.phases.find((ph) => ph.id === id)?.steps.length ?? 0;
+        part(s, "write", "done", `${count("demo")} demo replay steps · ${count("features")} main flows`);
+        cur = "laptop";
+        // Laptop and phone run at the same time.
+        part(s, "laptop", "running", "Starting a cloud browser…");
+        part(s, "phone", "running", "Starting a cloud browser…");
+        const summary = await runLiveTest({ project: projectId, target: live.url, flows, outDir: out, token, flowsSource: "written automatically by the reviewer agent" });
+        const words = {};
+        for (const dev of ["laptop", "phone"]) {
+          const r = summary.runs.find((x) => x.device === dev);
+          if (!r) {
+            part(s, dev, "skipped", "Not run.");
+            continue;
+          }
+          const c = countSteps((r.phases ?? []).flatMap((ph) => ph.steps));
+          words[dev] = `${c.passed} work${c.failed ? ` · ${c.failed} broken` : ""}${c.missing ? ` · ${c.missing} demo screens missing` : ""}${c.blocked ? ` · ${c.blocked} can't run in a browser` : ""}`;
+          part(s, dev, r.outcome.status === "error" ? "failed" : "done", r.outcome.status === "error" ? (r.error ?? "The cloud browser failed.") : words[dev]);
+        }
+        part(s, "save", "running");
+        const vids = summary.runs.filter((r) => r.video).map((r) => `${r.label.toLowerCase()} ${Math.round(r.video.seconds)} s`);
+        part(s, "save", "done", vids.length ? `Recordings: ${vids.join(", ")} · screenshot for every step` : "No recordings");
+        const failed = s.parts.some((x) => x.status === "failed");
+        end(s, failed ? "failed" : "done", `${host} · laptop: ${words.laptop ?? "—"} · phone: ${words.phone ?? "—"}`, [
+          { label: "Live app", value: host },
+          { label: "Found from", value: live.from },
+          { label: "Pages explored", value: discovery.pages.length },
+          { label: "Steps written", value: `${count("demo")} demo + ${count("features")} flows` },
+          { label: "Laptop", value: words.laptop },
+          { label: "Phone", value: words.phone },
+        ]);
+      } catch (e) {
+        part(s, cur, "failed", reason(e));
+        end(s, "failed", reason(e));
+      } finally {
+        stop();
       }
     }
   };
 
   /** 4. Fact-check the claims (needs code + demo) */
   const factStep = async () => {
-    /* ---------- 4. Fact-check the claims ---------- */
     if (!commit) skipStep("dossier", "Needs the code: the code review couldn't fetch the repository.");
     else if (!hasCredentials()) skipStep("dossier", "Needs an LLM key on the server.");
     else {
@@ -510,7 +509,6 @@ async function execute(projectId, judge) {
 
   /** 5. Judges (need everything above) */
   const judgeStep = async () => {
-    /* ---------- 5. Judges ---------- */
     const panel = judgesStore.list();
     if (!hasCredentials()) skipStep("judges", "Needs an LLM key on the server.");
     else if (!panel.length) skipStep("judges", "There are no judges on the panel yet. Add one on /judge.");
@@ -536,7 +534,7 @@ async function execute(projectId, judge) {
         const scored = r.reviews.filter((x) => x.status === "scored").length;
         const panelScore = r.panelHundredths != null ? (r.panelHundredths / 100).toFixed(2) : null;
         // Whoever scored counts: the step is done if any judge scored; a judge who couldn't gets their own cross.
-        end(s, scored ? "done" : "failed", `${scored} of ${r.reviews.length} judge${r.reviews.length === 1 ? "" : "s"} scored${panelScore ? ` · panel ${panelScore}` : ""}${dossiers.get(projectId) ? "" : " · without a fact-check"}`, [
+        end(s, scored ? "done" : "failed", `${scored} of ${plural(r.reviews.length, "judge")} scored${panelScore ? ` · panel ${panelScore}` : ""}${dossiers.get(projectId) ? "" : " · without a fact-check"}`, [
           { label: "Panel average", value: panelScore ? `${panelScore} / 100` : null },
           ...r.reviews.map((x) => ({ label: x.judge?.name ?? x.judgeId, value: x.status === "scored" ? (x.overallHundredths / 100).toFixed(2) : "didn't score" })),
           { label: "Evidence they had", value: had.join(", ") || "the submission only" },
@@ -555,7 +553,9 @@ async function execute(projectId, judge) {
    *   live test and fact-check then run side by side; the judges go when both are in.
    */
   const demoReady = demoStep();
-  demoReady.then(() => (demoReady.settled = true));
+  // Handle both outcomes: a bare .then() would leave an unhandled rejection if the demo step threw.
+  const markSettled = () => (demoReady.settled = true);
+  demoReady.then(markSettled, markSettled);
   const codeReady = codeStep();
   const liveDone = liveStep();
   const factDone = Promise.all([codeReady, demoReady]).then(factStep);

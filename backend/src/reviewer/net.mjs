@@ -80,18 +80,6 @@ export function checkUrl(raw) {
   return u;
 }
 
-/** Kept for callers that only want the up-front check. Resolution is re-checked at connect. */
-export async function assertPublicHttps(raw) {
-  const u = checkUrl(raw);
-  const host = u.hostname.replace(/^\[|\]$/g, "");
-  if (!net.isIP(host)) {
-    const addrs = await dns.promises.lookup(host, { all: true }).catch(() => []);
-    if (!addrs.length) throw new Error(`Can't resolve ${host}.`);
-    if (addrs.some((a) => isPrivateAddress(a.address))) throw new Error("That link points at a private network address.");
-  }
-  return u;
-}
-
 // Reused connections: an HLS download is hundreds of small requests to one host.
 // The guarded lookup still runs for every new socket.
 // Node tries each address for only 250 ms by default (happy eyeballs); far-away

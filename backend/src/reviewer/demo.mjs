@@ -29,6 +29,10 @@ async function loomCaptions(id) {
   const { captions } = await loomPage(id);
   if (!captions) throw new Error("This Loom video has no captions to read.");
   const vttRes = await safeFetch(captions, { headers: { referer: "https://www.loom.com/" } });
+  if (!vttRes.ok) {
+    vttRes.body.resume?.();
+    throw new Error(`Loom's captions returned HTTP ${vttRes.status}.`);
+  }
   const vtt = (await readCapped(vttRes, 2 * 1024 * 1024)).toString("utf8");
   const lines = [...vtt.matchAll(/(\d\d):(\d\d):(\d\d)\.\d+ --> [^\n]+\n([\s\S]+?)(?:\n\n|$)/g)].map(
     (m) => `[${fmt(Number(m[1]) * 3600 + Number(m[2]) * 60 + Number(m[3]))}] ${m[4].replace(/<[^>]+>/g, "").replace(/\n/g, " ").trim()}`,

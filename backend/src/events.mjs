@@ -5,24 +5,19 @@
  */
 import fs from "node:fs";
 import path from "node:path";
+import { readJSON } from "./datafiles.mjs";
 import { DATA_DIR } from "./store.mjs";
 
-const FILE = () => path.join(DATA_DIR, "events.json");
+const FILE = path.join(DATA_DIR, "events.json");
 export const OVERALL = { id: "overall", name: "Overall finalist", prize: "" };
 export const MAX_TRACKS_PER_PROJECT = 3;
 export const JUDGES_PER_EVENT = 3;
 
-function readAll() {
-  try {
-    return JSON.parse(fs.readFileSync(FILE(), "utf8"));
-  } catch {
-    return [];
-  }
-}
+const readAll = () => readJSON("events.json", []);
 function writeAll(all) {
-  const tmp = `${FILE()}.${process.pid}.tmp`;
+  const tmp = `${FILE}.${process.pid}.tmp`;
   fs.writeFileSync(tmp, JSON.stringify(all, null, 2));
-  fs.renameSync(tmp, FILE());
+  fs.renameSync(tmp, FILE);
 }
 
 const clean = (v, max) => String(v ?? "").trim().slice(0, max);

@@ -8,7 +8,7 @@
  * structuredCall(schema, name, system, user) -> { parsed, refusal, usage, stop }
  * SDKs load lazily so only the configured one is imported.
  */
-import { callZeroG, EFFORT, hasCredentials, MODEL, PROVIDER } from "./judges/review.mjs";
+import { callZeroG, EFFORT, fromAnthropicMessage, fromOpenAIResponse, hasCredentials, MODEL, PROVIDER } from "./judges/review.mjs";
 
 // Keep the review pipeline and judge panel on the same provider and credentials.
 export { EFFORT, hasCredentials, MODEL, PROVIDER };
@@ -30,13 +30,7 @@ async function callOpenAI(schema, name, system, user) {
     max_output_tokens: 32000,
     text: { format: openai.zodTextFormat(schema, name) },
   });
-  const refusal = (res.output ?? []).flatMap((o) => (o.type === "message" ? o.content : [])).find((c) => c.type === "refusal")?.refusal ?? null;
-  return {
-    parsed: res.output_parsed ?? null,
-    refusal,
-    usage: { input_tokens: res.usage?.input_tokens ?? 0, output_tokens: res.usage?.output_tokens ?? 0 },
-    stop: res.incomplete_details?.reason ?? res.status,
-  };
+  return fromOpenAIResponse(res);
 }
 
 async function callAnthropic(schema, name, system, user) {
@@ -53,12 +47,7 @@ async function callAnthropic(schema, name, system, user) {
     system,
     messages: [{ role: "user", content: user }],
   });
-  return {
-    parsed: res.parsed_output ?? null,
-    refusal: res.stop_reason === "refusal" ? res.stop_details?.explanation ?? "The model declined." : null,
-    usage: { input_tokens: res.usage?.input_tokens ?? 0, output_tokens: res.usage?.output_tokens ?? 0 },
-    stop: res.stop_reason,
-  };
+  return fromAnthropicMessage(res, "The model declined.");
 }
 
 export const structuredCall = (schema, name, system, user) =>

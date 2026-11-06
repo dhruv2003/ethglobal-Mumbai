@@ -27,7 +27,7 @@ import { transcripts } from "../store.mjs";
 
 export const PROVIDERS = ["0g", "openai", "anthropic"];
 const DEFAULT_MODEL = { "0g": "0gm-1.0-35b-a3b", openai: "gpt-5.4", anthropic: "claude-opus-5-5" };
-const KEY_NAME = { "0g": "ZG_API_KEY", openai: "OPENAI_API_KEY", anthropic: "ANTHROPIC_API_KEY" };
+export const KEY_NAME = { "0g": "ZG_API_KEY", openai: "OPENAI_API_KEY", anthropic: "ANTHROPIC_API_KEY" };
 export const PROVIDER_LABEL = { "0g": "0G Compute Router", openai: "OpenAI", anthropic: "Anthropic" };
 
 const requested = (process.env.JUDGE_PROVIDER || "0g").toLowerCase();
@@ -77,14 +77,38 @@ export function missingCredentialsError(provider = PROVIDER) {
  */
 const imagesOf = (u) => (typeof u === "string" ? [] : u?.images ?? []);
 export const textOf = (u) => (typeof u === "string" ? u : u?.text ?? "");
-const toOpenAIInput = (u) =>
-  imagesOf(u).length
-    ? [{ role: "user", content: [{ type: "input_text", text: textOf(u) }, ...imagesOf(u).flatMap((i) => [{ type: "input_text", text: i.caption }, { type: "input_image", image_url: `data:${i.mime};base64,${i.data}`, detail: "high" }])] }]
-    : textOf(u);
+/** Plain text when there are no images; otherwise the text, then each image preceded by its caption. */
+const withImages = (u, textPart, imagePart) =>
+  imagesOf(u).length ? [textPart(textOf(u)), ...imagesOf(u).flatMap((i) => [textPart(i.caption), imagePart(i)])] : textOf(u);
+const dataUrl = (i) => `data:${i.mime};base64,${i.data}`;
+const toOpenAIInput = (u) => {
+  const content = withImages(u, (text) => ({ type: "input_text", text }), (i) => ({ type: "input_image", image_url: dataUrl(i), detail: "high" }));
+  return typeof content === "string" ? content : [{ role: "user", content }];
+};
 const toAnthropicContent = (u) =>
-  imagesOf(u).length ? [{ type: "text", text: textOf(u) }, ...imagesOf(u).flatMap((i) => [{ type: "text", text: i.caption }, { type: "image", source: { type: "base64", media_type: i.mime, data: i.data } }])] : textOf(u);
-const toChatContent = (u) =>
-  imagesOf(u).length ? [{ type: "text", text: textOf(u) }, ...imagesOf(u).flatMap((i) => [{ type: "text", text: i.caption }, { type: "image_url", image_url: { url: `data:${i.mime};base64,${i.data}` } }])] : textOf(u);
+  withImages(u, (text) => ({ type: "text", text }), (i) => ({ type: "image", source: { type: "base64", media_type: i.mime, data: i.data } }));
+const toChatContent = (u) => withImages(u, (text) => ({ type: "text", text }), (i) => ({ type: "image_url", image_url: { url: dataUrl(i) } }));
+
+/** OpenAI Responses API reply -> the adapter shape (shared with the reviewer's llm.mjs). */
+export function fromOpenAIResponse(res) {
+  const refusal = (res.output ?? []).flatMap((o) => (o.type === "message" ? o.content : [])).find((c) => c.type === "refusal")?.refusal ?? null;
+  return {
+    parsed: res.output_parsed ?? null,
+    refusal,
+    usage: { input_tokens: res.usage?.input_tokens ?? 0, output_tokens: res.usage?.output_tokens ?? 0 },
+    stop: res.incomplete_details?.reason ?? res.status,
+  };
+}
+
+/** Anthropic Messages reply -> the adapter shape (shared with the reviewer's llm.mjs). */
+export function fromAnthropicMessage(res, declined) {
+  return {
+    parsed: res.parsed_output ?? null,
+    refusal: res.stop_reason === "refusal" ? res.stop_details?.explanation ?? declined : null,
+    usage: { input_tokens: res.usage?.input_tokens ?? 0, output_tokens: res.usage?.output_tokens ?? 0 },
+    stop: res.stop_reason,
+  };
+}
 
 /*
  * Provider adapters. Each takes (system, user) and returns
@@ -108,14 +132,7 @@ async function callOpenAI(system, user, model = MODEL) {
         text: { format },
       });
   })();
-  const res = await openaiCall(system, user, model);
-  const refusal = (res.output ?? []).flatMap((o) => (o.type === "message" ? o.content : [])).find((c) => c.type === "refusal")?.refusal ?? null;
-  return {
-    parsed: res.output_parsed ?? null,
-    refusal,
-    usage: { input_tokens: res.usage?.input_tokens ?? 0, output_tokens: res.usage?.output_tokens ?? 0 },
-    stop: res.incomplete_details?.reason ?? res.status,
-  };
+  return fromOpenAIResponse(await openaiCall(system, user, model));
 }
 
 let anthropicCall;
@@ -135,13 +152,7 @@ async function callAnthropic(system, user) {
         messages: [{ role: "user", content: toAnthropicContent(usr) }],
       });
   })();
-  const res = await anthropicCall(system, user);
-  return {
-    parsed: res.parsed_output ?? null,
-    refusal: res.stop_reason === "refusal" ? res.stop_details?.explanation ?? "The model declined to review." : null,
-    usage: { input_tokens: res.usage?.input_tokens ?? 0, output_tokens: res.usage?.output_tokens ?? 0 },
-    stop: res.stop_reason,
-  };
+  return fromAnthropicMessage(await anthropicCall(system, user), "The model declined to review.");
 }
 
 /*
