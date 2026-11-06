@@ -184,9 +184,20 @@ export default function App() {
                     Build your <span className="hl hl--crush">fighter</span>
                   </h1>
                   <p className="t-body m0 muted rise" style={{ "--i": 2 }}>
-                    Seven fields. Watch your fighter take shape as you fill them in.
+                    Three rounds, seven fields. Your fighter levels up as you fill them in.
                   </p>
-                  <span className="t-caption save-state rise" style={{ "--i": 3 }} data-saved={savedAt ? "true" : "false"}>
+                  <ul className="after-submit rise" style={{ "--i": 3 }} aria-label="What happens after you submit">
+                    <li>
+                      <span aria-hidden="true">1</span>We pin your commit
+                    </li>
+                    <li>
+                      <span aria-hidden="true">2</span>Replay your demo on a laptop and a phone
+                    </li>
+                    <li>
+                      <span aria-hidden="true">3</span>Three AI judges score it
+                    </li>
+                  </ul>
+                  <span className="t-caption save-state rise" style={{ "--i": 4 }} data-saved={savedAt ? "true" : "false"}>
                     <span className="save-state__dot" aria-hidden="true" />
                     {savedAt ? `Draft saved ${savedAt}` : "Drafts save as you type"}
                   </span>

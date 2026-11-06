@@ -1,7 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { isPrivateAddress, safeFetch } from "../src/reviewer/net.mjs";
-import { classifyDemo, sniffContainer } from "../src/reviewer/demo.mjs";
+import { sniffContainer } from "../src/reviewer/demo.mjs";
+import { classifyVideo as classifyDemo } from "../src/reviewer/media.mjs";
 import { corpusOf, hrefsOf, selectorMatches, toRunnerSteps } from "../src/reviewer/flows.mjs";
 
 const discovery = { pages: [{ path: "/", title: "Tap", headings: ["Payments at the pace of a tap"], buttons: ["Download APK"], links: [{ text: "Docs", href: "https://tap.example/docs" }], inputs: [], text: "Turn any Android phone into a terminal" }] };
@@ -41,9 +42,9 @@ test("private and loopback addresses are refused for downloads", () => {
   for (const ip of ["8.8.8.8", "151.101.1.1", "20.207.73.85", "2606:4700::1111", "::ffff:8.8.8.8", "64:ff9b::808:808"]) assert.ok(!isPrivateAddress(ip), ip);
 });
 
-test("demo links are classified: Mux and files download, YouTube is skipped", () => {
+test("demo links are classified: Mux and files download, YouTube only embeds", () => {
   assert.equal(classifyDemo("https://stream.mux.com/abc123.m3u8").url, "https://stream.mux.com/abc123/high.mp4");
-  assert.equal(classifyDemo("https://youtu.be/x").kind, "unsupported");
+  assert.equal(classifyDemo("https://youtu.be/x").kind, "embed-only");
   assert.equal(classifyDemo("https://www.loom.com/share/17b1dc5da755422ea3177d4842556813").kind, "loom");
   assert.equal(classifyDemo("https://cdn.example/demo.mp4").kind, "file");
 });

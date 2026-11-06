@@ -58,6 +58,9 @@ function guardedLookup(hostname, options, callback) {
     if (err) return callback(err);
     const bad = addrs.find((a) => isPrivateAddress(a.address));
     if (bad || !addrs.length) return callback(Object.assign(new Error("That link points at a private network address."), { code: "EPRIVATE" }));
+    // IPv4 first: many hosts publish AAAA records that the network can't reach, and
+    // connecting to those just hangs. Every address was checked above either way.
+    addrs.sort((a, b) => a.family - b.family);
     if (options?.all) return callback(null, addrs);
     callback(null, addrs[0].address, addrs[0].family);
   });
@@ -89,9 +92,16 @@ export async function assertPublicHttps(raw) {
   return u;
 }
 
+// Reused connections: an HLS download is hundreds of small requests to one host.
+// The guarded lookup still runs for every new socket.
+// Node tries each address for only 250 ms by default (happy eyeballs); far-away
+// hosts take longer than that to connect, so every attempt "times out".
+const CONNECT = { autoSelectFamily: true, autoSelectFamilyAttemptTimeout: 2000 };
+const agent = new https.Agent({ keepAlive: true, maxSockets: 16, lookup: guardedLookup, ...CONNECT });
+
 function get(u, headers, timeoutMs) {
   return new Promise((resolve, reject) => {
-    const req = https.request(u, { method: "GET", headers: { "user-agent": "BattleArenaReviewer/1.0", ...headers }, lookup: guardedLookup, timeout: timeoutMs }, (res) => resolve(res));
+    const req = https.request(u, { method: "GET", headers: { "user-agent": "BattleArenaReviewer/1.0", ...headers }, agent, lookup: guardedLookup, ...CONNECT, timeout: timeoutMs }, (res) => resolve(res));
     req.on("timeout", () => req.destroy(new Error("The link took too long to answer.")));
     req.on("error", reject);
     req.end();

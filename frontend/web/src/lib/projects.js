@@ -5,6 +5,7 @@
 import { api } from "./api.js";
 import { DEMO_ENABLED, isOutage } from "./demo.js";
 import { listSubmissions } from "./storage.js";
+import { uploadUrl } from "./video.js";
 
 function fromSubmission(r) {
   return {
@@ -17,6 +18,10 @@ function fromSubmission(r) {
     description: r.project?.description ?? "",
     repoUrl: r.repoUrl ?? "",
     videoUrl: r.demoVideoUrl ?? "",
+    // Our server's copy of the demo video: { saved, url, seconds, bytes, source } or { saved: false, reason }.
+    savedVideo: r.video ?? null,
+    // Screenshots instead of (or as well as) a video: playable URLs, in the team's order.
+    demoImages: (r.demoImages ?? []).map(uploadUrl).filter(Boolean),
     liveUrl: r.liveUrl ?? null,
     savedLocallyOnly: Boolean(r.savedLocallyOnly),
     tracks: r.tracks ?? [],
@@ -59,21 +64,4 @@ export async function getProject(id) {
 }
 
 /** Embeddable player URL for Loom and YouTube links; null for anything else. */
-export function embedUrl(url) {
-  try {
-    const u = new URL(url);
-    const host = u.hostname.replace(/^www\./, "");
-    if (host === "loom.com") {
-      const id = u.pathname.match(/\/(?:share|embed)\/([a-f0-9]+)/)?.[1];
-      return id ? `https://www.loom.com/embed/${id}` : null;
-    }
-    if (host === "youtu.be") return `https://www.youtube-nocookie.com/embed/${u.pathname.slice(1)}`;
-    if (host === "youtube.com" || host === "m.youtube.com") {
-      const id = u.searchParams.get("v") ?? u.pathname.match(/\/(?:embed|shorts)\/([^/]+)/)?.[1];
-      return id ? `https://www.youtube-nocookie.com/embed/${id}` : null;
-    }
-  } catch {
-    /* not a URL */
-  }
-  return null;
-}
+export { embedUrl } from "./video.js";

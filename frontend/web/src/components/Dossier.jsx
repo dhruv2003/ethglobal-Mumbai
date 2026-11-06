@@ -25,7 +25,7 @@ const STEP_STATE = {
   failed: { tone: "danger", word: "✕ Failed" },
   skipped: { tone: "neutral", word: "Skipped" },
 };
-const DEFAULT_STEPS = ["Fetch the repository", "Pin the commit", "Count the tests", "Read the demo video", "Build the evidence dossier", "Test the live app on cloud browsers", "Judges score it"].map((title, i) => ({ id: `s${i}`, title, status: "queued" }));
+const DEFAULT_STEPS = ["Fetch the repository", "Pin the commit", "Count the tests", "Save and read the demo video", "Build the evidence dossier", "Test the live app on cloud browsers", "Judges score it"].map((title, i) => ({ id: `s${i}`, title, status: "queued" }));
 
 export function DossierPending({ project, state, running, review, offline, onRerun, rerunError }) {
   const steps = state?.steps ?? DEFAULT_STEPS;

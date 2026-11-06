@@ -17,6 +17,10 @@
  *   GET    /api/projects/:id/dossier   the reviewer's dossier for a submitted project
  *   GET    /api/projects/:id/live      live test results (+ /live/files/<device>/<file> for media)
  *   DELETE /api/projects/:id           delete a submitted project and its data   (organizer)
+ *   POST   /api/uploads/video          upload a demo video file (raw body; MP4, MOV or WebM, max 300 MB)
+ *   POST   /api/uploads/image          upload a demo screenshot (raw body; PNG, JPEG or WebP, max 10 MB)
+ *   GET    /api/uploads/:file          play an uploaded video
+ *   GET    /api/projects/:id/video     our saved copy of the demo video (+ /video/file to play it)
  *   GET    /api/projects/:id/arkiv     the result as published on Arkiv (read from Arkiv) + Swarm links
  *   POST   /api/projects/:id/arkiv     publish the latest result to Swarm + Arkiv again   (organizer)
  *   POST   /api/projects/:id/reviews/public   anyone: re-judge a sample project on 0G (rate limited, capped per day)
@@ -33,7 +37,8 @@ import { EXAMPLE_FORMS } from "./judges/seed.mjs";
 import { loadProject } from "./projects.mjs";
 import fs from "node:fs";
 import path from "node:path";
-import { deleteProject, dossiers, judges, liveDir, pipelines, reviews, submissions } from "./store.mjs";
+import { deleteProject, dossiers, judges, liveDir, mediaDir, pipelines, reviews, submissions, videos } from "./store.mjs";
+import { cleanUploads, IMAGE_MAX, IMAGE_REF, MAX_IMAGES, MIME, storeImageUpload, storeUpload, UPLOAD_DIR, UPLOAD_FILE, UPLOAD_REF, VIDEO_MAX } from "./reviewer/media.mjs";
 import { dequeue, enqueue, isRunning, queueLength, queuePosition, resumeQueue } from "./reviewer/pipeline.mjs";
 import { checkSubmissionSignature, rateLimit, requireOrganizer } from "./security.mjs";
 import { canRead, canWrite, publisher, readLatest } from "./arkiv/arkiv.mjs";
@@ -189,13 +194,49 @@ function reviewStatus(id) {
 }
 
 /** Submissions as the public sees them: no signature material. */
-const publicSubmission = ({ auth, ...rest }) => ({ ...rest, signed: Boolean(auth?.signature), review: reviewStatus(rest.id) });
+const publicSubmission = ({ auth, ...rest }) => ({ ...rest, signed: Boolean(auth?.signature), review: reviewStatus(rest.id), video: publicVideo(rest.id) });
+
+/** What the web app needs to play our copy of the demo video. */
+function publicVideo(id) {
+  const v = videos.get(id);
+  if (!v) return null;
+  if (v.error) return { saved: false, reason: v.error };
+  return { saved: true, url: `/api/projects/${encodeURIComponent(id)}/video/file`, seconds: v.seconds, bytes: v.bytes, source: v.source };
+}
+
+/** A demo needs a video or at least one screenshot. Returns an error string or null. */
+function checkDemo(body) {
+  const imgs = body.demoImages ?? [];
+  if (!Array.isArray(imgs) || imgs.length > MAX_IMAGES) return `Add up to ${MAX_IMAGES} screenshots.`;
+  for (const ref of imgs) {
+    const m = IMAGE_REF.exec(String(ref));
+    if (!m || !fs.existsSync(path.join(UPLOAD_DIR, m[1]))) return "One of the screenshots isn't on the server any more. Upload it again.";
+  }
+  if (!body.demoVideoUrl) return imgs.length ? null : "Add a demo video or some screenshots.";
+  return checkDemoVideo(body.demoVideoUrl);
+}
+
+/** Is this an acceptable demo video value? Returns an error string or null. */
+function checkDemoVideo(v) {
+  if (!v) return "Add a demo video.";
+  if (String(v).startsWith("upload:")) {
+    const m = UPLOAD_REF.exec(v);
+    return m && fs.existsSync(path.join(UPLOAD_DIR, m[1])) ? null : "That uploaded video isn't on the server any more. Upload it again.";
+  }
+  try {
+    return new URL(v).protocol === "https:" ? null : "The demo video link must start with https://.";
+  } catch {
+    return "The demo video link isn't a valid URL.";
+  }
+}
 
 router.get("/submissions", (req, res) => res.json(submissions.list().map(publicSubmission)));
 
 router.post("/submissions", rateLimit({ max: 5, windowMs: 60 * 60 * 1000 }), async (req, res) => {
   const body = req.body ?? {};
   if (!body.project?.name || !body.repoUrl || !body.ownerWallet) return res.status(400).json({ error: "Missing project name, repo or owner wallet." });
+  const videoError = checkDemo(body);
+  if (videoError) return res.status(400).json({ error: videoError });
   const sigError = await checkSubmissionSignature(body, {
     seen: (sig) => submissions.list().some((s) => String(s.auth?.signature ?? "").toLowerCase() === sig),
   });
@@ -262,6 +303,79 @@ router.get("/projects/:id/live/files/:device/:file", (req, res) => {
   if (!fs.existsSync(full)) return res.status(404).end();
   res.sendFile(full, { headers: { "cache-control": "private, max-age=3600" } });
 });
+
+/* ---- Demo videos ---- */
+
+const VIDEO_TYPES = new Set(["video/mp4", "video/quicktime", "video/webm", "application/octet-stream"]);
+
+/** Upload a demo video before signing: the returned ref goes into the signed submission. */
+router.post("/uploads/video", rateLimit({ max: 10, windowMs: 60 * 60 * 1000, message: "Too many uploads from here. Try again later." }), async (req, res) => {
+  const type = String(req.headers["content-type"] ?? "").split(";")[0].trim().toLowerCase();
+  if (!VIDEO_TYPES.has(type)) return res.status(415).json({ error: "Upload an MP4, MOV or WebM video." });
+  const declared = Number(req.headers["content-length"] ?? 0);
+  if (declared > VIDEO_MAX) return res.status(413).json({ error: `That video is over ${Math.round(VIDEO_MAX / 1048576)} MB.` });
+  try {
+    const up = await storeUpload(req, { declaredBytes: declared });
+    res.status(201).json({ ref: `upload:${up.file}`, url: `/api/uploads/${up.file}`, bytes: up.bytes, seconds: up.seconds });
+  } catch (e) {
+    if (!res.headersSent) res.status(e.status ?? 500).json({ error: e.status ? e.message : "The upload failed. Try again." });
+    req.resume();
+  }
+});
+
+router.post("/uploads/image", rateLimit({ max: 60, windowMs: 60 * 60 * 1000, message: "Too many uploads from here. Try again later." }), async (req, res) => {
+  const type = String(req.headers["content-type"] ?? "").split(";")[0].trim().toLowerCase();
+  if (!["image/png", "image/jpeg", "image/webp", "application/octet-stream"].includes(type)) return res.status(415).json({ error: "Upload a PNG, JPEG or WebP image." });
+  if (Number(req.headers["content-length"] ?? 0) > IMAGE_MAX) return res.status(413).json({ error: "That image is over 10 MB." });
+  try {
+    const up = await storeImageUpload(req);
+    res.status(201).json({ ref: `upload:${up.file}`, url: `/api/uploads/${up.file}`, bytes: up.bytes });
+  } catch (e) {
+    if (!res.headersSent) res.status(e.status ?? 500).json({ error: e.status ? e.message : "The upload failed. Try again." });
+    req.resume();
+  }
+});
+
+const sendVideo = (res, full, ext) =>
+  res.sendFile(full, { headers: { "content-type": MIME[ext], "x-content-type-options": "nosniff", "content-disposition": "inline", "cache-control": "private, max-age=3600" } });
+
+router.get("/uploads/:file", (req, res) => {
+  const { file } = req.params;
+  if (!UPLOAD_FILE.test(file)) return res.status(404).end();
+  const full = path.join(UPLOAD_DIR, file);
+  if (!fs.existsSync(full)) return res.status(404).end();
+  sendVideo(res, full, path.extname(file).slice(1));
+});
+
+router.get("/projects/:id/video", (req, res) => res.json({ video: publicVideo(req.params.id) }));
+
+router.get("/projects/:id/video/file", (req, res) => {
+  const v = videos.get(req.params.id);
+  if (!v || v.error || !MIME[v.ext]) return res.status(404).end();
+  const full = path.join(mediaDir(req.params.id), `demo.${v.ext}`);
+  if (!fs.existsSync(full)) return res.status(404).end();
+  sendVideo(res, full, v.ext);
+});
+
+// Uploads nobody submitted are removed after a day.
+const referencedUploads = () =>
+  new Set(
+    submissions
+      .list()
+      .flatMap((s) => [UPLOAD_REF.exec(s.demoVideoUrl ?? "")?.[1], ...(s.demoImages ?? []).map((r) => IMAGE_REF.exec(String(r))?.[1])])
+      .filter(Boolean),
+  );
+if (process.env.ARENA_SERVER === "1") {
+  const sweep = () => {
+    try {
+      cleanUploads(referencedUploads());
+    } catch (e) {
+      console.warn("[uploads] clean-up failed:", e.message);
+    }
+  };
+  sweep();
+  setInterval(sweep, 60 * 60 * 1000).unref();
+}
 
 /** Delete a submitted project and everything stored for it. */
 router.delete("/projects/:id", requireOrganizer, (req, res) => {

@@ -3,7 +3,8 @@ import { AnimatePresence, LayoutGroup, motion } from "motion/react";
 import { Progress, StatusPill } from "@ds/ui.jsx";
 import { EVENT } from "../config/event.js";
 import { useCountUp } from "../lib/motion.js";
-import { embedUrl, getProject, listProjects } from "../lib/projects.js";
+import { getProject, listProjects } from "../lib/projects.js";
+import { DemoVideo } from "./DemoVideo.jsx";
 import { Link } from "../lib/router.jsx";
 import { shortAddress } from "../lib/wallet.js";
 import { Ring } from "./Arena.jsx";
@@ -607,7 +608,6 @@ export function ProjectPage({ id }) {
     );
   }
 
-  const embed = embedUrl(p.videoUrl);
   return (
     <>
       {back}
@@ -651,18 +651,7 @@ export function ProjectPage({ id }) {
           exit={{ opacity: 0, x: -24, transition: { duration: 0.15 } }}
           transition={{ duration: 0.4, ease: easeOut }}
         >
-          <section className="card stack rise" style={{ "--i": 2 }} aria-label="Demo video">
-            {embed ? (
-              <div className="video">
-                <iframe src={embed} title={`${p.name} demo video`} allow="fullscreen; picture-in-picture" allowFullScreen loading="lazy" />
-              </div>
-            ) : (
-              <p className="t-body m0">This video can't be embedded.</p>
-            )}
-            <a className="t-caption" href={p.videoUrl} target="_blank" rel="noreferrer">
-              Open the demo video
-            </a>
-          </section>
+          <DemoVideo project={p} />
 
           <section className="card stack rise" style={{ "--i": 3 }} aria-labelledby="about-h">
             <h3 id="about-h" className="t-heading m0">What it does and how it's built</h3>
