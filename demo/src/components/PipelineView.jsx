@@ -149,76 +149,6 @@ function useWidth(ref) {
   return w;
 }
 
-/* ---------- where the time went: every step on one time axis ---------- */
-
-const PART_SHADE = { connect: 0.45, explore: 0.6, write: 0.75, laptop: 1, android: 1, ios: 1, phone: 1, save: 0.45 };
-function TimeBars({ steps, start, end, sel, onPick }) {
-  const t0 = Date.parse(start);
-  const total = Date.parse(end) - t0;
-  if (!(total > 0)) return null;
-  const at = (iso) => ((Date.parse(iso) - t0) / total) * 100;
-  const rows = steps.filter((s) => s.startedAt && s.finishedAt);
-  const longest = rows.reduce((m, s) => (secs(s.startedAt, s.finishedAt) > secs(m.startedAt, m.finishedAt) ? s : m), rows[0]);
-  const share = longest ? Math.round((secs(longest.startedAt, longest.finishedAt) / (total / 1000)) * 100) : 0;
-  const ticks = [0, 0.25, 0.5, 0.75, 1];
-  return (
-    <div className="tbars">
-      <div className="tbars__head">
-        <span className="tbars__title">Where the time went</span>
-        {longest && (
-          <span className="tbars__note">
-            {NODES.find((n) => n.id === longest.id)?.short ?? longest.title} took <b className="t-num">{share}%</b> of the review
-          </span>
-        )}
-      </div>
-      <ol className="tbars__rows m0">
-        {rows.map((s, i) => {
-          const node = NODES.find((n) => n.id === s.id);
-          const parallel = s.id === "live" ? (s.parts ?? []).filter((p) => DEVICE_OS[p.id]) : [];
-          const seq = (s.parts ?? []).filter((p) => p.startedAt && p.finishedAt && !DEVICE_OS[p.id]);
-          return (
-            <li key={s.id}>
-              <button type="button" className={`tbar tbar--${node?.tone ?? "oracle"} ${sel === s.id ? "is-on" : ""}`} onClick={() => onPick(s.id)}>
-                <span className="tbar__label">{node?.short ?? s.title}</span>
-                <span className="tbar__track">
-                  <motion.span
-                    className="tbar__fill"
-                    style={{ left: `${at(s.startedAt)}%` }}
-                    initial={{ width: 0 }}
-                    animate={{ width: `${Math.max(0.6, at(s.finishedAt) - at(s.startedAt))}%` }}
-                    transition={{ duration: 0.7, delay: 0.05 * i, ease: [0.16, 1, 0.3, 1] }}
-                  >
-                    {seq.map((p) => (
-                      <span key={p.id} className="tbar__part" title={`${p.label} · ${fmt(secs(p.startedAt, p.finishedAt))}`} style={{ left: `${((Date.parse(p.startedAt) - Date.parse(s.startedAt)) / (Date.parse(s.finishedAt) - Date.parse(s.startedAt))) * 100}%`, width: `${(secs(p.startedAt, p.finishedAt) / secs(s.startedAt, s.finishedAt)) * 100}%`, opacity: PART_SHADE[p.id] ?? 0.7 }} />
-                    ))}
-                    {parallel.length > 0 && (
-                      <span className="tbar__lanes" style={{ left: `${((Date.parse(parallel[0].startedAt) - Date.parse(s.startedAt)) / (Date.parse(s.finishedAt) - Date.parse(s.startedAt))) * 100}%` }}>
-                        {parallel.map((p) => (
-                          <span key={p.id} className="tbar__lane" title={`${p.label} · ${fmt(secs(p.startedAt, p.finishedAt))}`} style={{ width: `${(secs(p.startedAt, p.finishedAt) / secs(parallel[0].startedAt, s.finishedAt)) * 100}%` }}>
-                            <OsLogo os={p.os ?? DEVICE_OS[p.id]} size={10} />
-                          </span>
-                        ))}
-                      </span>
-                    )}
-                  </motion.span>
-                </span>
-                <span className="tbar__time t-num">{fmt(secs(s.startedAt, s.finishedAt))}</span>
-              </button>
-            </li>
-          );
-        })}
-      </ol>
-      <div className="tbars__axis t-num" aria-hidden="true">
-        {ticks.map((t) => (
-          <span key={t} style={{ left: `${t * 100}%` }}>
-            {fmt(Math.round((total / 1000) * t))}
-          </span>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 /* ---------- canvas ---------- */
 
 const partPct = (s) => {
@@ -613,18 +543,6 @@ export function PipelineView({ project, live, onChanged, panelScore, onOpen, can
             setSelected(id);
           }}
         />
-        {finished && (
-          <TimeBars
-            steps={steps}
-            start={live.state.startedAt}
-            end={live.state.finishedAt}
-            sel={sel.id}
-            onPick={(id) => {
-              setFollow(false);
-              setSelected(id);
-            }}
-          />
-        )}
         <ul className="flegend" aria-label="Legend">
           <li>
             <span className="flegend__k flegend__k--done" /> done
