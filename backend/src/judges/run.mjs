@@ -4,7 +4,8 @@
  *
  *   cd backend && npm run judge -- --project go-health-me [--evidence] [--fresh-evidence] [--no-fixture] [--out file.json]
  *
- * Saves to backend/data/reviews/<id>.json. For sample projects it also writes
+ * Saves to backend/data/reviews/<id>.json (and, with ZG_STORAGE=1, archives it on
+ * 0G Storage before exiting; prints "pending" if 0G is slow). For sample projects it also writes
  * backend/fixtures/<id>/reviews.json so the static web app can show it, unless
  * --no-fixture is given (use that to compare models before picking one).
  *   --evidence        a vision model on 0G reads the live-test screenshots first
@@ -15,6 +16,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { reviewNow } from "../api.mjs";
+import { zgStatus } from "../store.mjs";
+import * as archive from "../zg/archive.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
@@ -58,7 +61,18 @@ try {
     fs.writeFileSync(path.join(fixture, "reviews.json"), JSON.stringify(result, null, 2));
     console.log(`wrote fixtures/${id}/reviews.json`);
   }
+  if (archive.enabled()) {
+    console.log("Archiving on 0G Storage…");
+    const left = await archive.drain({ timeoutMs: Number(process.env.ZG_STORAGE_DRAIN_MS) || 5 * 60_000 });
+    const st = zgStatus("review", id);
+    if (st.status === "stored") console.log(`0G Storage: review stored · root ${st.rootHash} · tx ${st.txHash ?? "(already on network)"}${st.links?.tx ? ` · ${st.links.tx}` : ""}`);
+    else console.log(`0G Storage: review ${st.status}${st.error ? ` (${st.error})` : ""}; the server will keep retrying.`);
+    const head = archive.loadHead();
+    if (head) console.log(`0G Storage head manifest: ${head.rootHash}`);
+    if (left.pending || left.failed) console.log(`0G outbox: ${left.pending} pending, ${left.failed} failed`);
+  }
 } catch (e) {
   console.error(e.message);
   process.exit(1);
 }
+process.exit(0);
