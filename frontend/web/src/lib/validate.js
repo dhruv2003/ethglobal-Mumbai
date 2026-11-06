@@ -15,7 +15,7 @@ export const isHttpsUrl = (v) => {
 export const GITHUB_REPO = /^https:\/\/github\.com\/[A-Za-z0-9-]{1,39}\/[A-Za-z0-9._-]{1,100}\/?$/;
 
 /** Character limits shown as counters on the form. */
-export const LIMITS = { teamName: 60, projectName: 60, pitch: 140, description: 1500 };
+export const LIMITS = { teamName: 60, projectName: 60, pitch: 140, description: 5000 };
 
 const blank = (v) => !String(v ?? "").trim();
 
