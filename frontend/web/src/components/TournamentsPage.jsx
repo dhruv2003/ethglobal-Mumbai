@@ -8,14 +8,12 @@ import confetti from "canvas-confetti";
 import { Card, Chip, StatusPill } from "@ds/ui.jsx";
 import { usePoll } from "../lib/chain.js";
 import { loadTournament, loadTournaments } from "../lib/arena.js";
-import { findMockTournament } from "../lib/demoArena.js";
 import { MATCH_LABEL, PHASE_LABEL } from "../lib/labels.js";
 import { POOL_LABEL, tournamentMarket } from "../lib/pools.js";
 import { Link, navigate } from "../lib/router.jsx";
-import { practicePools } from "../lib/practice.js";
 import { BetModal } from "./BetModal.jsx";
 import { isMatchOpen, openPools } from "../lib/tournamentView.js";
-import { BetPanel, SamplePool } from "./BetPanel.jsx";
+import { BetPanel } from "./BetPanel.jsx";
 import { useCountdown } from "./ChainBits.jsx";
 import { PixelFighter } from "./PixelFighter.jsx";
 import { Tilt, fadeUp, popIn, stagger } from "./fx.jsx";
@@ -32,9 +30,9 @@ const ORDER = { live: 0, upcoming: 1, completed: 2, canceled: 3 };
 const when = (iso) => new Date(iso).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
 
 function TournamentCard({ t }) {
-  const open = openPools(t).length > 0 || (t.demo && (t.phase === "live" || t.phase === "upcoming"));
+  const open = openPools(t).length > 0;
   const label = open ? POOL_LABEL.OPEN : PHASE_LABEL[t.phase];
-  const cta = t.demo && !open ? "View results" : open ? "Bet now" : t.phase === "live" ? "Watch" : t.phase === "upcoming" ? "View bracket" : "View results";
+  const cta = open ? "Bet now" : t.phase === "live" ? "Watch" : t.phase === "upcoming" ? "View bracket" : "View results";
   return (
     <motion.div variants={fadeUp} layout>
       <Tilt className="tcard-tilt" sheen={false} max={4}>
@@ -47,7 +45,7 @@ function TournamentCard({ t }) {
           <div className="tcard__body">
             <div className="section-head">
               <StatusPill tone={label.tone}>{label.word}</StatusPill>
-              {!t.demo && <StatusPill tone="reward">On chain</StatusPill>}
+              <StatusPill tone="reward">On chain</StatusPill>
             </div>
             <h2 className="t-heading m0">{t.title}</h2>
             <p className="t-caption m0 t-num">
@@ -74,7 +72,10 @@ function OpenPool({ pool, onBet }) {
       )}
       <span className="open-pool__text">
         <span className="t-body-strong">{pool.title}</span>
-        <span className="t-caption">{pool.detail}</span>
+        <span className="t-caption">
+          Testnet FILTER
+          {pool.detail ? ` · ${pool.detail}` : ""}
+        </span>
       </span>
       <span className="t-caption t-num open-pool__clock">
         {pool.live ? (
@@ -111,8 +112,7 @@ function OpenForBetting({ tournaments, loaded, failed, wallet }) {
     const t = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(t);
   }, []);
-  // Real chain pools first; the demo events take practice bets so there is always a live fight.
-  const pools = useMemo(() => [...tournaments.flatMap((t) => openPools(t, now)), ...practicePools().slice(0, 6)], [tournaments, now]);
+  const pools = useMemo(() => tournaments.flatMap((t) => openPools(t, now)), [tournaments, now]);
   return (
     <section className="stack" aria-label="Open for betting">
       <div className="section-head">
@@ -202,7 +202,7 @@ function BracketMatch({ t, match }) {
       {match.winner != null && match.winner === p ? <span className="bracket-line__tick" aria-label="winner">★</span> : null}
     </span>
   );
-  const canOpen = t.demo ? match.a != null && match.b != null : match.opened;
+  const canOpen = match.opened;
   const body = (
     <>
       <StatusPill tone={label.tone}>{label.word}</StatusPill>
@@ -301,12 +301,7 @@ function HowDrawn({ t }) {
 
 function Lobby({ t, wallet }) {
   const label = openPools(t).length ? POOL_LABEL.OPEN : PHASE_LABEL[t.phase];
-  const countdown = useCountdown(t.phase === "upcoming" ? (t.demo ? new Date(t.startsAt).getTime() : t.cutoffMs) : null);
-  const shares = useMemo(() => {
-    const raw = t.projects.map((_, i) => 1 + ((i * 37 + t.count * 11) % 19));
-    const sum = raw.reduce((a, b) => a + b, 0);
-    return raw.map((v) => Math.round((v / sum) * 100));
-  }, [t.projects, t.count]);
+  const countdown = useCountdown(t.phase === "upcoming" ? t.cutoffMs : null);
   const selections = t.projects.map((project, i) => ({ id: i, project }));
 
   return (
@@ -318,7 +313,7 @@ function Lobby({ t, wallet }) {
         <div className="intro">
           <span className="org-roles">
             <StatusPill tone={label.tone}>{label.word}</StatusPill>
-            {!t.demo && <StatusPill tone="reward">On chain</StatusPill>}
+            <StatusPill tone="reward">On chain</StatusPill>
           </span>
           <h1 className="t-display-lg m0 rise">{t.title}</h1>
           <p className="t-body m0 muted">
@@ -327,7 +322,7 @@ function Lobby({ t, wallet }) {
         </div>
         {countdown && countdown.left > 0 && (
           <motion.div className="lobby-clock" variants={popIn} initial="hidden" animate="show">
-            <span className="t-caption">{t.demo ? "Starts in" : "Betting closes in"}</span>
+            <span className="t-caption">Betting closes in</span>
             <span className="t-display-md t-num">{countdown.text}</span>
           </motion.div>
         )}
@@ -335,7 +330,7 @@ function Lobby({ t, wallet }) {
 
       {t.champion != null && <ChampionBanner t={t} />}
 
-      {!t.demo && !t.frozen && t.phase !== "canceled" ? (
+      {!t.frozen && t.phase !== "canceled" ? (
         <Card variant="surface" className="empty">
           <span className="t-body muted">Betting opens once the organizer locks the bracket.</span>
           <Link className="btn btn--secondary btn--sm" to="/organizer">
@@ -350,11 +345,7 @@ function Lobby({ t, wallet }) {
             <RulesCard />
           </div>
           <div className="lobby-side">
-            {t.demo ? (
-              <SamplePool title="Who wins it all?" total={t.poolTotal ?? 0} selections={selections} shares={shares} />
-            ) : (
-              <BetPanel wallet={wallet} tournamentId={t.id} market={tournamentMarket(t.id)} selections={selections} title="Who wins it all?" />
-            )}
+            <BetPanel wallet={wallet} tournamentId={t.id} market={tournamentMarket(t.id)} selections={selections} title="Who wins it all?" />
           </div>
         </div>
       )}
@@ -382,5 +373,5 @@ function Missing({ word }) {
 }
 
 export function TournamentPage({ id, wallet }) {
-  return /^\d+$/.test(id) || findMockTournament(id) ? <ChainLobby id={id} wallet={wallet} /> : <Missing word="We couldn't find that tournament." />;
+  return /^\d+$/.test(id) ? <ChainLobby id={id} wallet={wallet} /> : <Missing word="We couldn't find that tournament." />;
 }

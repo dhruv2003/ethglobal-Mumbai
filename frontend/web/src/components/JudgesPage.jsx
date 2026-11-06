@@ -77,7 +77,6 @@ function Seat({ judge, criteria, onEdit, onRemove, i }) {
       <div className="seat__body">
         <div className="fighter-card__badges">
           <StatusPill tone="neutral">{judge.tone}</StatusPill>
-          {judge.example && <StatusPill tone="neutral">Example judge</StatusPill>}
         </div>
         <h2 className="t-heading m0">{judge.name}</h2>
         <p className="t-caption m0">{judge.title}</p>

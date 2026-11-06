@@ -24,7 +24,6 @@
  *   GET    /api/projects/:id/video     our saved copy of the demo video (+ /video/file to play it)
  *   GET    /api/projects/:id/arkiv     the result as published on Arkiv (read from Arkiv) + Swarm links
  *   POST   /api/projects/:id/arkiv     publish the latest result to Swarm + Arkiv again   (organizer)
- *   POST   /api/projects/:id/reviews/public   anyone: re-judge a sample project on 0G (rate limited, capped per day)
  */
 import crypto from "node:crypto";
 import express from "express";
@@ -49,6 +48,9 @@ import { listRecords, readRecord } from "./arkiv/records/store.mjs";
 import { TYPES } from "./arkiv/records/schemas.mjs";
 import { swarmConfigured } from "./arkiv/swarm.mjs";
 import { arenaRouter } from "./arena/routes.mjs";
+import { worldRouter } from "./world/routes.mjs";
+import { payoutStatus, startPayouts } from "./payouts/index.mjs";
+import { startAutorun } from "./arena/autorunService.mjs";
 
 // Seed the example panel the first time only.
 if (!judges.list().length) judges.save(EXAMPLE_FORMS.map((f) => ({ ...validateForm(f).persona, example: true })));
@@ -56,7 +58,6 @@ if (!judges.list().length) judges.save(EXAMPLE_FORMS.map((f) => ({ ...validateFo
 const running = new Map(); // projectId -> Promise, so one project is never reviewed twice at once
 // projectId -> { startedAt, events, error? }: what the UI shows while a run is going (0G request IDs as they arrive)
 const progress = new Map();
-const lastRun = new Map(); // projectId -> ms timestamp of the last public run
 
 /**
  * Run the panel on one project and save the result.
@@ -115,6 +116,9 @@ export async function reviewNow(projectId, { evidence = EVIDENCE_ENABLED, freshE
 
 export const router = express.Router();
 router.use("/arena", arenaRouter);
+router.use("/world", worldRouter);
+
+router.get("/payouts", async (req, res) => res.json(await payoutStatus()));
 
 router.get("/health", (req, res) => {
   res.json({
@@ -210,7 +214,7 @@ function reviewStatus(id) {
 }
 
 /** Submissions as the public sees them: no signature material. */
-const publicSubmission = ({ auth, ...rest }) => ({ ...rest, signed: Boolean(auth?.signature), review: reviewStatus(rest.id), video: publicVideo(rest.id) });
+const publicSubmission = ({ auth, ...rest }) => ({ ...rest, signed: Boolean(auth?.signature), review: reviewStatus(rest.id), hasDossier: Boolean(dossiers.get(rest.id)), video: publicVideo(rest.id) });
 
 /** What the web app needs to play our copy of the demo video. */
 function publicVideo(id) {
@@ -510,40 +514,6 @@ router.get("/projects/:id/reviews", (req, res) => {
   res.json({ running: running.has(id) || isRunning(id) || queuePosition(id) != null, progress: progress.get(id) ?? null, result: r });
 });
 
-/*
- * Public "watch the judges score this" for sample projects, so anyone trying the app
- * can start real 0G inference and see the request IDs arrive. Guarded three ways,
- * because each run is paid: 0G provider only, 2 runs per IP per hour, a 10-minute
- * cooldown per project, and PUBLIC_RUNS_PER_DAY in total (default 40, ~$0.30 on 0gm).
- */
-const PUBLIC_COOLDOWN_MS = 10 * 60 * 1000;
-const publicDay = { day: "", n: 0 };
-router.post(
-  "/projects/:id/reviews/public",
-  rateLimit({ max: 2, windowMs: 60 * 60 * 1000, message: "You've asked the judges twice this hour. Try again later." }),
-  (req, res) => {
-    const id = req.params.id;
-    const project = loadProject(id);
-    if (!project || project.kind !== "sample") return res.status(404).json({ error: "Only sample projects can be re-judged from here." });
-    if (PROVIDER !== "0g") return res.status(409).json({ error: "Public judging runs on 0G only." });
-    if (!hasCredentials()) return res.status(503).json({ error: missingCredentialsError().message });
-    if (running.has(id)) return res.status(202).json({ running: true, progress: progress.get(id) ?? null });
-    const since = Date.now() - (lastRun.get(id) ?? 0);
-    if (since < PUBLIC_COOLDOWN_MS) {
-      return res.status(429).json({ error: `The judges scored this ${Math.max(1, Math.round(since / 60000))} min ago. Try again in ${Math.ceil((PUBLIC_COOLDOWN_MS - since) / 60000)} min.` });
-    }
-    const today = new Date().toISOString().slice(0, 10);
-    if (publicDay.day !== today) Object.assign(publicDay, { day: today, n: 0 });
-    if (publicDay.n >= Number(process.env.PUBLIC_RUNS_PER_DAY || 40)) return res.status(429).json({ error: "Today's free judge runs are used up. Come back tomorrow." });
-    publicDay.n++;
-    lastRun.set(id, Date.now());
-    // Reuse screenshot observations already read on 0G (free); never pay for new ones from a public click.
-    // Public runs show real 0G inference, so they never fall back to (and pay for) OpenAI.
-    reviewNow(id, { evidence: EVIDENCE_ENABLED || hasCachedEvidence(project), fallback: false }).catch((e) => console.error(`[judges] public review of ${id} failed: ${e.message}`));
-    res.status(202).json({ running: true, progress: progress.get(id) ?? null });
-  },
-);
-
 router.post("/projects/:id/reviews", requireOrganizer, async (req, res) => {
   try {
     res.json({ running: false, result: await reviewNow(req.params.id) });
@@ -556,4 +526,6 @@ router.post("/projects/:id/reviews", requireOrganizer, async (req, res) => {
 if (process.env.ARENA_SERVER === "1") {
   const n = resumeQueue({ judge: reviewNow });
   if (n) console.log(`[pipeline] resumed ${n} unfinished review(s)`);
+  startPayouts();
+  startAutorun();
 }

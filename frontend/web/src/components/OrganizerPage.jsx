@@ -11,7 +11,8 @@ import { chainNow, formatAmount, listTournaments, manager, read, readTournament,
 import { bracketRounds, parseScore } from "../lib/pools.js";
 import { MATCH_LABEL, PHASE_LABEL } from "../lib/labels.js";
 import { api, organizerKey } from "../lib/api.js";
-import { getBracket, matchmake, registerBracket, runFight } from "../lib/arena.js";
+import { getBracket, getFight, matchmake, registerBracket, runFight } from "../lib/arena.js";
+import { usePayouts } from "../lib/payouts.js";
 import { Link } from "../lib/router.jsx";
 import { viewOfChain } from "../lib/tournamentView.js";
 import { AddressLink, TxStatus, WalletGate } from "./ChainBits.jsx";
@@ -21,6 +22,8 @@ const hash = (value) => keccak256(stringToHex(JSON.stringify(value)));
 const MINUTE = 60n;
 const DAY = 86400n;
 const ROUNDS = { 2: 1n, 4: 2n, 8: 3n, 16: 4n };
+// Local testing only: reward wallets nobody holds, so the bets and payouts can be tested without real submissions.
+const TEST_PROJECT_WALLETS = ["0x00000000000000000000000000000000000a11ce", "0x00000000000000000000000000000000000b0b0b"];
 
 /** The backend (bracket registration, running fights) takes the same organizer key as the judges page. */
 function BackendKey() {
@@ -67,6 +70,11 @@ function Roles({ wallet, onChanged }) {
   const grant = (role, who, word) => run({ ...manager, functionName: "grantRole", args: [role, who], label: `Grant ${word}` }, `${word} role granted.`);
   const target = other.trim() || address;
   const validTarget = isAddress(target ?? "");
+  const { data: server, refresh: refreshServer } = usePoll(() => api("/arena/auto").catch(() => null), [], 15000);
+  const handOver = async () => {
+    const calls = [!server.publisher && { ...manager, functionName: "grantRole", args: [data.publisherRole, server.address], label: "Let the server publish" }, !server.organizer && { ...manager, functionName: "grantRole", args: [await read(manager, "ORGANIZER_ROLE"), server.address], label: "Let the server organize" }];
+    if (await run(calls, "The server now runs tournaments by itself.")) await refreshServer();
+  };
 
   return (
     <Card className="stack">
@@ -88,7 +96,13 @@ function Roles({ wallet, onChanged }) {
             <Button variant="secondary" size="sm" disabled={busy || !validTarget} onClick={() => grant(data.publisherRole, target, "Publisher")}>
               Grant publisher
             </Button>
+            {server?.address && !server.ready && (
+              <Button variant="oracle" size="sm" disabled={busy} onClick={handOver}>
+                Let the server run tournaments
+              </Button>
+            )}
           </div>
+          {server?.ready && <p className="t-caption m0">Tournaments run by themselves: once 2 or more reviewed projects are waiting, the server creates the tournament, opens betting, runs the fight, publishes and pays out.</p>}
         </>
       ) : (
         <p className="t-body m0 muted">{data?.organizer ? "You can run tournaments from this wallet." : "Only the admin can grant roles. Connect the wallet that deployed the contracts."}</p>
@@ -107,6 +121,8 @@ function CreateTournament({ wallet, info, onCreated }) {
   const [recipient, setRecipient] = useState("");
   const { tx, run, reset, busy } = useTx(wallet, onCreated);
   const address = wallet.address;
+  const payouts = usePayouts();
+  const { data: botCanPublish } = usePoll(async () => (payouts.address ? read(manager, "hasRole", [await read(manager, "PUBLISHER_ROLE"), payouts.address]) : false), [payouts.address], 15000);
 
   const minutes = Number(cutoff);
   const min = toUnits(minBet, info.decimals);
@@ -130,7 +146,7 @@ function CreateTournament({ wallet, info, onCreated }) {
       bettingCutoff,
       resolutionDeadline,
       reviewer: reviewerAddress,
-      publisher: address,
+      publisher: botCanPublish ? payouts.address : address,
       platformRecipient: recipientAddress,
       minBet: min,
       maxBet: max,
@@ -163,8 +179,8 @@ function CreateTournament({ wallet, info, onCreated }) {
           <Input id="org-reviewer" label="Reviewer (blank = this wallet)" placeholder={address} value={reviewer} onChange={(e) => setReviewer(e.target.value)} error={reviewer && !isAddress(reviewer.trim()) ? "Not a wallet address." : undefined} />
           <Input id="org-platform" label="Platform 10% goes to (blank = this wallet)" placeholder={address} value={recipient} onChange={(e) => setRecipient(e.target.value)} error={recipient && !isAddress(recipient.trim()) ? "Not a wallet address." : undefined} />
         </div>
-        {capacity === 2 && <p className="t-caption m0">A 2-project tournament (one final) needs the updated TournamentManager contract. On the older deployment, pick 4.</p>}
-        <p className="t-caption m0">This wallet becomes the organizer and publisher, and can't bet in this tournament. A leftover tournament refunds by itself after its deadline.</p>
+        {capacity === 2 && <p className="t-caption m0">A 2-project tournament has one final.</p>}
+        <p className="t-caption m0">This wallet becomes the organizer{botCanPublish ? "" : " and publisher"}, and can't bet in this tournament. A leftover tournament refunds by itself after its deadline.</p>
         <Button type="submit" variant="oracle" disabled={!valid || busy}>
           {busy ? "Working…" : "Create tournament"}
         </Button>
@@ -188,7 +204,9 @@ function Freeze({ wallet, tournament, onDone }) {
   const { data: subs, error: subsError } = usePoll(() => api("/submissions"), [], 8000);
   const allowed = [2, 4, 8, 16].filter((c) => c <= tournament.capacity);
   const byId = new Map((subs ?? []).map((x) => [x.id, x]));
-  const ready = (x) => x.review?.status === "reviewed";
+  // A project can only fight with a dossier, so a review that ended without one doesn't count.
+  const ready = (x) => x.review?.status === "reviewed" && x.hasDossier;
+  const reviewWord = (x) => (ready(x) ? "review done" : x.review?.status === "reviewed" ? "review finished without a dossier: run it again" : x.review?.status === "stopped" ? "review stopped" : "still being reviewed");
   const toggle = (id) => {
     setPlan(null); // any change to the field voids the proposed bracket
     setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]));
@@ -235,8 +253,19 @@ function Freeze({ wallet, tournament, onDone }) {
     run({ ...manager, functionName: "freeze", args: [BigInt(tournament.id), projects, seed, plan ? `0x${plan.resultHash}` : hash({ order: picked, seed })], label: "Freeze the tournament" }, "Frozen. The tournament pool is open for bets.");
   };
 
+  const freezeTest = () => {
+    const seed = `0x${Array.from(crypto.getRandomValues(new Uint8Array(32)), (b) => b.toString(16).padStart(2, "0")).join("")}`;
+    const projects = TEST_PROJECT_WALLETS.map((w, i) => ({ owner: w, rewardWallet: w, snapshotHash: hash({ testProject: i + 1, tournament: tournament.id }) }));
+    run({ ...manager, functionName: "freeze", args: [BigInt(tournament.id), projects, seed, hash({ testBracket: tournament.id, seed })], label: "Freeze with test projects" }, "Frozen with 2 test projects. Open the match next.");
+  };
+
   return (
     <div className="stack">
+      {import.meta.env.DEV && (
+        <Button variant="secondary" disabled={busy} onClick={freezeTest}>
+          Freeze with 2 test projects (local testing only)
+        </Button>
+      )}
       <p className="t-body m0 muted">
         Pick the real projects that enter, then let matchmaking draw the bracket: the most similar projects meet in round one, and similar projects are kept in opposite halves so they meet as late as possible. Or tick them yourself in bracket order (1st and 2nd meet in match 1). Freezing locks the bracket and reward wallets and opens the tournament winner pool. It can't be undone.
       </p>
@@ -253,7 +282,7 @@ function Freeze({ wallet, tournament, onDone }) {
               <span className="stack stack--tight">
                 <span className="t-body-strong">{x.project?.name}</span>
                 <span className="t-caption">
-                  {x.team?.name} · owner {short(x.ownerWallet)} · {ok ? "review done" : x.review?.status === "stopped" ? "review stopped" : "still being reviewed"}
+                  {x.team?.name} · owner {short(x.ownerWallet)} · {reviewWord(x)}
                 </span>
               </span>
             </button>
@@ -298,11 +327,13 @@ function MatchRow({ wallet, view, match, busy, run }) {
   const [why, setWhy] = useState("");
   const name = (p) => (p == null ? "To be decided" : view.projects[p].name);
   const label = MATCH_LABEL[match.status];
+  const payouts = usePayouts();
+  const autoPublish = Boolean(payouts.address) && view.raw.publisher?.toLowerCase() === payouts.address.toLowerCase();
   const [fightError, setFightError] = useState("");
   const [starting, setStarting] = useState(false);
   const watching = match.opened && match.status === "live";
   const { data: fight, refresh: refreshFight } = usePoll(
-    () => (watching ? api(`/arena/fights/${view.id}/${match.index}/result`, { method: "POST" }).catch(() => null) : Promise.resolve(null)),
+    () => (watching ? getFight(view.id, match.index).catch(() => null) : Promise.resolve(null)),
     [watching, view.id, match.index],
     4000,
   );
@@ -311,7 +342,7 @@ function MatchRow({ wallet, view, match, busy, run }) {
     setFightError("");
     setStarting(true);
     try {
-      await runFight(view.id, match.index, { a: match.a, b: match.b, revealAt: match.cutoffMs, rerun: fight?.status === "failed" });
+      await runFight(view.id, match.index, { a: match.a, b: match.b, revealAt: Math.max(match.cutoffMs, view.cutoffMs), rerun: fight?.status === "failed" });
       await refreshFight();
     } catch (e) {
       setFightError(e.status === 403 || e.status === 401 ? "The backend needs the organizer key (Backend key box at the top). " + e.message : e.message);
@@ -328,7 +359,21 @@ function MatchRow({ wallet, view, match, busy, run }) {
   const scoresValid = Object.values(parsed).every((v) => v != null);
   const tied = scoresValid && parsed.a === parsed.b;
 
+  const [serverBusy, setServerBusy] = useState(false);
+  const askServer = async (action, body) => {
+    setFightError("");
+    setServerBusy(true);
+    try {
+      await api(`/arena/tournaments/${view.id}/matches/${match.index}/${action}`, { method: "POST", body });
+    } catch (e) {
+      setFightError(e.status === 403 || e.status === 401 ? "The backend needs the organizer key (Backend key box at the top). " + e.message : e.message);
+    } finally {
+      setServerBusy(false);
+    }
+  };
+
   const open = async () => {
+    if (autoPublish) return askServer("open", { minutes: Number(minutes) });
     const now = await chainNow();
     const cutoff = now + BigInt(Math.max(1, Number(minutes) || 1)) * MINUTE;
     const scheduled = BigInt(Math.floor(new Date(view.startsAt).getTime() / 1000));
@@ -372,9 +417,10 @@ function MatchRow({ wallet, view, match, busy, run }) {
       {canOpen && (
         <div className="org-match__form">
           <Input id={`open-${match.index}`} label="Betting closes in (minutes)" inputMode="numeric" value={minutes} onChange={(e) => setMinutes(e.target.value)} />
-          <Button variant="secondary" size="sm" disabled={busy} onClick={open}>
-            Open match
+          <Button variant="secondary" size="sm" disabled={busy || serverBusy} onClick={open}>
+            {serverBusy ? "Opening…" : "Open match"}
           </Button>
+          {fightError && <p className="field__error" role="alert">{fightError}</p>}
         </div>
       )}
 
@@ -382,9 +428,12 @@ function MatchRow({ wallet, view, match, busy, run }) {
         <div className="stack">
           <div className="stack stack--tight">
             <div className="org-actions">
-              <Button variant="secondary" size="sm" disabled={busy || fightRunning || fight?.status === "done" || fight?.status === "sealed"} onClick={startFight}>
-                {fightRunning ? "Fight running…" : fight?.status === "failed" ? "Run the fight again" : "Run the fight on 0G"}
-              </Button>
+              {(!payouts.enabled || fight?.status === "failed") && (
+                <Button variant="secondary" size="sm" disabled={busy || fightRunning || fight?.status === "done" || fight?.status === "sealed"} onClick={startFight}>
+                  {fightRunning ? "Fight running…" : fight?.status === "failed" ? "Run the fight again" : "Run the fight on 0G"}
+                </Button>
+              )}
+              {payouts.enabled && fight?.status !== "failed" && fight?.status !== "done" && <span className="t-caption">{fightRunning ? "Fight running." : "The fight starts by itself in a few seconds."}</span>}
               {fight?.status === "done" && (
                 <span className="t-body t-num">
                   {name(match.a)} {(fight.scores.a / 100).toFixed(2)} · {name(match.b)} {(fight.scores.b / 100).toFixed(2)}
@@ -396,12 +445,12 @@ function MatchRow({ wallet, view, match, busy, run }) {
             {fight?.status === "failed" && <p className="field__error">The last run failed: {fight.error}</p>}
             {fight?.status === "done" && (
               <p className="t-caption m0">
-                Judged by 3 judges over 5 rounds ({fight.calls} 0G calls). Scores are filled in below{fight.needsReview ? "; both rounds tied, so the contract will send this to human review" : ""}. Publishing sends them to the contract.
+                Judged by 3 judges over 5 rounds ({fight.calls} 0G calls). {autoPublish ? "The server is publishing the scores" : "Scores are filled in below"}{fight.needsReview ? "; both rounds tied, so the contract will send this to human review" : ""}.
               </p>
             )}
             {fightError && <p className="field__error" role="alert">{fightError}</p>}
           </div>
-          <div className="org-scores">
+          {!autoPublish && <div className="org-scores">
             <Input id={`a-${match.index}`} label={`${name(match.a)} score`} inputMode="decimal" placeholder="82.50" value={scores.a} onChange={(e) => setScores({ ...scores, a: e.target.value })} />
             <Input id={`b-${match.index}`} label={`${name(match.b)} score`} inputMode="decimal" placeholder="78.00" value={scores.b} onChange={(e) => setScores({ ...scores, b: e.target.value })} />
             <AnimatePresence initial={false}>
@@ -412,12 +461,14 @@ function MatchRow({ wallet, view, match, busy, run }) {
                 </motion.div>
               )}
             </AnimatePresence>
-          </div>
+          </div>}
           <div className="org-actions">
-            <Button variant="oracle" size="sm" disabled={busy || !scoresValid || !scores.a || !scores.b} onClick={publish}>
-              Publish result
-            </Button>
-            <Button variant="danger" size="sm" disabled={busy} onClick={() => run({ ...manager, functionName: "voidMatch", args: [id, index, hash({ reason: "organizer" })], label: "Void the match" }, "Match voided and tournament canceled.")}>
+            {!autoPublish && (
+              <Button variant="oracle" size="sm" disabled={busy || !scoresValid || !scores.a || !scores.b} onClick={publish}>
+                Publish result
+              </Button>
+            )}
+            <Button variant="danger" size="sm" disabled={busy || serverBusy} onClick={() => (autoPublish ? askServer("void") : run({ ...manager, functionName: "voidMatch", args: [id, index, hash({ reason: "organizer" })], label: "Void the match" }, "Match voided and tournament canceled."))}>
               Void match
             </Button>
           </div>

@@ -21,7 +21,8 @@ const { loadProject } = await import("../src/projects.mjs");
 const { validateForm } = await import("../src/judges/persona.mjs");
 const { EXAMPLE_FORMS } = await import("../src/judges/seed.mjs");
 
-const sample = loadProject("go-health-me");
+const { seedProject } = await import("./seedProject.mjs");
+const sample = loadProject(seedProject());
 const tournament = {
   id: "7",
   title: "Finalists",

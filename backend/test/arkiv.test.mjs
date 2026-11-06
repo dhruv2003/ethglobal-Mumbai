@@ -16,7 +16,8 @@ const swarm = await import("../src/arkiv/swarm.mjs");
 const { publishRun, lastPublish, liveDirOf } = await import("../src/arkiv/publish.mjs");
 const { loadProject } = await import("../src/projects.mjs");
 
-const sample = loadProject("go-health-me");
+const { seedProject } = await import("./seedProject.mjs");
+const sample = loadProject(seedProject());
 const result = JSON.parse(fs.readFileSync(new URL("../fixtures/go-health-me/reviews.json", import.meta.url), "utf8"));
 const KEY = (n) => `0x${String(n).repeat(64).slice(0, 64)}`;
 

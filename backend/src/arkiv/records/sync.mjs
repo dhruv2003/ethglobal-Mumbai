@@ -13,15 +13,12 @@
  */
 import fs from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { loadProject } from "../../projects.mjs";
 import { DATA_DIR, judges, pipelines, submissions, transcripts } from "../../store.mjs";
 import { canWrite } from "../arkiv.mjs";
 import * as build from "./builders.mjs";
 import { writeRecord } from "./store.mjs";
 
-const here = path.dirname(fileURLToPath(import.meta.url));
-const FIXTURES = path.resolve(here, "../../../fixtures");
 const safe = (v) => String(v).replace(/[^a-zA-Z0-9_-]/g, "");
 const readJson = (file) => {
   try {
@@ -30,15 +27,6 @@ const readJson = (file) => {
     return null;
   }
 };
-
-/** Transcript for a submitted project (data/transcripts) or a sample (fixture files). */
-function transcriptOf(project) {
-  if (project.kind !== "sample") return transcripts.get(project.id);
-  const dir = path.join(FIXTURES, project.id, "media");
-  const md = path.join(dir, "demo-transcript.md");
-  if (!fs.existsSync(md)) return null;
-  return { source: "fixture", text: fs.readFileSync(md, "utf8"), words: readJson(path.join(dir, "loom-transcript.json")) };
-}
 
 async function writeAll(records, opts) {
   const out = [];
@@ -56,13 +44,13 @@ async function writeAll(records, opts) {
 export async function syncProject(projectId, opts = {}) {
   const project = loadProject(projectId);
   if (!project) throw new Error(`No such project: ${projectId}`);
-  const raw = project.kind === "sample" ? null : submissions.get(projectId);
+  const raw = submissions.get(projectId);
   return writeAll(
     [
       build.projectRecord(project, raw),
       build.pipelineRecord(project, pipelines.get(projectId)),
       build.dossierRecord(project),
-      build.transcriptRecord(project, transcriptOf(project)),
+      build.transcriptRecord(project, transcripts.get(project.id)),
       build.livetestRecord(project),
       build.visionRecord(project, readJson(path.join(DATA_DIR, "evidence", `${safe(projectId)}.json`))),
     ],
@@ -82,7 +70,7 @@ export function syncFight(t, m, opts = {}) {
 
 /** Every project, judge, tournament and fight on this server. */
 export async function syncAll(opts = {}) {
-  const ids = [...new Set([...fs.readdirSync(FIXTURES).filter((d) => fs.existsSync(path.join(FIXTURES, d, "submission.json"))), ...submissions.list().map((s) => s.id)])];
+  const ids = submissions.list().map((s) => s.id);
   const out = { judges: await syncJudges(opts), projects: {}, tournaments: {}, fights: {} };
   for (const id of ids) out.projects[id] = await syncProject(id, opts);
   const list = (name) => (fs.existsSync(path.join(DATA_DIR, name)) ? fs.readdirSync(path.join(DATA_DIR, name)).filter((f) => f.endsWith(".json")) : []);

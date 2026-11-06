@@ -1,6 +1,6 @@
 /*
  * The bet popup. Pick a side, type an amount, place it. Nothing else.
- * Practice pools (demo events) settle in local credits; chain pools send the real approve + bet.
+ * It sends the real approve + bet.
  * On success it calls onPlaced(bet), and the caller takes the bettor into the fight.
  */
 import { useEffect, useRef, useState } from "react";
@@ -10,7 +10,6 @@ import { AnimatePresence, motion } from "motion/react";
 import { CONTRACTS } from "../config/event.js";
 import { formatAmount, pools, toUnits, token, useToken, useTx } from "../lib/chain.js";
 import { estimatePayout, percent } from "../lib/pools.js";
-import { PRACTICE_MIN, PRACTICE_SYMBOL, myPracticeStake, placePracticeBet, practiceLedger, rememberBet } from "../lib/practice.js";
 import { usePoolData } from "./BetPanel.jsx";
 import { TxStatus, WalletGate, useCountdown } from "./ChainBits.jsx";
 import { PixelFighter } from "./PixelFighter.jsx";
@@ -118,53 +117,6 @@ function Sheet({ pool, symbol, shares, balance, mine, problemFor, payoutFor, onP
   );
 }
 
-function PracticeSheet({ pool, onPlaced }) {
-  const [, bump] = useState(0);
-  const [busy, setBusy] = useState(false);
-  const ledger = practiceLedger();
-  const stakes = pool.stakes;
-  const total = stakes[0] + stakes[1];
-  const shares = stakes.map((v) => (total ? Math.round((v / total) * 100) : 50));
-  const mine = pool.selections.map((s) => myPracticeStake(pool.market, s.id) || null);
-  const parse = (t) => Number(t);
-  const problemFor = (t) => {
-    const n = parse(t);
-    if (!Number.isFinite(n)) return "Enter a number.";
-    if (n < PRACTICE_MIN) return `Minimum ${PRACTICE_MIN} ${PRACTICE_SYMBOL}.`;
-    if (n > ledger.balance) return `You have ${ledger.balance} ${PRACTICE_SYMBOL}.`;
-    return null;
-  };
-  const payoutFor = (i, t) => {
-    const n = parse(t);
-    return Math.floor(((total + n) * 0.7 * ((mine[i] ?? 0) + n)) / (stakes[i] + n)).toLocaleString("en-US");
-  };
-  const onPlace = async (i, t) => {
-    setBusy(true);
-    const s = pool.selections[i];
-    const payout = Number(payoutFor(i, t).replace(/,/g, ""));
-    placePracticeBet({ market: pool.market, selection: s.id, amount: parse(t), payout });
-    bump((x) => x + 1);
-    await new Promise((r) => setTimeout(r, 450));
-    onPlaced({ poolKey: pool.key, practice: true, market: pool.market, selection: s.id, name: s.project.name, side: i === 0 ? "a" : "b", amount: parse(t).toLocaleString("en-US"), payout: payout.toLocaleString("en-US"), symbol: PRACTICE_SYMBOL });
-  };
-  return (
-    <Sheet
-      pool={pool}
-      symbol={PRACTICE_SYMBOL}
-      shares={shares}
-      balance={ledger.balance.toLocaleString("en-US")}
-      mine={mine.map((m) => m && m.toLocaleString("en-US"))}
-      problemFor={problemFor}
-      payoutFor={payoutFor}
-      onPlace={onPlace}
-      busy={busy}
-      amountAt={(p) => (Math.floor((ledger.balance * p) / 100) || "").toString()}
-      pctOf={(t) => (ledger.balance ? (Number(t) / ledger.balance) * 100 : 0)}
-      footer={<p className="bm__fine">Practice credits · no real money</p>}
-    />
-  );
-}
-
 function ChainSheet({ pool, wallet, onPlaced }) {
   const info = useToken();
   const { data, refresh } = usePoolData(wallet, pool.tournamentId, pool.market, pool.selections);
@@ -191,7 +143,7 @@ function ChainSheet({ pool, wallet, onPlaced }) {
       { ...pools, functionName: "bet", args: [pool.market, BigInt(s.id), amount], label: "Place your bet" },
     ];
     if (await run(calls, `You backed ${s.project.name} with ${fmt(amount)} ${symbol}.`)) {
-      onPlaced({ poolKey: pool.key, practice: false, name: s.project.name, side: i === 0 ? "a" : "b", amount: fmt(amount), payout: payoutFor(i, t), symbol });
+      onPlaced();
     }
   };
   const ok = wallet.status === "connected" && wallet.onTargetNetwork;
@@ -227,7 +179,7 @@ function ChainSheet({ pool, wallet, onPlaced }) {
   );
 }
 
-/** pool: from matchBetPool() (practice) or the chain open-pool list. null closes it. */
+/** pool: from the chain open-pool list. null closes it. */
 export function BetModal({ pool, wallet, onClose, onPlaced }) {
   const countdown = useCountdown(pool?.cutoffMs ?? null);
   const card = useRef(null);
@@ -245,11 +197,6 @@ export function BetModal({ pool, wallet, onClose, onPlaced }) {
       prev?.focus?.({ preventScroll: true });
     };
   }, [pool, onClose]);
-
-  const placed = (bet) => {
-    rememberBet(bet);
-    onPlaced(bet);
-  };
 
   return createPortal(
     <AnimatePresence>
@@ -282,7 +229,7 @@ export function BetModal({ pool, wallet, onClose, onPlaced }) {
                 ×
               </button>
             </header>
-            {pool.practice ? <PracticeSheet pool={pool} onPlaced={placed} /> : <ChainSheet pool={pool} wallet={wallet} onPlaced={placed} />}
+            <ChainSheet pool={pool} wallet={wallet} onPlaced={onPlaced} />
           </motion.div>
         </motion.div>
       )}

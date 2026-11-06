@@ -2,11 +2,8 @@
 /*
  * Run the judge panel on one project from the command line.
  *
- *   cd backend && npm run judge -- --project go-health-me [--evidence] [--fresh-evidence] [--no-fixture] [--out file.json]
+ *   cd backend && npm run judge -- --project go-health-me [--evidence] [--fresh-evidence] [--out file.json]
  *
- * Saves to backend/data/reviews/<id>.json. For sample projects it also writes
- * backend/fixtures/<id>/reviews.json so the static web app can show it, unless
- * --no-fixture is given (use that to compare models before picking one).
  *   --evidence        a vision model on 0G reads the live-test screenshots first
  *   --out <file>      also write the result here
  */
@@ -25,7 +22,7 @@ const value = (name) => {
 };
 const id = value("--project");
 if (!id) {
-  console.error("usage: node src/judges/run.mjs --project <id> [--evidence] [--fresh-evidence] [--no-fixture] [--out file.json]");
+  console.error("usage: node src/judges/run.mjs --project <id> [--evidence] [--fresh-evidence] [--out file.json]");
   process.exit(2);
 }
 const usd = (micro) => `$${(micro / 1e6).toFixed(4)}`;
@@ -53,11 +50,6 @@ try {
     fs.mkdirSync(path.dirname(path.resolve(out)), { recursive: true });
     fs.writeFileSync(path.resolve(out), JSON.stringify(result, null, 2));
     console.log(`wrote ${out}`);
-  }
-  const fixture = path.resolve(here, "../../fixtures", id);
-  if (!flag("--no-fixture") && fs.existsSync(path.join(fixture, "submission.json"))) {
-    fs.writeFileSync(path.join(fixture, "reviews.json"), JSON.stringify(result, null, 2));
-    console.log(`wrote fixtures/${id}/reviews.json`);
   }
 } catch (e) {
   console.error(e.message);

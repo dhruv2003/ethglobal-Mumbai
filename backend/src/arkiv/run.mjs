@@ -11,7 +11,7 @@
  *   npm run arkiv -- get <type> --project <id>        newest record of a type, read back from Arkiv
  *                    (or --judge <id>, --tournament <id> [--match <m>])
  *
- * publish uses the latest saved review (data/reviews/<id>.json, or the sample's fixture).
+ * publish uses the latest saved review (data/reviews/<id>.json).
  */
 import "dotenv/config";
 import fs from "node:fs";
@@ -55,8 +55,7 @@ try {
   if (cmd === "publish") {
     const project = loadProject(id);
     if (!project) throw new Error(`No such project: ${id}`);
-    const fixture = path.resolve(here, "../../fixtures", id, "reviews.json");
-    const result = reviews.get(id) ?? (fs.existsSync(fixture) ? JSON.parse(fs.readFileSync(fixture, "utf8")) : null);
+    const result = reviews.get(id);
     if (!result) throw new Error(`No judged result for ${id}. Run the judges first: npm run judge -- --project ${id}`);
     const record = await publishRun(project, result, { log: (m) => console.log(m) });
     console.log(JSON.stringify(record, null, 2));

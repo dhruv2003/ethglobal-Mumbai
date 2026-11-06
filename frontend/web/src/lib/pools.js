@@ -88,3 +88,16 @@ export function percent(part, whole) {
   if (!whole) return 0;
   return Number((part * 10000n) / whole) / 100;
 }
+
+/**
+ * What a wallet's stakes in a finished two-sided pool come to, using the contract's rules and
+ * chain numbers only. null if the wallet didn't bet. `mine` and `stakes` are in selection order.
+ */
+export function settledResult({ stakes, mine, winnerIndex }) {
+  const myStake = mine[0] + mine[1];
+  if (myStake === 0n) return null;
+  if (stakes[0] === 0n || stakes[1] === 0n) return { kind: "refund", amount: myStake };
+  if (mine[winnerIndex] === 0n) return { kind: "lost", amount: 0n };
+  const bucket = ((stakes[0] + stakes[1]) * 70n) / 100n;
+  return { kind: "won", amount: (bucket * mine[winnerIndex]) / stakes[winnerIndex] };
+}

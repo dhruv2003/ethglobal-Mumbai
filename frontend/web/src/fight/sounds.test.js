@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { MOCK_EVENTS } from "./demoFight.js";
+import { MOCK_EVENTS } from "./testFight.js";
 import { cuesBetween, cuesFor, musicPlaysDuring, pickOther } from "./soundCues.js";
 import { SFX, SONGS, SOUND_GROUPS, playStep } from "./sounds.js";
 

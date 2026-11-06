@@ -20,14 +20,13 @@ import zgModels from "../zg/models.js";
 import { DATA_DIR, liveDir } from "../store.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const FIXTURES = path.resolve(here, "../../fixtures");
 export const EVIDENCE_ENABLED = process.env.JUDGE_EVIDENCE === "1" || process.env.JUDGE_EVIDENCE === "true";
 const MATCHES = ["yes", "partly", "no", "unclear"];
 
 /** Every screenshot the live test saved, with the step it belongs to. */
 export function screenshotsOf(project) {
   const runs = project.liveTest?.runs ?? [];
-  const directory = project.kind === "submitted" ? liveDir(project.id) : path.join(FIXTURES, project.id, "smoke");
+  const directory = liveDir(project.id);
   const out = [];
   for (const run of runs) {
     for (const phase of run.phases ?? []) {

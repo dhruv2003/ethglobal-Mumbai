@@ -80,7 +80,8 @@ test("a missing ZG_API_KEY gives a clear 503", () => {
 
 test("reviewNow refuses with that 503 when ZG_API_KEY is missing", async () => {
   const { reviewNow } = await import("../src/api.mjs");
-  await assert.rejects(reviewNow("go-health-me"), (e) => e.status === 503 && /ZG_API_KEY/.test(e.message));
+  const { seedProject } = await import("./seedProject.mjs");
+  await assert.rejects(reviewNow(seedProject()), (e) => e.status === 503 && /ZG_API_KEY/.test(e.message));
 });
 
 test("mapZeroG maps parsed, usage names and the 0G trace", () => {
@@ -198,7 +199,8 @@ test("panel totals list every 0G request ID and sum the cost", () => {
 
 test("screenshot evidence: IDs per device and step, failures recorded, judges see no traces", async () => {
   const { loadProject } = await import("../src/projects.mjs");
-  const p = loadProject("go-health-me");
+  const { seedProject } = await import("./seedProject.mjs");
+  const p = loadProject(seedProject());
   const shots = evidence.screenshotsOf(p);
   assert.ok(shots.length > 0);
   assert.ok(shots.some((s) => s.id === "V-laptop-d1"));
@@ -263,25 +265,6 @@ test("runPanel reports each 0G request ID as it arrives, then each judge's resul
   assert.ok(calls.every((e) => e.attempt === 1 && judges.some((j) => j.id === e.judgeId)));
   assert.equal(events.filter((e) => e.type === "judge" && e.status === "scored").length, 3);
   assert.equal(result.zg.requestIds.length, 3);
-});
-
-test("public judging: samples only, and a clear 503 without ZG_API_KEY", async () => {
-  const { default: express } = await import("express");
-  const { router } = await import("../src/api.mjs");
-  const app = express().use("/api", router);
-  const server = app.listen(0);
-  const base = `http://127.0.0.1:${server.address().port}/api`;
-  try {
-    const notSample = await fetch(`${base}/projects/not-a-project/reviews/public`, { method: "POST" });
-    assert.equal(notSample.status, 404);
-    const noKey = await fetch(`${base}/projects/go-health-me/reviews/public`, { method: "POST" });
-    assert.equal(noKey.status, 503);
-    assert.match((await noKey.json()).error, /ZG_API_KEY/);
-    const third = await fetch(`${base}/projects/go-health-me/reviews/public`, { method: "POST" });
-    assert.equal(third.status, 429); // 2 per IP per hour
-  } finally {
-    server.close();
-  }
 });
 
 test("a timeout is retried once, then thrown", async () => {

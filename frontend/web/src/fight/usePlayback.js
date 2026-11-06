@@ -6,7 +6,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { eventDuration } from "./choreo.js";
 
-export function usePlayback(events, { autoPlay = false, start = { index: 0, ms: 0 } } = {}) {
+/** live: more events are still coming, so reaching the end waits for them instead of stopping. */
+export function usePlayback(events, { autoPlay = false, start = { index: 0, ms: 0 }, live = false } = {}) {
   const [pos, setPos] = useState(start);
   const [playing, setPlaying] = useState(autoPlay);
   const [speed, setSpeed] = useState(1);
@@ -31,12 +32,12 @@ export function usePlayback(events, { autoPlay = false, start = { index: 0, ms: 
       const next = { index, ms };
       ref.current.pos = next;
       setPos(next);
-      if (end) setPlaying(false);
+      if (end && !live) setPlaying(false);
       else raf = requestAnimationFrame(step);
     };
     raf = requestAnimationFrame(step);
     return () => cancelAnimationFrame(raf);
-  }, [playing, events]);
+  }, [playing, events, live]);
 
   const seek = useCallback(
     (index) => {
@@ -59,7 +60,7 @@ export function usePlayback(events, { autoPlay = false, start = { index: 0, ms: 
   return { index: pos.index, ms: pos.ms, event: events[pos.index], playing, toggle, speed, setSpeed, seek };
 }
 
-const REEL_MS = 10000;
+const REEL_MS = 30000; // a whole fight, start to result, never takes longer than this
 const INTRO_MS = 1200;
 const RESULT_MS = 2200;
 const HIGHLIGHT = new Set(["ruling", "penalty"]);
@@ -121,9 +122,20 @@ export function useReel(events, { autoPlay = false, totalMs = REEL_MS } = {}) {
     });
   }, [slots]);
 
+  /** Carry on from a given event, for a fight that was just being watched live. */
+  const playFrom = useCallback(
+    (eventIndex) => {
+      const slot = slots.findIndex((s) => s.index >= eventIndex);
+      ref.current = { slot: slot < 0 ? slots.length - 1 : slot, t: 0 };
+      setPos(ref.current);
+      setPlaying(true);
+    },
+    [slots],
+  );
+
   const { index, dur } = slots[pos.slot];
   const event = events[index];
   const ms = dur ? (pos.t / dur) * eventDuration(event) : 0;
   const leftMs = slots.slice(pos.slot).reduce((s, x) => s + x.dur, 0) - pos.t;
-  return { index, ms, event, playing, toggle, leftMs };
+  return { index, ms, event, playing, toggle, leftMs, playFrom };
 }

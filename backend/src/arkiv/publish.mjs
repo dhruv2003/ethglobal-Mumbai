@@ -13,7 +13,6 @@ import { canWrite, publishPanel, publisher } from "./arkiv.mjs";
 import { swarmConfigured, uploadBundle } from "./swarm.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const FIXTURES = path.resolve(here, "../../fixtures");
 const safeId = (id) => String(id).replace(/[^a-zA-Z0-9_-]/g, "");
 const recordFile = (id) => path.join(DATA_DIR, "arkiv", `${safeId(id)}.json`);
 
@@ -28,8 +27,8 @@ export function lastPublish(projectId) {
   }
 }
 
-/** Where this project's live test lives: fixtures for samples, data/live for submissions. */
-export const liveDirOf = (project) => (project.kind === "sample" ? path.join(FIXTURES, project.id, "smoke") : liveDir(project.id));
+/** Where this project's live test lives. */
+export const liveDirOf = (project) => liveDir(project.id);
 
 /**
  * Publish one saved run. opts.upload / opts.publish replace Swarm and Arkiv (tests).

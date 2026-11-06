@@ -49,6 +49,7 @@ const NAV = [
   { to: "/judge", label: "Judges", on: (r) => r.name === "judges" },
   { to: "/wallet", label: "Wallet", on: (r) => r.name === "wallet" },
   { to: "/submit", label: "Submit", on: (r) => r.name === "form" },
+  { to: "/organizer", label: "Organizer", on: (r) => r.name === "organizer" },
 ];
 
 export function Header({ wallet, route }) {

@@ -12,6 +12,7 @@ import { formatAmount, listTournaments, pools, publicClient, read, toUnits, toke
 import { POOL_LABEL, POOL_STATE, matchMarket, tournamentMarket } from "../lib/pools.js";
 import { Link } from "../lib/router.jsx";
 import { AddressLink, AnimatedNumber, TxStatus, WalletGate } from "./ChainBits.jsx";
+import { FreePack } from "./FreePack.jsx";
 import { fadeUp, popIn, stagger } from "./fx.jsx";
 
 const BURST = ["#ffd43b", "#ff5c93", "#2f4bf0"];
@@ -270,6 +271,8 @@ export function WalletPage({ wallet }) {
           <Tile label="Network" value={EVENT.network.chainId} format={(v) => String(Math.round(v))} hint={EVENT.network.name} />
         </motion.div>
       )}
+
+      {address && wallet.onTargetNetwork && <FreePack wallet={wallet} onClaimed={refresh} />}
 
       {info ? (
         <div className="wallet-grid">

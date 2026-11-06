@@ -1,11 +1,8 @@
 /*
- * Persistence. Drafts are a per-browser convenience (localStorage).
- * saveSubmission() is the single seam for the database: swap its body for an
- * API call when the backend exists. Nothing else in the app needs to change.
+ * Drafts are a per-browser convenience (localStorage). Submissions only ever live on the backend.
  */
 
 const DRAFT_SLOT = "arena.submission.draft.v2";
-const SUBMISSIONS_SLOT = "arena.submissions.v1";
 
 export function loadDraft() {
   try {
@@ -78,55 +75,15 @@ export async function submissionDigest(p) {
   return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-/** Forget a submission saved in this browser (after it's deleted). */
-export function removeLocalSubmission(id) {
-  try {
-    const all = JSON.parse(localStorage.getItem(SUBMISSIONS_SLOT) || "[]");
-    localStorage.setItem(SUBMISSIONS_SLOT, JSON.stringify(all.filter((r) => r.id !== id)));
-  } catch {
-    /* storage unavailable */
-  }
-}
-
-export function listSubmissions() {
-  try {
-    const all = JSON.parse(localStorage.getItem(SUBMISSIONS_SLOT) || "[]");
-    return Array.isArray(all) ? all : [];
-  } catch {
-    return [];
-  }
-}
-
-/**
- * Save to the backend (POST /api/submissions), which also starts the judges'
- * review. If the backend is offline, keep it in this browser instead.
- */
+/** Save to the backend (POST /api/submissions), which also starts the review. */
 export async function saveSubmission(payload) {
-  let record;
   let res;
   try {
     res = await fetch("/api/submissions", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) });
   } catch {
-    /* backend unreachable: fall through to local */
+    throw Object.assign(new Error("Couldn't reach the server, so nothing was submitted. Your draft is safe. Try again."), { fromServer: true });
   }
-  if (res?.ok) record = await res.json().catch(() => undefined);
-  else if (res && res.status >= 400 && res.status < 500 && res.headers.get("content-type")?.includes("json")) {
-    // The backend answered and said no (bad signature, rate limit...). Don't hide that behind a local save.
-    const data = await res.json().catch(() => ({}));
-    throw Object.assign(new Error(data.error ?? `The server refused the submission (HTTP ${res.status}).`), { fromServer: true });
-  }
-  record ??= {
-    id: globalThis.crypto?.randomUUID?.() ?? String(Date.now()),
-    submittedAt: new Date().toISOString(),
-    ...payload,
-    savedLocallyOnly: true,
-  };
-  try {
-    const all = JSON.parse(localStorage.getItem(SUBMISSIONS_SLOT) || "[]");
-    all.push(record);
-    localStorage.setItem(SUBMISSIONS_SLOT, JSON.stringify(all));
-  } catch {
-    /* storage unavailable: the caller still gets the record to download */
-  }
-  return record;
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw Object.assign(new Error(data.error ?? `The server refused the submission (HTTP ${res.status}).`), { fromServer: true });
+  return data;
 }

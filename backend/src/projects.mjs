@@ -1,15 +1,10 @@
 /*
  * Everything a judge may see about a project: the team's submission, the
- * reviewer's dossier and the live test. Sample projects come from
- * backend/fixtures/<id>/; submitted ones from the store.
+ * reviewer's dossier and the live test, all from the store.
  */
 import fs from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { dossiers, liveDir, submissions } from "./store.mjs";
-
-const here = path.dirname(fileURLToPath(import.meta.url));
-const FIXTURES = path.resolve(here, "../fixtures");
 
 const readJson = (p) => {
   try {
@@ -18,28 +13,6 @@ const readJson = (p) => {
     return null;
   }
 };
-
-function fromFixture(id) {
-  const dir = path.join(FIXTURES, id);
-  const sub = readJson(path.join(dir, "submission.json"));
-  if (!sub) return null;
-  const f = sub.form;
-  return {
-    id,
-    kind: "sample",
-    submission: {
-      teamName: f.team.name,
-      name: f.project.name,
-      pitch: f.project.pitch,
-      description: f.project.description,
-      repoUrl: f.code.repoUrl,
-      videoUrl: f.demo.videoUrl,
-      tracks: f.tracks.selected,
-    },
-    dossier: readJson(path.join(dir, "dossier.json")),
-    liveTest: readJson(path.join(dir, "smoke", "smoke.json")),
-  };
-}
 
 function fromSubmission(r) {
   return {
@@ -60,7 +33,6 @@ function fromSubmission(r) {
 }
 
 export function loadProject(id) {
-  if (/^[a-z0-9-]+$/.test(id) && fs.existsSync(path.join(FIXTURES, id, "submission.json"))) return fromFixture(id);
   const s = submissions.get(id);
   return s ? fromSubmission(s) : null;
 }

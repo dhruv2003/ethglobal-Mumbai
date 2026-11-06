@@ -1,4 +1,4 @@
-/* One shape for tournaments, whether they're on chain or sample data, so pages don't care which. */
+/* One shape for a tournament read from the chain, joined with its registered bracket. */
 import { matchMarket, MATCH_STATUS, TOURNAMENT_STATUS, WIN_SOURCE, bracketRounds, feeders, matchRound, roundName } from "./pools.js";
 
 /** A bracket slot: the registered project when the organizer saved the bracket, else a plain numbered slot. */
@@ -69,11 +69,10 @@ export function viewOfChain(t, meta = null) {
 }
 
 /** Same rule as the contract's poolState: the pool exists, isn't void, and its cutoff hasn't passed. */
-export const isMatchOpen = (view, match, now = Date.now()) => !view.demo && match.opened && match.status !== "void" && now < match.cutoffMs;
+export const isMatchOpen = (view, match, now = Date.now()) => match.opened && match.status !== "void" && now < match.cutoffMs;
 
 /** Every pool of a tournament taking bets right now. */
 export function openPools(view, now = Date.now()) {
-  if (view.demo) return []; // demo data never takes bets
   const pools = [];
   if (view.frozen && view.phase !== "canceled" && now < view.cutoffMs) {
     pools.push({ key: `${view.id}-winner`, title: "Who wins it all?", detail: `${view.title} · ${view.count} projects`, to: `/tournaments/${view.id}`, cutoffMs: view.cutoffMs, fighters: [] });
@@ -90,7 +89,6 @@ export function openPools(view, now = Date.now()) {
 /** What the bet popup needs to bet on one chain match. */
 export const chainBetPool = (view, match) => ({
   key: `${view.id}-${match.index}`,
-  practice: false,
   tournamentId: view.id,
   matchIndex: match.index,
   market: matchMarket(view.id, match.index),

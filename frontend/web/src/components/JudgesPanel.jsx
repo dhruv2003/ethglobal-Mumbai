@@ -1,7 +1,6 @@
 /*
  * Each judge's score and comment on a project. Reads the latest review from
- * the backend; falls back to the review stored with a sample project when the
- * backend is offline. Scores are integer hundredths computed by the backend.
+ * the backend. Scores are integer hundredths computed by the backend.
  */
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
@@ -188,20 +187,12 @@ export function JudgesPanel({ project }) {
     };
   }, [state.running, path]);
 
-  // Anyone may re-judge a sample project on 0G; other projects need the organizer key.
-  const isPublic = project.kind === "sample" && state.health?.provider === "0g";
-
   async function ask() {
     setAsking(true);
     setError("");
     try {
-      if (isPublic) {
-        const r = await api(`${path}/public`, { method: "POST" });
-        setState((s) => ({ ...s, running: true, progress: r.progress }));
-      } else {
-        const r = await api(path, { method: "POST" });
-        setState((s) => ({ ...s, result: r.result, running: false }));
-      }
+      const r = await api(path, { method: "POST" });
+      setState((s) => ({ ...s, result: r.result, running: false }));
     } catch (e) {
       setError(e.message);
     } finally {
@@ -270,9 +261,8 @@ export function JudgesPanel({ project }) {
         ) : (
           <div className="judges__ask">
             <button type="button" className="btn btn--oracle btn--sm" onClick={ask} disabled={busy}>
-              {busy ? "Judging on 0G…" : isPublic ? "Watch the judges score this on 0G" : result ? "Ask the judges again" : "Ask the judges"}
+              {busy ? "Judging on 0G…" : result ? "Ask the judges again" : "Ask the judges"}
             </button>
-            {isPublic && !busy && <span className="t-caption">Three judges run live on the 0G Compute Router. You'll see each request ID as it comes back.</span>}
           </div>
         )}
       </div>

@@ -18,7 +18,6 @@ import { bouncy, stagger } from "./fx.jsx";
 
 /** Health bar from the published scores: 20% floor plus 0.008% per score hundredth, as the fight player draws it. */
 function withHealth(match) {
-  if (match.healthA !== undefined) return match; // demo matches carry their own bars
   if (match.status !== "finalized" && match.status !== "review") return match;
   const hp = (score) => 20 + score * 0.008;
   return { ...match, healthA: hp(match.scoreA ?? 0), healthB: hp(match.scoreB ?? 0) };
@@ -148,8 +147,8 @@ const SPARKLES = [
 ];
 
 export function ArenaPage() {
-  const { data } = usePoll(loadTournaments, [], 15000);
-  const real = useMemo(() => (data ?? []).map((t) => ({ ...t, prize: t.demo ? t.prize : "On chain" })), [data]);
+  const { data, error } = usePoll(loadTournaments, [], 15000);
+  const real = useMemo(() => (data ?? []).map((t) => ({ ...t, prize: "On chain" })), [data]);
   const open = real.flatMap((t) => openPools(t)).length;
 
   const sizeOf = (t) => (t.count >= 16 ? "district--wide" : t.count >= 8 ? "district--big" : "");
@@ -197,6 +196,7 @@ export function ArenaPage() {
         {real.map((t) => (
           <District key={t.id} t={t} size={sizeOf(t)} />
         ))}
+        {data == null && error && <p className="plot__empty m0">Couldn't reach the chain. Retrying…</p>}
         {data != null && !real.length && <p className="plot__empty m0">No tournaments yet. Create one in the organizer console.</p>}
       </motion.div>
     </section>

@@ -7,7 +7,7 @@ export const MUMBAI_SCENES = [
   { id: "local", name: "CSMT & the local", detail: "Next stop · maximum Mumbai", color: "#b582ac" },
 ];
 
-/** Stable through data refreshes; mock replays reuse ids across tournaments. */
+/** Stable through data refreshes. */
 export function sceneryIdentity(match) {
   const explicit = MUMBAI_SCENES.find((scene) => scene.id === match.scenery)?.id;
   return JSON.stringify([match.id, match.event, explicit, ...["a", "b"].map((side) => {
