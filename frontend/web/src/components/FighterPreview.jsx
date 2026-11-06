@@ -193,7 +193,7 @@ function ReadyMeter({ ready, total }) {
     <div className="ready" role="progressbar" aria-valuenow={ready} aria-valuemin={0} aria-valuemax={total} aria-label="Fields ready">
       <div className="ready__head">
         <span className="t-caption t-num">
-          {ready} of {total} fields ready
+          {ready} of {total} required fields
         </span>
         <AnimatePresence>
           {done && (

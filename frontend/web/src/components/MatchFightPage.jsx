@@ -150,18 +150,20 @@ function Layout({ tournament, match, side, fight }) {
       </Link>
       <header className="intro intro--row">
         <div className="intro">
-          <span className="t-caption">
-            {match.roundName} · Match {match.index + 1}
+          <span className="org-roles">
+            <StatusPill tone={label.tone}>{label.word}</StatusPill>
+            <span className="t-caption">
+              {match.roundName} · Match {match.index + 1}
+            </span>
           </span>
           <h1 className="t-display-lg m0 rise">
             {a?.name ?? "To be decided"} <span className="muted">vs</span> {b?.name ?? "To be decided"}
           </h1>
         </div>
-        <StatusPill tone={label.tone}>{label.word}</StatusPill>
       </header>
       {match.status === "review" && (
         <motion.div className="notice" role="status" initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}>
-          <span>Both rounds tied. Awaiting the organizer's decision; advancement and payouts are paused until then.</span>
+          <span>Tied twice. Waiting for the organizer to decide. Payouts are paused.</span>
         </motion.div>
       )}
       <div className="fight-layout">

@@ -103,7 +103,6 @@ function StatTile({ label, value, note, children, i }) {
 /* ---------------------------------------------------------------- hero */
 
 function ArenaHero({ projects }) {
-  const count = useCountUp(projects?.length ?? 0);
   const roster = (projects ?? []).slice(0, ROSTER_MAX);
   // Everyone stands on the mat in one row: shrink as the roster grows.
   const slots = roster.length + 1;
@@ -117,16 +116,15 @@ function ArenaHero({ projects }) {
         </motion.span>
         <h1 id="hero-h" className="t-display-xl m0 hero__title">
           <SplitWords delay={0.12}>
-            <span className="t-num hero__count">{count}</span>
-            {count === 1 ? "fighter" : "fighters"} in the
+            Your code steps into the
             <span className="hero__arena">
-              arena
+              ring
               <Squiggle className="hero__squiggle" delay={0.9} />
             </span>
           </SplitWords>
         </h1>
         <motion.p className="t-body m0 hero__lede" variants={fadeUp}>
-          Every project becomes an AI fighter. Three judges score the evidence, and the fight shows the score.
+          Every project becomes a fighter. Three AI judges score the code, and the fight shows who wins.
         </motion.p>
         <motion.div className="hero__actions" variants={fadeUp}>
           <Magnetic>
@@ -134,9 +132,9 @@ function ArenaHero({ projects }) {
               Submit your project <span aria-hidden="true">→</span>
             </Link>
           </Magnetic>
-          <a href="#how" className="btn btn--ghost btn--underline">
-            How it works
-          </a>
+          <Link to="/arena" className="btn btn--ghost btn--underline">
+            Watch a fight
+          </Link>
         </motion.div>
       </motion.div>
 
@@ -182,9 +180,9 @@ function ArenaHero({ projects }) {
 }
 
 const STEPS = [
-  ["Submit", "Seven fields and a public repo. Takes two minutes.", "crush"],
-  ["We read the code", "We pin your commit, run the tests and build an evidence dossier.", "oracle"],
-  ["Your fighter battles", "Three AI judges score five rounds. Health follows the score.", "sunny"],
+  ["Submit", "A public repo and a short form. Two minutes.", "crush"],
+  ["We read the code", "We pin your commit, run the tests and collect evidence.", "oracle"],
+  ["You fight", "Three AI judges score five rounds. Health follows the score.", "sunny"],
 ];
 
 /** Tiny line icons for the three steps. */
@@ -218,7 +216,7 @@ function HowItWorks() {
       <Reveal className="section-title">
         <span className="eyebrow">How it works</span>
         <h2 id="how-h" className="t-display-md m0">
-          From repo to ring in three moves
+          Repo to ring in three steps
         </h2>
       </Reveal>
       <motion.ol className="how__list" initial="hidden" whileInView="show" viewport={{ once: true, margin: "-80px" }} variants={stagger(0.12)}>
@@ -256,8 +254,7 @@ export function LandingPage() {
       <HowItWorks />
       <Reveal as="section" className="landing-cta" aria-label="See the roster">
         <div className="landing-cta__copy">
-          <span className="eyebrow eyebrow--ink">The roster</span>
-          <p className="t-display-md m0">Meet the fighters already in the ring.</p>
+          <p className="t-display-md m0">Meet the fighters</p>
           <Link to="/projects" className="btn btn--primary btn--arrow">
             See all projects <span aria-hidden="true">→</span>
           </Link>
@@ -329,12 +326,11 @@ export function ProjectsPage() {
     <>
       <div className="intro intro--row">
         <div className="intro">
-          <span className="eyebrow rise">{EVENT.name}</span>
           <h1 className="t-display-lg m0">
-            <SplitWords>The arena roster</SplitWords>
+            <SplitWords>Projects</SplitWords>
           </h1>
           <p className="t-body m0 muted rise" style={{ "--i": 2 }}>
-            Every project competes for finalist; tracks are extra.
+            Every project competes for finalist. Sponsor tracks are optional.
           </p>
         </div>
         <Link to="/submit" className="btn btn--primary btn--arrow rise" style={{ "--i": 3 }}>
@@ -343,40 +339,27 @@ export function ProjectsPage() {
       </div>
 
       <motion.section className="stats" aria-label="Summary" initial="hidden" animate="show" variants={stagger(0.08, 0.15)}>
-        <StatTile i={3} label="Projects" value={all.length} note="All entries in the arena" />
-        <StatTile
-          i={4}
-          label="Submitted by teams"
-          value={submitted}
-          note="Entered by their own teams"
-        />
-        <StatTile i={5} label="Tracks in play" value={inPlay.length} note={`of ${EVENT.tracks.length} sponsor tracks`}>
+        <StatTile i={3} label="Projects" value={all.length} note={`${submitted} submitted by teams`} />
+        <StatTile i={5} label="Tracks entered" value={inPlay.length} note={`of ${EVENT.tracks.length} sponsor tracks`}>
           <Progress value={inPlay.length} max={EVENT.tracks.length} label="Tracks with at least one entry" />
         </StatTile>
         <StatTile
           i={6}
-          label="Most entered track"
+          label="Top track"
           value={leaders.length === 0 ? "–" : leaders.length === 1 ? leaders[0].name : `${leaders.length}-way tie`}
-          note={leaders.length === 0 ? "No tracks picked yet" : leaders.length === 1 ? plural(most) : `${leaders.map((t) => t.name).join(", ")}, ${most} each`}
+          note={leaders.length === 0 ? "No tracks picked yet" : leaders.length === 1 ? plural(most) : leaders.map((t) => t.name).join(", ")}
         />
       </motion.section>
 
       <section className="roster-section" aria-labelledby="roster-h">
-        <div className="section-head">
-          <h2 id="roster-h" className="t-display-md m0">
-            Fighters
-          </h2>
-          {projects && (
-            <span className="t-caption" role="status" aria-live="polite">
-              {filtered ? `Showing ${shown.length} of ${all.length}` : plural(all.length)}
-            </span>
-          )}
-        </div>
-
+        <h2 id="roster-h" className="visually-hidden">
+          All projects
+        </h2>
         <div className="filters">
           <label className="visually-hidden" htmlFor="search">
             Search projects
           </label>
+          <div className="filters__row">
           <div className="search">
             <svg className="search__icon" viewBox="0 0 20 20" aria-hidden="true">
               <circle cx="9" cy="9" r="6" fill="none" stroke="currentColor" strokeWidth="2" />
@@ -391,6 +374,12 @@ export function ProjectsPage() {
               onChange={(e) => setFilters({ q: e.target.value })}
             />
             <kbd className="search__kbd" aria-hidden="true">/</kbd>
+          </div>
+          {projects && (
+            <span className="t-caption" role="status" aria-live="polite">
+              {filtered ? `Showing ${shown.length} of ${all.length}` : plural(all.length)}
+            </span>
+          )}
           </div>
           <LayoutGroup id="track-filter">
             <div className="chips" role="group" aria-label="Filter by track">
@@ -418,7 +407,7 @@ export function ProjectsPage() {
 
         {projects && shown.length === 0 && (
           <motion.div className="card card--surface empty" initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} transition={bouncy}>
-            <p className="t-body m0">{all.length ? "No fighters match these filters." : "The arena is empty. Be the first in."}</p>
+            <p className="t-body m0">{all.length ? "No projects match." : "No projects yet. Be the first."}</p>
             {filtered ? (
               <button type="button" className="btn btn--ghost btn--sm" onClick={() => setFilters({ track: "", q: "" })}>
                 Clear filters
@@ -530,8 +519,8 @@ function useView() {
 /** Segmented toggle: real tabs (arrow keys move between them), sliding thumb. */
 function ViewToggle({ view, onChange, hasDossier }) {
   const tabs = [
-    { id: "team", label: "Team submission", hint: "What they entered" },
-    { id: "judge", label: "Agent judge", hint: hasDossier ? "What our reviewer found" : "Review pending" },
+    { id: "team", label: "Submission", hint: "From the team" },
+    { id: "judge", label: "Review", hint: hasDossier ? "From the AI judges" : "Pending" },
   ];
   const onKey = (e) => {
     if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
@@ -599,9 +588,9 @@ export function ProjectPage({ id }) {
         {back}
         <div className="card card--surface stack">
           <h1 className="t-display-md m0">We can't find that fighter</h1>
-          <p className="t-body m0">It may have been entered in a different browser. Submissions only live on the device that sent them for now.</p>
-          <Link to="/projects" className="btn btn--secondary btn--sm back">
-            Back to the arena
+          <p className="t-body m0">It may have been submitted from another browser.</p>
+          <Link to="/projects" className="btn btn--secondary btn--sm">
+            All projects
           </Link>
         </div>
       </>
@@ -654,7 +643,7 @@ export function ProjectPage({ id }) {
           <DemoVideo project={p} />
 
           <section className="card stack rise" style={{ "--i": 3 }} aria-labelledby="about-h">
-            <h3 id="about-h" className="t-heading m0">What it does and how it's built</h3>
+            <h3 id="about-h" className="t-heading m0">About</h3>
             {p.description.split(/\n{2,}/).map((para, i) => (
               <p key={i} className="t-body m0">
                 {para}
@@ -670,13 +659,13 @@ export function ProjectPage({ id }) {
                 <dd className="t-body">{p.teamName}</dd>
               </div>
               <div>
-                <dt className="t-label">Competing in</dt>
+                <dt className="t-label">Tracks</dt>
                 <dd>
                   <Tracks ids={p.tracks} />
                 </dd>
               </div>
               <div>
-                <dt className="t-label">Source code</dt>
+                <dt className="t-label">Code</dt>
                 <dd>
                   <a className="t-mono addr" href={p.repoUrl} target="_blank" rel="noreferrer">
                     {p.repoUrl.replace(/^https:\/\/(www\.)?github\.com\//, "")}
@@ -700,7 +689,7 @@ export function ProjectPage({ id }) {
               )}
               {p.showcaseUrl && (
                 <div>
-                  <dt className="t-label">Original showcase</dt>
+                  <dt className="t-label">Showcase</dt>
                   <dd>
                     <a className="t-body" href={p.showcaseUrl} target="_blank" rel="noreferrer">
                       {p.event ?? "ETHGlobal"} ↗

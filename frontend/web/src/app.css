@@ -93,7 +93,7 @@ a.brand { color: var(--ink); text-decoration: none; }
 .top__nav a[aria-current="page"] { background: var(--surface-sunken); color: var(--ink); }
 
 /* ---------- Projects ---------- */
-.solo--wide { max-width: 1080px; }
+.solo--wide { max-width: 1200px; }
 .intro--row { flex-direction: row; justify-content: space-between; align-items: flex-end; gap: var(--space-4); flex-wrap: wrap; }
 .stack { display: flex; flex-direction: column; gap: var(--space-4); }
 .visually-hidden {
@@ -320,7 +320,7 @@ a.brand:hover .brand__mark { transform: rotate(-8deg) scale(1.08); }
 .fighter-card:hover .fighter-card__cta span { transform: translateX(4px); }
 
 /* ---------- Submit ---------- */
-.solo--form { max-width: 1080px; }
+.solo--form { max-width: 1200px; }
 .submit-layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: var(--space-6); align-items: start; }
 .preview { position: sticky; top: 88px; display: flex; flex-direction: column; gap: var(--space-4); }
 .preview__ring { min-height: 260px; }

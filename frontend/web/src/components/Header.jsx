@@ -43,12 +43,12 @@ export function BrandMark() {
 }
 
 const NAV = [
+  { to: "/arena", label: "Arena", on: (r) => r.name === "arena" },
+  { to: "/tournaments", label: "Tournaments", on: (r) => r.name === "tournaments" || r.name === "tournament" || r.name === "matchFight" },
   { to: "/projects", label: "Projects", on: (r) => r.name === "projects" || r.name === "project" },
-  { to: "/submit", label: "Submit", on: (r) => r.name === "form" },
   { to: "/judge", label: "Judges", on: (r) => r.name === "judges" },
-  { to: "/tournaments", label: "Tournaments", on: (r) => r.name === "tournaments" || r.name === "tournament" },
-  { to: "/arena", label: "Arena", on: (r) => r.name === "arena" || r.name === "matchFight" },
   { to: "/wallet", label: "Wallet", on: (r) => r.name === "wallet" },
+  { to: "/submit", label: "Submit", on: (r) => r.name === "form" },
 ];
 
 export function Header({ wallet, route }) {
@@ -109,7 +109,7 @@ export function Header({ wallet, route }) {
 
 function NetworkStatus({ wallet }) {
   if (wallet.status !== "connected" || wallet.chainId == null) {
-    return <StatusPill tone="neutral">{EVENT.network.name} · testnet</StatusPill>;
+    return <StatusPill tone="neutral">{EVENT.network.name}</StatusPill>;
   }
   if (wallet.onTargetNetwork) return <StatusPill tone="live">{EVENT.network.name}</StatusPill>;
   return (
