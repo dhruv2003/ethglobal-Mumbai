@@ -3,6 +3,7 @@
  * kept in the browser (no localStorage). It survives moving between pages, not a
  * reload. Submissions only ever live on the backend (Arkiv; files on 0G Storage).
  */
+import { apiUrl } from "./api.js";
 
 let draft = null;
 
@@ -77,7 +78,7 @@ export async function submissionDigest(p) {
 export async function saveSubmission(payload) {
   let res;
   try {
-    res = await fetch("/api/submissions", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) });
+    res = await fetch(apiUrl("/api/submissions"), { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) });
   } catch {
     throw Object.assign(new Error("Couldn't reach the server, so nothing was submitted. Your draft is safe. Try again."), { fromServer: true });
   }

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api } from "../../lib/api.js";
+import { api, apiUrl } from "../../lib/api.js";
 import { Spinner } from "../Feedback.jsx";
 
 /**
@@ -30,7 +30,7 @@ export function LiveScreen({ projectId, device }) {
   return (
     <div className={`screen screen--${device}`}>
       {on ? (
-        <img key={n} src={`/api/projects/${encodeURIComponent(projectId)}/live/stream/${device}?n=${n}`} alt={`Live view of the ${device} cloud browser`} />
+        <img key={n} src={apiUrl(`/api/projects/${encodeURIComponent(projectId)}/live/stream/${device}?n=${n}`)} alt={`Live view of the ${device} cloud browser`} />
       ) : (
         <span className="screen__wait">
           <Spinner size={18} label="Starting" /> Starting the {device}…

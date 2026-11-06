@@ -6,6 +6,7 @@ import { useRef, useState } from "react";
 import { Button, Card, StatusPill } from "@ds/ui.jsx";
 import { usePoll } from "../lib/chain.js";
 import { celebrate } from "./WalletPage.jsx";
+import { apiUrl } from "../lib/api.js";
 
 const WORLD_ERROR = {
   user_rejected: "You cancelled, so nothing was claimed.",
@@ -18,14 +19,14 @@ const WORLD_ERROR = {
 };
 
 async function postJson(url, body) {
-  const res = await fetch(url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+  const res = await fetch(apiUrl(url), { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.error ?? "Something went wrong, so nothing was claimed.");
   return data;
 }
 
 async function readStatus(address) {
-  const res = await fetch(`/api/world/status?wallet=${encodeURIComponent(address)}`);
+  const res = await fetch(apiUrl(`/api/world/status?wallet=${encodeURIComponent(address)}`));
   if (!res.ok) throw new Error("status unavailable");
   return res.json();
 }

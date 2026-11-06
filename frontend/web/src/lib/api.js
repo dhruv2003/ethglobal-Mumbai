@@ -1,9 +1,18 @@
 /*
- * Backend client. The web app talks to /api (proxied to the backend in dev and
- * preview: see vite.config.js). Every call fails soft: callers decide what to
- * show when the judge service is offline.
+ * Backend client. The web app talks to /api on the backend: VITE_API_URL when the
+ * backend runs on its own host (production: .env.production), otherwise the same
+ * origin (proxied to the backend in dev and preview: see vite.config.js). Every
+ * call fails soft: callers decide what to show when the judge service is offline.
  */
 import { dropPrivate, peek, put } from "./cache.js";
+
+/** The backend's origin, e.g. https://eth-mum.onrender.com; "" means this site's own origin. */
+export const API_ORIGIN = String(import.meta.env?.VITE_API_URL ?? "").trim().replace(/\/+$/, "");
+/**
+ * Where a backend URL really points. Takes "/api/..." paths (ours, and the ones the
+ * backend returns for videos, uploads and files) and leaves anything else alone.
+ */
+export const apiUrl = (url) => (typeof url === "string" && /^\/api(\/|$|\?)/.test(url) ? `${API_ORIGIN}${url}` : url);
 
 let organizerSession = null;
 /** Set by lib/organizer.js. Every request then proves this wallet is an organizer. */
@@ -37,7 +46,7 @@ export function api(path, { method = "GET", body } = {}) {
 async function request(path, method, body) {
   const headers = organizerHeaders();
   if (body) headers["content-type"] = "application/json";
-  const res = await fetch(`/api${path}`, {
+  const res = await fetch(apiUrl(`/api${path}`), {
     method,
     headers,
     body: body ? JSON.stringify(body) : undefined,
@@ -60,7 +69,7 @@ export const health = () => api("/health").catch(() => null);
 /** POST a file or recording as the raw request body (organizer key attached). */
 export async function upload(path, blob) {
   const headers = { "content-type": blob.type || "application/octet-stream", ...organizerHeaders() };
-  const res = await fetch(`/api${path}`, { method: "POST", headers, body: blob });
+  const res = await fetch(apiUrl(`/api${path}`), { method: "POST", headers, body: blob });
   let data = null;
   try {
     data = await res.json();
@@ -86,7 +95,7 @@ export const MAX_IMAGES = 8;
 function uploadFile(path, file, contentType, onProgress) {
   const xhr = new XMLHttpRequest();
   const done = new Promise((resolve, reject) => {
-    xhr.open("POST", `/api${path}`);
+    xhr.open("POST", apiUrl(`/api${path}`));
     xhr.setRequestHeader("content-type", contentType);
     xhr.upload.onprogress = (e) => e.lengthComputable && onProgress?.(e.loaded / e.total);
     xhr.onload = () => {
