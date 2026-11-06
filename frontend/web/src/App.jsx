@@ -35,7 +35,7 @@ const TITLES = {
   home: "The arena",
   form: "Submit a project",
   projects: "Projects",
-  fighters: "Fighters",
+  fighters: "Rankings",
   project: "Project",
   judges: "Judges",
   wallet: "Wallet",

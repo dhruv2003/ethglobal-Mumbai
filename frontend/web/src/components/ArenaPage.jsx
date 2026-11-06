@@ -8,6 +8,8 @@ import { StatusPill } from "@ds/ui.jsx";
 import { usePoll } from "../lib/chain.js";
 import { loadTournaments } from "../lib/arena.js";
 import { Link } from "../lib/router.jsx";
+import { listProjects } from "../lib/projects.js";
+import { PixelFighter } from "./PixelFighter.jsx";
 import { AerialRing } from "./AerialRing.jsx";
 import { bouncy, stagger } from "./fx.jsx";
 
@@ -18,10 +20,17 @@ function withHealth(match) {
   return { ...match, healthA: hp(match.scoreA ?? 0), healthB: hp(match.scoreB ?? 0) };
 }
 
-/** Every fight worth showing, across tournaments: live first, then the newest finished. */
+/**
+ * A tournament counts once its bracket is registered with real projects. Contract
+ * tournaments without one (left from testing) only have numbered slots and are not shown.
+ */
+const isReal = (t) => t.projects.length > 0 && t.projects.every((p) => p.registered);
+
+/** Every fight worth showing, across real tournaments: live first, then the newest finished. */
 function fightsOf(tournaments) {
   const rank = { live: 0, review: 1, finalized: 2, scheduled: 3 };
   return tournaments
+    .filter(isReal)
     .flatMap((t) => t.matches.filter((m) => m.a != null && m.b != null && m.status !== "void").map((m) => ({ t, match: withHealth(m) })))
     .sort((x, y) => (rank[x.match.status] ?? 9) - (rank[y.match.status] ?? 9) || Number(y.t.id) - Number(x.t.id));
 }
@@ -66,6 +75,38 @@ function FightCard({ t, match, big }) {
 
 const PER_SCREEN = 4;
 
+/** Before the first real tournament: the submitted projects, waiting for their bracket. */
+function WaitingRoom() {
+  const { data: projects } = usePoll(() => listProjects().catch(() => []), [], 30000, { key: "projects" });
+  const list = projects ?? [];
+  return (
+    <div className="waiting">
+      <p className="t-body m0">
+        <strong>No fights yet.</strong> The first bouts start when the organizer opens a tournament. These fighters are ready:
+      </p>
+      {list.length > 0 ? (
+        <ul className="waiting__line">
+          {list.map((p, i) => (
+            <li key={p.id} style={{ "--i": i }}>
+              <Link to={`/projects/${encodeURIComponent(p.id)}`} className="waiting__fighter" title={p.pitch}>
+                <span className="waiting__spot">
+                  <PixelFighter project={p} scale={4} />
+                </span>
+                <span className="waiting__name">{p.name}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="t-caption m0">No projects submitted yet.</p>
+      )}
+      <Link to="/rankings" className="btn btn--secondary btn--sm">
+        See the rankings →
+      </Link>
+    </div>
+  );
+}
+
 export function ArenaPage() {
   const { data, error } = usePoll(loadTournaments, [], 15000, { key: "tournaments" });
   const fights = useMemo(() => fightsOf(data ?? []), [data]);
@@ -94,7 +135,8 @@ export function ArenaPage() {
           Arena
         </h1>
         <p className="t-body muted m0 rise" style={{ "--i": 2 }}>
-          {live ? `${live} ${live === 1 ? "fight" : "fights"} live now.` : "Every fight, judged on evidence."} Tap a ring to watch.
+          {live ? `${live} ${live === 1 ? "fight" : "fights"} live now.` : "Every fight, judged on evidence."}
+          {fights.length ? " Tap a ring to watch." : ""}
         </p>
       </header>
 
@@ -103,7 +145,7 @@ export function ArenaPage() {
           <FightCard key={`${t.id}-${match.index}`} t={t} match={match} big />
         ))}
         {data == null && error && <p className="plot__empty m0">Couldn't reach the chain. Retrying…</p>}
-        {data != null && !fights.length && <p className="plot__empty m0">No fights yet.</p>}
+        {data != null && !fights.length && <WaitingRoom />}
       </motion.div>
 
       {earlier.length > 0 && (
