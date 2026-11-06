@@ -992,12 +992,12 @@ fieldset.field { border: 0; margin: 0; padding: 0; min-width: 0; }
 .ens-board__stats dd { margin: 0; font-weight: 700; }
 
 /* ---------- /fighters: the roster (standings list), Playful Minimal ---------- */
-.roster { display: flex; flex-direction: column; gap: var(--space-5); max-width: 1080px; margin: 0 auto; width: 100%; }
-.roster > * { align-self: stretch; width: 100%; }
-.roster__head { display: flex; flex-direction: column; gap: var(--space-2); text-align: left; }
-.roster__sub { max-width: 680px; }
-.roster__note { font: 500 14px/20px var(--font-sans); color: var(--ink-secondary); }
-.roster__list { display: flex; flex-direction: column; gap: var(--space-3); margin: 0; padding: 0; list-style: none; }
+.ranks { display: flex; flex-direction: column; gap: var(--space-5); max-width: 1080px; margin: 0 auto; width: 100%; }
+.ranks > * { align-self: stretch; width: 100%; }
+.ranks__head { display: flex; flex-direction: column; gap: var(--space-2); text-align: left; }
+.ranks__sub { max-width: 680px; }
+.ranks__note { font: 500 14px/20px var(--font-sans); color: var(--ink-secondary); }
+.ranks__list { display: flex; flex-direction: column; gap: var(--space-3); margin: 0; padding: 0; list-style: none; }
 
 .frow {
   --tone: var(--crush); --tone-soft: var(--crush-soft);
@@ -1011,8 +1011,8 @@ fieldset.field { border: 0; margin: 0; padding: 0; min-width: 0; }
 .frow--sunny { --tone: var(--sunny); --tone-soft: var(--sunny-soft); }
 .frow::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 8px; background: var(--tone); border-right: 2px solid var(--ink); }
 .frow:hover { transform: translateY(-3px); box-shadow: var(--shadow-pop); }
-.roster--unranked .frow { grid-template-columns: minmax(0, 1fr) 340px; }
-.roster--unranked .frow__rank { display: none; }
+.ranks--unranked .frow { grid-template-columns: minmax(0, 1fr) 340px; }
+.ranks--unranked .frow__rank { display: none; }
 .frow__rank { display: grid; place-items: center; width: 44px; height: 44px; border: 2px solid var(--ink); border-radius: 12px; background: var(--canvas); font: 800 20px/1 var(--font-display); transform: rotate(-4deg); }
 .frow__rank--1 { background: var(--sunny); box-shadow: var(--shadow-pop-sm); }
 .frow__rank--2 { background: var(--oracle-soft); }
@@ -1042,7 +1042,7 @@ fieldset.field { border: 0; margin: 0; padding: 0; min-width: 0; }
 .frow__ens:focus-visible { outline: 2px solid var(--oracle); outline-offset: 2px; }
 .frow__ens--none { font-family: var(--font-sans); font-style: italic; }
 
-.roster__judges { display: flex; flex-direction: column; gap: var(--space-3); padding-top: var(--space-4); border-top: 2px dashed var(--line-strong); }
+.ranks__judges { display: flex; flex-direction: column; gap: var(--space-3); padding-top: var(--space-4); border-top: 2px dashed var(--line-strong); }
 .ringside { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-3); margin: 0; padding: 0; list-style: none; }
 .ringside__judge { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-2) var(--space-3); border: 2px solid var(--ink); border-radius: var(--radius-md); background: var(--canvas); box-shadow: var(--shadow-pop-sm); }
 .ringside__face { display: grid; place-items: end center; flex: none; width: 56px; height: 56px; border: 2px solid var(--ink); border-radius: 50%; background: var(--oracle-soft); overflow: hidden; }
@@ -1052,8 +1052,8 @@ fieldset.field { border: 0; margin: 0; padding: 0; min-width: 0; }
 .ringside__ens:hover { color: var(--oracle); }
 @media (max-width: 860px) {
   .ringside { grid-template-columns: minmax(0, 1fr); }
-  .frow, .roster--unranked .frow { grid-template-columns: minmax(0, 1fr); }
-  .frow:not(.roster--unranked .frow) { grid-template-columns: 40px minmax(0, 1fr); }
+  .frow, .ranks--unranked .frow { grid-template-columns: minmax(0, 1fr); }
+  .frow:not(.ranks--unranked .frow) { grid-template-columns: 40px minmax(0, 1fr); }
   .frow__rank { width: 36px; height: 36px; font-size: 16px; }
   .frow__side { grid-column: 1 / -1; }
   .frow__fighter { grid-template-columns: 72px minmax(0, 1fr); gap: var(--space-3); }

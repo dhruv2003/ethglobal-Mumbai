@@ -141,8 +141,8 @@ export function FightersPage() {
   const final = fighters.some((f) => Number(f.ens?.records?.["arena.titles"]) > 0);
   const podium = anyRanked ? fighters.filter(ranked).slice(0, 3) : [];
   return (
-    <div className={`roster ${anyRanked ? "" : "roster--unranked"}`}>
-      <header className="roster__head">
+    <div className={`ranks ${anyRanked ? "" : "ranks--unranked"}`}>
+      <header className="ranks__head">
         <span className={`rank-status ${final ? "rank-status--final" : ""}`}>
           {final ? (
             "Final standings"
@@ -163,14 +163,14 @@ export function FightersPage() {
             </>
           )}
         </h1>
-        <p className="t-body muted m0 roster__sub">
+        <p className="t-body muted m0 ranks__sub">
           Ranked by the judges' score, then fights won, then titles. Every result lives on the fighter's ENS name, so anyone can check it.
           {at && !final && <span className="t-caption"> Updated {at.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}.</span>}
         </p>
       </header>
 
-      {loading && <p className="roster__note" aria-busy="true">Reading the standings…</p>}
-      {error && <p className="roster__note" role="alert">{error}</p>}
+      {loading && <p className="ranks__note" aria-busy="true">Reading the standings…</p>}
+      {error && <p className="ranks__note" role="alert">{error}</p>}
 
       {!loading && fighters.length > 0 && <Podium top={podium} final={final} />}
 
@@ -179,17 +179,17 @@ export function FightersPage() {
           <h2 id="standings-h" className="t-heading m0">
             Standings
           </h2>
-          <ol className="roster__list">
+          <ol className="ranks__list">
             {fighters.map((f, i) => (
               <FighterRow key={f.id} f={f} cfg={cfg} rank={i + 1} isRanked={ranked(f)} />
             ))}
           </ol>
         </section>
       )}
-      {!loading && !error && fighters.length === 0 && <p className="roster__note">No fighters yet. A project joins the rankings when it's submitted.</p>}
+      {!loading && !error && fighters.length === 0 && <p className="ranks__note">No fighters yet. A project joins the rankings when it's submitted.</p>}
 
       {judges.length > 0 && (
-        <section className="roster__judges" aria-labelledby="ringside-h">
+        <section className="ranks__judges" aria-labelledby="ringside-h">
           <h2 id="ringside-h" className="t-heading m0">
             Ringside judges
           </h2>
