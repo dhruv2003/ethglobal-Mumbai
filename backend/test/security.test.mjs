@@ -13,6 +13,7 @@ async function signed(overrides = {}) {
     project: { name: "Atlas", pitch: "Reports in 2 minutes", description: "Next.js + Foundry." },
     repoUrl: "https://github.com/team/atlas",
     demoVideoUrl: "https://youtu.be/x",
+    liveUrl: "https://atlas.example",
     tracks: ["base"],
     ownerWallet: account.address,
     fighterSeed: "abc123",

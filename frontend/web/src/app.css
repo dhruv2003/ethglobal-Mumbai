@@ -636,6 +636,42 @@ fieldset.field { border: 0; margin: 0; padding: 0; min-width: 0; }
 /* Judge card header: name gets the full width; score sits on its own row */
 .jcard__who { grid-template-columns: 56px minmax(0, 1fr); }
 .jcard__who .jscore { grid-column: 1 / -1; }
+.pending-steps__text { min-width: 0; }
+.pending-steps__item--running .pending-steps__num { background: var(--oracle); color: var(--on-oracle); }
+.pending-steps__item--done .pending-steps__num { background: var(--success-soft); color: var(--success); }
+.pending-steps__item--failed .pending-steps__num { background: var(--danger-soft); color: var(--danger); }
+
+/* ---------- Spinner & toasts ---------- */
+.spinner {
+  display: inline-block; flex: none; width: var(--size, 20px); height: var(--size, 20px);
+  border-radius: 50%; border: 3px solid var(--oracle-soft); border-top-color: var(--oracle);
+  animation: spin 800ms linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.review-head { display: flex; align-items: center; gap: var(--space-2); }
+.review-head .pill { align-self: center; }
+.review-badge { display: inline-flex; align-items: center; gap: var(--space-1); }
+.pending-steps__state { display: inline-flex; align-items: center; gap: var(--space-2); }
+.judges__busy .spinner { --size: 22px; }
+
+.toasts {
+  position: fixed; left: 0; right: 0; bottom: max(var(--space-6), env(safe-area-inset-bottom)); z-index: 50;
+  display: flex; flex-direction: column; align-items: center; gap: var(--space-2); pointer-events: none; padding: 0 var(--space-4);
+}
+.toast-card {
+  pointer-events: auto; display: flex; align-items: center; gap: var(--space-3); max-width: 560px;
+  padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4); border-radius: var(--radius-pill);
+  background: var(--ink); color: var(--canvas); font: 600 15px/20px var(--font-sans); box-shadow: var(--shadow-soft);
+  animation: toast-in var(--dur-base) var(--ease-spring) both;
+}
+.toast-card__mark { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; flex: none; font: 700 13px/1 var(--font-sans); }
+.toast-card--success .toast-card__mark { background: var(--success-soft); color: var(--success); }
+.toast-card--warning .toast-card__mark { background: var(--sunny); color: var(--ink); }
+.toast-card__x { border: 0; background: none; color: var(--canvas); opacity: 0.7; cursor: pointer; font: 700 18px/1 var(--font-sans); min-width: 32px; min-height: 32px; border-radius: 50%; }
+.toast-card__x:hover { opacity: 1; background: var(--action-hover); }
+@keyframes toast-in { from { opacity: 0; transform: translateY(16px) scale(0.96); } to { opacity: 1; transform: none; } }
+.delete-row { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
+.rerun-banner { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4); border-radius: var(--radius-md); background: var(--oracle-soft); }
 /* =====================================================================
    Fight player (/fight-demo). Tokens only. Scene fills map pixel-art
    roles to design tokens; fighter colours stay in fighter.js.

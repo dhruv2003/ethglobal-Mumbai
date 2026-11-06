@@ -29,7 +29,7 @@ export const PROVIDER_LABEL = { "0g": "0G Compute Router", openai: "OpenAI", ant
 const requested = (process.env.JUDGE_PROVIDER || "0g").toLowerCase();
 export const PROVIDER = PROVIDERS.includes(requested) ? requested : "0g";
 export const MODEL = process.env.JUDGE_MODEL || DEFAULT_MODEL[PROVIDER];
-const EFFORT = process.env.JUDGE_EFFORT ?? "high";
+export const EFFORT = process.env.JUDGE_EFFORT ?? "high";
 const ZG_BASE_URL = (process.env.ZG_BASE_URL || "https://router-api.0g.ai/v1").replace(/\/$/, "");
 
 const ReviewSchema = z.object({
@@ -133,15 +133,16 @@ async function callAnthropic(system, user) {
  * instead of throwing.
  */
 let zgSetup;
-async function zeroGSetup() {
+async function zeroGSetup(schema, name) {
   zgSetup ??= await (async () => {
     const { default: OpenAI } = await import("openai");
     const { zodResponseFormat } = await import("openai/helpers/zod");
     // Retries are ours (withZgRetry), following the 0G errors page.
     const client = new OpenAI({ apiKey: process.env.ZG_API_KEY, baseURL: ZG_BASE_URL, maxRetries: 0, timeout: 180_000 });
-    return { client, format: zodResponseFormat(ReviewSchema, "judge_review") };
+    return { client, zodResponseFormat };
   })();
-  return zgSetup;
+  const { client, zodResponseFormat } = await zgSetup;
+  return { client, format: zodResponseFormat(schema, name) };
 }
 
 const sleepMs = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -222,8 +223,9 @@ export function mapZeroG(res, headers, parse) {
   };
 }
 
-export async function callZeroG(system, user, { setup, sleep } = {}) {
-  const { client, format } = setup ?? (await zeroGSetup());
+// The reviewer shares this adapter, with its own dossier/flow schema and token budget.
+export async function callZeroG(system, user, { setup, sleep, schema = ReviewSchema, name = "judge_review", maxTokens = 16000 } = {}) {
+  const { client, format } = setup ?? (await zeroGSetup(schema, name));
   const { data, response } = await withZgRetry(
     () =>
       client.chat.completions
@@ -235,7 +237,7 @@ export async function callZeroG(system, user, { setup, sleep } = {}) {
           ],
           response_format: format,
           reasoning_effort: EFFORT,
-          max_tokens: 16000,
+          max_tokens: maxTokens,
         })
         .withResponse(),
     { sleep },

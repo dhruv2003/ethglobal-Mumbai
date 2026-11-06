@@ -14,6 +14,7 @@ app.get("/", (req, res) => {
 });
 
 // Judges, submissions and reviews (ES module, loaded once at startup).
+process.env.ARENA_SERVER = "1"; // lets the API resume the review queue (the CLI doesn't)
 const ready = import("./api.mjs").then(({ router }) => {
     app.use("/api", router);
 });

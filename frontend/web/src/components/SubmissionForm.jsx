@@ -56,7 +56,17 @@ export function SubmissionForm({ wallet, onSubmit, submitState, problemCount }) 
         type="url"
         inputMode="url"
         placeholder="https://youtu.be/…"
-        help="2 to 4 minutes. It's the main evidence for the product round."
+        help="2 to 4 minutes. A direct video file or a Loom link can be transcribed automatically."
+        autoCapitalize="off"
+        spellCheck={false}
+      />
+      <TextField
+        path="demo.liveUrl"
+        label="Live app (optional)"
+        type="url"
+        inputMode="url"
+        placeholder="https://your-app.xyz"
+        help="Where it runs. We test it on a laptop and a phone. Left empty, we use your GitHub repo's homepage."
         autoCapitalize="off"
         spellCheck={false}
       />
