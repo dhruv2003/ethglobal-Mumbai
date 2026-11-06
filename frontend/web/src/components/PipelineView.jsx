@@ -11,7 +11,7 @@
  */
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { api, health } from "../lib/api.js";
+import { api, health, peekApi } from "../lib/api.js";
 import { RERUN_EVENT, rerunReview } from "../lib/review.js";
 import { Spinner } from "./Feedback.jsx";
 import { band, fmt, secs } from "./review/useReviewData.js";
@@ -91,9 +91,17 @@ function normalize(raw) {
 
 /** Polls the pipeline while it's queued or running. */
 export function usePipeline(project) {
-  const [live, setLive] = useState({ state: null, running: false, review: null, offline: false, loaded: false });
+  // Seed from this tab's last answer (memory cache), so revisiting a project paints its pipeline at once.
+  const seed = () => {
+    const p = peekApi(`/projects/${encodeURIComponent(project.id)}/pipeline`);
+    return { id: project.id, state: p?.state ?? null, running: Boolean(p?.running), review: p?.review ?? null, offline: false, loaded: Boolean(p) };
+  };
+  const [stored, setLive] = useState(seed);
+  // Another project: never show the previous one's pipeline.
+  const live = stored.id === project.id ? stored : seed();
   const [tick, setTick] = useState(0);
   useEffect(() => {
+    setLive((l) => (l.id === project.id ? l : seed()));
     if (project.kind !== "submitted") return undefined;
     let alive = true;
     let timer;
@@ -101,10 +109,12 @@ export function usePipeline(project) {
     const load = async () => {
       const h = await health();
       if (!alive) return;
-      if (!h) return setLive((l) => ({ ...l, offline: true, loaded: true }));
+      if (!h) return setLive((l) => ({ ...l, id: project.id, offline: true, loaded: true }));
       const p = await api(`/projects/${encodeURIComponent(project.id)}/pipeline`).catch(() => null);
       if (!alive) return;
-      setLive({ state: p?.state ?? null, running: Boolean(p?.running), review: p?.review ?? null, offline: false, loaded: true });
+      // A failed read keeps what we had instead of blanking the pipeline.
+      if (p) setLive({ id: project.id, state: p.state ?? null, running: Boolean(p.running), review: p.review ?? null, offline: false, loaded: true });
+      else setLive((l) => ({ ...(l.id === project.id ? l : seed()), loaded: true }));
       const waiting = p?.running || p?.review?.status === "queued" || (p?.state && !p.state.finishedAt);
       if (waiting && Date.now() - started < 45 * 60 * 1000) timer = setTimeout(load, 2500);
     };

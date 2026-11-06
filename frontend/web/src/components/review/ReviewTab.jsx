@@ -6,12 +6,13 @@
  *   Evidence  – claims vs. code, the live test, screenshots
  * The sub-tab lives in the URL (?view=judge&tab=…), so links keep it.
  */
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { useCountUp } from "../../lib/motion.js";
 import { judgeAsFighter } from "../JudgesPage.jsx";
 import { PixelFighter } from "../PixelFighter.jsx";
 import { FlowStrip, Icon, PipelineView, usePipeline } from "../PipelineView.jsx";
+import { Spinner } from "../Feedback.jsx";
 import { ClaimBar } from "./EvidenceView.jsx";
 import { EvidenceView } from "./EvidenceView.jsx";
 import { JudgesView } from "./JudgesView.jsx";
@@ -207,6 +208,15 @@ export function ReviewTab({ project }) {
   const data = useReviewData(project, live);
   const busy = live.running || live.review?.status === "queued" || (live.state && !live.state.finishedAt);
   const [tab, setTab] = useTab(busy ? "pipeline" : "overview");
+  // The pipeline loads after mount: once it does, open on it if a review is running (unless ?tab= chose).
+  const chosen = useRef(new URLSearchParams(location.search).has("tab"));
+  useEffect(() => {
+    if (live.loaded && busy && !chosen.current) {
+      chosen.current = true;
+      setTab("pipeline");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [live.loaded]);
   const [judge, setJudge] = useState(0);
   const tabs = TABS.filter((t) => (t.id !== "pipeline" && t.id !== "testing") || project.kind === "submitted" || (t.id === "testing" && project.liveTest));
   const liveRunning = live.state?.steps?.find((s) => s.id === "live")?.status === "running";
@@ -259,6 +269,13 @@ export function ReviewTab({ project }) {
 
       <AnimatePresence mode="wait" initial={false}>
         <motion.div key={tab} id={`rpanel-${tab}`} role="tabpanel" aria-labelledby={`rtab-${tab}`} className="rv__panel" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6, transition: { duration: 0.12 } }} transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}>
+          {/* Before the first answer (and with nothing cached), say "loading", not "offline" or "not judged yet". */}
+          {tab !== "pipeline" && ((!data.loaded && !data.result && !data.dossier) || (tab === "testing" && project.kind === "submitted" && !live.loaded)) ? (
+            <div className="rv-empty">
+              <Spinner label="Loading the review" />
+            </div>
+          ) : (
+          <>
           {tab === "overview" && (
             <Overview
               project={project}
@@ -275,6 +292,8 @@ export function ReviewTab({ project }) {
           {tab === "testing" && <TestingView project={project} live={live} />}
           {tab === "judges" && <JudgesView project={project} data={data} sel={judge} onSel={setJudge} />}
           {tab === "evidence" && <EvidenceView project={project} data={data} live={live} />}
+          </>
+          )}
         </motion.div>
       </AnimatePresence>
     </div>

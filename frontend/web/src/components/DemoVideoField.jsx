@@ -41,6 +41,8 @@ export function DemoVideoField() {
     if (!OK_TYPE.test(file.type) && !OK_NAME.test(file.name)) return setProblem("Pick an MP4, MOV or WebM video.");
     if (file.size > VIDEO_MAX_MB * 1048576) return setProblem(`That file is ${fmtBytes(file.size)}. The limit is ${VIDEO_MAX_MB} MB.`);
     ctl.current?.abort();
+    // Keep the good upload until the replacement has landed: a failed replace must not lose it.
+    const before = upload ?? null;
     setLocalUrl(URL.createObjectURL(file));
     set("demo.upload", null);
     setJob({ name: file.name, bytes: file.size, progress: 0 });
@@ -51,7 +53,10 @@ export function DemoVideoField() {
       set("demo.upload", { ref: r.ref, url: r.url, name: file.name, bytes: r.bytes, seconds: r.seconds });
       touch("demo.videoUrl");
     } catch (e) {
-      if (!e.aborted) setProblem(e.message);
+      if (!e.aborted) {
+        setProblem(e.message);
+        if (before) set("demo.upload", before);
+      }
       setLocalUrl(null);
     } finally {
       if (ctl.current === c) ctl.current = null;

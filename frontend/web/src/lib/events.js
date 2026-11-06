@@ -1,11 +1,17 @@
 /* Tournaments ("ETH Global"): their tracks and prizes, from the backend. */
-import { api } from "./api.js";
+import { api, peekApi } from "./api.js";
 
 const trackNames = new Map();
 const remember = (event) => {
   for (const t of event.tracks) trackNames.set(t.id, t.name);
   return event;
 };
+
+// Track names from the last visit, so labels are right before /events answers again.
+for (const e of peekApi("/events") ?? []) remember(e);
+
+/** The cached copy of one tournament (its own answer, or its row in the list). */
+export const cachedEvent = (id) => peekApi(`/events/${encodeURIComponent(id)}`) ?? peekApi("/events")?.find((e) => e.id === id);
 
 export const listEvents = async () => (await api("/events")).map(remember);
 export const getEvent = async (id) => remember(await api(`/events/${encodeURIComponent(id)}`));

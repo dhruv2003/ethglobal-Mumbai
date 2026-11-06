@@ -16,7 +16,7 @@ import { useFightSound } from "../fight/useFightSound.js";
 import { eventDuration } from "../fight/choreo.js";
 import { useReel } from "../fight/usePlayback.js";
 import { formatAmount, usePoll, useToken } from "../lib/chain.js";
-import { getFight, loadTournament } from "../lib/arena.js";
+import { cachedTournament, getFight, loadTournament } from "../lib/arena.js";
 import { MATCH_LABEL } from "../lib/labels.js";
 import { prefersReducedMotion } from "../lib/motion.js";
 import { usePayouts } from "../lib/payouts.js";
@@ -411,8 +411,8 @@ function NoFight({ word = "We couldn't find that fight." }) {
 const wantsWatch = () => new URLSearchParams(location.search).has("watch");
 
 export function MatchFightPage({ id, matchIndex, wallet }) {
-  const { data: t, loading, error } = usePoll(() => loadTournament(id), [id], 10000);
-  const { data: fight } = usePoll(() => getFight(id, matchIndex).catch(() => null), [id, matchIndex], 4000);
+  const { data: t, loading, error } = usePoll(() => loadTournament(id), [id], 10000, { key: `tournament:${id}`, initial: () => cachedTournament(id) });
+  const { data: fight } = usePoll(() => getFight(id, matchIndex), [id, matchIndex], 4000, { key: `fight:${id}:${matchIndex}` });
   const [watching, setWatching] = useState(wantsWatch);
   const [betting, setBetting] = useState(null);
   const closeBet = useCallback(() => setBetting(null), []);

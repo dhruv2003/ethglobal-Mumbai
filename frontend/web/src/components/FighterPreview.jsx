@@ -60,13 +60,16 @@ export function FighterPreview({ eventName }) {
   useEffect(() => {
     const added = [...equipped].find((id) => !prev.current.includes(id));
     prev.current = [...equipped];
-    if (!added) return undefined;
-    setFresh(GEAR_RULES.find((r) => r.id === added)?.label ?? null);
-    const timer = setTimeout(() => setFresh(null), 2400);
-    return () => clearTimeout(timer);
+    if (added) setFresh(GEAR_RULES.find((r) => r.id === added)?.label ?? null);
     // equipped is derived from data; the joined ids keep the effect stable
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [[...equipped].join("|")]);
+  // Its own timer, so a gear change inside the 2.4 s can't leave the note stuck on screen.
+  useEffect(() => {
+    if (!fresh) return undefined;
+    const timer = setTimeout(() => setFresh(null), 2400);
+    return () => clearTimeout(timer);
+  }, [fresh]);
 
   const [dir, setDir] = useState(1);
   const cycle = (step) => {

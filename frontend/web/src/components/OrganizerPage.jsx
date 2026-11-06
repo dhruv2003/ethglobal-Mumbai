@@ -173,7 +173,8 @@ function MatchRow({ wallet, view, match, busy, run }) {
   const [starting, setStarting] = useState(false);
   const watching = match.opened && match.status === "live";
   const { data: fight, refresh: refreshFight } = usePoll(
-    () => (watching ? getFight(view.id, match.index).catch(() => null) : Promise.resolve(null)),
+    () => // A failed poll throws, so usePoll keeps the last answer instead of resetting the replay.
+    (watching ? getFight(view.id, match.index) : Promise.resolve(null)),
     [watching, view.id, match.index],
     4000,
   );
@@ -214,7 +215,13 @@ function MatchRow({ wallet, view, match, busy, run }) {
 
   const open = async () => {
     if (autoPublish) return askServer("open", { minutes: Number(minutes) });
-    const now = await chainNow();
+    let now;
+    try {
+      now = await chainNow();
+    } catch {
+      setFightError("Couldn't read the chain time. Try again.");
+      return;
+    }
     const cutoff = now + BigInt(Math.max(1, Number(minutes) || 1)) * MINUTE;
     const scheduled = BigInt(Math.floor(new Date(view.startsAt).getTime() / 1000));
     const start = cutoff > scheduled ? cutoff : scheduled;
@@ -408,7 +415,7 @@ function TournamentControl({ wallet, tournament, onChanged }) {
 
 export function OrganizerPage({ wallet }) {
   const info = useToken();
-  const { data: list, refresh: refreshList, loading } = usePoll(listTournaments, [], 20000);
+  const { data: list, refresh: refreshList, loading } = usePoll(listTournaments, [], 20000, { key: "chain:tournaments" });
   const [selected, setSelected] = useState(null);
   const current = selected ?? list?.[0]?.id ?? null;
   const { data: tournament, refresh } = usePoll(() => (current ? readTournament(current) : Promise.resolve(null)), [current], 10000);

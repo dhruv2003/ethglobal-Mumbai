@@ -161,7 +161,7 @@ async function readPositions(address) {
 }
 
 function Positions({ wallet, info, onChanged }) {
-  const { data, loading, error, refresh } = usePoll(() => (wallet.address ? readPositions(wallet.address) : Promise.resolve([])), [wallet.address], 15000);
+  const { data, loading, error, refresh } = usePoll(() => (wallet.address ? readPositions(wallet.address) : Promise.resolve([])), [wallet.address], 15000, { key: wallet.address ? `positions:${wallet.address.toLowerCase()}` : null });
   const done = async () => {
     await refresh();
     await onChanged?.();

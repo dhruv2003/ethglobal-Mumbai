@@ -27,26 +27,32 @@ export function VoiceNote({ model, onText }) {
   const timer = useRef(null);
   const canRecord = typeof navigator !== "undefined" && Boolean(navigator.mediaDevices?.getUserMedia) && pickMime() !== null;
 
-  useEffect(
-    () => () => {
+  const alive = useRef(true);
+  useEffect(() => {
+    alive.current = true;
+    return () => {
+      alive.current = false;
       clearInterval(timer.current);
+      // Leaving mid-recording discards it: no upload (and no paid transcription) for a form that's gone.
+      if (rec.current) rec.current.onstop = null;
+      if (rec.current?.state === "recording") rec.current.stop();
       rec.current?.stream?.getTracks().forEach((t) => t.stop());
-    },
-    [],
-  );
+    };
+  }, []);
 
   async function send(blob) {
     setPhase("sending");
     setError("");
     try {
       const r = await upload("/judges/voice-note", blob);
+      if (!alive.current) return;
       setResult(r);
       if (r.text) onText(target, r.text);
       else setError("No speech was found in that recording.");
     } catch (e) {
-      setError(e.message);
+      if (alive.current) setError(e.message);
     } finally {
-      setPhase("idle");
+      if (alive.current) setPhase("idle");
     }
   }
 
@@ -55,6 +61,8 @@ export function VoiceNote({ model, onText }) {
     setResult(null);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      // The form closed while the permission prompt was open: release the mic at once.
+      if (!alive.current) return stream.getTracks().forEach((t) => t.stop());
       const mimeType = pickMime();
       const mr = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
       const chunks = [];

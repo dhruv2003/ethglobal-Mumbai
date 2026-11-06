@@ -60,6 +60,7 @@ export function toPayload(data, { ownerWallet, chainId }) {
  * entered can be changed after signing. Key order matters: keep both in sync.
  */
 export async function submissionDigest(p) {
+  if (!globalThis.crypto?.subtle) throw Object.assign(new Error("Open the site over https (or localhost) to submit: the browser only signs on a secure page."), { fromServer: true });
   const canonical = JSON.stringify({
     team: { name: p.team?.name ?? "" },
     project: { name: p.project?.name ?? "", pitch: p.project?.pitch ?? "", description: p.project?.description ?? "" },

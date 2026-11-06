@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { FormCtx, fieldId } from "./components/fields.jsx";
 import { Header } from "./components/Header.jsx";
-import { SubmissionForm } from "./components/SubmissionForm.jsx";
+import { SubmissionForm, SubmitHeader } from "./components/SubmissionForm.jsx";
 import { FighterPreview } from "./components/FighterPreview.jsx";
 import { Toaster, toast } from "./components/Feedback.jsx";
 import { eventIsOpen, getEvent } from "./lib/events.js";
@@ -57,24 +57,26 @@ export default function App() {
   const [savedAt, setSavedAt] = useState("");
   const [submitState, setSubmitState] = useState({ phase: "idle", error: "" });
   // The tournament being entered: its tracks are the only ones on the form.
-  const [entering, setEntering] = useState({ loading: false, event: null });
+  const [entering, setEntering] = useState({ loading: false, event: null, forId: null });
   useEffect(() => {
     if (route.name !== "form") return undefined;
     let live = true;
-    setEntering({ loading: true, event: null });
+    setEntering({ loading: true, event: null, forId: null });
     getEvent(route.eventId).then(
       (event) => {
         if (!live) return;
-        setEntering({ loading: false, event });
+        setEntering({ loading: false, event, forId: route.eventId });
         setData((d) => setIn(d, "tracks.selected", d.tracks.selected.filter((id) => event.tracks.some((t) => t.id === id))));
       },
-      () => live && setEntering({ loading: false, event: null }),
+      () => live && setEntering({ loading: false, event: null, forId: route.eventId }),
     );
     return () => {
       live = false;
     };
   }, [route.name, route.eventId]);
-  const event = entering.event;
+  // Until this route's tournament has answered, it's loading (no "not found" flash on the first paint).
+  const event = entering.forId === route.eventId ? entering.event : null;
+  const eventLoading = route.name === "form" && entering.forId !== route.eventId;
 
   const { errors } = useMemo(() => validate(data, { walletAddress: wallet.address, tracks: event?.tracks }), [data, wallet.address, event]);
   // The wallet isn't a form field; the submit row handles it.
@@ -96,7 +98,9 @@ export default function App() {
     setShowAll(true);
     setSubmitState({ phase: "idle", error: "" });
     if (fieldErrors.length) {
-      const el = document.getElementById(fieldId(fieldErrors[0]));
+      // The demo field's input id depends on its mode (link, upload, screenshots).
+      const fid = fieldId(fieldErrors[0]);
+      const el = document.getElementById(fid) ?? document.getElementById(`${fid}-file`) ?? document.getElementById(`${fid}-images`);
       el?.focus({ preventScroll: true });
       el?.scrollIntoView({ block: "center" });
       return;
@@ -104,14 +108,14 @@ export default function App() {
     if (!wallet.address || !event) return;
     const payload = { ...toPayload(data, { ownerWallet: wallet.address, chainId: wallet.chainId }), eventId: event.id };
     const issuedAt = new Date().toISOString();
-    const message = [
-      `Submit "${payload.project.name}" to ${event.name} Battle Arena`,
-      `Repository: ${payload.repoUrl}`,
-      `Owner: ${wallet.address}`,
-      `Submission: ${await submissionDigest(payload)}`,
-      `Issued at: ${issuedAt}`,
-    ].join("\n");
     try {
+      const message = [
+        `Submit "${payload.project.name}" to ${event.name} Battle Arena`,
+        `Repository: ${payload.repoUrl}`,
+        `Owner: ${wallet.address}`,
+        `Submission: ${await submissionDigest(payload)}`,
+        `Issued at: ${issuedAt}`,
+      ].join("\n");
       setSubmitState({ phase: "signing", error: "" });
       const signature = await wallet.sign(message);
       setSubmitState({ phase: "saving", error: "" });
@@ -173,7 +177,7 @@ export default function App() {
         <AnimatePresence mode="wait" initial={false}>
           <motion.main
             id="main"
-            key={route.name + (route.id ?? "") + (route.match ?? "")}
+            key={[route.name, route.id, route.match].join("|")}
             className={pageClass}
             initial={{ opacity: 0, y: 14, filter: "blur(8px)" }}
             animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
@@ -206,7 +210,7 @@ export default function App() {
               <StoragePage />
             ) : route.name === "project" ? (
               <ProjectPage id={route.id} wallet={wallet} />
-            ) : entering.loading ? (
+            ) : eventLoading ? (
               <div className="skeleton skeleton--seat" aria-label="Loading tournament" />
             ) : !event || !eventIsOpen(event) ? (
               <div className="card card--surface stack">
@@ -217,29 +221,7 @@ export default function App() {
               </div>
             ) : (
               <>
-                <div className="intro intro--form">
-                  <h1 className="t-display-lg m0 rise" style={{ "--i": 1 }}>
-                    Submit to {event.name}
-                  </h1>
-                  <p className="t-body m0 muted rise" style={{ "--i": 2 }}>
-                    Three short rounds. Your fighter levels up as you go.
-                  </p>
-                  <ul className="after-submit rise" style={{ "--i": 3 }} aria-label="What happens after you submit">
-                    <li>
-                      <span aria-hidden="true">1</span>We pin your commit
-                    </li>
-                    <li>
-                      <span aria-hidden="true">2</span>Replay your demo on a laptop and a phone
-                    </li>
-                    <li>
-                      <span aria-hidden="true">3</span>AI judges score it
-                    </li>
-                  </ul>
-                  <span className="t-caption save-state rise" style={{ "--i": 4 }} data-saved={savedAt ? "true" : "false"}>
-                    <span className="save-state__dot" aria-hidden="true" />
-                    {savedAt ? `Draft saved ${savedAt}` : "Saves as you type"}
-                  </span>
-                </div>
+                <SubmitHeader event={event} savedAt={savedAt} />
                 <div className="submit-layout">
                   <SubmissionForm tracks={event.tracks} wallet={wallet} onSubmit={submit} submitState={submitState} problemCount={fieldErrors.length} />
                   <FighterPreview eventName={event.name} />

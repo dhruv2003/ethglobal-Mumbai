@@ -3,14 +3,17 @@
  * bracket slot, and the recorded fights. The chain stays the source of truth for money,
  * scores and winners; this only supplies names and the fight replay.
  */
-import { api } from "./api.js";
+import { api, peekApi } from "./api.js";
+import { peek } from "./cache.js";
 import { listTournaments, readTournament } from "./chain.js";
 import { viewOfChain } from "./tournamentView.js";
 
 /** Bracket of one tournament, or null if the organizer hasn't registered one (or the backend is down). */
-export const getBracket = (id) => api(`/arena/tournaments/${id}`).catch(() => null);
+// A blip must not strip names and tournaments off every bracket: fall back to the last answer we had.
+export const getBracket = (id) =>
+  api(`/arena/tournaments/${id}`).catch((e) => (e.status === 404 ? null : (peekApi(`/arena/tournaments/${id}`) ?? null)));
 
-const allBrackets = () => api("/arena/tournaments").catch(() => []);
+const allBrackets = () => api("/arena/tournaments").catch(() => peekApi("/arena/tournaments") ?? []);
 
 /** Ask the backend who should fight whom. Returns the bracket order, its audit hashes and why each first-round fight exists. */
 export const matchmake = (body) => api("/arena/matchmaking", { method: "POST", body });
@@ -21,6 +24,9 @@ export const runFight = (t, m, body) => api(`/arena/fights/${t}/${m}`, { method:
 
 /** The recorded fight of a match. */
 export const getFight = (t, m) => api(`/arena/fights/${t}/${m}`);
+
+/** The cached view of one tournament (its own answer, or its row in the list). */
+export const cachedTournament = (id) => peek("tournaments")?.find((t) => t.id === String(id));
 
 /** One tournament, read from chain and joined with its registered bracket. null if it doesn't exist. */
 export async function loadTournament(id) {

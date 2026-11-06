@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 
 export function navigate(to) {
-  if (to === location.pathname) return;
+  if (to === location.pathname + location.search) return;
   history.pushState({}, "", to);
   window.dispatchEvent(new PopStateEvent("popstate"));
   window.scrollTo({ top: 0 });

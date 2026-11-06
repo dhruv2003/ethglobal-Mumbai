@@ -41,8 +41,9 @@ const host = (u) => String(u ?? "").replace(/^https?:\/\//, "").replace(/\/$/, "
 
 /** Load the live test (bundled for samples, from the API for submissions), polling while it's pending. */
 function useLiveTest(project, pending) {
-  const [remote, setRemote] = useState(null);
+  const [remote, setRemote] = useState({ id: project.id, lt: null });
   useEffect(() => {
+    setRemote((r) => (r.id === project.id ? r : { id: project.id, lt: null }));
     if (project.liveTest || project.kind !== "submitted") return undefined;
     let alive = true;
     let timer;
@@ -51,14 +52,14 @@ function useLiveTest(project, pending) {
       if (!alive) return;
       if (r?.liveTest) {
         const base = `/api/projects/${encodeURIComponent(project.id)}/live/files`;
-        setRemote({
+        setRemote({ id: project.id, lt: {
           ...r.liveTest,
           runs: r.liveTest.runs.map((run) => ({
             ...run,
             videoUrl: run.video ? `${base}/${run.video.file}` : null,
             phases: run.phases?.map((ph) => ({ ...ph, steps: ph.steps.map((st) => ({ ...st, shotUrl: st.screenshot ? `${base}/${st.screenshot}` : null })) })),
           })),
-        });
+        } });
       } else if (pending) timer = setTimeout(load, 6000);
     };
     load();
@@ -67,7 +68,8 @@ function useLiveTest(project, pending) {
       clearTimeout(timer);
     };
   }, [project.id, project.kind, project.liveTest, pending]);
-  return project.liveTest ?? remote;
+  // Never another project's results.
+  return project.liveTest ?? (remote.id === project.id ? remote.lt : null);
 }
 
 /* ---------- devices ---------- */
@@ -111,6 +113,10 @@ function Device({ run, focus, onTime, seekRef }) {
       if (!el) return;
       el.currentTime = Math.max(0, at - 0.3);
       el.play().catch(() => {});
+    };
+    const refs = seekRef.current;
+    return () => {
+      delete refs[run.device];
     };
   }, [run.device, seekRef]);
 
@@ -466,8 +472,9 @@ export function TestingView({ project, live }) {
   const [now, setNow] = useState({});
   const [view, setView] = useState("both");
 
+  // A re-run in progress shows the live browsers, not the previous run's recordings.
+  if (liveStep?.status === "running") return <LiveStage project={project} liveStep={liveStep} />;
   if (!lt?.runs?.length) {
-    if (liveStep?.status === "running") return <LiveStage project={project} liveStep={liveStep} />;
     return (
       <div className="rv-empty">
         <span className="rv-empty__art" aria-hidden="true">
@@ -490,8 +497,12 @@ export function TestingView({ project, live }) {
     setNow((n) => (n[device] === cur?.id ? n : { ...n, [device]: cur?.id }));
   };
   const seek = (device, at) => {
-    if (view !== "both" && view !== device) setView("both");
-    seekRef.current[device]?.(at);
+    const go = () => seekRef.current[device]?.(at);
+    // The other device isn't mounted yet: show both, then seek once it has rendered.
+    if (view !== "both" && view !== device) {
+      setView("both");
+      requestAnimationFrame(() => requestAnimationFrame(go));
+    } else go();
     document.querySelector(`.tvdev--${device}`)?.scrollIntoView({ block: "nearest", behavior: "smooth" });
   };
 

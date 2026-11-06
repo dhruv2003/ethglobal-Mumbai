@@ -6,7 +6,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { SplitWords, bouncy, easeOut } from "./fx.jsx";
-import { api } from "../lib/api.js";
+import { api, peekApi } from "../lib/api.js";
+import { sameData } from "../lib/cache.js";
 import { Link } from "../lib/router.jsx";
 import { NODE_TYPES, createSimulation, hitTest, neighbourhood, prepareGraph, reheat, tick, visibleGraph } from "../lib/graphLayout.js";
 
@@ -60,16 +61,21 @@ function GraphCanvas({ data, hidden, selected, onSelect }) {
 
   const graph = useMemo(() => visibleGraph(data, hidden), [data, hidden]);
 
+  // One glide at a time, and any pan or zoom by the user cancels it.
+  const glide = useRef(0);
+  const stopGlide = useCallback(() => cancelAnimationFrame(glide.current), []);
+  useEffect(() => stopGlide, [stopGlide]);
   const animateTo = useCallback((target) => {
+    cancelAnimationFrame(glide.current);
     const from = { ...view.current };
     const t0 = performance.now();
     const step = (now) => {
       const p = Math.min(1, (now - t0) / 500);
       const e = 1 - (1 - p) ** 3;
       view.current = { k: from.k + (target.k - from.k) * e, x: from.x + (target.x - from.x) * e, y: from.y + (target.y - from.y) * e };
-      if (p < 1) requestAnimationFrame(step);
+      if (p < 1) glide.current = requestAnimationFrame(step);
     };
-    requestAnimationFrame(step);
+    glide.current = requestAnimationFrame(step);
   }, []);
 
   const fit = useCallback((animate = true) => {
@@ -96,6 +102,7 @@ function GraphCanvas({ data, hidden, selected, onSelect }) {
   }, [selected, animateTo]);
 
   const zoomBy = useCallback((f, cx, cy) => {
+    cancelAnimationFrame(glide.current);
     const v = view.current;
     const { w, h } = size.current;
     const px = cx ?? w / 2;
@@ -295,6 +302,7 @@ function GraphCanvas({ data, hidden, selected, onSelect }) {
     return { sx, sy, gx: (sx - x) / k, gy: (sy - y) / k };
   };
   const onDown = (e) => {
+    stopGlide();
     const p = toGraph(e);
     const n = sim.current && hitTest(sim.current, p.gx, p.gy);
     canvas.current.setPointerCapture(e.pointerId);
@@ -385,17 +393,22 @@ function Stat({ label, value, tone }) {
 
 function Details({ id, data, judges, onSelect }) {
   const node = data.nodes.find((n) => n.id === id);
-  const [info, setInfo] = useState(null);
   const type = node?.type;
   const key = id?.split(":").slice(1).join(":");
+  const cachedInfo = () => {
+    const explain = peekApi(`/graph/projects/${encodeURIComponent(key)}`);
+    const similar = peekApi(`/graph/projects/${encodeURIComponent(key)}/similar`);
+    return explain && similar ? { explain, similar } : null;
+  };
+  const [info, setInfo] = useState(() => (type === "project" ? cachedInfo() : null));
 
   useEffect(() => {
-    setInfo(null);
+    setInfo(type === "project" ? cachedInfo() : null);
     if (type !== "project") return;
     let live = true;
     Promise.all([api(`/graph/projects/${encodeURIComponent(key)}`), api(`/graph/projects/${encodeURIComponent(key)}/similar`)])
       .then(([explain, similar]) => live && setInfo({ explain, similar }))
-      .catch(() => live && setInfo({ error: true }));
+      .catch(() => live && setInfo((i) => (i && !i.error ? i : { error: true })));
     return () => {
       live = false;
     };
@@ -545,14 +558,19 @@ function Details({ id, data, judges, onSelect }) {
 }
 
 export function GraphPage() {
-  const [state, setState] = useState({ loading: true });
+  // Last visit's graph paints at once; the fresh one replaces it only if something changed (no layout jump).
+  const [state, setState] = useState(() => {
+    const graph = peekApi("/graph");
+    const judges = peekApi("/graph/judges");
+    return graph && judges ? { graph, judges } : { loading: true };
+  });
   const [hidden, setHidden] = useState(() => new Set());
   const [selected, setSelected] = useState(null);
 
   useEffect(() => {
     Promise.all([api("/graph"), api("/graph/judges")])
-      .then(([graph, judges]) => setState({ graph, judges }))
-      .catch((e) => setState({ error: e.message }));
+      .then(([graph, judges]) => setState((s) => (sameData(s.graph, graph) && sameData(s.judges, judges) ? s : { graph, judges })))
+      .catch((e) => setState((s) => (s.graph ? s : { error: e.message })));
   }, []);
 
   const counts = useMemo(() => {

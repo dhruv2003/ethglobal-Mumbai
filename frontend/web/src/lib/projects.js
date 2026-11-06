@@ -2,6 +2,7 @@
  * Projects shown on /projects: whatever teams submitted, from the backend's store.
  */
 import { api } from "./api.js";
+import { peek, put } from "./cache.js";
 import { listEvents } from "./events.js";
 import { uploadUrl } from "./video.js";
 
@@ -30,6 +31,7 @@ function fromSubmission(r) {
     submittedAt: r.submittedAt ?? null,
     review: r.review ?? null,
     dossier: null,
+    hasDossier: Boolean(r.hasDossier),
     liveTest: null,
     reviews: null,
   };
@@ -38,7 +40,15 @@ function fromSubmission(r) {
 export async function listProjects() {
   const [remote, events] = await Promise.all([api("/submissions"), listEvents().catch(() => [])]);
   const nameOf = new Map(events.map((e) => [e.id, e.name]));
-  return remote.map((r) => ({ ...fromSubmission(r), event: nameOf.get(r.eventId) ?? null })).sort((a, b) => String(b.submittedAt).localeCompare(String(a.submittedAt)));
+  const list = remote.map((r) => ({ ...fromSubmission(r), event: nameOf.get(r.eventId) ?? null })).sort((a, b) => String(b.submittedAt).localeCompare(String(a.submittedAt)));
+  put("projects", list); // any fresh read (one project's page too) refreshes the cached list
+  return list;
+}
+
+/** Take a deleted project out of the cached list, so it doesn't flash back before the next read. */
+export function forgetProject(id) {
+  const list = peek("projects");
+  if (list) put("projects", list.filter((p) => p.id !== id));
 }
 
 export async function getProject(id) {

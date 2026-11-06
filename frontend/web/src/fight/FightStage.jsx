@@ -153,7 +153,7 @@ function RoundBadge({ state }) {
   const idx = state.round ? CRITERIA.indexOf(state.round) + 1 : 0;
   return (
     <div className="fs-round">
-      <span className="fs-round__k">{idx ? `Round ${idx}/5` : state.phase === "pitches" ? "Pitches" : "Intro"}</span>
+      <span className="fs-round__k">{idx ? `Round ${idx}/${CRITERIA.length}` : state.phase === "pitches" ? "Pitches" : "Intro"}</span>
       <span className="fs-round__name">{state.round ? CRITERION_LABEL[state.round] : "Get ready"}</span>
       <span className="fs-round__pips" aria-label="Rounds">
         {CRITERIA.map((c) => (

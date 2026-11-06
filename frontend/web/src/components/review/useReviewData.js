@@ -4,19 +4,29 @@
  * dossier and the backend's health. Reloads when the pipeline moves on.
  */
 import { useCallback, useEffect, useState } from "react";
-import { api, health } from "../../lib/api.js";
+import { api, health, peekApi } from "../../lib/api.js";
 
 export function useReviewData(project, live) {
   const id = encodeURIComponent(project.id);
-  const [data, setData] = useState({
-    loaded: false,
-    health: null,
-    result: project.reviews ?? null,
-    running: false,
-    progress: null,
-    dossier: project.dossier ?? null,
-    zgStorage: null,
-  });
+  // This tab's last answers (organizer-only, memory cache) paint at once; the effect below refreshes them.
+  const seed = () => {
+    const r = peekApi(`/projects/${id}/reviews`);
+    const d = peekApi(`/projects/${id}/dossier`);
+    const h = peekApi("/health");
+    return {
+      id,
+      loaded: Boolean(h && r),
+      health: h ?? null,
+      result: project.reviews ?? r?.result ?? null,
+      running: Boolean(r?.running),
+      progress: r?.progress ?? null,
+      dossier: project.dossier ?? d?.dossier ?? null,
+      zgStorage: r?.zgStorage ?? null,
+    };
+  };
+  const [stored, setData] = useState(seed);
+  // Another project: never show the previous one's scores while its own load.
+  const data = stored.id === id ? stored : seed();
   const [asking, setAsking] = useState(false);
   const [error, setError] = useState("");
 
@@ -33,7 +43,10 @@ export function useReviewData(project, live) {
         ? await Promise.all([api(`/projects/${id}/reviews`).catch(() => null), project.kind === "submitted" ? api(`/projects/${id}/dossier`).catch(() => null) : null])
         : [null, null];
       if (!alive) return;
-      setData((x) => ({
+      setData((prev) => {
+        const x = prev.id === id ? prev : seed();
+        return {
+        id,
         loaded: true,
         health: h,
         result: r?.result ?? x.result,
@@ -41,7 +54,8 @@ export function useReviewData(project, live) {
         progress: r?.progress ?? null,
         dossier: d?.dossier ?? x.dossier,
         zgStorage: r?.zgStorage ?? x.zgStorage ?? null,
-      }));
+        };
+      });
     })();
     return () => {
       alive = false;

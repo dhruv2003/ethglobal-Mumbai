@@ -35,12 +35,23 @@ const httpsHref = (raw) => {
 /** Our copy's facts, refreshed while the review is still saving it. */
 function useSavedVideo(project) {
   const [saved, setSaved] = useState(project.savedVideo ?? null);
-  const waiting = project.kind === "submitted" && !saved && project.review?.status !== "reviewed" && project.review?.status !== "stopped";
+  // Only wait while the review (which saves the copy) is actually in flight, and never forever:
+  // participants don't see the review status, and a not-started review would otherwise spin for good.
+  const inFlight = project.review?.status === "queued" || project.review?.status === "reviewing";
+  const [gaveUp, setGaveUp] = useState(false);
+  const waiting = project.kind === "submitted" && !saved && inFlight && !gaveUp;
   useEffect(() => setSaved(project.savedVideo ?? null), [project.id, project.savedVideo]);
+  useEffect(() => setGaveUp(false), [project.id]);
   useEffect(() => {
     if (!waiting) return undefined;
     let alive = true;
+    const started = Date.now();
     const t = setInterval(async () => {
+      if (Date.now() - started > 10 * 60 * 1000) {
+        clearInterval(t);
+        if (alive) setGaveUp(true);
+        return;
+      }
       const r = await api(`/projects/${encodeURIComponent(project.id)}/video`).catch(() => null);
       if (alive && r?.video) setSaved(r.video);
     }, 5000);

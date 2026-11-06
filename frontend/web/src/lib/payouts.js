@@ -3,6 +3,6 @@ import { api } from "./api.js";
 import { usePoll } from "./chain.js";
 
 export function usePayouts() {
-  const { data } = usePoll(() => api("/payouts").catch(() => ({ enabled: false })), [], 30000);
+  const { data } = usePoll(() => api("/payouts").catch(() => ({ enabled: false })), [], 30000, { key: "payouts" });
   return data ?? { enabled: false };
 }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ReviewTab } from "./review/ReviewTab.jsx";
 import { AnimatePresence, LayoutGroup, motion } from "motion/react";
 import { Progress, StatusPill } from "@ds/ui.jsx";
@@ -7,7 +7,9 @@ import { listEvents, trackNameOf } from "../lib/events.js";
 import { useOrganizer } from "../lib/organizer.js";
 import { OrganizerGate } from "./OrganizerGate.jsx";
 import { useCountUp } from "../lib/motion.js";
-import { getProject, listProjects } from "../lib/projects.js";
+import { forgetProject, getProject, listProjects } from "../lib/projects.js";
+import { usePoll } from "../lib/chain.js";
+import { peek } from "../lib/cache.js";
 import { DemoVideo } from "./DemoVideo.jsx";
 import { Link } from "../lib/router.jsx";
 import { shortAddress } from "../lib/wallet.js";
@@ -69,6 +71,9 @@ function Tracks({ ids }) {
   );
 }
 
+/** Pseudo-tournament id for projects without a (known) tournament. */
+const UNASSIGNED = "unassigned";
+
 /** Filters live in the URL (?track=&q=) so a filtered view can be shared and survives reload. */
 function useFilters() {
   const read = () => {
@@ -86,6 +91,13 @@ function useFilters() {
     if (merged.mine) q.set("mine", "1");
     history.replaceState({}, "", `${location.pathname}${q.toString() ? `?${q}` : ""}`);
   };
+  // In-app links to /projects?… (and back/forward) change the query without remounting: re-read it.
+  useEffect(() => {
+    const on = () => setF(read());
+    window.addEventListener("popstate", on);
+    return () => window.removeEventListener("popstate", on);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   return [f, update];
 }
 
@@ -247,15 +259,21 @@ function HowItWorks() {
 
 /* ------------------------------------------------------------- landing */
 
+/** Every project, shown from the last visit's cache while the backend answers. null while loading with nothing cached. */
+function useProjects() {
+  const { data, error } = usePoll(listProjects, [], 0, { key: "projects" });
+  return { projects: data ?? (error ? [] : null), error: data ? null : error };
+}
+
+/** Every tournament, cached the same way. [] until known. */
+function useEvents() {
+  const { data } = usePoll(listEvents, [], 0, { key: "events" });
+  return data ?? [];
+}
+
 export function LandingPage() {
-  const [projects, setProjects] = useState(null);
-  useEffect(() => {
-    listProjects().then(setProjects, () => setProjects([]));
-  }, []);
-  const [events, setEvents] = useState([]);
-  useEffect(() => {
-    listEvents().then(setEvents, () => setEvents([]));
-  }, []);
+  const { projects } = useProjects();
+  const events = useEvents();
   const latest = events.at(-1);
   const parade = (projects ?? []).slice(0, 4);
   return (
@@ -301,18 +319,16 @@ export function LandingPage() {
 /* ----------------------------------------------------------- dashboard */
 
 export function ProjectsPage({ wallet }) {
-  const [projects, setProjects] = useState(null);
-  const [events, setEvents] = useState([]);
-  useEffect(() => {
-    listEvents().then(setEvents, () => setEvents([]));
-  }, []);
+  const { projects, error: projectsError } = useProjects();
+  const events = useEvents();
   const [filters, setFilters] = useFilters();
+  // Once per visit, not on every retry.
+  const warned = useRef(false);
   useEffect(() => {
-    listProjects().then(setProjects, () => {
-      setProjects([]);
-      toast("Couldn't reach the server, so projects can't be listed.", { tone: "warning", ms: 6000 });
-    });
-  }, []);
+    if (!projectsError || warned.current) return;
+    warned.current = true;
+    toast("Couldn't reach the server, so projects can't be listed.", { tone: "warning", ms: 6000 });
+  }, [projectsError]);
   // "/" jumps to search, like most dashboards.
   useEffect(() => {
     const onKey = (e) => {
@@ -325,9 +341,14 @@ export function ProjectsPage({ wallet }) {
   }, []);
 
   // Projects belong to a tournament: one is always selected, and the track filters are its own.
-  const selected = events.find((e) => e.id === filters.tournament) ?? events.at(-1) ?? null;
+  // Projects with no tournament (or one that no longer exists) go under "Unassigned" so they never vanish.
+  const known = new Set(events.map((e) => e.id));
+  const orphans = (projects ?? []).filter((p) => !known.has(p.eventId));
+  const unassigned = orphans.length ? { id: UNASSIGNED, name: "Unassigned", tracks: [] } : null;
+  const choices = unassigned ? [...events, unassigned] : events;
+  const selected = choices.find((e) => e.id === filters.tournament) ?? events.at(-1) ?? unassigned;
   const tracks = selected?.tracks ?? [];
-  const all = (projects ?? []).filter((p) => p.eventId === selected?.id);
+  const all = selected?.id === UNASSIGNED ? orphans : (projects ?? []).filter((p) => p.eventId === selected?.id);
   const counts = Object.fromEntries(tracks.map((t) => [t.id, all.filter((p) => p.tracks.includes(t.id)).length]));
   const inPlay = tracks.filter((t) => counts[t.id] > 0);
   const most = Math.max(0, ...inPlay.map((t) => counts[t.id]));
@@ -339,10 +360,10 @@ export function ProjectsPage({ wallet }) {
   const shown = all.filter(
     (p) =>
       (!filters.track || p.tracks.includes(filters.track)) &&
-      (!filters.mine || p.ownerWallet?.toLowerCase() === wallet.address?.toLowerCase()) &&
+      (!filters.mine || !wallet.address || p.ownerWallet?.toLowerCase() === wallet.address.toLowerCase()) &&
       (!needle || [p.name, p.teamName, p.pitch].some((x) => x.toLowerCase().includes(needle))),
   );
-  const filtered = Boolean(filters.track || needle || filters.mine);
+  const filtered = Boolean(filters.track || needle || (filters.mine && wallet.address));
 
   return (
     <>
@@ -352,11 +373,15 @@ export function ProjectsPage({ wallet }) {
             <SplitWords>Projects</SplitWords>
           </h1>
           <p className="t-body m0 muted rise" style={{ "--i": 2 }}>
-            {selected ? `Every project in ${selected.name}. They all compete for finalist, and tracks are optional.` : "No tournaments yet."}
+            {selected?.id === UNASSIGNED
+              ? "Projects that aren't part of any tournament."
+              : selected
+                ? `Every project in ${selected.name}. They all compete for finalist, and tracks are optional.`
+                : "No tournaments yet."}
           </p>
-          {events.length > 0 && (
+          {choices.length > 0 && (
             <div className="trade__presets" role="group" aria-label="Choose a tournament">
-              {events.map((e) => (
+              {choices.map((e) => (
                 <button key={e.id} type="button" className="chip chip--anim" aria-pressed={selected?.id === e.id} onClick={() => setFilters({ tournament: e.id, track: "" })}>
                   {e.name}
                 </button>
@@ -445,7 +470,7 @@ export function ProjectsPage({ wallet }) {
           <motion.div className="card card--surface empty" initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} transition={bouncy}>
             <p className="t-body m0">{all.length ? "No projects match." : "No projects yet. Be the first."}</p>
             {filtered ? (
-              <button type="button" className="btn btn--ghost btn--sm" onClick={() => setFilters({ track: "", q: "" })}>
+              <button type="button" className="btn btn--ghost btn--sm" onClick={() => setFilters({ track: "", q: "", mine: false })}>
                 Clear filters
               </button>
             ) : (
@@ -508,7 +533,6 @@ export function ProjectsPage({ wallet }) {
 
 /* --------------------------------------------------------- project page */
 
-/** Delete a submitted project (organizer). Local-only drafts just leave this browser. */
 /** Run the whole review again (organizer). Opens the Agent judge side to watch it. */
 function RerunReview({ project, onStarted }) {
   const [busy, setBusy] = useState(false);
@@ -537,6 +561,7 @@ function RerunReview({ project, onStarted }) {
   );
 }
 
+/** Delete a submitted project (organizer). */
 function DeleteProject({ project }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -546,10 +571,12 @@ function DeleteProject({ project }) {
     setError("");
     try {
       await api(`/projects/${encodeURIComponent(project.id)}`, { method: "DELETE" });
+      forgetProject(project.id);
       toast(`${project.name} deleted.`);
       navigate("/projects");
     } catch (e) {
       if (e.status === 404) {
+        forgetProject(project.id);
         toast(`${project.name} deleted.`);
         navigate("/projects");
         return;
@@ -625,13 +652,15 @@ export function ProjectPage({ id, wallet }) {
   // Reviews are only for organizers. Everyone else sees what the team submitted.
   const { isOrganizer } = useOrganizer(wallet);
   const view = isOrganizer ? wantedView : "team";
-  const [state, setState] = useState({ loading: true, project: null });
-  useEffect(() => {
-    getProject(id).then(
-      (project) => setState({ loading: false, project }),
-      () => setState({ loading: false, project: null }),
-    );
-  }, [id]);
+  // The cached list has this project already: show it at once, then swap in the fresh copy.
+  // While a review is queued or running, re-read every 5s so its status (and the rerun button) stays current.
+  const [watching, setWatching] = useState(false);
+  const { data: project, loading, refresh } = usePoll(() => getProject(id), [id], watching ? 5000 : 0, {
+    initial: () => peek("projects")?.find((p) => p.id === id) ?? null,
+  });
+  const reviewing = project?.review?.status === "reviewing" || project?.review?.status === "queued";
+  useEffect(() => setWatching(reviewing), [reviewing]);
+  const state = { loading: loading && !project, project };
 
   const back = (
     <Link to="/projects" className="btn btn--ghost btn--sm back">
@@ -688,7 +717,13 @@ export function ProjectPage({ id, wallet }) {
           <p className="t-caption m0">by {p.teamName}</p>
           {isOrganizer && (
             <div className="project-actions">
-              <RerunReview project={p} onStarted={() => setView("judge")} />
+              <RerunReview
+                project={p}
+                onStarted={() => {
+                  setView("judge");
+                  refresh();
+                }}
+              />
               <DeleteProject project={p} />
             </div>
           )}
@@ -702,7 +737,7 @@ export function ProjectPage({ id, wallet }) {
         </div>
       </header>
 
-      {isOrganizer && <ViewToggle view={view} onChange={setView} hasDossier={Boolean(p.dossier) || p.review?.status === "reviewed"} review={p.review} />}
+      {isOrganizer && <ViewToggle view={view} onChange={setView} hasDossier={Boolean(p.dossier || p.hasDossier) || p.review?.status === "reviewed"} review={p.review} />}
 
       <AnimatePresence mode="wait" initial={false}>
       {view === "team" ? (
