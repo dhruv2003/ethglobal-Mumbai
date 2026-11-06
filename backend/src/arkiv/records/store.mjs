@@ -11,7 +11,7 @@
 import crypto from "node:crypto";
 import zlib from "node:zlib";
 import { ExpirationTime } from "@arkiv-network/sdk";
-import { and, asc, desc, eq } from "@arkiv-network/sdk/query";
+import { and, asc, desc, eq, gt } from "@arkiv-network/sdk/query";
 import { u64 } from "@arkiv-network/sdk/schema";
 import { hexToBytes } from "viem";
 import { canWrite, publicClient, publisher, ttlDays, walletClient } from "../arkiv.mjs";
@@ -179,11 +179,12 @@ async function readParts(type, identity, { reader = null, maxParts = 100 } = {})
  * Every version's first part matching the filters (in key order: stable pages), without payloads,
  * paged through to the end (the node returns at most 100 rows at a time).
  */
-export async function listAllHeads(type, filters = {}, { reader = null, page = 100 } = {}) {
+export async function listAllHeads(type, filters = {}, { reader = null, page = 100, since = null } = {}) {
   const { schema } = spec(type);
   const owner = readOwner();
   const r = reader ?? publicClient();
-  const where = and(eq("part", 0), ...Object.entries(filters).map(([k, v]) => eq(k, v)));
+  // since: only versions written after this writtenAt (the database's refresh)
+  const where = and(eq("part", 0), ...Object.entries(filters).map(([k, v]) => eq(k, v)), ...(since == null ? [] : [gt("writtenAt", u64(BigInt(Math.max(0, Math.floor(since)))))]));
   const out = [];
   for (let offset = 0; ; offset += page) {
     const { entities } = await r.select(selection(type, false)).from(schema).ownedBy(owner).where(where).orderBy(asc("$key")).limit(page).offset(offset).fetch();

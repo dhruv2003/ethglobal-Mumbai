@@ -12,6 +12,9 @@
  *
  * Reads don't go to Arkiv each time: a query takes ~0.5 s and a page needs dozens of
  * records. The copy in memory is only ever what Arkiv holds plus writes on their way there.
+ * refresh() (every ARKIV_DB_REFRESH_MS, default 30 s, on the server) picks up versions other
+ * processes wrote (another server, a CLI run, a migration); for the same document the newest
+ * version wins.
  *
  * Writes: Arkiv entities are read-only, so a change is a new version (the newest wins;
  * writtenAt is a strictly increasing millisecond clock). One wallet sends one transaction at
@@ -32,6 +35,10 @@ export const memoryOnly = () => process.env.ARENA_DB === "memory" || (Boolean(pr
 const data = new Map();
 /** "collection\0id" -> sha256 of the newest value Arkiv has (or is getting), for dedup */
 const written = new Map();
+/** "collection\0docId" -> writtenAt of the version this copy holds (so refresh only reads newer ones) */
+const heldAt = new Map();
+/** Highest writtenAt seen on Arkiv: where the next refresh starts looking */
+let seenAt = 0;
 
 const keyOf = (collection, id) => `${collection}\u0000${id}`;
 const docIdOf = (id) => (Buffer.byteLength(String(id)) <= 128 ? String(id) : `sha256:${crypto.createHash("sha256").update(String(id)).digest("hex")}`);
@@ -58,11 +65,8 @@ export function load({ log = (m) => console.log(m) } = {}) {
     const started = Date.now();
     const heads = await listAllHeads(TYPE);
     // The newest version of each document.
-    const newest = new Map();
-    for (const h of heads) {
-      const k = keyOf(h.collection, h.docId);
-      if (!newest.has(k) || Number(h.writtenAt) > Number(newest.get(k).writtenAt)) newest.set(k, h);
-    }
+    const newest = newestByDoc(heads);
+    for (const [k, h] of newest) heldAt.set(k, Number(h.writtenAt));
     const live = [...newest.values()].filter((h) => !h.deleted);
     let next = 0;
     const worker = async () => {
@@ -75,7 +79,8 @@ export function load({ log = (m) => console.log(m) } = {}) {
       }
     };
     await Promise.all(Array.from({ length: 6 }, worker));
-    lastAt = Math.max(lastAt, ...heads.map((h) => Number(h.writtenAt) || 0));
+    seenAt = Math.max(0, ...heads.map((h) => Number(h.writtenAt) || 0));
+    lastAt = Math.max(lastAt, seenAt);
     loaded = true;
     log(`[arkiv-db] loaded ${live.length} documents (${heads.length} versions) from Arkiv in ${((Date.now() - started) / 1000).toFixed(1)} s`);
   })().catch((e) => {
@@ -83,6 +88,65 @@ export function load({ log = (m) => console.log(m) } = {}) {
     throw e;
   });
   return loading;
+}
+
+/** The newest head of each document: "collection\0docId" -> head. */
+function newestByDoc(heads) {
+  const newest = new Map();
+  for (const h of heads) {
+    const k = keyOf(h.collection, h.docId);
+    if (!newest.has(k) || Number(h.writtenAt) > Number(newest.get(k).writtenAt)) newest.set(k, h);
+  }
+  return newest;
+}
+
+// Another writer's clock may run behind ours: look back this far for versions we haven't seen.
+const CLOCK_SLACK_MS = 5 * 60_000;
+let refreshing = null;
+
+/**
+ * Read versions written since the last look (by any process using this wallet) and apply
+ * the ones newer than what this copy holds. A document with a write of ours still waiting
+ * keeps our value (ours goes out next and is newer). Returns how many documents changed.
+ */
+export function refresh({ log = (m) => console.log(m) } = {}) {
+  if (!loaded || memoryOnly()) return Promise.resolve(0);
+  refreshing ??= (async () => {
+    const heads = await listAllHeads(TYPE, {}, { since: seenAt - CLOCK_SLACK_MS });
+    let changed = 0;
+    for (const [k, h] of newestByDoc(heads)) {
+      const at = Number(h.writtenAt);
+      seenAt = Math.max(seenAt, at);
+      lastAt = Math.max(lastAt, at);
+      if (at <= (heldAt.get(k) ?? -1)) continue;
+      const r = await readRecord(TYPE, { collection: h.collection, docId: h.docId });
+      if (!r) continue;
+      const id = r.payload?.id ?? (h.docId.startsWith("sha256:") ? null : h.docId);
+      if (id == null || pending.has(keyOf(h.collection, id))) continue;
+      if (r.deleted || !r.payload) {
+        data.get(h.collection)?.delete(String(id));
+        written.set(keyOf(h.collection, id), "deleted");
+      } else {
+        coll(h.collection).set(String(id), r.payload.value);
+        written.set(keyOf(h.collection, id), hashOf(r.payload.value));
+      }
+      heldAt.set(k, Number(r.writtenAt));
+      changed++;
+    }
+    if (changed) log(`[arkiv-db] picked up ${changed} document(s) written elsewhere`);
+    return changed;
+  })().finally(() => {
+    refreshing = null;
+  });
+  return refreshing;
+}
+
+/** Refresh on a timer (the server). */
+export function startRefresh(everyMs = Number(process.env.ARKIV_DB_REFRESH_MS) || 30_000) {
+  if (memoryOnly()) return null;
+  const t = setInterval(() => refresh().catch((e) => console.warn(`[arkiv-db] refresh failed: ${String(e?.message ?? e).slice(0, 200)}`)), everyMs);
+  t.unref();
+  return t;
 }
 
 const ensureLoaded = () => {
@@ -164,6 +228,8 @@ async function drain() {
     try {
       await writeRecord(TYPE, { collection: job.collection, docId: docIdOf(job.id), deleted: job.deleted ? 1 : 0 }, job.deleted ? null : { id: job.id, value: job.value }, { dedupe: false, writtenAt: lastAt });
       written.set(k, job.hash);
+      heldAt.set(keyOf(job.collection, docIdOf(job.id)), lastAt);
+      seenAt = Math.max(seenAt, lastAt);
       stats.written++;
     } catch (e) {
       const error = String(e?.shortMessage ?? e?.message ?? e).slice(0, 300);
@@ -208,5 +274,6 @@ export function resetForTests() {
   pending.clear();
   order.length = 0;
   failed.clear();
+  heldAt.clear();
   stats = { written: 0, skipped: 0 };
 }
