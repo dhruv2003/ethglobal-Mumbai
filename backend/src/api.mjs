@@ -17,6 +17,8 @@
  *   GET    /api/projects/:id/dossier   the reviewer's dossier for a submitted project
  *   GET    /api/projects/:id/live      live test results (+ /live/files/<device>/<file> for media)
  *   DELETE /api/projects/:id           delete a submitted project and its data   (organizer)
+ *   GET    /api/projects/:id/arkiv     the result as published on Arkiv (read from Arkiv) + Swarm links
+ *   POST   /api/projects/:id/arkiv     publish the latest result to Swarm + Arkiv again   (organizer)
  *   POST   /api/projects/:id/reviews/public   anyone: re-judge a sample project on 0G (rate limited, capped per day)
  */
 import crypto from "node:crypto";
@@ -34,6 +36,9 @@ import path from "node:path";
 import { deleteProject, dossiers, judges, liveDir, pipelines, reviews, submissions } from "./store.mjs";
 import { dequeue, enqueue, isRunning, queueLength, queuePosition, resumeQueue } from "./reviewer/pipeline.mjs";
 import { checkSubmissionSignature, rateLimit, requireOrganizer } from "./security.mjs";
+import { canRead, canWrite, publisher, readLatest } from "./arkiv/arkiv.mjs";
+import { lastPublish, publishInBackground, publishing, publishRun } from "./arkiv/publish.mjs";
+import { swarmConfigured } from "./arkiv/swarm.mjs";
 
 // Seed the example panel the first time only.
 if (!judges.list().length) judges.save(EXAMPLE_FORMS.map((f) => ({ ...validateForm(f).persona, example: true })));
@@ -71,7 +76,10 @@ export async function reviewNow(projectId, { evidence = EVIDENCE_ENABLED, freshE
       const why = [...new Set(result.reviews.map((r) => r.detail).filter(Boolean))].join(" ");
       throw Object.assign(new Error(`No judge could score this time (${why || "unknown error"}). The last result is still shown.`), { status: 502, result });
     }
-    return save ? reviews.save(projectId, result) : result;
+    if (!save) return result;
+    const saved = reviews.save(projectId, result);
+    publishInBackground(project, saved); // Swarm + Arkiv, when set up; never fails the review
+    return saved;
   })()
     .catch((e) => {
       prog.error = e.message;
@@ -98,6 +106,7 @@ router.get("/health", (req, res) => {
     keyName: PROVIDER === "0g" ? "ZG_API_KEY" : PROVIDER === "openai" ? "OPENAI_API_KEY" : "ANTHROPIC_API_KEY",
     model: MODEL,
     voiceNotes: hasCredentials("0g") ? { model: zgModels.MODELS.transcribe } : null,
+    arkiv: { read: canRead(), write: canWrite(), swarm: swarmConfigured(), publisher: publisher() },
   });
 });
 
@@ -201,6 +210,39 @@ router.get("/projects/:id/pipeline", (req, res) => {
 router.get("/projects/:id/dossier", (req, res) => res.json({ dossier: dossiers.get(req.params.id) }));
 
 /** Live test results for a submitted project; media under /live/files/... */
+/*
+ * The judged result as published on Arkiv, read back from Arkiv itself (not from
+ * the local store), with links to the evidence bundle on Swarm.
+ */
+router.get("/projects/:id/arkiv", async (req, res) => {
+  const id = req.params.id;
+  const last = lastPublish(id);
+  const out = { configured: { read: canRead(), write: canWrite(), swarm: swarmConfigured() }, publishing: publishing.has(id), last, onchain: null };
+  if (!canRead()) return res.json(out);
+  try {
+    out.onchain = await readLatest(id);
+    // Only link the files this bundle really holds (a project may have no dossier or videos).
+    const s = out.onchain?.swarm;
+    const files = s && last?.swarm?.reference === s.reference ? last.swarm.files : null;
+    if (s && files) {
+      const has = { dossier: "dossier.json", liveTest: "live/smoke.json", laptopVideo: "live/laptop/video.mp4", phoneVideo: "live/phone/video.mp4" };
+      for (const [k, f] of Object.entries(has)) if (!files.includes(f)) delete s[k];
+    }
+  } catch (e) {
+    out.error = `Arkiv read failed: ${String(e?.shortMessage ?? e?.message ?? e).slice(0, 200)}`;
+  }
+  res.json(out);
+});
+
+/** Publish the latest saved review again (organizer). */
+router.post("/projects/:id/arkiv", requireOrganizer, async (req, res) => {
+  const project = loadProject(req.params.id);
+  const result = reviews.get(req.params.id);
+  if (!project || !result) return res.status(404).json({ error: "No judged result to publish." });
+  if (!canWrite()) return res.status(503).json({ error: "Arkiv is not set up: set ARKIV_PRIVATE_KEY in backend/.env." });
+  res.json(await publishRun(project, result));
+});
+
 router.get("/projects/:id/live", (req, res) => {
   try {
     res.json({ liveTest: JSON.parse(fs.readFileSync(path.join(liveDir(req.params.id), "smoke.json"), "utf8")) });

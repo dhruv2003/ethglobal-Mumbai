@@ -13,6 +13,7 @@ import { Ring } from "./Arena.jsx";
 import { judgeAsFighter } from "./JudgesPage.jsx";
 import { PixelFighter } from "./PixelFighter.jsx";
 import { EvidenceList, JudgeTraces, LiveCalls, PanelProof } from "./ZeroGProof.jsx";
+import { ArkivRecord } from "./ArkivRecord.jsx";
 
 const LABELS = {
   product_journey: "Product journey",
@@ -215,6 +216,7 @@ export function JudgesPanel({ project }) {
       {state.running && <LiveCalls progress={state.progress} />}
 
       <PanelProof result={result} />
+      {h && <ArkivRecord projectId={project.id} ranAt={result?.ranAt} />}
 
       {result ? (
         <div className="jcards">
