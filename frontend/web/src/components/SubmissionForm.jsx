@@ -1,4 +1,6 @@
+import { AnimatePresence, motion } from "motion/react";
 import { StatusPill } from "@ds/ui.jsx";
+import { bouncy } from "./fx.jsx";
 import { EVENT } from "../config/event.js";
 import { LIMITS } from "../lib/validate.js";
 import { Msg, TextField, useForm } from "./fields.jsx";
@@ -80,10 +82,26 @@ export function SubmissionForm({ wallet, onSubmit, submitState, problemCount }) 
           {EVENT.tracks.map((t) => {
             const on = selected.includes(t.id);
             return (
-              <button key={t.id} type="button" className="chip" aria-pressed={on} aria-disabled={!on && full} onClick={() => toggle(t.id)}>
-                {on && "✓ "}
+              <motion.button
+                key={t.id}
+                type="button"
+                className="chip chip--pick"
+                aria-pressed={on}
+                aria-disabled={!on && full}
+                onClick={() => toggle(t.id)}
+                whileTap={!on && full ? { x: [0, -4, 4, -2, 0] } : { scale: 0.92 }}
+                layout
+                transition={bouncy}
+              >
+                <AnimatePresence initial={false}>
+                  {on && (
+                    <motion.span className="chip__check" initial={{ width: 0, opacity: 0 }} animate={{ width: "auto", opacity: 1 }} exit={{ width: 0, opacity: 0 }} transition={bouncy} aria-hidden="true">
+                      ✓
+                    </motion.span>
+                  )}
+                </AnimatePresence>
                 {t.name}
-              </button>
+              </motion.button>
             );
           })}
         </div>
@@ -111,7 +129,7 @@ export function SubmissionForm({ wallet, onSubmit, submitState, problemCount }) 
           )}
         </div>
         {connected ? (
-          <button type="submit" className="btn btn--primary" disabled={busy}>
+          <button type="submit" className={`btn ${problemCount ? "btn--primary" : "btn--crush"} btn--arrow`} disabled={busy}>
             {submitState.phase === "signing" ? "Sign in MetaMask…" : submitState.phase === "saving" ? "Saving…" : "Submit project"}
           </button>
         ) : wallet.status === "unavailable" ? (

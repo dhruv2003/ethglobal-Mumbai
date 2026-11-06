@@ -1,18 +1,17 @@
 /*
  * One structured LLM call, whichever provider is configured.
  *
- *   JUDGE_PROVIDER=openai     (default) OPENAI_API_KEY,    JUDGE_MODEL default gpt-5.4
+ *   JUDGE_PROVIDER=0g         (default) ZG_API_KEY,        JUDGE_MODEL default 0gm-1.0-35b-a3b
+ *   JUDGE_PROVIDER=openai               OPENAI_API_KEY,    JUDGE_MODEL default gpt-5.4
  *   JUDGE_PROVIDER=anthropic            ANTHROPIC_API_KEY, JUDGE_MODEL default claude-opus-5-5
  *
  * structuredCall(schema, name, system, user) -> { parsed, refusal, usage, stop }
  * SDKs load lazily so only the configured one is imported.
  */
-export const PROVIDER = (process.env.JUDGE_PROVIDER ?? "openai").toLowerCase() === "anthropic" ? "anthropic" : "openai";
-export const MODEL = process.env.JUDGE_MODEL ?? (PROVIDER === "openai" ? "gpt-5.4" : "claude-opus-5-5");
-export const EFFORT = process.env.JUDGE_EFFORT ?? "high";
+import { callZeroG, EFFORT, hasCredentials, MODEL, PROVIDER } from "./judges/review.mjs";
 
-export const hasCredentials = () =>
-  PROVIDER === "openai" ? Boolean(process.env.OPENAI_API_KEY) : Boolean(process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_AUTH_TOKEN);
+// Keep the review pipeline and judge panel on the same provider and credentials.
+export { EFFORT, hasCredentials, MODEL, PROVIDER };
 
 let openai;
 let anthropic;
@@ -63,4 +62,8 @@ async function callAnthropic(schema, name, system, user) {
 }
 
 export const structuredCall = (schema, name, system, user) =>
-  PROVIDER === "openai" ? callOpenAI(schema, name, system, user) : callAnthropic(schema, name, system, user);
+  PROVIDER === "0g"
+    ? callZeroG(system, user, { schema, name, maxTokens: 32000 })
+    : PROVIDER === "openai"
+      ? callOpenAI(schema, name, system, user)
+      : callAnthropic(schema, name, system, user);

@@ -197,3 +197,53 @@ export function fighterLayers(t) {
     glints: toRects(glints, t),
   };
 }
+
+// ---------- fight poses ----------
+/*
+ * The same chibi, posed for the fight player. Each pose is the base pixels
+ * with an upper-body offset, a limb swap, or an eye swap: no new art set.
+ * Poses draw into a 24×20 cell (body at x = 2) so the punching arm fits.
+ * The fighter faces right; the renderer mirrors the right-hand corner.
+ */
+export const POSES = ["idle", "bob", "talk", "wind", "punch", "hit", "block", "victory", "defeat"];
+export const POSE_CELL = { w: 24, h: 20, bodyX: 2 };
+
+const ARM = (x0, y0, y1) => [
+  ...range(y0, y1).flatMap((y) => [[x0 - 1, y, "O"], [x0, y, "J"], [x0 + 1, y, "j"], [x0 + 2, y, "O"]]),
+  [x0, y0 - 1, "S"], [x0 + 1, y0 - 1, "S"], [x0, y0 - 2, "O"], [x0 + 1, y0 - 2, "O"], [x0 - 1, y0 - 1, "O"], [x0 + 2, y0 - 1, "O"],
+];
+const POSE_SPEC = {
+  idle: {},
+  bob: { uy: 1 },
+  talk: { mouth: true },
+  wind: { ux: -1 },
+  punch: {
+    ux: 1, dropFront: true,
+    extra: [...range(12, 18).flatMap((x) => [[x, 11, "O"], [x, 14, "O"]]), ...range(12, 17).flatMap((x) => [[x, 12, "J"], [x, 13, "j"]]),
+      [18, 12, "S"], [18, 13, "S"], [19, 12, "S"], [19, 13, "S"], [19, 11, "O"], [19, 14, "O"], [20, 12, "O"], [20, 13, "O"]],
+  },
+  hit: { ux: -1, closed: true },
+  block: { ux: -1, dropFront: true, extra: ARM(12, 8, 12) },
+  victory: { dropFront: true, dropBack: true, extra: [...ARM(1, 5, 11), ...ARM(13, 5, 11)] },
+  defeat: { uy: 1, closed: true },
+};
+
+/** Rects for one pose, ready for an SVG renderer (same shape as fighterLayers). */
+export function poseRects(t, pose = "idle") {
+  const spec = POSE_SPEC[pose] ?? POSE_SPEC.idle;
+  const base = [...gridPixels(HEADS[t.hairStyle]), ...gridPixels(FACE_AND_BODY, 5)];
+  if (t.hairStyle === "long") base.push(...LONG_SIDES);
+  const ux = spec.ux ?? 0, uy = spec.uy ?? 0, bx = POSE_CELL.bodyX;
+  const dropped = ([x, y]) => (spec.dropFront && y >= 12 && y <= 14 && x >= 12) || (spec.dropBack && y >= 12 && y <= 14 && x <= 3);
+  const hidesEyes = t.gear.head?.id === "goggles" || t.gear.eye?.id === "shades";
+  const cyber = t.gear.eye?.id === "cyber";
+  const eyes = hidesEyes ? [] : (spec.closed ? EYES_CLOSED : EYES_OPEN).filter(([x]) => !(cyber && x >= 9));
+  const gear = Object.values(t.gear).flatMap((g) => GEAR_PIXELS[g.id] ?? []).filter(([, y]) => !(spec.dropFront && y >= 15));
+  const upper = [...base.filter(([, y]) => y <= 14), ...(spec.extra ?? []), ...eyes, ...gear.filter(([, y]) => y <= 14)].filter((p) => !dropped(p));
+  const legs = [...base.filter(([, y]) => y >= 15), ...gear.filter(([, y]) => y >= 15)];
+  const px = [
+    ...legs.map(([x, y, k]) => [x + bx, y, k]),
+    ...upper.map(([x, y, k]) => [x + bx + ux, y + uy, spec.mouth && k === "M" ? "E" : k]),
+  ].filter(([x, y]) => x >= 0 && x < POSE_CELL.w && y >= 0 && y < POSE_CELL.h);
+  return toRects(px, t);
+}

@@ -275,7 +275,8 @@ async function execute(projectId, judge) {
   if (!hasCredentials()) skip("judges", "Skipped: no LLM key on the server.");
   else {
     await doStep("judges", async () => {
-      const r = await judge(projectId);
+      // A rerun may replace screenshots while keeping the same number of steps.
+      const r = await judge(projectId, { freshEvidence: true });
       const scored = r.reviews.filter((x) => x.status === "scored").length;
       return `${scored} of ${r.reviews.length} judges scored${r.panelHundredths != null ? ` · panel ${(r.panelHundredths / 100).toFixed(2)}` : ""}${dossiers.get(projectId) ? "" : " (without a dossier)"}`;
     });

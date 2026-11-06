@@ -69,6 +69,6 @@ export const workDir = (projectId) => path.join(DATA_DIR, "work", safeId(project
 export function deleteProject(projectId) {
   const id = safeId(projectId);
   write("submissions.json", read("submissions.json", []).filter((s) => s.id !== projectId));
-  for (const f of [`reviews/${id}.json`, `pipeline/${id}.json`, `dossiers/${id}.json`, `transcripts/${id}.json`]) fs.rmSync(path.join(DATA_DIR, f), { force: true });
+  for (const f of [`reviews/${id}.json`, `pipeline/${id}.json`, `dossiers/${id}.json`, `transcripts/${id}.json`, `evidence/${id}.json`]) fs.rmSync(path.join(DATA_DIR, f), { force: true });
   for (const d of [repoDir(projectId), liveDir(projectId), workDir(projectId)]) fs.rmSync(d, { recursive: true, force: true });
 }

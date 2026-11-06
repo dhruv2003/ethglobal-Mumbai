@@ -1,175 +1,941 @@
 {
   "projectId": "go-health-me",
-  "ranAt": "2026-11-05T22:47:32.608Z",
-  "provider": "openai",
-  "model": "gpt-5.4",
+  "ranAt": "2026-11-05T23:29:04.497Z",
+  "provider": "0g",
+  "model": "0gm-1.0-35b-a3b",
   "effort": "high",
   "complete": true,
-  "panelHundredths": 6305,
+  "panelHundredths": 5253,
+  "zg": {
+    "requestIds": [
+      "5d66be10-1dee-4c8d-8c60-4f841c5b1d35",
+      "686dabb7-ffe0-4832-88ff-46698c8d7b60",
+      "e35faf4d-2bd0-4704-a070-7f851e88ee48",
+      "f115a33c-274e-4773-acf1-1bb223498864",
+      "83a2c458-d2e7-447b-bc48-86fd95e35e96",
+      "63dd6094-55a6-4f6c-82b0-21c1ca222a2b",
+      "f7878dbc-b4cf-458d-9308-cfd690537e11",
+      "00636b7a-3517-4823-a366-c1b1b31184d5",
+      "96195b59-46de-4c7c-a0df-d2e5d050c019",
+      "e61a6126-af80-4256-8b6c-825d7c3fb057",
+      "0baa70d8-dffb-486f-b8f5-9f0467c1912d",
+      "54c6ccdc-11a2-47ca-8f75-709012d2f5a0",
+      "55ff6474-4686-4079-b41a-c7cfe64651fb",
+      "d6ce167e-987f-49c6-9786-d27e9714da3d",
+      "8ce5ca20-8ef4-432c-8e7d-05a29fe201e9",
+      "6dc83f8f-4f87-4f68-9cb8-738a28e9db84",
+      "de441808-8bfb-426b-9d92-b9b53ef3ec2a",
+      "3ff7084d-f724-452c-8e77-bf580c777ca3",
+      "4165e5ba-fbdd-4ceb-b119-45d721808b4d",
+      "b90bdc6d-e504-440c-aa73-ca6d66dbb393",
+      "141fbd73-daed-43fa-8a5d-eb3c6eb18ce0",
+      "35c5a428-ae4a-46a2-bd38-34cf5ecdba6d",
+      "66b6bad4-51e2-424c-a960-cf0afd76aa36",
+      "eb4717df-baf8-4ce8-af23-429c761c0abb",
+      "e1e1dc5f-f2c7-4372-b31c-b197f45c8aea",
+      "bd8070bc-e46d-4f54-8024-79e4c3c53fae",
+      "1d4f09ae-3c42-41bf-bf1f-595f0e9d43ae",
+      "8764fcbb-f798-4ff5-b1f1-adf51ec964c1",
+      "24a991b3-37f4-4f87-9b8d-57e7518d83b7"
+    ],
+    "costUsdMicro": 35059,
+    "judgeCostUsdMicro": 9839,
+    "evidenceCostUsdMicro": 25220,
+    "calls": 29,
+    "uncostedCalls": 0,
+    "providers": [
+      "0xf4FB8d2bD856e672b5f9848b0eD235A20079B250"
+    ]
+  },
+  "evidence": [
+    {
+      "id": "V-laptop-d1",
+      "device": "laptop",
+      "stepId": "d1",
+      "stepTitle": "Landing: \"Put money on yourself\"",
+      "observation": {
+        "seen": "The screen displays the GoHealthMe landing page with the large headline 'Put money on yourself.' and a mascot. A panel indicates 'No challenge is open right now' and a lower section explains the staking mechanism with tabs for 'You hit', 'You miss', and 'Nobody hits'.",
+        "visibleText": [
+          "Put money on yourself.",
+          "GoHealthMe",
+          "No challenge is open right now",
+          "Start a challenge",
+          "Everyone stakes the same. Your night decides the rest.",
+          "You hit"
+        ],
+        "matchesStep": "yes",
+        "problems": []
+      },
+      "trace": {
+        "requestId": "f115a33c-274e-4773-acf1-1bb223498864",
+        "requestIds": [
+          "f115a33c-274e-4773-acf1-1bb223498864"
+        ],
+        "provider": "0xf4FB8d2bD856e672b5f9848b0eD235A20079B250",
+        "costUsdMicro": 562,
+        "model": "0gm-1.0-35b-a3b"
+      }
+    },
+    {
+      "id": "V-laptop-d2",
+      "device": "laptop",
+      "stepId": "d2",
+      "stepTitle": "Payout explainer: You hit / You miss / Nobody hits",
+      "observation": {
+        "seen": "The screen displays the GoHealthMe homepage with a hero section about staking on sleep or workouts. Below that, a section titled 'Everyone stakes the same' features three options: 'You hit', 'You miss', and 'Nobody hits'.",
+        "visibleText": [
+          "Put money on yourself.",
+          "No challenge is open right now",
+          "Start a challenge",
+          "Everyone stakes the same. Your night decides the rest.",
+          "You hit",
+          "Nobody hits"
+        ],
+        "matchesStep": "yes",
+        "problems": []
+      },
+      "trace": {
+        "requestId": "83a2c458-d2e7-447b-bc48-86fd95e35e96",
+        "requestIds": [
+          "83a2c458-d2e7-447b-bc48-86fd95e35e96"
+        ],
+        "provider": "0xf4FB8d2bD856e672b5f9848b0eD235A20079B250",
+        "costUsdMicro": 894,
+        "model": "0gm-1.0-35b-a3b"
+      }
+    },
+    {
+      "id": "V-laptop-d3",
+      "device": "laptop",
+      "stepId": "d3",
+      "stepTitle": "Open challenges with the \"What do you wear?\" picker",
+      "observation": {
+        "seen": "The page displays the 'Open challenges' section of the GoHealthMe application. The 'What do you wear?' picker is visible with the 'Oura' button selected, and an empty state message indicates there are currently no open challenges listed.",
+        "visibleText": [
+          "Open challenges",
+          "What do you wear?",
+          "Oura",
+          "No open challenges right now.",
+          "Start a challenge",
+          "GoHealthMe"
+        ],
+        "matchesStep": "yes",
+        "problems": []
+      },
+      "trace": {
+        "requestId": "63dd6094-55a6-4f6c-82b0-21c1ca222a2b",
+        "requestIds": [
+          "63dd6094-55a6-4f6c-82b0-21c1ca222a2b"
+        ],
+        "provider": "0xf4FB8d2bD856e672b5f9848b0eD235A20079B250",
+        "costUsdMicro": 859,
+        "model": "0gm-1.0-35b-a3b"
+      }
+    },
+    {
+      "id": "V-laptop-d4",
+      "device": "laptop",
+      "stepId": "d4",
+      "stepTitle": "Make your player: sign-in options",
+      "observation": {
+        "seen": "The screen shows the 'Your player' setup page for GoHealthMe, specifically displaying the first step 'Sign in' with various authentication options.",
+        "visibleText": [
+          "Your player",
+          "1 Sign in",
+          "Sign in with Base",
+          "Email me a sign-in code",
+          "I already have a wallet",
+          "World ID, optional"
+        ],
+        "matchesStep": "yes",
+        "problems": []
+      },
+      "trace": {
+        "requestId": "f7878dbc-b4cf-458d-9308-cfd690537e11",
+        "requestIds": [
+          "f7878dbc-b4cf-458d-9308-cfd690537e11"
+        ],
+        "provider": "0xf4FB8d2bD856e672b5f9848b0eD235A20079B250",
+        "costUsdMicro": 394,
+        "model": "0gm-1.0-35b-a3b"
+      }
+    },
+    {
+      "id": "V-laptop-d6",
+      "device": "laptop",
+      "stepId": "d6",
+      "stepTitle": "SPOTTER's verdicts and payouts are public on chain",
+      "observation": {
+        "seen": "The screen displays a 'History' page titled 'Everyone's claims', listing challenge verifications and payouts. It shows transaction links ('Verdict tx', 'Payout tx') for a successful payout and an error message for a failed on-chain recording.",
+        "visibleText": [
+          "History",
+          "Everyone's claims",
+          "Verdict tx",
+          "Payout tx",
+          "Paid +3.00 USDC",
+          "SPOTTER hit a problem at recording the result on-chain"
+        ],
+        "matchesStep": "yes",
+        "problems": [
+          "Visible error message in the first claim item: 'SPOTTER hit a problem at recording the result on-chain. Nothing has been paid on this claim yet.'"
+        ]
+      },
+      "trace": {
+        "requestId": "00636b7a-3517-4823-a366-c1b1b31184d5",
+        "requestIds": [
+          "00636b7a-3517-4823-a366-c1b1b31184d5"
+        ],
+        "provider": "0xf4FB8d2bD856e672b5f9848b0eD235A20079B250",
+        "costUsdMicro": 875,
+        "model": "0gm-1.0-35b-a3b"
+      }
+    },
+    {
+      "id": "V-laptop-d8",
+      "device": "laptop",
+      "stepId": "d8",
+      "stepTitle": "Open challenges list and \"Start a challenge\"",
+      "observation": {
+        "seen": "The screen shows the 'Start a challenge' page of the GoHealthMe app, featuring input fields for goals and stake amounts. There is a visible contradiction where the header says 'On yourself' but the description below mentions a friend matching the stake.",
+        "visibleText": [
+          "Start a challenge",
+          "On yourself",
+          "Pick your goal",
+          "10 USDC",
+          "20.00 USDC",
+          "Miss: stake back"
+        ],
+        "matchesStep": "yes",
+        "problems": [
+          "The header 'On yourself' contradicts the challenge rules which state 'Your friend matches it'.",
+          "Confusing text about missed goals: 'This challenge cannot record a miss, so a miss comes back too.'",
+          "The button 'Miss: stake back' has a back/undo arrow icon next to it, which is confusing UI."
+        ]
+      },
+      "trace": {
+        "requestId": "96195b59-46de-4c7c-a0df-d2e5d050c019",
+        "requestIds": [
+          "96195b59-46de-4c7c-a0df-d2e5d050c019"
+        ],
+        "provider": "0xf4FB8d2bD856e672b5f9848b0eD235A20079B250",
+        "costUsdMicro": 1786,
+        "model": "0gm-1.0-35b-a3b"
+      }
+    },
+    {
+      "id": "V-laptop-f1",
+      "device": "laptop",
+      "stepId": "f1",
+      "stepTitle": "Navigate from the header to Challenges",
+      "observation": {
+        "seen": "The screenshot shows the 'Challenges' page of the GoHealthMe website, featuring a header with navigation, a wearable selection section, and a main area indicating no open challenges are available.",
+        "visibleText": [
+          "GoHealthMe",
+          "Challenges",
+          "Sign in",
+          "Oura",
+          "No open challenges right now",
+          "Nothing to check. I'm on break."
+        ],
+        "matchesStep": "yes",
+        "problems": [
+          "The text 'Nothing to check. I'm on break.' appears to be placeholder or broken copy for the bot status."
+        ]
+      },
+      "trace": {
+        "requestId": "e61a6126-af80-4256-8b6c-825d7c3fb057",
+        "requestIds": [
+          "e61a6126-af80-4256-8b6c-825d7c3fb057"
+        ],
+        "provider": "0xf4FB8d2bD856e672b5f9848b0eD235A20079B250",
+        "costUsdMicro": 685,
+        "model": "0gm-1.0-35b-a3b"
+      }
+    },
+    {
+      "id": "V-laptop-f2",
+      "device": "laptop",
+      "stepId": "f2",
+      "stepTitle": "Open a listed challenge and read how it ended",
+      "observation": {
+        "seen": "The screen displays a specific challenge page titled '7 hours of sleep, Monday night' which is marked as 'Settled'. The page shows the challenge results, including stake amount and the text 'Settled. No hit was recorded'.",
+        "visibleText": [
+          "7 hours of sleep, Monday night",
+          "Settled",
+          "Ended Tue 09:00",
+          "10.00 USDC",
+          "Settled. No hit was recorded",
+          "Find an open challenge"
+        ],
+        "matchesStep": "yes",
+        "problems": []
+      },
+      "trace": {
+        "requestId": "0baa70d8-dffb-486f-b8f5-9f0467c1912d",
+        "requestIds": [
+          "0baa70d8-dffb-486f-b8f5-9f0467c1912d"
+        ],
+        "provider": "0xf4FB8d2bD856e672b5f9848b0eD235A20079B250",
+        "costUsdMicro": 704,
+        "model": "0gm-1.0-35b-a3b"
+      }
+    },
+    {
+      "id": "V-laptop-f3",
+      "device": "laptop",
+      "stepId": "f3",
+      "stepTitle": "Build a challenge: pick a goal and a stake",
+      "observation": {
+        "seen": "The screen displays a 'Start a challenge' page with a form on the left to pick a goal and stake, and a summary panel on the right showing the selected options.",
+        "visibleText": [
+          "Start a challenge",
+          "Pick your goal",
+          "Complete at least 1 workout for 1 day",
+          "Your stake. Your friend matches it.",
+          "10 USDC",
+          "Your challenge"
+        ],
+        "matchesStep": "yes",
+        "problems": []
+      },
+      "trace": {
+        "requestId": "54c6ccdc-11a2-47ca-8f75-709012d2f5a0",
+        "requestIds": [
+          "54c6ccdc-11a2-47ca-8f75-709012d2f5a0"
+        ],
+        "provider": "0xf4FB8d2bD856e672b5f9848b0eD235A20079B250",
+        "costUsdMicro": 480,
+        "model": "0gm-1.0-35b-a3b"
+      }
+    },
+    {
+      "id": "V-laptop-f4",
+      "device": "laptop",
+      "stepId": "f4",
+      "stepTitle": "Creating a challenge needs sign-in (no anonymous money moves)",
+      "observation": {
+        "seen": "The 'Start a challenge' page is visible with form fields for goals and stakes, alongside a summary of the challenge rules and monetary values on the right.",
+        "visibleText": [
+          "GoHealthMe",
+          "Sign in",
+          "Start a challenge",
+          "Pick your goal",
+          "Stake each 10.00 USDC",
+          "Sign in to start"
+        ],
+        "matchesStep": "yes",
+        "problems": []
+      },
+      "trace": {
+        "requestId": "55ff6474-4686-4079-b41a-c7cfe64651fb",
+        "requestIds": [
+          "55ff6474-4686-4079-b41a-c7cfe64651fb"
+        ],
+        "provider": "0xf4FB8d2bD856e672b5f9848b0eD235A20079B250",
+        "costUsdMicro": 447,
+        "model": "0gm-1.0-35b-a3b"
+      }
+    },
+    {
+      "id": "V-laptop-f5",
+      "device": "laptop",
+      "stepId": "f5",
+      "stepTitle": "Friend challenges are private until you sign in",
+      "observation": {
+        "seen": "The screen displays a sign-in page for a web app called GoHealthMe, featuring a 'Challenges with friends' heading and a sign-in card with options to sign in with Base, email, or an existing wallet.",
+        "visibleText": [
+          "GoHealthMe",
+          "Challenges with friends",
+          "Sign in",
+          "Sign in with Base",
+          "Email me a sign-in code",
+          "I already have a wallet"
+        ],
+        "matchesStep": "yes",
+        "problems": []
+      },
+      "trace": {
+        "requestId": "d6ce167e-987f-49c6-9786-d27e9714da3d",
+        "requestIds": [
+          "d6ce167e-987f-49c6-9786-d27e9714da3d"
+        ],
+        "provider": "0xf4FB8d2bD856e672b5f9848b0eD235A20079B250",
+        "costUsdMicro": 543,
+        "model": "0gm-1.0-35b-a3b"
+      }
+    },
+    {
+      "id": "V-laptop-f6",
+      "device": "laptop",
+      "stepId": "f6",
+      "stepTitle": "SPOTTER's settlement wallet is shown and linked to Basescan",
+      "observation": {
+        "seen": "The screenshot shows a 'History' page titled 'GoHealthMe' displaying a list of claim entries under 'Everyone's claims'. It shows verdicts, payout amounts, and links like 'Verdict tx' and 'Payout tx', but does not explicitly display a 'SPOTTER settlement wallet' or the text 'Basescan'.",
+        "visibleText": [
+          "History",
+          "Everyone's claims",
+          "Sign in",
+          "SPOTTER's decision",
+          "Verdict tx",
+          "Payout tx"
+        ],
+        "matchesStep": "no",
+        "problems": [
+          "SPOTTER hit a problem at recording the result on-chain. Nothing has been paid on this claim yet."
+        ]
+      },
+      "trace": {
+        "requestId": "8ce5ca20-8ef4-432c-8e7d-05a29fe201e9",
+        "requestIds": [
+          "8ce5ca20-8ef4-432c-8e7d-05a29fe201e9"
+        ],
+        "provider": "0xf4FB8d2bD856e672b5f9848b0eD235A20079B250",
+        "costUsdMicro": 2015,
+        "model": "0gm-1.0-35b-a3b"
+      }
+    },
+    {
+      "id": "V-laptop-f7",
+      "device": "laptop",
+      "stepId": "f7",
+      "stepTitle": "Privacy policy and terms are published",
+      "observation": {
+        "seen": "The screenshot shows the 'Terms of Use' page for the 'GoHealthMe' application, featuring a 'Beta, testnet' badge. The main content area lists rules under 'The short version', including points like 'Test money only' and 'You put money on yourself'.",
+        "visibleText": [
+          "GoHealthMe",
+          "Terms of Use",
+          "Beta, testnet",
+          "The short version",
+          "Test money only.",
+          "You put money on yourself."
+        ],
+        "matchesStep": "yes",
+        "problems": []
+      },
+      "trace": {
+        "requestId": "6dc83f8f-4f87-4f68-9cb8-738a28e9db84",
+        "requestIds": [
+          "6dc83f8f-4f87-4f68-9cb8-738a28e9db84"
+        ],
+        "provider": "0xf4FB8d2bD856e672b5f9848b0eD235A20079B250",
+        "costUsdMicro": 1678,
+        "model": "0gm-1.0-35b-a3b"
+      }
+    },
+    {
+      "id": "V-phone-d1",
+      "device": "phone",
+      "stepId": "d1",
+      "stepTitle": "Landing: \"Put money on yourself\"",
+      "observation": {
+        "seen": "The screen displays the GoHealthMe landing page on a phone, featuring a large headline 'Put money on yourself' and an illustration of a sleeping otter.",
+        "visibleText": [
+          "GoHealthMe",
+          "Sign in",
+          "Put money on yourself.",
+          "No challenge is open right now",
+          "Start a challenge",
+          "See the open challenges"
+        ],
+        "matchesStep": "yes",
+        "problems": []
+      },
+      "trace": {
+        "requestId": "de441808-8bfb-426b-9d92-b9b53ef3ec2a",
+        "requestIds": [
+          "de441808-8bfb-426b-9d92-b9b53ef3ec2a"
+        ],
+        "provider": "0xf4FB8d2bD856e672b5f9848b0eD235A20079B250",
+        "costUsdMicro": 420,
+        "model": "0gm-1.0-35b-a3b"
+      }
+    },
+    {
+      "id": "V-phone-d2",
+      "device": "phone",
+      "stepId": "d2",
+      "stepTitle": "Payout explainer: You hit / You miss / Nobody hits",
+      "observation": {
+        "seen": "The screen shows a payout explainer page for an app called GoHealthMe, featuring three selectable tabs labeled 'You hit', 'You miss', and 'Nobody hits'. The 'You hit' tab is currently active and displays text explaining that the user's stake comes back plus a share.",
+        "visibleText": [
+          "GoHealthMe",
+          "See the open challenges >",
+          "Everyone stakes the same. Your night decides the rest.",
+          "You hit",
+          "You miss",
+          "Nobody hits"
+        ],
+        "matchesStep": "yes",
+        "problems": []
+      },
+      "trace": {
+        "requestId": "3ff7084d-f724-452c-8e77-bf580c777ca3",
+        "requestIds": [
+          "3ff7084d-f724-452c-8e77-bf580c777ca3"
+        ],
+        "provider": "0xf4FB8d2bD856e672b5f9848b0eD235A20079B250",
+        "costUsdMicro": 551,
+        "model": "0gm-1.0-35b-a3b"
+      }
+    },
+    {
+      "id": "V-phone-d3",
+      "device": "phone",
+      "stepId": "d3",
+      "stepTitle": "Open challenges with the \"What do you wear?\" picker",
+      "observation": {
+        "seen": "The GoHealthMe app displays the 'Open challenges' section featuring a 'What do you wear?' picker with 'Oura' currently selected. Below the picker, an empty state message indicates there are no open challenges available.",
+        "visibleText": [
+          "GoHealthMe",
+          "Open challenges",
+          "What do you wear?",
+          "Oura",
+          "No open challenges right now.",
+          "Start a challenge"
+        ],
+        "matchesStep": "yes",
+        "problems": []
+      },
+      "trace": {
+        "requestId": "4165e5ba-fbdd-4ceb-b119-45d721808b4d",
+        "requestIds": [
+          "4165e5ba-fbdd-4ceb-b119-45d721808b4d"
+        ],
+        "provider": "0xf4FB8d2bD856e672b5f9848b0eD235A20079B250",
+        "costUsdMicro": 512,
+        "model": "0gm-1.0-35b-a3b"
+      }
+    },
+    {
+      "id": "V-phone-d4",
+      "device": "phone",
+      "stepId": "d4",
+      "stepTitle": "Make your player: sign-in options",
+      "observation": {
+        "seen": "The screen displays the \"Your player\" setup page for the GoHealthMe app, specifically showing the \"Sign in\" section with options to use a Base wallet or email.",
+        "visibleText": [
+          "GoHealthMe",
+          "Sign in",
+          "Your player",
+          "Sign in with Base",
+          "Email me a sign-in code",
+          "I already have a wallet"
+        ],
+        "matchesStep": "yes",
+        "problems": []
+      },
+      "trace": {
+        "requestId": "b90bdc6d-e504-440c-aa73-ca6d66dbb393",
+        "requestIds": [
+          "b90bdc6d-e504-440c-aa73-ca6d66dbb393"
+        ],
+        "provider": "0xf4FB8d2bD856e672b5f9848b0eD235A20079B250",
+        "costUsdMicro": 404,
+        "model": "0gm-1.0-35b-a3b"
+      }
+    },
+    {
+      "id": "V-phone-d6",
+      "device": "phone",
+      "stepId": "d6",
+      "stepTitle": "SPOTTER's verdicts and payouts are public on chain",
+      "observation": {
+        "seen": "The screen shows the \"History\" page of the GoHealthMe app, listing public claims under the heading \"Everyone's claims\". It displays SPOTTER's decisions, transaction links, and payout amounts for different challenges, including an error message for one entry.",
+        "visibleText": [
+          "GoHealthMe",
+          "History",
+          "Everyone's claims",
+          "SPOTTER's decision Pay",
+          "Verdict tx",
+          "Paid +3.00 USDC"
+        ],
+        "matchesStep": "yes",
+        "problems": [
+          "SPOTTER hit a problem at recording the result on-chain. Nothing has been paid on this claim yet."
+        ]
+      },
+      "trace": {
+        "requestId": "141fbd73-daed-43fa-8a5d-eb3c6eb18ce0",
+        "requestIds": [
+          "141fbd73-daed-43fa-8a5d-eb3c6eb18ce0"
+        ],
+        "provider": "0xf4FB8d2bD856e672b5f9848b0eD235A20079B250",
+        "costUsdMicro": 1517,
+        "model": "0gm-1.0-35b-a3b"
+      }
+    },
+    {
+      "id": "V-phone-d8",
+      "device": "phone",
+      "stepId": "d8",
+      "stepTitle": "Open challenges list and \"Start a challenge\"",
+      "observation": {
+        "seen": "The screen shows the 'Start a challenge' page of the GoHealthMe application, featuring goal selection options and stake amount buttons.",
+        "visibleText": [
+          "GoHealthMe",
+          "Start a challenge",
+          "Pick your goal",
+          "Sleep at least 7 hours for 1 night",
+          "10 USDC",
+          "Custom"
+        ],
+        "matchesStep": "yes",
+        "problems": []
+      },
+      "trace": {
+        "requestId": "35c5a428-ae4a-46a2-bd38-34cf5ecdba6d",
+        "requestIds": [
+          "35c5a428-ae4a-46a2-bd38-34cf5ecdba6d"
+        ],
+        "provider": "0xf4FB8d2bD856e672b5f9848b0eD235A20079B250",
+        "costUsdMicro": 807,
+        "model": "0gm-1.0-35b-a3b"
+      }
+    },
+    {
+      "id": "V-phone-f1",
+      "device": "phone",
+      "stepId": "f1",
+      "stepTitle": "Navigate from the header to Challenges",
+      "observation": {
+        "seen": "The screenshot displays the 'Challenges' page of the GoHealthMe mobile app, featuring a device selection card and a large 'Sign in' button.",
+        "visibleText": [
+          "GoHealthMe",
+          "Sign in",
+          "Challenges",
+          "What do you wear?",
+          "Oura",
+          "Sign in"
+        ],
+        "matchesStep": "yes",
+        "problems": [
+          "Empty content placeholders at the bottom of the page"
+        ]
+      },
+      "trace": {
+        "requestId": "66b6bad4-51e2-424c-a960-cf0afd76aa36",
+        "requestIds": [
+          "66b6bad4-51e2-424c-a960-cf0afd76aa36"
+        ],
+        "provider": "0xf4FB8d2bD856e672b5f9848b0eD235A20079B250",
+        "costUsdMicro": 1401,
+        "model": "0gm-1.0-35b-a3b"
+      }
+    },
+    {
+      "id": "V-phone-f2",
+      "device": "phone",
+      "stepId": "f2",
+      "stepTitle": "Open a listed challenge and read how it ended",
+      "observation": {
+        "seen": "The screen displays the details of a finished challenge titled '7 hours of sleep, Monday night'. It shows the settlement status, financial details like stake and pot, and a text description of the outcome.",
+        "visibleText": [
+          "Settled",
+          "7 hours of sleep, Monday night",
+          "Ended Tue 09:00",
+          "Stake 10.00 USDC",
+          "Settled. No hit was recorded",
+          "Find an open challenge"
+        ],
+        "matchesStep": "yes",
+        "problems": []
+      },
+      "trace": {
+        "requestId": "eb4717df-baf8-4ce8-af23-429c761c0abb",
+        "requestIds": [
+          "eb4717df-baf8-4ce8-af23-429c761c0abb"
+        ],
+        "provider": "0xf4FB8d2bD856e672b5f9848b0eD235A20079B250",
+        "costUsdMicro": 459,
+        "model": "0gm-1.0-35b-a3b"
+      }
+    },
+    {
+      "id": "V-phone-f3",
+      "device": "phone",
+      "stepId": "f3",
+      "stepTitle": "Build a challenge: pick a goal and a stake",
+      "observation": {
+        "seen": "The screen displays the 'Start a challenge' page of the GoHealthMe app. It shows a section to 'Pick your goal' and a section to select 'Your stake'.",
+        "visibleText": [
+          "GoHealthMe",
+          "Start a challenge",
+          "Pick your goal",
+          "Complete at least 1 workout for 1 day",
+          "10 USDC",
+          "Your stake. Your friend matches it."
+        ],
+        "matchesStep": "yes",
+        "problems": [
+          "The selected goal text 'Complete at least 1 workout for 1 day' is duplicated: it appears in a dark text box at the top and again as a selected white button in the list below, creating a confusing/redu"
+        ]
+      },
+      "trace": {
+        "requestId": "e1e1dc5f-f2c7-4372-b31c-b197f45c8aea",
+        "requestIds": [
+          "e1e1dc5f-f2c7-4372-b31c-b197f45c8aea"
+        ],
+        "provider": "0xf4FB8d2bD856e672b5f9848b0eD235A20079B250",
+        "costUsdMicro": 1265,
+        "model": "0gm-1.0-35b-a3b"
+      }
+    },
+    {
+      "id": "V-phone-f4",
+      "device": "phone",
+      "stepId": "f4",
+      "stepTitle": "Creating a challenge needs sign-in (no anonymous money moves)",
+      "observation": {
+        "seen": "The screen shows the 'Start a challenge' page on the GoHealthMe mobile app, displaying options to select a goal and a monetary stake. A 'Sign in' button is visible in the top right corner, indicating the user is not currently authenticated.",
+        "visibleText": [
+          "GoHealthMe",
+          "Sign in",
+          "Start a challenge",
+          "Pick your goal",
+          "10 USDC",
+          "Sleep at least 7 hours for 1 night"
+        ],
+        "matchesStep": "yes",
+        "problems": []
+      },
+      "trace": {
+        "requestId": "bd8070bc-e46d-4f54-8024-79e4c3c53fae",
+        "requestIds": [
+          "bd8070bc-e46d-4f54-8024-79e4c3c53fae"
+        ],
+        "provider": "0xf4FB8d2bD856e672b5f9848b0eD235A20079B250",
+        "costUsdMicro": 767,
+        "model": "0gm-1.0-35b-a3b"
+      }
+    },
+    {
+      "id": "V-phone-f5",
+      "device": "phone",
+      "stepId": "f5",
+      "stepTitle": "Friend challenges are private until you sign in",
+      "observation": {
+        "seen": "The screen shows a GoHealthMe landing page with a large modal asking the user to sign in. The main heading is 'Challenges with friends' and explanatory text states that signing in is required to view challenges.",
+        "visibleText": [
+          "GoHealthMe",
+          "Sign in",
+          "Challenges with friends",
+          "Sign in to see the challenges aimed at you and the ones you sent.",
+          "Sign in with Base",
+          "Email me a sign-in code"
+        ],
+        "matchesStep": "yes",
+        "problems": []
+      },
+      "trace": {
+        "requestId": "1d4f09ae-3c42-41bf-bf1f-595f0e9d43ae",
+        "requestIds": [
+          "1d4f09ae-3c42-41bf-bf1f-595f0e9d43ae"
+        ],
+        "provider": "0xf4FB8d2bD856e672b5f9848b0eD235A20079B250",
+        "costUsdMicro": 458,
+        "model": "0gm-1.0-35b-a3b"
+      }
+    },
+    {
+      "id": "V-phone-f6",
+      "device": "phone",
+      "stepId": "f6",
+      "stepTitle": "SPOTTER's settlement wallet is shown and linked to Basescan",
+      "observation": {
+        "seen": "The screen displays the 'History' page of the GoHealthMe app, listing 'Everyone's claims' with wallet addresses, verdicts, and payout details.",
+        "visibleText": [
+          "GoHealthMe",
+          "History",
+          "Everyone's claims",
+          "Verdict tx",
+          "SPOTTER's decision Pay",
+          "Paid +3.00 USDC"
+        ],
+        "matchesStep": "partly",
+        "problems": []
+      },
+      "trace": {
+        "requestId": "8764fcbb-f798-4ff5-b1f1-adf51ec964c1",
+        "requestIds": [
+          "89395251-04ce-444a-98bd-217bd4b7ecc9",
+          "8764fcbb-f798-4ff5-b1f1-adf51ec964c1"
+        ],
+        "provider": "0xf4FB8d2bD856e672b5f9848b0eD235A20079B250",
+        "costUsdMicro": 3562,
+        "model": "0gm-1.0-35b-a3b"
+      }
+    },
+    {
+      "id": "V-phone-f7",
+      "device": "phone",
+      "stepId": "f7",
+      "stepTitle": "Privacy policy and terms are published",
+      "observation": {
+        "seen": "The screen displays the 'Terms of Use' page for GoHealthMe, featuring the app header, a 'Terms of Use' title with an update date, and a section called 'The short version' listing rules about test money and staking.",
+        "visibleText": [
+          "GoHealthMe",
+          "Sign in",
+          "Terms of Use",
+          "Last updated 2026-09-26",
+          "The short version",
+          "Test money only."
+        ],
+        "matchesStep": "partly",
+        "problems": []
+      },
+      "trace": {
+        "requestId": "24a991b3-37f4-4f87-9b8d-57e7518d83b7",
+        "requestIds": [
+          "24a991b3-37f4-4f87-9b8d-57e7518d83b7"
+        ],
+        "provider": "0xf4FB8d2bD856e672b5f9848b0eD235A20079B250",
+        "costUsdMicro": 1175,
+        "model": "0gm-1.0-35b-a3b"
+      }
+    }
+  ],
   "reviews": [
     {
-      "judgeId": "judge_adcf8968",
+      "judgeId": "judge_11631c00",
       "status": "scored",
-      "overallHundredths": 6736,
+      "overallHundredths": 5340,
       "review": {
         "criteria": [
           {
             "id": "product_journey",
-            "score": 71,
-            "comment": "The core story is easy to follow: pick a health challenge, stake, verify with a wearable, and settle publicly. But I could not verify the full end-to-end loop live—the prove-human/pairing and join/get-paid moments were blocked—so I’m discounting the journey score.",
+            "score": 55,
+            "comment": "The core loop is clearly defined, but the live test blocks the critical join/stake and verdict steps (d5, d7, f8) and shows 500 errors on activity/ENS routes. I saw the concept, but not the working product.",
             "evidence": [
-              "d1",
-              "d2",
-              "d3",
-              "d4",
               "d5",
-              "d6",
               "d7",
-              "d8",
-              "f2",
-              "f3",
-              "f4",
               "f8",
-              "E2",
-              "E6",
-              "E7"
+              "V-laptop-d6",
+              "V-phone-d6"
             ]
           },
           {
             "id": "real_world_value",
-            "score": 78,
-            "comment": "This tackles a real behavior-change problem for a clear user: people with wearables who want a commitment device for sleep or workouts. It feels meaningfully useful if it works, though the audience is narrower because it depends on compatible wearables and comfort with staking on yourself.",
+            "score": 65,
+            "comment": "Betting on habit formation taps into proven behavioral economics, and the 'stake + social pressure' model solves a real accountability gap. Impact scales if it drives retention, but right now it’s a testnet prototype relying on a single trusted agent.",
             "evidence": [
+              "E19",
               "d1",
-              "d3",
-              "f5",
-              "E7",
-              "E19"
+              "d2"
             ]
           },
           {
             "id": "ui_ux",
-            "score": 69,
-            "comment": "The front door is clear and the product browses reasonably on both laptop and phone, which I appreciate. The hit is that some of the key moments in onboarding and the money loop were blocked in live testing, so the UX is not yet dependable where it matters most.",
+            "score": 50,
+            "comment": "The landing and payout explainer are clean, and it works on both laptops and phones. However, contradictory copy, placeholder text, duplicated selection on mobile, and unhandled error states hurt polish.",
             "evidence": [
-              "d1",
-              "d2",
-              "d3",
-              "d4",
-              "d8",
-              "f1",
-              "f2",
-              "f3",
-              "f7",
-              "d5",
-              "f8"
+              "V-laptop-d8",
+              "V-phone-f3",
+              "V-laptop-f1",
+              "V-laptop-d6"
             ]
           },
           {
             "id": "code_quality",
-            "score": 81,
-            "comment": "Static review suggests a thoughtful codebase: real architecture, scoped permissions, RLS, and a large test surface. I’m holding back a bit because the tests were counted, not run here, and some important protections depend on environment configuration rather than code alone.",
+            "score": 60,
+            "comment": "Large test suite with clear rationale comments, RLS enabled on all tables, and sensible contract separation. However, slot math is manual, security depends on environment flags, and the single-author/AI-heavy commit pattern raises review concerns.",
             "evidence": [
-              "E3",
               "E8",
-              "E10",
-              "E14",
-              "E15",
-              "E16",
-              "E17",
-              "E18",
-              "E19"
+              "E3",
+              "E5",
+              "continuity"
             ]
           },
           {
             "id": "sdlc",
-            "score": 66,
-            "comment": "You did more repo hygiene than most hackathon teams—docs, proof scripts, and production guards are all good signs. I’m less comfortable with the inconsistent deployment notes and the fact that test passing/CI wasn’t verified from the materials I have.",
+            "score": 55,
+            "comment": "Good scaffolding: vercel.json cron, ENS boundary-proof script, clear commit history for event work. But DEPLOYMENTS.md contradicts itself, the submitted repo 404s, tests weren’t executed, and deployment configs hide critical security behavior.",
             "evidence": [
               "E4",
-              "E8",
-              "E12",
-              "E14"
+              "E14",
+              "continuity",
+              "E10"
             ]
           },
           {
             "id": "feasibility",
-            "score": 74,
-            "comment": "This is more shippable than most hackathon health demos: the web app, auth, wearable ingestion, settlement agent, and storage choices are real. The hard part is trust and operations, since verdicts are off-chain and some safety controls only work if live env config is set correctly.",
+            "score": 55,
+            "comment": "Security gates like Intercepta and World gating are conditional on env vars and silently become no-ops when unset. Oracle routing is ambiguous, and a creator can cancel after verdicts are recorded.",
             "evidence": [
-              "E1",
-              "E2",
-              "E6",
-              "E7",
               "E10",
               "E15",
-              "E18",
-              "E20",
-              "f6"
+              "E6",
+              "E16"
             ]
           },
           {
             "id": "scalability",
-            "score": 58,
-            "comment": "For an early pilot, this stack is fine. At larger scale, the single settlement/oracle path and contract-storage participant lookup look like obvious bottlenecks, and each new wearable/provider will add operational complexity.",
+            "score": 45,
+            "comment": "Testnet only right now, but even in prod, wearable API limits, single-circle-wallet payout routing, and the centralized SPOTTER verdict oracle will bottleneck growth. No path to decentralized verification is shown.",
             "evidence": [
-              "E3",
-              "E5",
+              "E1",
               "E6",
-              "E7"
+              "E7",
+              "V-laptop-d6"
             ]
           },
           {
             "id": "business_model",
-            "score": 34,
-            "comment": "I understand the mechanic better than the business. The materials do not clearly show who consistently pays, what fee you take, or why this is sustainable once you move past test USDC.",
-            "evidence": []
+            "score": 40,
+            "comment": "No revenue model is stated. It runs on test USDC with no clear path to sustainability beyond what’s implied. Sponsor pools or platform fees would be needed, but none are designed yet.",
+            "evidence": [
+              "d2",
+              "V-laptop-d1"
+            ]
           },
           {
             "id": "brownie_points",
-            "score": 67,
-            "comment": "You get extra credit from me for having a phone-usable browse experience, live privacy/terms, and nice trust-building details like public settlement receipts. The bonus is capped because the most delightful mobile moments—prove human, pair wearable, join, get paid—weren’t verified live.",
+            "score": 45,
+            "comment": "Nice touches like the payout explainer, public tx links on history, and ENS agent permission proofs. Missing proper accessibility work and the 'delight' is undercut by visible backend errors and rough copy.",
             "evidence": [
-              "d1",
-              "d2",
-              "d3",
-              "d4",
-              "d6",
-              "d8",
-              "f7",
-              "E14",
-              "E19"
+              "V-laptop-d6",
+              "V-phone-d6",
+              "f6",
+              "d6"
             ]
           }
         ],
-        "headline": "Compelling commitment-device concept with real implementation depth, but the live core loop is not yet proven end to end.",
-        "comment": "Team, this is one of the clearer product ideas here: I immediately get the user, the wager mechanic, and why wearable verification matters. You also built real product, not just slides—auth, challenge creation, settlement logic, and public receipts all count. Where I need more is the tomorrow-morning journey: I couldn’t verify prove-human, pair wearable, join, and get paid straight through. Tighten that one-minute flow, make the trust/config story visible, and clarify the business model.",
+        "headline": "Clear behavioral incentive and a mostly functional prototype, but broken live flows and config-dependent security keep it from feeling like a shipped product.",
+        "comment": "You’ve nailed the hook and the payout logic is thoughtful, but the core money-and-verdict loop failed live. Fix the 500s on /api/activity and ENS, harden security so it doesn’t rely on environment flags being set, and ship a clean onboarding-to-payout flow on testnet before worrying about scale. Clarify how this sustains financially—right now it’s a cool bet, not a product.",
         "strengths": [
-          "Clear user/problem fit: a commitment device for people already tracking sleep or workouts.",
-          "Real implementation depth: wearable integrations, settlement agent, conservative refund/miss logic, and substantial test coverage on paper.",
-          "Good trust-signaling details like public settlement visibility and published policies."
+          "Strong behavioral hook and clear payout explainer that sets expectations.",
+          "Solid architectural separation: raw health data stays off-chain, only verdicts hit the ledger.",
+          "Transparent settlement: public tx links and clear 'You hit / You miss / Nobody hits' rules."
         ],
         "concerns": [
-          "The full core loop was not verified live; key onboarding and payout steps were blocked.",
-          "Important protections depend on environment configuration and a trusted off-chain agent.",
-          "Business model and deployment state are less clear than the product concept."
+          "Critical live flows (join, stake, verdict) are blocked or erroring out.",
+          "Security gates (World ID, Intercepta) silently disable when env vars are unset.",
+          "UI copy contradictions and unhandled error states show incomplete polish."
         ],
         "dealBreakerHit": false,
-        "dealBreakerNote": "I did not see evidence of fake screens, and there is an identifiable user: wearable users who want a commitment device for health goals.",
+        "dealBreakerNote": "None. The live errors are real failures, not fake screens, and the team is identifiable. No demo screens were invented or shown that the product lacks.",
         "certainty": "medium"
       },
       "attempts": 1,
       "usage": {
-        "input_tokens": 8011,
-        "output_tokens": 4699
+        "input_tokens": 13923,
+        "output_tokens": 5148
       },
-      "ms": 99489,
+      "ms": 81646,
+      "traces": [
+        {
+          "requestId": "5d66be10-1dee-4c8d-8c60-4f841c5b1d35",
+          "provider": "0xf4FB8d2bD856e672b5f9848b0eD235A20079B250",
+          "costUsdMicro": 3531,
+          "chatId": "0f895b66-6049-4922-b5c8-4bc5f317cca5",
+          "model": "0gm-1.0-35b-a3b"
+        }
+      ],
       "judge": {
-        "id": "judge_adcf8968",
+        "id": "judge_11631c00",
         "name": "Priya Raman",
         "title": "Product lead who has shipped three consumer fintech apps",
         "version": 1,
-        "promptVersion": "judge-v1",
+        "promptVersion": "judge-v2",
         "weights": {
           "product_journey": 20,
           "real_world_value": 20,
@@ -185,152 +951,127 @@
       }
     },
     {
-      "judgeId": "judge_f3569fec",
+      "judgeId": "judge_e9c669c4",
       "status": "scored",
-      "overallHundredths": 6386,
+      "overallHundredths": 4245,
       "review": {
         "criteria": [
           {
             "id": "product_journey",
-            "score": 55,
-            "comment": "The story is clear: browse a challenge, sign in, pair a wearable, stake, and settle. But in the live run I only verified the browse/explainer pieces; the World ID/WHOOP setup and the actual join/get-paid path were blocked, so the core journey is only partially proven.",
+            "score": 40,
+            "comment": "The core flow stalls at sign-in and staking in the live run (d5, d7, f8 blocked), and on-chain recording fails visibly on the history page (V-laptop-d6). E2, E21, liveTest",
             "evidence": [
-              "d1",
-              "d2",
-              "d3",
-              "d4",
-              "d5",
-              "d6",
-              "d8",
-              "f3",
-              "f4",
-              "f8"
+              "E2",
+              "E21"
             ]
           },
           {
             "id": "real_world_value",
-            "score": 70,
-            "comment": "The use case is real: users want commitment pressure around sleep and workouts, and only putting the verdict on-chain is the right privacy trade for this kind of app. The ceiling is lower while verdicts come from a trusted server and provider access is limited.",
+            "score": 55,
+            "comment": "Wearable-backed commitment staking is a strong concept, but it is tethered to testnet, proprietary wearable seats, and a centralized Circle executor, limiting immediate impact. E20, E22, liveTest",
             "evidence": [
-              "E6",
-              "E7",
-              "E19"
+              "E20",
+              "E22"
             ]
           },
           {
             "id": "ui_ux",
-            "score": 60,
-            "comment": "The product reads cleanly on laptop and phone, with a good plain-English payout explainer. Reliability is not there yet: both runs had errors, and the important signed-in flows were blocked.",
-            "evidence": [
-              "d1",
-              "d2",
-              "d3",
-              "f1",
-              "f2",
-              "f3",
-              "f7",
-              "d5",
-              "f8"
-            ]
+            "score": 45,
+            "comment": "Functional base layout, but persistent 500 errors, broken copy (\"Nothing to check. I'm on break.\"), and duplicate goal text degrade polish. V-laptop-f1, V-laptop-f3, liveTest",
+            "evidence": []
           },
           {
             "id": "code_quality",
-            "score": 74,
-            "comment": "I can trace most technical claims back to real code, and the backend/security posture shows defensive thinking around auth, adjudication, and gas budgets. I am docking for safety switches that turn into no-ops when env vars are unset and for unresolved payout edge cases.",
+            "score": 50,
+            "comment": "Solidity is pre-event and untouched. The TypeScript layer carries heavy AI assistance (289/437 commits), and contracts lack invariant or fuzz tests despite high static test counts. E4, E8, E16",
             "evidence": [
-              "E3",
-              "E6",
+              "E4",
               "E8",
-              "E10",
-              "E15",
-              "E16",
-              "E18"
+              "E16"
             ]
           },
           {
             "id": "sdlc",
-            "score": 64,
-            "comment": "There is real scaffolding here: docs, scripts, and a large test surface that does exist in the repo. But I could not verify tests actually passing, and the deployment notes are inconsistent enough that I do not fully trust the release story.",
+            "score": 35,
+            "comment": "351 commits in a weekend, mostly AI-generated, with an inconsistent DEPLOYMENTS.md and a 404 submission URL. CI/testing execution was never verified. E4, E8, reviewerDossier.continuity",
             "evidence": [
-              "E8",
-              "E12",
-              "E14",
               "E4",
-              "E6"
+              "E8"
             ]
           },
           {
             "id": "feasibility",
-            "score": 61,
-            "comment": "This can run as a centralized service on today's stack; the live site, cron model, wallet auth, and Circle execution path are all concrete. What I could not verify is the full stake-to-payout path, and some safety guarantees only hold if production env is set correctly.",
+            "score": 45,
+            "comment": "Works today only as a testnet demo. Reliant on Circle's agent execution model, WHOOP seat limits, and security gates that silently fail closed when env vars are unset. E6, E10, E15, E20",
             "evidence": [
-              "E1",
-              "E2",
               "E6",
-              "E7",
               "E10",
               "E15",
-              "d5",
-              "f8"
+              "E20"
             ]
           },
           {
             "id": "scalability",
-            "score": 58,
-            "comment": "Vercel plus Upstash/Supabase will get you through early traffic, but the bottleneck is operational: one agent, one wallet path, and external wearable providers. The storage-slot participant read is clever, but it is brittle and not how I want to scale contract indexing.",
+            "score": 30,
+            "comment": "SPOTTER's off-chain agent and Circle payouts create a hard ceiling. One-human enforcement relies on server-side KV rather than on-chain logic, bottling up scaling. E6, E10, reviewerDossier.architecture",
             "evidence": [
-              "E1",
-              "E3",
-              "E5",
               "E6",
-              "E7"
+              "E10"
             ]
           },
           {
             "id": "business_model",
-            "score": 25,
-            "comment": "I do not see a concrete who-pays or sustainability story in the materials yet. Right now this looks like a good testnet experiment, not a business.",
+            "score": 20,
+            "comment": "Labeled \"test money only\" with no clear path to sustainability or revenue beyond grant funding. reviewerDossier.limitations",
             "evidence": []
           },
           {
             "id": "brownie_points",
-            "score": 53,
-            "comment": "Partial credit for scoped roles and key separation work, especially the limited ENS agent permissions and the Circle-based executor path. I did not see verified invariant/fuzz coverage or a threat model, and the live oracle setup is still not fully nailed down.",
+            "score": 40,
+            "comment": "The ENS role-bound proof script and Intercepta screening integration are solid engineering efforts, but missing contract-level invariant/fuzz tests keeps it from the top tier. E14, E15",
             "evidence": [
-              "E6",
               "E14",
-              "E8"
+              "E15"
             ]
           }
         ],
-        "headline": "Strong engineering bones, but the live end-to-end money path and safety config were not proven.",
-        "comment": "Team, this is one of the more substantive builds here. I verified a lot of real engineering in the app and backend, and the privacy choice to keep raw health data off-chain is sensible. But for something that moves money based on oracle writes, I need the live safety posture to be provable, not assumed from env vars, and I need one reproducible end-to-end stake->verdict->settle trace. Fix the deployment ambiguity, show which oracle key is live, and close the creator-cancel-after-verdict edge.",
+        "headline": "Strong commitment-staking concept derailed by off-chain dependencies, testnet scope, and a broken live onboarding flow.",
+        "comment": "product_journey",
         "strengths": [
-          "Detailed showcase claims map to concrete code rather than demo-only handwaving.",
-          "Defensive backend choices around auth, adjudication timing, and capped gas dripping.",
-          "Scoped permissions work is thoughtful, especially around ENS receipt writes and the settlement agent path."
+          "Conservative contract logic with automatic refund paths for unadjudicated players (E4, E16).",
+          "Clear separation of verdict vs. raw health data; only verdicts hit chain (E19).",
+          "ENS agent permissions scoped with Enhanced Access Control and an executable proof script (E14)."
         ],
         "concerns": [
-          "The core money flow was not verified live; join/stake/get-paid remained blocked.",
-          "World ID and Intercepta protections are no-ops when env vars are unset, so fail-closed depends on deployment config.",
-          "Oracle-role/deployment state is ambiguous, and creator cancellation after verdicts is a bad edge for winners."
+          "Config-dependent security gates (Intercepta, World ID) become silent no-ops when env vars are unset, breaking the \"fail closed\" promise.",
+          "SPOTTER relies on a single Circle wallet and off-chain agent, creating a central point of failure and payout bottleneck.",
+          "Repo provenance issues (404 submission URL, single author across 400+ commits) undermine confidence in the team's build process."
         ],
         "dealBreakerHit": false,
-        "dealBreakerNote": "No deal-breaker was proven from the materials. The claimed tests do exist statically, I saw no evidence of secrets in the repo, and I did not find outright unchecked fund movement paths; the bigger issue is config-dependent safety and unverified live state.",
-        "certainty": "medium"
+        "dealBreakerNote": "No hard deal-breakers met: static test counts match claims, no secrets found in repo, and funds are testnet. However, config-dependent security gates and the unresolved oracle key flip mechanism are serious red flags for production.",
+        "certainty": "high"
       },
       "attempts": 1,
       "usage": {
-        "input_tokens": 8006,
-        "output_tokens": 6457
+        "input_tokens": 13916,
+        "output_tokens": 4007
       },
-      "ms": 120457,
+      "ms": 67799,
+      "traces": [
+        {
+          "requestId": "686dabb7-ffe0-4832-88ff-46698c8d7b60",
+          "provider": "0xf4FB8d2bD856e672b5f9848b0eD235A20079B250",
+          "costUsdMicro": 2983,
+          "chatId": "25106bc1-0db5-4ab2-a839-ec77e0dfd118",
+          "model": "0gm-1.0-35b-a3b"
+        }
+      ],
       "judge": {
-        "id": "judge_f3569fec",
+        "id": "judge_e9c669c4",
         "name": "Marcus Lee",
         "title": "Staff engineer, smart contracts and payments infrastructure",
         "version": 1,
-        "promptVersion": "judge-v1",
+        "promptVersion": "judge-v2",
         "weights": {
           "product_journey": 5,
           "real_world_value": 9,
@@ -346,24 +1087,16 @@
       }
     },
     {
-      "judgeId": "judge_4c074f4a",
+      "judgeId": "judge_c876a259",
       "status": "scored",
-      "overallHundredths": 5794,
+      "overallHundredths": 6173,
       "review": {
         "criteria": [
           {
             "id": "product_journey",
-            "score": 64,
-            "comment": "The core loop is easy to grasp: discover a challenge, join or create one, let the wearable verify, then settle. But the most important proof points in the journey were not shown working end to end in the live test, especially human proof / pairing and the actual join-to-payout path.",
+            "score": 65,
+            "comment": "The core journey is logically sound but the live test blocked critical path steps like World ID pairing and stake-join (d5, d7, f8), and several endpoints returned 500s. What’s verified in code matches your architecture, but the user flow isn’t end-to-end yet.",
             "evidence": [
-              "d1",
-              "d2",
-              "d3",
-              "d4",
-              "d8",
-              "f2",
-              "f3",
-              "f4",
               "d5",
               "d7",
               "f8"
@@ -371,124 +1104,118 @@
           },
           {
             "id": "real_world_value",
-            "score": 77,
-            "comment": "This goes after a real behavior problem: people struggle to follow through on sleep and workout goals, and putting money at stake is a concrete mechanism. The privacy choice to keep raw health data off-chain helps, though actual user demand and outcomes are still unproven here.",
+            "score": 70,
+            "comment": "Staking capital on measurable health habits targets a real behavioral incentive, but testnet-only status and wearable API seat limits keep real-world impact hypothetical right now.",
             "evidence": [
-              "E7",
               "E19",
-              "E16",
-              "d2"
+              "E7"
             ]
           },
           {
             "id": "ui_ux",
-            "score": 63,
-            "comment": "The product reads clearly on both laptop and phone, and the challenge flows are understandable without much explanation. I’m marking it down because critical actions were blocked in testing, which matters more than visual polish for this kind of product.",
+            "score": 55,
+            "comment": "Functional across devices, but I saw contradictory copy, placeholder bot text, and an exposed on-chain error message in the history view that hurt polish and clarity.",
             "evidence": [
-              "d1",
-              "d3",
-              "d4",
-              "d8",
-              "f1",
-              "f2",
-              "f3",
-              "d5",
-              "f8"
+              "V-laptop-d8",
+              "V-laptop-f1",
+              "V-laptop-d6"
             ]
           },
           {
             "id": "code_quality",
-            "score": 85,
-            "comment": "This is a serious codebase for a hackathon: the architecture is thoughtfully split across app, contract, agent, storage, and integrations, with unusually deep test coverage and careful money-path logic. I’m discounting a bit because the tests were counted, not run, and some protections depend on deployment configuration.",
+            "score": 72,
+            "comment": "Architecture is clean, RLS is enforced, and the static test count aligns with your claim, though I can’t confirm pass rates without running them. Claims are largely verified in code.",
             "evidence": [
-              "E6",
               "E8",
-              "E14",
-              "E16",
-              "E18"
+              "E3"
             ]
           },
           {
             "id": "sdlc",
-            "score": 69,
-            "comment": "You show real engineering discipline in the size of the test suite, production guardrails, and deployment scripting. The caveat is that execution quality is not fully proven from the materials: tests were not run in review, and the deployment notes are internally inconsistent.",
+            "score": 60,
+            "comment": "Rapid commit velocity shows momentum, but DEPLOYMENTS.md contradicts itself and the heavy AI-assisted batch raises review-depth questions. You were honest about pre-event vs event boundaries.",
             "evidence": [
-              "E8",
-              "E12",
-              "E4"
+              "E4",
+              "continuity"
             ]
           },
           {
             "id": "feasibility",
-            "score": 67,
-            "comment": "This is more than a concept deck: the site exists, browse/create flows work, and the off-chain settlement agent is concretely implemented. Still, it is testnet-only in the materials, depends on several third parties, and the critical live payout path was blocked during testing.",
+            "score": 68,
+            "comment": "Testnet deployment is feasible today, but production would break on the single-agent oracle, env-dependent security gates, and complex miss-rule edge cases that haven’t been exercised.",
             "evidence": [
               "E6",
-              "E7",
+              "E10",
               "E15",
-              "f2",
-              "f3",
-              "f8"
+              "E16"
             ]
           },
           {
             "id": "scalability",
-            "score": 64,
-            "comment": "Keeping only verdicts on-chain is the right cost and privacy tradeoff, and the off-chain stack should handle an early user base. The obvious ceiling is the single trusted SPOTTER/Circle bottleneck plus wearable-provider limits and centralized adjudication.",
+            "score": 58,
+            "comment": "The server-side settlement loop and wearable integrations are natural bottlenecks; scaling horizontally would require a decentralized oracle and multi-provider fallback to avoid rate limits.",
             "evidence": [
-              "E3",
-              "E6",
               "E7",
-              "E19"
+              "E6"
             ]
           },
           {
             "id": "business_model",
-            "score": 38,
-            "comment": "I can see why users might try this, but I do not yet see a clear answer to who pays you and what sustainable economics look like once this moves beyond test USDC. Right now the materials sell the mechanic better than the business.",
+            "score": 45,
+            "comment": "No revenue model, token mechanics, or sponsor path is stated. As a testnet experiment it makes sense, but a pre-seed bet needs a clear path to sustainability.",
             "evidence": [
-              "E4",
-              "d2"
+              "submission"
             ]
           },
           {
             "id": "brownie_points",
-            "score": 29,
-            "comment": "The integrations are real and helpful, but I do not see verified pilots, early users, or a true distribution wedge in the materials. The claimed 'first real hit' could be meaningful, but it is still a claim rather than something I can score as proven.",
+            "score": 75,
+            "comment": "Advanced integrations like World ID for agents, ENSv2 resolver, and Intercepta screening show real technical differentiation, though no live pilot or early users offset the demo only.",
             "evidence": [
-              "E7",
-              "E21"
+              "E9",
+              "E11",
+              "E13",
+              "E22"
             ]
           }
         ],
-        "headline": "Distinct and technically ambitious, but still pre-company until the live flow and business model catch up.",
-        "comment": "Team, this is one of the more company-shaped entries here: the wager-on-yourself loop is fresh, the privacy posture is thoughtful, and the technical build is deeper than a weekend toy. Where I need more is business clarity and proof that the live product can reliably take a user from signup to wearable proof to payout. Right now the trust model is still \"believe SPOTTER and the config is right,\" which is acceptable for a prototype but not yet for a scalable business. Tighten reliability and explain monetization, and this gets much stronger.",
+        "headline": "Technically ambitious health-staking prototype with solid engineering scaffolding, but testnet limits and an unproven business model keep it from being investable right now.",
+        "comment": "Strong engineering scaffolding and clever integrations, but testnet confinement, config-gated security, and a missing revenue model keep this from being investable today. Fix the onboarding flow, decentralize the verdict oracle, and you’ll have a serious foundation.",
         "strengths": [
-          "Fresh health commitment mechanic with wearable-verified outcomes and verdict-only on-chain privacy.",
-          "Serious technical execution, including a deep test surface and conservative settlement logic.",
-          "Clear product framing: users can quickly understand what happens if they hit, miss, or nobody hits."
+          "Robust test scaffolding and secure defaults (RLS, fail-closed mock guards).",
+          "Conservative escrow and payout logic with a clear off-chain verdict separation.",
+          "Advanced integrations (World ID for agents, ENSv2 resolver, Intercepta screening) show technical depth."
         ],
         "concerns": [
-          "Business model is underspecified; it is not clear who pays you or what sustainable margins look like.",
-          "Critical trust and safety properties depend on configuration and a centralized off-chain agent.",
-          "Key live flows were blocked, and live deployment state is not fully verifiable from the materials."
+          "No sustainable revenue model or clear path beyond testnet staking.",
+          "Single server-side oracle and env-config-dependent security gates create centralization and deployment risks.",
+          "Live UI inconsistencies and blocked stake/join flows hurt demo confidence and user retention."
         ],
         "dealBreakerHit": false,
-        "dealBreakerNote": "No. This is not a me-too idea; it has a real edge. Growth and monetization are still thin, but not enough from the materials to call that a deal-breaker.",
-        "certainty": "medium"
+        "dealBreakerNote": "No me-too hand-waving; the concept is distinct and the build is substantial. However, the testnet-only scope and absent business model are material gaps that prevent a go today.",
+        "certainty": "high"
       },
       "attempts": 1,
       "usage": {
-        "input_tokens": 8005,
-        "output_tokens": 4784
+        "input_tokens": 13915,
+        "output_tokens": 4721
       },
-      "ms": 91136,
+      "ms": 79023,
+      "traces": [
+        {
+          "requestId": "e35faf4d-2bd0-4704-a070-7f851e88ee48",
+          "provider": "0xf4FB8d2bD856e672b5f9848b0eD235A20079B250",
+          "costUsdMicro": 3325,
+          "chatId": "0191a21b-274e-4040-9aab-fcd2a9c4bfcd",
+          "model": "0gm-1.0-35b-a3b"
+        }
+      ],
       "judge": {
-        "id": "judge_4c074f4a",
+        "id": "judge_c876a259",
         "name": "Ana Okafor",
         "title": "Early-stage investor and former founder",
         "version": 1,
-        "promptVersion": "judge-v1",
+        "promptVersion": "judge-v2",
         "weights": {
           "product_journey": 8,
           "real_world_value": 17,

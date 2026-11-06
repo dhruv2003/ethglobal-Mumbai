@@ -7,7 +7,7 @@ Everything that runs off the user's browser.
 ```bash
 cd backend
 npm install
-cp .env.example .env      # then put your OpenAI key in OPENAI_API_KEY
+cp .env.example .env      # then put your 0G Compute Router key in ZG_API_KEY
 npm start                 # http://localhost:3000, API under /api
 npm test                  # judge, scoring and security tests
 ```
@@ -19,12 +19,15 @@ The web app (`frontend/web`) proxies `/api` here in dev and preview.
 **Judge agents** (`src/judges/`, PRD 7.2):
 
 - **Personas.** A judge fills the form on `/judge`: background, what they expect, how much each of 9 criteria matters (0–5), brownie points, deal-breakers and tone. `persona.mjs` compiles that into a versioned persona and prompt. Weights always total 100. The platform rules come last so persona text can't override them.
-- **Reviews.** `review.mjs` sends each judge the submission, the reviewer's dossier and the live test results, and asks the LLM for structured scores. **OpenAI by default** (`JUDGE_PROVIDER=openai`, `gpt-5.4` through the Responses API with reasoning effort `high`); set `JUDGE_PROVIDER=anthropic` to use Claude (`claude-opus-5-5`). `JUDGE_MODEL` overrides the model. Reviews contain all 9 criteria scored 0–100, each with a comment and cited evidence, plus a headline and overall comment. A malformed review gets one repair attempt; after that it's marked invalid and no score is invented. A refusal is recorded as "declined".
+- **Reviews.** `review.mjs` sends each judge the submission, the reviewer's dossier and the live test results, and asks the LLM for structured scores. **0G by default** (`JUDGE_PROVIDER=0g`): the [0G Compute Router](https://docs.0g.ai/developer-hub/building-on-0g/compute-network/router/quickstart), chat completions with a `json_schema` response format and reasoning effort `high`, model `0gm-1.0-35b-a3b` (0G's own model on a TDX TEE provider). `JUDGE_MODEL=gpt-5.4` also works through 0G; Claude models through 0G reject `json_schema`, so don't use them for judges. To skip 0G, set `JUDGE_PROVIDER=openai` (`gpt-5.4` via the Responses API, needs `OPENAI_API_KEY`) or `JUDGE_PROVIDER=anthropic` (`claude-opus-5-5`, needs `ANTHROPIC_API_KEY`). `JUDGE_MODEL` overrides the model. Reviews contain all 9 criteria scored 0–100, each with a comment and cited evidence, plus a headline and overall comment. A malformed review gets one repair attempt; after that it's marked invalid and no score is invented. A refusal is recorded as "declined".
 - **Scoring.** Each judge's overall score is computed here, not by the model: the sum of weight% × score, in exact integer hundredths. The panel score is the mean of the three, rounded half up.
 - **Independence.** The three judges run in parallel and never see each other's output. Project materials are passed as untrusted data.
+- **0G proof.** Every 0G call keeps its trace: request ID, provider address, cost in micro-dollars, and the `ZG-Res-Key` chat ID for an independent signature check. Each review stores one trace per attempt (two if it needed a repair), and the result stores panel totals (`zg.requestIds`, `zg.costUsdMicro`). 0G errors follow the [errors page](https://docs.0g.ai/developer-hub/building-on-0g/compute-network/router/errors): 402 is never retried and shows "0G balance empty", 429 waits for `Retry-After` (up to 3 times), and 502, 503 and a timeout (180 s) are each retried once.
+- **Screenshot evidence (optional).** With `--evidence` (or `JUDGE_EVIDENCE=1` for the API), `evidence.mjs` first sends each live-test screenshot (`fixtures/<id>/smoke/<device>/`) to `0gm-1.0-35b-a3b` on 0G, which writes down what is on screen. Judges get these observations as untrusted evidence with IDs they can cite (`V-laptop-d1`…), and each one keeps its 0G request ID. Results are cached in `data/evidence/`.
+- **Voice notes.** On `/judge`, a judge can record or upload a voice note. `POST /api/judges/voice-note` sends it to `whisper-large-v3` on 0G with `verify_tee=true`, and the transcript goes into a free-text field of the persona. The form shows the request ID, and says "TEE verified" only when 0G returned `tee_verified: true` for that call.
 - **On submit.** `POST /api/submissions` saves the project and starts the panel review in the background.
 
-From the command line: `npm run judge -- --project go-health-me`. This also writes `fixtures/<id>/reviews.json`, so the static site can show the review.
+From the command line: `npm run judge -- --project go-health-me`. This also writes `fixtures/<id>/reviews.json`, so the static site can show the review. Add `--no-fixture --out <file>` to compare models without overwriting it, and `--evidence` to run the screenshot step first.
 
 **Reviewer pipeline** (`src/reviewer/`): runs automatically for every submission, in a queue (`REVIEW_CONCURRENCY`, default 1; unfinished reviews resume on restart), with live status at `GET /api/projects/:id/pipeline`:
 
@@ -35,6 +38,8 @@ From the command line: `npm run judge -- --project go-health-me`. This also writ
 5. **Dossier:** the reviewer agent reads a bounded, line-numbered pack of the repo plus the transcript and writes the evidence dossier. Every `file:line` it cites is checked against the clone; a "supported" claim with no real line is downgraded to "unverified".
 6. **Live test:** the live URL is the team's optional field, else the GitHub repo's homepage. `discoverSite` explores up to 6 pages on a Mozark cloud browser. The reviewer agent then writes the demo replay and major flows (`flows.mjs`): major flows may only target text the explorer saw, and demo screens it never saw are flagged so a miss reads as "not found on the live site". The flows run on laptop and phone through `tester/runner.mjs`, recorded. Results go to `data/live/<id>/`. Needs `MOZARK_TOKEN`, or the KEY=VALUE file at `MOZARK_ENV_FILE` (default `~/.mozark.env`).
 7. **Judges:** the panel scores with the dossier and the live test.
+
+The dossier and flow writer use the same `JUDGE_PROVIDER`, `JUDGE_MODEL`, and credentials as the judges, including 0G by default. Each request keeps its own output schema; demo transcription still uses the separate OpenAI transcription step described above.
 
 Re-run one by hand: `npm run review -- --project <id>`. Delete a project with `DELETE /api/projects/:id` (organizer).
 
@@ -51,6 +56,41 @@ Needs on the server: `git`, `ffmpeg`/`ffprobe`, and `npm install` in `backend/te
 - **CORS** only allows the app's own origins (`CORS_ORIGIN`).
 
 **Tester** (`tester/`): the live smoke test on Mozark cloud browsers. See its README.
+
+## 0G (ETHGlobal Mumbai: Build with 0G Private Computer)
+
+All AI inference in the main flow runs on the 0G Compute Router (`https://router-api.0g.ai/v1`, OpenAI-compatible, key in `ZG_API_KEY`):
+
+| Job | Model on 0G | Code |
+| --- | --- | --- |
+| Judge reviews (3 judges in parallel) | `0gm-1.0-35b-a3b` (TDX TEE provider); `gpt-5.4` optional | `src/judges/review.mjs` (`callZeroG`) |
+| Screenshot evidence for judges | `0gm-1.0-35b-a3b` (image input) | `src/judges/evidence.mjs` |
+| Judge voice notes → persona text | `whisper-large-v3`, `verify_tee=true` | `POST /api/judges/voice-note` in `src/api.mjs` |
+| Public "Watch the judges score this on 0G" (sample projects) | as judge reviews | `POST /api/projects/:id/reviews/public` |
+
+### What breaks if 0G is removed
+
+Without 0G no project gets a panel score, judges can't fill in their persona by voice, and the live-test screenshots go unread, because every model call in those flows goes through the 0G Compute Router.
+
+In practice, with the default `JUDGE_PROVIDER=0g` and no `ZG_API_KEY`: `/api/health` reports `judgesReady: false`, the judge button is replaced by "Add `ZG_API_KEY`", review routes return 503, and new submissions are saved without a review. Switching judges to `openai` or `anthropic` brings scoring back, but with no 0G request IDs, provider addresses or costs to show. (The fight agents in `src/agents/` are written for 0G but not yet wired into the app.)
+
+### Try it (no account needed)
+
+Open a sample project, choose **Agent judge**, and press **Watch the judges score this on 0G**. The three judges run live on the 0G Compute Router, and each request ID appears as soon as that judge answers (about a minute on `0gm-1.0-35b-a3b`, under $0.01 a run). Guards, because each run is paid: sample projects only, 2 runs per visitor per hour, 10 minutes between runs of one project, and `PUBLIC_RUNS_PER_DAY` in total (default 40). Screenshot observations already read on 0G are reused for free. A run where no judge could score never replaces the last good result.
+
+### Where 0G request IDs appear in the product
+
+- **Project page, while judging**: "Live on 0G", each judge's request ID (copyable) the moment their call answers, then their score.
+- **Project page, judges' panel** (`frontend/web/src/components/JudgesPanel.jsx`): a "Ran on 0G Compute Router" label with the model, call count and panel cost; under each judge card, "Ran on 0G" with that judge's request ID(s) (copyable, monospace), provider address and cost; a list of every request ID for the panel.
+- **Project page, screenshot evidence**: each screenshot observation with its request ID (when the evidence step ran).
+- **`/judge` form, voice notes**: the whisper request ID, cost and the TEE status that 0G reported.
+- **Stored results**: `data/reviews/<id>.json` and `fixtures/<id>/reviews.json` (`reviews[].traces[]`, `zg.requestIds`, `zg.costUsdMicro`, `evidence[].trace`).
+- **CLI**: `npm run judge` prints each request ID, provider and cost.
+
+### What we claim about TEEs
+
+- Judge reviews on `0gm-1.0-35b-a3b` run on a TEE provider, but 0G does not return a `tee_verified` field for that chat (the response is end-to-end sealed, `X-0g-E2ee: sealed`). We don't label judge output "TEE verified". We show the request ID and the provider address, and keep the `ZG-Res-Key` chat ID so the signature check from the [verifiable execution docs](https://docs.0g.ai/developer-hub/building-on-0g/compute-network/router/features/verifiable-execution) can be run independently. We have not implemented that check.
+- Voice notes on `whisper-large-v3` do come back with `tee_verified: true`, and only then does the UI say "TEE verified by 0G".
 
 ## Still to build
 

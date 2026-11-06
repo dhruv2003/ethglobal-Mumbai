@@ -4,10 +4,13 @@
  * them. The backend compiles that into the persona the judge agent uses.
  */
 import { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
 import { StatusPill } from "@ds/ui.jsx";
+import { SplitWords, bouncy, easeOut } from "./fx.jsx";
 import { api, health, organizerKey } from "../lib/api.js";
 import { Ring } from "./Arena.jsx";
 import { PixelFighter } from "./PixelFighter.jsx";
+import { VoiceNote } from "./VoiceNote.jsx";
 
 const LEVELS = ["Ignore", "Barely", "Some", "Matters", "Big", "Essential"];
 const TONES = [
@@ -50,7 +53,7 @@ function WeightBars({ weights, criteria, top }) {
         <li key={r.id}>
           <span className="t-caption wbars__label">{r.label}</span>
           <span className="wbars__track" aria-hidden="true">
-            <span style={{ width: `${r.w}%` }} />
+            <motion.span initial={{ width: 0 }} animate={{ width: `${r.w}%` }} transition={{ duration: 0.9, ease: easeOut, delay: 0.3 }} />
           </span>
           <span className="t-caption t-num wbars__num">{r.w}%</span>
         </li>
@@ -61,7 +64,13 @@ function WeightBars({ weights, criteria, top }) {
 
 function Seat({ judge, criteria, onEdit, onRemove, i }) {
   return (
-    <article className="card seat rise" style={{ "--i": i }}>
+    <motion.article
+      className="card seat"
+      initial={{ opacity: 0, y: 30, rotate: i % 2 ? 1.5 : -1.5 }}
+      animate={{ opacity: 1, y: 0, rotate: 0 }}
+      whileHover={{ y: -6 }}
+      transition={{ ...bouncy, delay: i * 0.08 }}
+    >
       <Ring compact className="seat__ring">
         <PixelFighter project={judgeAsFighter(judge)} scale={5} label={`${judge.name}, judge`} />
       </Ring>
@@ -83,13 +92,19 @@ function Seat({ judge, criteria, onEdit, onRemove, i }) {
           </button>
         </div>
       </div>
-    </article>
+    </motion.article>
   );
 }
 
 function EmptySeat({ onAdd, disabled, i }) {
   return (
-    <article className="card seat seat--empty rise" style={{ "--i": i }}>
+    <motion.article
+      className="card seat seat--empty"
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -6 }}
+      transition={{ ...bouncy, delay: i * 0.08 }}
+    >
       <Ring compact className="seat__ring">
         <PixelFighter project={{ seed: `seat-${i}`, name: "Open seat", tracks: [] }} scale={5} ghost label="Open judge seat" />
       </Ring>
@@ -102,7 +117,7 @@ function EmptySeat({ onAdd, disabled, i }) {
           </button>
         </div>
       </div>
-    </article>
+    </motion.article>
   );
 }
 
@@ -116,7 +131,9 @@ function Field({ id, label, hint, error, children }) {
   );
 }
 
-function JudgeForm({ criteria, initial, editing, onCancel, onSaved }) {
+const MAX_LEN = { background: 1200, expectations: 1500, browniePoints: 800, dealBreakers: 800 };
+
+function JudgeForm({ criteria, initial, editing, voice, onCancel, onSaved }) {
   const [f, setF] = useState(initial);
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
@@ -127,6 +144,12 @@ function JudgeForm({ criteria, initial, editing, onCancel, onSaved }) {
     setErrors((e) => (e[k] ? { ...e, [k]: undefined } : e));
   };
   const weights = previewWeights(f.priorities, criteria);
+  // A transcript is added after whatever the judge already wrote, never replacing it.
+  // Functional update: the transcript arrives after an await, when `f` may be stale.
+  const addSpoken = (k, spoken) => {
+    setF((x) => ({ ...x, [k]: [x[k]?.trim(), spoken.trim()].filter(Boolean).join("\n\n").slice(0, MAX_LEN[k]) }));
+    setErrors((e) => (e[k] ? { ...e, [k]: undefined } : e));
+  };
 
   async function save(e) {
     e.preventDefault();
@@ -154,7 +177,16 @@ function JudgeForm({ criteria, initial, editing, onCancel, onSaved }) {
   );
 
   return (
-    <form className="card judge-form rise" onSubmit={save} noValidate aria-labelledby="jf-h">
+    <motion.form
+      className="card judge-form"
+      onSubmit={save}
+      noValidate
+      aria-labelledby="jf-h"
+      initial={{ opacity: 0, y: 24, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: 16, scale: 0.98, transition: { duration: 0.15 } }}
+      transition={{ duration: 0.45, ease: easeOut }}
+    >
       <div className="judge-form__head">
         <h2 id="jf-h" className="t-display-md m0">{editing ? `Edit ${editing.name}` : "Add a judge"}</h2>
         <Ring compact className="judge-form__ring">
@@ -168,6 +200,7 @@ function JudgeForm({ criteria, initial, editing, onCancel, onSaved }) {
       </div>
       {text("background", "Background", "Experience and point of view. Optional, but it makes the persona sharper.", true, 1200)}
       {text("expectations", "What do you expect from a winning project?", "The major things you look for.", true, 1500)}
+      {voice && <VoiceNote model={voice.model} onText={addSpoken} />}
 
       <fieldset className="field priorities" aria-describedby="prio-help">
         <legend>How much does each one matter to you?</legend>
@@ -235,7 +268,7 @@ function JudgeForm({ criteria, initial, editing, onCancel, onSaved }) {
           </button>
         </div>
       </div>
-    </form>
+    </motion.form>
   );
 }
 
@@ -255,16 +288,31 @@ export function JudgesPage() {
     load().catch((e) => setState({ loading: false, offline: true, error: e.message }));
   }, []);
 
-  if (state.loading) return <p className="t-body">Loading the judges…</p>;
+  if (state.loading)
+    return (
+      <div className="seats" aria-busy="true">
+        <span className="visually-hidden">Loading the judges…</span>
+        {[0, 1, 2].map((k) => (
+          <div key={k} className="card seat skeleton skeleton--seat" />
+        ))}
+      </div>
+    );
   if (state.offline) {
     return (
       <>
-        <h1 className="t-display-lg m0">The judges' table</h1>
-        <div className="card card--surface stack">
+        <div className="intro">
+          <span className="eyebrow rise">Panel</span>
+          <h1 className="t-display-lg m0">
+            <SplitWords>The judges' table</SplitWords>
+          </h1>
+        </div>
+        <motion.div className="card card--surface stack offline" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25, ...bouncy }}>
           <StatusPill tone="neutral">Judge service offline</StatusPill>
           <p className="t-body m0">Judges live on the backend so their API key never reaches the browser. Start it, then reload:</p>
-          <pre className="t-mono-caption m0">cd backend && npm install && npm start</pre>
-        </div>
+          <pre className="t-mono-caption m0 code-block">
+            <span className="code-block__prompt" aria-hidden="true">$ </span>cd backend && npm install && npm start
+          </pre>
+        </motion.div>
       </>
     );
   }
@@ -286,7 +334,10 @@ export function JudgesPage() {
     <>
       <div className="intro intro--row">
         <div className="intro">
-          <h1 className="t-display-lg m0 rise">The judges' table</h1>
+          <span className="eyebrow rise">Panel</span>
+          <h1 className="t-display-lg m0">
+            <SplitWords>The judges' table</SplitWords>
+          </h1>
           <p className="t-body m0 muted rise" style={{ "--i": 1 }}>
             Three judges score every project. Each one's priorities decide how their score adds up.
           </p>
@@ -296,7 +347,9 @@ export function JudgesPage() {
             {judges.length === h.maxJudges ? "✓ " : ""}
             {judges.length} of {h.maxJudges} seats filled
           </StatusPill>
-          <StatusPill tone={h.judgesReady ? "live" : "neutral"}>{h.judgesReady ? `Agents ready · ${h.model}` : `No ${h.provider === "openai" ? "OpenAI" : "Anthropic"} key on the server`}</StatusPill>
+          <StatusPill tone={h.judgesReady ? "live" : "neutral"}>
+            {h.judgesReady ? `Agents ready · ${h.model}${h.provider === "0g" ? " on 0G" : ""}` : `No ${h.providerLabel ?? h.provider} key on the server`}
+          </StatusPill>
         </div>
       </div>
       {error && (
@@ -323,11 +376,13 @@ export function JudgesPage() {
         </div>
       </details>
 
+      <AnimatePresence mode="wait">
       {editor ? (
         <JudgeForm
           key={editor.editing?.id ?? "new"}
           criteria={criteria}
           editing={editor.editing}
+          voice={h.voiceNotes}
           initial={editor.editing ? { ...blankForm(criteria), ...editor.editing } : blankForm(criteria)}
           onCancel={() => setEditor(null)}
           onSaved={async () => {
@@ -336,7 +391,7 @@ export function JudgesPage() {
           }}
         />
       ) : (
-        <div className="seats">
+        <motion.div className="seats" key="seats" exit={{ opacity: 0, y: 12, transition: { duration: 0.15 } }}>
           {seats.map((j, i) =>
             j ? (
               <Seat key={j.id} judge={j} criteria={criteria} i={i} onEdit={() => setEditor({ editing: j })} onRemove={() => remove(j)} />
@@ -344,11 +399,12 @@ export function JudgesPage() {
               <EmptySeat key={`empty-${i}`} i={i} onAdd={() => setEditor({})} />
             ),
           )}
-        </div>
+        </motion.div>
       )}
+      </AnimatePresence>
       {!h.judgesReady && (
         <p className="t-caption m0">
-          To let the judges score projects, add <code className="t-mono-caption">{h.provider === "openai" ? "OPENAI_API_KEY" : "ANTHROPIC_API_KEY"}</code> to{" "}
+          To let the judges score projects, add <code className="t-mono-caption">{h.keyName}</code> to{" "}
           <code className="t-mono-caption">backend/.env</code> and restart the backend.
         </p>
       )}

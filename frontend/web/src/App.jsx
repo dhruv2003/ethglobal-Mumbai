@@ -12,10 +12,14 @@ import { useWallet } from "./lib/wallet.js";
 import { matchRoute, navigate, useCanonical, usePath } from "./lib/router.jsx";
 import { LandingPage, ProjectPage, ProjectsPage } from "./components/Projects.jsx";
 import { JudgesPage } from "./components/JudgesPage.jsx";
+import { FightDemo } from "./components/FightDemo.jsx";
+import { Footer } from "./components/Footer.jsx";
+import { Backdrop, ScrollProgress, easeOut } from "./components/fx.jsx";
+import { AnimatePresence, MotionConfig, motion } from "motion/react";
 
 const hhmm = () => new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
-const TITLES = { home: "The arena", form: "Submit a project", projects: "Projects", project: "Project", judges: "Judges" };
+const TITLES = { home: "The arena", form: "Submit a project", projects: "Projects", project: "Project", judges: "Judges", fight: "Fight demo" };
 
 export default function App() {
   const wallet = useWallet();
@@ -97,44 +101,80 @@ export default function App() {
 
   const ctx = { data, get, set, errors, touched, touch, showAll };
 
+  const pageClass = `page ${route.name === "form" ? "solo solo--form" : route.name === "fight" ? "solo solo--fight" : "solo solo--wide"}`;
+
   return (
-    <FormCtx.Provider value={ctx}>
-      <a className="skip" href="#main">
-        Skip to content
-      </a>
-      <Header wallet={wallet} route={route} />
-      <Toaster />
-      {wallet.error && (
-        <div className="banner" role="alert">
-          <span>✕ {wallet.error}</span>
-          <button type="button" className="btn btn--ghost btn--sm" onClick={wallet.clearError}>
-            Dismiss
-          </button>
-        </div>
-      )}
-      <main id="main" key={route.name + (route.id ?? "")} className={`page ${route.name === "form" ? "solo solo--form" : "solo solo--wide"}`}>
-        {route.name === "home" ? (
-          <LandingPage />
-        ) : route.name === "judges" ? (
-          <JudgesPage />
-        ) : route.name === "projects" ? (
-          <ProjectsPage />
-        ) : route.name === "project" ? (
-          <ProjectPage id={route.id} />
-        ) : (
-          <>
-            <div className="intro">
-              <h1 className="t-display-lg m0">Build your fighter</h1>
-              <p className="t-body m0 muted">Seven fields. Watch your fighter take shape as you fill them in.</p>
-              <span className="t-caption">{savedAt ? `Draft saved ${savedAt}` : "Drafts save as you type"}</span>
-            </div>
-            <div className="submit-layout">
-              <SubmissionForm wallet={wallet} onSubmit={submit} submitState={submitState} problemCount={fieldErrors.length} />
-              <FighterPreview />
-            </div>
-          </>
-        )}
-      </main>
-    </FormCtx.Provider>
+    <MotionConfig reducedMotion="user">
+      <FormCtx.Provider value={ctx}>
+        <Backdrop />
+        <ScrollProgress />
+        <a className="skip" href="#main">
+          Skip to content
+        </a>
+        <Header wallet={wallet} route={route} />
+        <Toaster />
+        <AnimatePresence>
+          {wallet.error && (
+            <motion.div
+              className="banner"
+              role="alert"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.3, ease: easeOut }}
+            >
+              <span>✕ {wallet.error}</span>
+              <button type="button" className="btn btn--ghost btn--sm" onClick={wallet.clearError}>
+                Dismiss
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.main
+            id="main"
+            key={route.name + (route.id ?? "")}
+            className={pageClass}
+            initial={{ opacity: 0, y: 14, filter: "blur(8px)" }}
+            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+            exit={{ opacity: 0, y: -10, filter: "blur(6px)", transition: { duration: 0.18, ease: "easeIn" } }}
+            transition={{ duration: 0.5, ease: easeOut }}
+          >
+            {route.name === "home" ? (
+              <LandingPage />
+            ) : route.name === "judges" ? (
+              <JudgesPage />
+            ) : route.name === "fight" ? (
+              <FightDemo />
+            ) : route.name === "projects" ? (
+              <ProjectsPage />
+            ) : route.name === "project" ? (
+              <ProjectPage id={route.id} />
+            ) : (
+              <>
+                <div className="intro intro--form">
+                  <span className="eyebrow rise">Step into the ring</span>
+                  <h1 className="t-display-lg m0 rise" style={{ "--i": 1 }}>
+                    Build your <span className="hl hl--crush">fighter</span>
+                  </h1>
+                  <p className="t-body m0 muted rise" style={{ "--i": 2 }}>
+                    Seven fields. Watch your fighter take shape as you fill them in.
+                  </p>
+                  <span className="t-caption save-state rise" style={{ "--i": 3 }} data-saved={savedAt ? "true" : "false"}>
+                    <span className="save-state__dot" aria-hidden="true" />
+                    {savedAt ? `Draft saved ${savedAt}` : "Drafts save as you type"}
+                  </span>
+                </div>
+                <div className="submit-layout">
+                  <SubmissionForm wallet={wallet} onSubmit={submit} submitState={submitState} problemCount={fieldErrors.length} />
+                  <FighterPreview />
+                </div>
+              </>
+            )}
+          </motion.main>
+        </AnimatePresence>
+        <Footer />
+      </FormCtx.Provider>
+    </MotionConfig>
   );
 }

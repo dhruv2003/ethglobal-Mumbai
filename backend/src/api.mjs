@@ -5,6 +5,7 @@
  *   GET    /api/criteria               what judges score
  *   GET    /api/judges                 the panel (max 3)
  *   POST   /api/judges                 add a judge from the form   (organizer)
+ *   POST   /api/judges/voice-note      audio -> transcript (whisper on 0G, TEE-checked)   (organizer)
  *   PUT    /api/judges/:id             edit a judge (new persona version)   (organizer)
  *   DELETE /api/judges/:id             remove a judge   (organizer)
  *   GET    /api/submissions            submitted projects
@@ -16,12 +17,16 @@
  *   GET    /api/projects/:id/dossier   the reviewer's dossier for a submitted project
  *   GET    /api/projects/:id/live      live test results (+ /live/files/<device>/<file> for media)
  *   DELETE /api/projects/:id           delete a submitted project and its data   (organizer)
+ *   POST   /api/projects/:id/reviews/public   anyone: re-judge a sample project on 0G (rate limited, capped per day)
  */
 import crypto from "node:crypto";
 import express from "express";
 import { CRITERIA } from "./judges/criteria.mjs";
 import { MAX_JUDGES, validateForm } from "./judges/persona.mjs";
-import { hasCredentials, MODEL, PROVIDER, runPanel } from "./judges/review.mjs";
+import { hasCredentials, missingCredentialsError, MODEL, PROVIDER, PROVIDER_LABEL, runPanel } from "./judges/review.mjs";
+import { collectScreenshotEvidence, EVIDENCE_ENABLED, forJudges, hasCachedEvidence } from "./judges/evidence.mjs";
+import zg from "./zg/client.js";
+import zgModels from "./zg/models.js";
 import { EXAMPLE_FORMS } from "./judges/seed.mjs";
 import { loadProject } from "./projects.mjs";
 import fs from "node:fs";
@@ -34,20 +39,48 @@ import { checkSubmissionSignature, rateLimit, requireOrganizer } from "./securit
 if (!judges.list().length) judges.save(EXAMPLE_FORMS.map((f) => ({ ...validateForm(f).persona, example: true })));
 
 const running = new Map(); // projectId -> Promise, so one project is never reviewed twice at once
+// projectId -> { startedAt, events, error? }: what the UI shows while a run is going (0G request IDs as they arrive)
+const progress = new Map();
+const lastRun = new Map(); // projectId -> ms timestamp of the last public run
 
-export async function reviewNow(projectId) {
+/**
+ * Run the panel on one project and save the result.
+ * opts.evidence: first let a vision model on 0G read the live-test screenshots (default JUDGE_EVIDENCE).
+ * opts.save: false to skip saving to data/reviews (the CLI uses this for side-by-side model runs).
+ */
+export async function reviewNow(projectId, { evidence = EVIDENCE_ENABLED, freshEvidence = false, save = true, log } = {}) {
   if (running.has(projectId)) return running.get(projectId);
   const project = loadProject(projectId);
   if (!project) throw Object.assign(new Error("No such project."), { status: 404 });
   const panel = judges.list();
   if (panel.length !== MAX_JUDGES) throw Object.assign(new Error(`The panel needs ${MAX_JUDGES} judges; it has ${panel.length}.`), { status: 409 });
-  if (!hasCredentials()) {
-    const key = PROVIDER === "openai" ? "OPENAI_API_KEY" : "ANTHROPIC_API_KEY";
-    throw Object.assign(new Error(`No ${PROVIDER === "openai" ? "OpenAI" : "Anthropic"} API key on the server. Add ${key} to backend/.env and restart.`), { status: 503 });
-  }
-  const job = runPanel(panel, project)
-    .then((result) => reviews.save(projectId, result))
-    .finally(() => running.delete(projectId));
+  if (!hasCredentials()) throw missingCredentialsError();
+  if (evidence && !hasCredentials("0g")) throw missingCredentialsError("0g");
+  const prog = { startedAt: new Date().toISOString(), events: [] };
+  progress.set(projectId, prog);
+  const onEvent = (e) => prog.events.push({ at: new Date().toISOString(), ...e });
+  const job = (async () => {
+    if (evidence) {
+      const records = await collectScreenshotEvidence(project, { fresh: freshEvidence, log });
+      project.screenshotEvidenceRecords = records;
+      project.screenshotEvidence = forJudges(records);
+    }
+    const result = await runPanel(panel, project, { onEvent });
+    // A run where no judge scored never replaces the last good result: the page keeps showing it.
+    if (!result.reviews.some((r) => r.status === "scored")) {
+      const why = [...new Set(result.reviews.map((r) => r.detail).filter(Boolean))].join(" ");
+      throw Object.assign(new Error(`No judge could score this time (${why || "unknown error"}). The last result is still shown.`), { status: 502, result });
+    }
+    return save ? reviews.save(projectId, result) : result;
+  })()
+    .catch((e) => {
+      prog.error = e.message;
+      throw e;
+    })
+    .finally(() => {
+      running.delete(projectId);
+      prog.finishedAt = new Date().toISOString();
+    });
   running.set(projectId, job);
   return job;
 }
@@ -55,7 +88,17 @@ export async function reviewNow(projectId) {
 export const router = express.Router();
 
 router.get("/health", (req, res) => {
-  res.json({ ok: true, judgesReady: hasCredentials(), judges: judges.list().length, maxJudges: MAX_JUDGES, provider: PROVIDER, model: MODEL });
+  res.json({
+    ok: true,
+    judgesReady: hasCredentials(),
+    judges: judges.list().length,
+    maxJudges: MAX_JUDGES,
+    provider: PROVIDER,
+    providerLabel: PROVIDER_LABEL[PROVIDER],
+    keyName: PROVIDER === "0g" ? "ZG_API_KEY" : PROVIDER === "openai" ? "OPENAI_API_KEY" : "ANTHROPIC_API_KEY",
+    model: MODEL,
+    voiceNotes: hasCredentials("0g") ? { model: zgModels.MODELS.transcribe } : null,
+  });
 });
 
 router.get("/criteria", (req, res) => res.json(CRITERIA));
@@ -69,6 +112,38 @@ router.post("/judges", requireOrganizer, (req, res) => {
   if (errors) return res.status(400).json({ errors });
   judges.save([...all, persona]);
   res.status(201).json(persona);
+});
+
+/*
+ * Voice note for the persona form: the browser sends the raw recording or upload,
+ * whisper on 0G transcribes it, and the form puts the text into a free-text field.
+ * We ask 0G to check the provider's TEE signature (?verify_tee=true) and pass on
+ * exactly what it reports: teeVerified is true, false, or null (not reported).
+ */
+const AUDIO_EXT = { "audio/webm": "webm", "video/webm": "webm", "audio/ogg": "ogg", "audio/mp4": "m4a", "audio/x-m4a": "m4a", "audio/m4a": "m4a", "audio/mpeg": "mp3", "audio/mp3": "mp3", "audio/wav": "wav", "audio/x-wav": "wav", "audio/wave": "wav", "audio/flac": "flac" };
+const audioBody = express.raw({ type: (req) => /^(audio|video)\//.test(req.headers["content-type"] ?? ""), limit: "20mb" });
+
+router.post("/judges/voice-note", requireOrganizer, rateLimit({ max: 30, windowMs: 60 * 60 * 1000 }), audioBody, async (req, res) => {
+  if (!hasCredentials("0g")) return res.status(503).json({ error: missingCredentialsError("0g").message });
+  const mime = String(req.headers["content-type"] ?? "").split(";")[0].trim().toLowerCase();
+  const ext = AUDIO_EXT[mime];
+  if (!ext) return res.status(415).json({ error: "Send audio as webm, ogg, m4a, mp3, wav or flac." });
+  if (!Buffer.isBuffer(req.body) || req.body.length < 1000) return res.status(400).json({ error: "That recording is empty or too short." });
+  try {
+    const { text, trace } = await zg.transcribe({ audio: req.body, filename: `voice-note.${ext}`, mime, model: zgModels.MODELS.transcribe, verifyTee: true });
+    res.json({
+      text: text.trim(),
+      model: trace.model,
+      requestId: trace.requestId,
+      provider: trace.provider,
+      costUsdMicro: trace.costUsdMicro,
+      teeVerified: trace.teeVerified === true ? true : trace.teeVerified === false ? false : null,
+    });
+  } catch (e) {
+    const status = e.status === 402 ? 402 : e.code === "missing_api_key" ? 503 : 502;
+    const error = e.status === 402 ? "0G balance empty: top up the account behind ZG_API_KEY, then try again." : `Transcription on 0G failed: ${e.message}`;
+    res.status(status).json({ error, requestId: e.requestId ?? null });
+  }
 });
 
 router.put("/judges/:id", requireOrganizer, (req, res) => {
@@ -159,9 +234,44 @@ router.post("/projects/:id/pipeline", requireOrganizer, (req, res) => {
 });
 
 router.get("/projects/:id/reviews", (req, res) => {
-  const r = reviews.get(req.params.id);
-  res.json({ running: running.has(req.params.id), result: r });
+  const id = req.params.id;
+  const r = reviews.get(id);
+  // Keep the panel polling while the pipeline prepares evidence or waits in line.
+  res.json({ running: running.has(id) || isRunning(id) || queuePosition(id) != null, progress: progress.get(id) ?? null, result: r });
 });
+
+/*
+ * Public "watch the judges score this" for sample projects, so anyone trying the app
+ * can start real 0G inference and see the request IDs arrive. Guarded three ways,
+ * because each run is paid: 0G provider only, 2 runs per IP per hour, a 10-minute
+ * cooldown per project, and PUBLIC_RUNS_PER_DAY in total (default 40, ~$0.30 on 0gm).
+ */
+const PUBLIC_COOLDOWN_MS = 10 * 60 * 1000;
+const publicDay = { day: "", n: 0 };
+router.post(
+  "/projects/:id/reviews/public",
+  rateLimit({ max: 2, windowMs: 60 * 60 * 1000, message: "You've asked the judges twice this hour. Try again later." }),
+  (req, res) => {
+    const id = req.params.id;
+    const project = loadProject(id);
+    if (!project || project.kind !== "sample") return res.status(404).json({ error: "Only sample projects can be re-judged from here." });
+    if (PROVIDER !== "0g") return res.status(409).json({ error: "Public judging runs on 0G only." });
+    if (!hasCredentials()) return res.status(503).json({ error: missingCredentialsError().message });
+    if (running.has(id)) return res.status(202).json({ running: true, progress: progress.get(id) ?? null });
+    const since = Date.now() - (lastRun.get(id) ?? 0);
+    if (since < PUBLIC_COOLDOWN_MS) {
+      return res.status(429).json({ error: `The judges scored this ${Math.max(1, Math.round(since / 60000))} min ago. Try again in ${Math.ceil((PUBLIC_COOLDOWN_MS - since) / 60000)} min.` });
+    }
+    const today = new Date().toISOString().slice(0, 10);
+    if (publicDay.day !== today) Object.assign(publicDay, { day: today, n: 0 });
+    if (publicDay.n >= Number(process.env.PUBLIC_RUNS_PER_DAY || 40)) return res.status(429).json({ error: "Today's free judge runs are used up. Come back tomorrow." });
+    publicDay.n++;
+    lastRun.set(id, Date.now());
+    // Reuse screenshot observations already read on 0G (free); never pay for new ones from a public click.
+    reviewNow(id, { evidence: EVIDENCE_ENABLED || hasCachedEvidence(project) }).catch((e) => console.error(`[judges] public review of ${id} failed: ${e.message}`));
+    res.status(202).json({ running: true, progress: progress.get(id) ?? null });
+  },
+);
 
 router.post("/projects/:id/reviews", requireOrganizer, async (req, res) => {
   try {
