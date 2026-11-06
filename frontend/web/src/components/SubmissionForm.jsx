@@ -35,13 +35,13 @@ export function SubmissionForm({ wallet, onSubmit, submitState, problemCount }) 
         <TextField path="team.name" label="Team name" limit={LIMITS.teamName} autoComplete="organization" />
         <TextField path="project.name" label="Project name" limit={LIMITS.projectName} />
       </div>
-      <TextField path="project.pitch" label="Short pitch" limit={LIMITS.pitch} placeholder="One line that sells it" />
+      <TextField path="project.pitch" label="Pitch" limit={LIMITS.pitch} placeholder="One line that sells it" />
       <TextField
         path="project.description"
-        label="What it does and how it's built"
+        label="Description"
         multiline
         limit={LIMITS.description}
-        placeholder="The problem, who it's for, and the stack. Judges check this against your code."
+        placeholder="The problem, who it's for, and how it's built. Judges check this against your code."
       />
       </Round>
 
@@ -53,7 +53,7 @@ export function SubmissionForm({ wallet, onSubmit, submitState, problemCount }) 
         inputMode="url"
         mono
         placeholder="https://github.com/team/project"
-        help="Public repos only. We pin the exact commit when submissions freeze."
+        help="Must be public. We pin the commit at the deadline."
         autoCapitalize="off"
         spellCheck={false}
       />
@@ -64,7 +64,7 @@ export function SubmissionForm({ wallet, onSubmit, submitState, problemCount }) 
         type="url"
         inputMode="url"
         placeholder="https://your-app.xyz"
-        help="Where it runs. We test it on a laptop and a phone. Left empty, we use your GitHub repo's homepage."
+        help="Leave empty to use the repo's homepage."
         autoCapitalize="off"
         spellCheck={false}
       />
@@ -108,7 +108,7 @@ export function SubmissionForm({ wallet, onSubmit, submitState, problemCount }) 
         </div>
         <Msg
           id="f-tracks-selected-msg"
-          help={full ? `That's ${EVENT.maxTracks}. Remove one to pick another.` : "You're always in the running for finalist. Tracks are optional."}
+          help={full ? `That's ${EVENT.maxTracks}. Remove one to pick another.` : "Optional. Every project competes for finalist."}
           error={showAll ? errors["tracks.selected"] : undefined}
         />
       </fieldset>
@@ -119,14 +119,14 @@ export function SubmissionForm({ wallet, onSubmit, submitState, problemCount }) 
           {submitState.error ? (
             <span className="field__error">✕ {submitState.error}</span>
           ) : !connected ? (
-            <span className="t-caption">Connect your wallet to submit. It owns this entry and receives the project's rewards.</span>
+            <span className="t-caption">Connect a wallet to submit. It receives any prizes.</span>
           ) : showAll && problemCount ? (
             <span className="field__error">
               ✕ Fix {problemCount} {problemCount === 1 ? "thing" : "things"} before submitting.
             </span>
           ) : (
             <span className="t-caption">
-              You'll sign a message in MetaMask (no gas). Submitting confirms you own this work and the arena can show it publicly.
+              You'll sign a free message to confirm you own this project.
             </span>
           )}
         </div>

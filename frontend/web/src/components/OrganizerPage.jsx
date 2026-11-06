@@ -519,12 +519,11 @@ export function OrganizerPage({ wallet }) {
   return (
     <div className="stack stack--page">
       <header className="intro">
-        <span className="eyebrow rise">Backstage</span>
         <h1 className="t-display-lg m0 rise" style={{ "--i": 1 }}>
-          Organizer <span className="hl hl--crush">console</span>
+          Organizers
         </h1>
         <p className="t-body m0 muted rise" style={{ "--i": 2 }}>
-          Runs a real tournament on chain: pick submitted projects, open each match, run the fight on 0G, publish the scores.
+          Run a tournament on chain: pick projects, open matches, fight on 0G, publish scores.
         </p>
       </header>
       <WalletGate wallet={wallet} reason="to run a tournament" />

@@ -179,12 +179,11 @@ export default function App() {
             ) : (
               <>
                 <div className="intro intro--form">
-                  <span className="eyebrow rise">Step into the ring</span>
                   <h1 className="t-display-lg m0 rise" style={{ "--i": 1 }}>
-                    Build your <span className="hl hl--crush">fighter</span>
+                    Submit a project
                   </h1>
                   <p className="t-body m0 muted rise" style={{ "--i": 2 }}>
-                    Three rounds, seven fields. Your fighter levels up as you fill them in.
+                    Three short rounds. Your fighter levels up as you go.
                   </p>
                   <ul className="after-submit rise" style={{ "--i": 3 }} aria-label="What happens after you submit">
                     <li>
@@ -199,7 +198,7 @@ export default function App() {
                   </ul>
                   <span className="t-caption save-state rise" style={{ "--i": 4 }} data-saved={savedAt ? "true" : "false"}>
                     <span className="save-state__dot" aria-hidden="true" />
-                    {savedAt ? `Draft saved ${savedAt}` : "Drafts save as you type"}
+                    {savedAt ? `Draft saved ${savedAt}` : "Saves as you type"}
                   </span>
                 </div>
                 <div className="submit-layout">

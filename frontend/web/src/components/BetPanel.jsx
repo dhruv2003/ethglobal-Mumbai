@@ -325,11 +325,7 @@ export function SamplePool({ title, total, selections, shares }) {
         ))}
       </motion.div>
       <p className="t-caption m0">
-        Demo data shown because live data could not be reached, so betting is off.{" "}
-        <Link to="/organizer" className="link">
-          Create a real tournament
-        </Link>{" "}
-        to bet with FILTER.
+        Live data is unavailable, so this is demo data and betting is off.
       </p>
     </Card>
   );

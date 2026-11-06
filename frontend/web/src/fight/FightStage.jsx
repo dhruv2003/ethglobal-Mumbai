@@ -266,19 +266,15 @@ export function FightStage({ match, state, event, ms, reduced = false, captions 
         )}
       </div>
       <div className="fs-locations">
-        <div className="fs-locations__heading">
-          <span className="t-label">Mumbai stages</span>
-          <span className="t-caption">{scenery.detail}</span>
-        </div>
-        <div className="fs-locations__options" role="group" aria-label="Arena scenery">
+        <span className="t-label fs-locations__heading">Stage</span>
+        <div className="fs-locations__options" role="group" aria-label="Stage">
           {MUMBAI_SCENES.map((scene) => (
-            <button key={scene.id} type="button" aria-pressed={scenery.id === scene.id} onClick={() => setSceneChoice({ key: sceneKey, scene })}>
+            <button key={scene.id} type="button" aria-pressed={scenery.id === scene.id} title={scene.detail} onClick={() => setSceneChoice({ key: sceneKey, scene })}>
               <span className="fs-locations__swatch" style={{ background: scene.color }} aria-hidden="true" />
               {scene.name}
             </button>
           ))}
         </div>
-        <p className="fs-locations__cast t-caption">Local legends: <b>{traits.a.archetypeName}</b> <span aria-hidden="true">×</span><span className="sr-only">versus</span> <b>{traits.b.archetypeName}</b></p>
       </div>
       <p className="sr-only" aria-live="polite">{cap.who ? `${cap.who}: ${cap.text}` : cap.text}</p>
     </div>

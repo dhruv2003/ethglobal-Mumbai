@@ -32,7 +32,7 @@ const when = (iso) => new Date(iso).toLocaleString([], { month: "short", day: "n
 function TournamentCard({ t }) {
   const open = openPools(t).length > 0;
   const label = open ? POOL_LABEL.OPEN : PHASE_LABEL[t.phase];
-  const cta = t.demo ? "See the demo" : open ? "Bet now" : t.phase === "live" ? "Watch" : t.phase === "upcoming" ? "See the bracket" : "See the results";
+  const cta = t.demo ? "View demo" : open ? "Bet now" : t.phase === "live" ? "Watch" : t.phase === "upcoming" ? "View bracket" : "View results";
   return (
     <motion.div variants={fadeUp} layout>
       <Tilt className="tcard-tilt" sheen={false} max={4}>
@@ -49,8 +49,7 @@ function TournamentCard({ t }) {
             </div>
             <h2 className="t-heading m0">{t.title}</h2>
             <p className="t-caption m0 t-num">
-              {t.track} · {t.count} projects · {when(t.startsAt)}
-              {t.poolTotal ? ` · ${t.poolTotal.toLocaleString("en-US")} FILTER staked` : ""}
+              {t.count} projects · {when(t.startsAt)}
             </p>
             <span className="tcard__cta t-label">{cta} →</span>
           </div>
@@ -130,13 +129,15 @@ export function TournamentsPage() {
     <div className="stack stack--page">
       <header className="intro intro--row">
         <div className="intro">
-          <span className="eyebrow rise">Pick your fight night</span>
           <h1 className="t-display-lg m0 rise" style={{ "--i": 1 }}>
-            <span className="hl hl--crush">Tournaments</span>
+            Tournaments
           </h1>
+          <p className="t-body m0 muted rise" style={{ "--i": 2 }}>
+            Watch the brackets and bet on who wins.
+          </p>
         </div>
-        <Link className="btn btn--oracle" to="/arena">
-          Enter the arena
+        <Link className="btn btn--secondary" to="/arena">
+          Open the arena map
         </Link>
       </header>
       <OpenForBetting tournaments={real} loaded={chainList != null} failed={!!error && chainList == null} />
@@ -169,11 +170,11 @@ export function TournamentsPage() {
 
 function BracketMatch({ t, match }) {
   const label = isMatchOpen(t, match) ? POOL_LABEL.OPEN : MATCH_LABEL[match.status];
-  const name = (p) => (p == null ? "To be decided" : t.projects[p].name);
+  const name = (p) => (p == null ? "TBD" : t.projects[p].name);
   const line = (p) => (
     <span className={`bracket-line ${match.winner != null && match.winner === p ? "is-winner" : ""} ${match.winner != null && match.winner !== p ? "is-out" : ""}`}>
       {p != null ? <PixelFighter project={t.projects[p]} scale={1.2} label="" /> : <span className="bracket-line__empty" aria-hidden="true" />}
-      <span className="t-label">{name(p)}</span>
+      <span className={`t-label ${p == null ? "muted" : ""}`}>{name(p)}</span>
       {match.winner != null && match.winner === p ? <span className="bracket-line__tick" aria-label="winner">★</span> : null}
     </span>
   );
@@ -236,13 +237,12 @@ function ChampionBanner({ t }) {
 function RulesCard() {
   return (
     <Card variant="surface" className="stack">
-      <h2 className="t-heading m0">How it works</h2>
+      <h2 className="t-heading m0">Rules</h2>
       <ul className="rules t-body">
-        <li>Five rounds, three judges. Product 40%, engineering 20%, innovation 20%, feasibility 10%, defense 10%.</li>
-        <li>A tie gets one tie-break round. A second tie goes to a human organizer.</li>
-        <li>Each pool pays 70% to winning bettors, 20% to the winning project and 10% to the platform.</li>
-        <li>Pools with bets on only one side, or none on the winner, are refunded.</li>
-        <li>Tournament bets and match bets are separate pools.</li>
+        <li>Three judges score five rounds: product 40%, engineering 20%, innovation 20%, feasibility 10%, defense 10%.</li>
+        <li>Ties go to a tie-break round, then to an organizer.</li>
+        <li>Pools pay 70% to winning bettors, 20% to the winning project, 10% to the platform.</li>
+        <li>One-sided pools are refunded.</li>
       </ul>
     </Card>
   );
@@ -298,7 +298,7 @@ function Lobby({ t, wallet }) {
           </span>
           <h1 className="t-display-lg m0 rise">{t.title}</h1>
           <p className="t-body m0 muted">
-            {t.track} · {t.count} projects · starts {when(t.startsAt)}
+            {t.track} · {t.count} projects · {t.phase === "upcoming" ? "starts" : "started"} {when(t.startsAt)}
           </p>
         </div>
         {countdown && countdown.left > 0 && (
@@ -313,9 +313,9 @@ function Lobby({ t, wallet }) {
 
       {!t.demo && !t.frozen && t.phase !== "canceled" ? (
         <Card variant="surface" className="empty">
-          <span className="t-body muted">This tournament isn't frozen yet, so its pool isn't open.</span>
+          <span className="t-body muted">Betting opens once the organizer locks the bracket.</span>
           <Link className="btn btn--secondary btn--sm" to="/organizer">
-            Open organizer console
+            Organizer tools
           </Link>
         </Card>
       ) : (
