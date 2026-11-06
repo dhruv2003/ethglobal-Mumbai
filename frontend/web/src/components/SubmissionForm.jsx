@@ -301,14 +301,14 @@ function ArenaStep({ tracks }) {
           {selected.length} of {EVENT.maxTracks} tracks
         </span>
       </legend>
-      <div className="tcards" id={fieldId("tracks.selected")} tabIndex={-1}>
-        <div className="tcard tcard--locked" aria-label="Overall finalist, always entered">
-          <span className="tcard__mark" aria-hidden="true">★</span>
-          <span className="tcard__text">
-            <span className="tcard__name">Overall finalist</span>
-            <span className="tcard__prize">Every project, automatically</span>
+      <div className="trackcards" id={fieldId("tracks.selected")} tabIndex={-1}>
+        <div className="trackcard trackcard--locked" aria-label="Overall finalist, always entered">
+          <span className="trackcard__mark" aria-hidden="true">★</span>
+          <span className="trackcard__text">
+            <span className="trackcard__name">Overall finalist</span>
+            <span className="trackcard__prize">Every project, automatically</span>
           </span>
-          <span className="tcard__state">Entered</span>
+          <span className="trackcard__state">Entered</span>
         </div>
         {tracks.map((t, i) => {
           const on = selected.includes(t.id);
@@ -317,25 +317,25 @@ function ArenaStep({ tracks }) {
             <motion.button
               key={t.id}
               type="button"
-              className={`tcard tcard--${TRACK_TONES[i % TRACK_TONES.length]} ${on ? "tcard--on" : ""}`}
+              className={`trackcard trackcard--${TRACK_TONES[i % TRACK_TONES.length]} ${on ? "trackcard--on" : ""}`}
               aria-pressed={on}
               aria-disabled={blocked}
               onClick={() => toggle(t.id)}
               whileTap={blocked ? { x: [0, -4, 4, -2, 0] } : { scale: 0.97 }}
               transition={bouncy}
             >
-              <span className="tcard__mark" aria-hidden="true">
+              <span className="trackcard__mark" aria-hidden="true">
                 <AnimatePresence mode="wait" initial={false}>
                   <motion.span key={on ? "on" : "off"} initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} transition={bouncy}>
                     {on ? "✓" : "+"}
                   </motion.span>
                 </AnimatePresence>
               </span>
-              <span className="tcard__text">
-                <span className="tcard__name">{t.name}</span>
-                <span className="tcard__prize">{t.prize ? `Prize · ${t.prize}` : "Sponsor track"}</span>
+              <span className="trackcard__text">
+                <span className="trackcard__name">{t.name}</span>
+                <span className="trackcard__prize">{t.prize ? `Prize · ${t.prize}` : "Sponsor track"}</span>
               </span>
-              <span className="tcard__state">{on ? "Entered" : blocked ? "Max 3" : "Enter"}</span>
+              <span className="trackcard__state">{on ? "Entered" : blocked ? "Max 3" : "Enter"}</span>
             </motion.button>
           );
         })}
