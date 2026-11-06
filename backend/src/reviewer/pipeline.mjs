@@ -185,7 +185,8 @@ async function execute(projectId, judge) {
   // Demo video: independent of the repo, so it runs even if the clone failed.
   // 1) keep our own copy (uploads, Loom, direct files, HLS), 2) transcribe it.
   let transcript = null;
-  if (!sub.demoVideoUrl) skip("demo", "Skipped: no demo video.");
+  const shots = sub.demoImages?.length ?? 0;
+  if (!sub.demoVideoUrl) skip("demo", shots ? `No video: the team added ${shots} screenshot${shots === 1 ? "" : "s"} instead.` : "Skipped: no demo video.");
   else {
     const s = step("demo");
     s.status = "running";

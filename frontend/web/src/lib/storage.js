@@ -43,7 +43,10 @@ export function toPayload(data, { ownerWallet, chainId }) {
     },
     repoUrl: data.code.repoUrl.trim().replace(/\/$/, ""),
     // An uploaded file is sent as its server ref ("upload:<sha256>.<ext>"), so the signature covers it.
-    demoVideoUrl: data.demo.source === "upload" && data.demo.upload?.ref ? data.demo.upload.ref : data.demo.videoUrl.trim(),
+    demoVideoUrl:
+      data.demo.source === "images" ? "" : data.demo.source === "upload" && data.demo.upload?.ref ? data.demo.upload.ref : data.demo.videoUrl.trim(),
+    // Screenshots instead of a video: server refs ("upload:<sha256>.png"), covered by the signature.
+    demoImages: data.demo.source === "images" ? (data.demo.images ?? []).map((i) => i.ref).filter(Boolean) : [],
     liveUrl: (data.demo.liveUrl ?? "").trim() || null,
     tracks: [...data.tracks.selected],
     fighterSeed: data.fighter?.seed ?? null,
@@ -65,6 +68,7 @@ export async function submissionDigest(p) {
     project: { name: p.project?.name ?? "", pitch: p.project?.pitch ?? "", description: p.project?.description ?? "" },
     repoUrl: p.repoUrl ?? "",
     demoVideoUrl: p.demoVideoUrl ?? "",
+    demoImages: Array.isArray(p.demoImages) ? p.demoImages : [],
     liveUrl: p.liveUrl ?? null,
     tracks: p.tracks ?? [],
     ownerWallet: String(p.ownerWallet ?? "").toLowerCase(),

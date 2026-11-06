@@ -8,6 +8,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { uploadVideo, VIDEO_MAX_MB } from "../lib/api.js";
 import { embedUrl, fmtBytes, fmtSeconds, linkPlan } from "../lib/video.js";
 import { fieldId, Msg, useForm } from "./fields.jsx";
+import { DemoImagesField } from "./DemoImagesField.jsx";
 
 const OK_TYPE = /^video\/(mp4|webm|quicktime|x-m4v)$/;
 const OK_NAME = /\.(mp4|mov|webm|m4v)$/i;
@@ -71,13 +72,16 @@ export function DemoVideoField() {
   return (
     <div className="field demo-field">
       <div className="demo-field__head">
-        <label htmlFor={source === "link" ? id : `${id}-file`}>Demo video</label>
-        <div className="chips chips--tight" role="group" aria-label="How to add your demo video">
+        <label htmlFor={source === "link" ? id : source === "images" ? `${id}-images` : `${id}-file`}>Demo</label>
+        <div className="chips chips--tight" role="group" aria-label="How to add your demo">
           <button type="button" className="chip" aria-pressed={source === "link"} onClick={() => choose("link")}>
             Paste a link
           </button>
           <button type="button" className="chip" aria-pressed={source === "upload"} onClick={() => choose("upload")}>
-            Upload a file
+            Upload a video
+          </button>
+          <button type="button" className="chip" aria-pressed={source === "images"} onClick={() => choose("images")}>
+            No video? Screenshots
           </button>
         </div>
       </div>
@@ -106,6 +110,11 @@ export function DemoVideoField() {
               </motion.div>
             )}
           </AnimatePresence>
+        </>
+      ) : source === "images" ? (
+        <>
+          <DemoImagesField id={`${id}-images`} error={error} onProblem={setProblem} />
+          <Msg id={`${id}-images-msg`} error={error} help="Show the main screens in the order a user sees them. Without a video we can't replay your demo, so the live test checks your main flows instead." />
         </>
       ) : (
         <>

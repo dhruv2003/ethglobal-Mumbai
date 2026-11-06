@@ -5,9 +5,10 @@ export function emptyForm() {
     team: { name: "" },
     project: { name: "", pitch: "", description: "" },
     code: { repoUrl: "" },
-    // source: "link" (paste a URL) or "upload" (a file from this computer, stored on our server).
+    // source: "link" (paste a URL), "upload" (a video file) or "images" (screenshots, no video).
     // upload: { ref, url, name, bytes, seconds } once the file is on the server.
-    demo: { videoUrl: "", liveUrl: "", source: "link", upload: null },
+    // images: [{ ref, url, name, bytes }] screenshots on the server, in order.
+    demo: { videoUrl: "", liveUrl: "", source: "link", upload: null, images: [] },
     tracks: { selected: [] },
     // Stable look for this draft's fighter, so the preview matches the published card.
     fighter: { seed: newSeed() },

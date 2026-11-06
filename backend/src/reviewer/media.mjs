@@ -26,9 +26,20 @@ export const VIDEO_MAX = 300 * 1024 * 1024;
 const MAX_SEGMENTS = 3000;
 
 export const UPLOAD_DIR = path.join(DATA_DIR, "uploads");
-export const UPLOAD_FILE = /^[0-9a-f]{64}\.(mp4|mov|webm)$/;
+export const UPLOAD_FILE = /^[0-9a-f]{64}\.(mp4|mov|webm|png|jpg|webp)$/;
 export const UPLOAD_REF = /^upload:([0-9a-f]{64}\.(?:mp4|mov|webm))$/;
-export const MIME = { mp4: "video/mp4", mov: "video/quicktime", webm: "video/webm" };
+export const IMAGE_REF = /^upload:([0-9a-f]{64}\.(?:png|jpg|webp))$/;
+export const IMAGE_MAX = 10 * 1024 * 1024;
+export const MAX_IMAGES = 8;
+export const MIME = { mp4: "video/mp4", mov: "video/quicktime", webm: "video/webm", png: "image/png", jpg: "image/jpeg", webp: "image/webp" };
+
+/** PNG, JPEG or WebP by magic bytes. Never SVG (it can carry script). */
+export function sniffImage(buf) {
+  if (buf.length >= 8 && buf.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))) return "png";
+  if (buf.length >= 3 && buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) return "jpg";
+  if (buf.length >= 12 && buf.subarray(0, 4).toString("latin1") === "RIFF" && buf.subarray(8, 12).toString("latin1") === "WEBP") return "webp";
+  return null;
+}
 
 /** What is this, by its first bytes? Only these ever reach ffmpeg. */
 export function sniffVideo(buf) {
@@ -353,6 +364,29 @@ export async function storeUpload(stream, { declaredBytes = 0 } = {}) {
     else fs.renameSync(tmp, full);
     fs.utimesSync(full, new Date(), new Date()); // fresh again for the clean-up clock
     return { file, bytes: c.bytes(), seconds };
+  } catch (e) {
+    fs.rmSync(tmp, { force: true });
+    throw e;
+  }
+}
+
+/** Store an uploaded screenshot (PNG, JPEG or WebP, max 10 MB). Returns { file, bytes }. */
+export async function storeImageUpload(stream) {
+  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+  const tmp = path.join(UPLOAD_DIR, `.part-${crypto.randomUUID()}`);
+  const hash = crypto.createHash("sha256");
+  const c = capped(IMAGE_MAX, hash);
+  try {
+    await pump(stream, c, fs.createWriteStream(tmp));
+    if (c.bytes() < 100) throw Object.assign(new Error("That image is empty."), { status: 400 });
+    const ext = sniffImage(head(tmp, 16));
+    if (!ext) throw Object.assign(new Error("Upload a PNG, JPEG or WebP image."), { status: 415 });
+    const file = `${hash.digest("hex")}.${ext}`;
+    const full = path.join(UPLOAD_DIR, file);
+    if (fs.existsSync(full)) fs.rmSync(tmp, { force: true });
+    else fs.renameSync(tmp, full);
+    fs.utimesSync(full, new Date(), new Date());
+    return { file, bytes: c.bytes() };
   } catch (e) {
     fs.rmSync(tmp, { force: true });
     throw e;

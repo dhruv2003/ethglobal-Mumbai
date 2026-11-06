@@ -7,7 +7,7 @@ import path from "node:path";
 import { Readable } from "node:stream";
 
 process.env.ARENA_DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), "arena-media-test-"));
-const { classifyVideo, cleanUploads, parsePlaylist, saveDemoVideo, sniffVideo, storeUpload, UPLOAD_DIR, UPLOAD_REF } = await import("../src/reviewer/media.mjs");
+const { classifyVideo, cleanUploads, IMAGE_REF, parsePlaylist, saveDemoVideo, sniffImage, sniffVideo, storeImageUpload, storeUpload, UPLOAD_DIR, UPLOAD_REF } = await import("../src/reviewer/media.mjs");
 after(() => fs.rmSync(process.env.ARENA_DATA_DIR, { recursive: true, force: true }));
 
 /** A real 2-second MP4 made by ffmpeg, so probing is tested for real. */
@@ -85,4 +85,18 @@ test("unused uploads are cleaned up after a day; submitted ones are kept", () =>
 
 test("embed-only links are not downloaded", async () => {
   await assert.rejects(saveDemoVideo("https://youtu.be/abc", path.join(process.env.ARENA_DATA_DIR, "media", "p2")), (e) => e.skip === true);
+});
+
+test("screenshots: PNG, JPEG and WebP are stored by hash; SVG and junk are refused", async () => {
+  const png = path.join(process.env.ARENA_DATA_DIR, "shot.png");
+  execFileSync("ffmpeg", ["-v", "error", "-y", "-f", "lavfi", "-i", "testsrc=size=64x48", "-frames:v", "1", png]);
+  const up = await storeImageUpload(Readable.from([fs.readFileSync(png)]));
+  assert.match(up.file, /^[0-9a-f]{64}\.png$/);
+  assert.ok(IMAGE_REF.test(`upload:${up.file}`));
+  assert.ok(!UPLOAD_REF.test(`upload:${up.file}`), "an image is never accepted as the demo video");
+  assert.equal(sniffImage(Buffer.from([0xff, 0xd8, 0xff, 0xe0])), "jpg");
+  assert.equal(sniffImage(Buffer.from("RIFF\0\0\0\0WEBPVP8 ")), "webp");
+  const svg = Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>${" ".repeat(200)}`);
+  await assert.rejects(storeImageUpload(Readable.from([svg])), (e) => e.status === 415);
+  await assert.rejects(storeImageUpload(Readable.from([Buffer.alloc(11 * 1024 * 1024, 1)])), (e) => e.status === 413);
 });

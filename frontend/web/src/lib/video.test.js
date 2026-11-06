@@ -46,3 +46,24 @@ describe("uploaded demo video in the form", () => {
     expect(toPayload(d, { ownerWallet: "0x1", chainId: 1 }).demoVideoUrl).toBe("https://youtu.be/old");
   });
 });
+
+describe("screenshots instead of a video", () => {
+  const IMG = `upload:${"cd".repeat(32)}.png`;
+  const base = () => setIn(emptyForm(), "demo.source", "images");
+  it("needs at least one uploaded screenshot", () => {
+    expect(validate(base()).errors["demo.videoUrl"]).toMatch(/screenshot/);
+    expect(validate(setIn(base(), "demo.images", [{ ref: IMG }])).errors["demo.videoUrl"]).toBeUndefined();
+  });
+  it("sends the screenshot refs and no video", () => {
+    let d = setIn(base(), "demo.images", [{ ref: IMG }]);
+    d = setIn(d, "demo.videoUrl", "https://youtu.be/old");
+    const p = toPayload(d, { ownerWallet: "0x1", chainId: 1 });
+    expect(p.demoVideoUrl).toBe("");
+    expect(p.demoImages).toEqual([IMG]);
+    expect(toPayload(setIn(d, "demo.source", "link"), { ownerWallet: "0x1", chainId: 1 }).demoImages).toEqual([]);
+  });
+  it("turns image refs into URLs, and nothing else", () => {
+    expect(uploadUrl(IMG)).toBe(`/api/uploads/${"cd".repeat(32)}.png`);
+    expect(uploadUrl(`upload:${"cd".repeat(32)}.svg`)).toBeNull();
+  });
+});

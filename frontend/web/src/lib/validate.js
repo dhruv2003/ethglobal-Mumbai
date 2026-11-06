@@ -44,7 +44,11 @@ export function validate(d, { walletAddress = "" } = {}) {
   if (!repo) errors["code.repoUrl"] = "Add your public GitHub repository.";
   else if (!GITHUB_REPO.test(repo)) errors["code.repoUrl"] = "Use a GitHub repo link, like https://github.com/team/project.";
 
-  if (d.demo.source === "upload") {
+  if (d.demo.source === "images") {
+    const n = (d.demo.images ?? []).filter((i) => i?.ref).length;
+    if (!n) errors["demo.videoUrl"] = "Add at least one screenshot, or switch to a video.";
+    else if (n > 8) errors["demo.videoUrl"] = "Keep it to 8 screenshots.";
+  } else if (d.demo.source === "upload") {
     if (!d.demo.upload?.ref) errors["demo.videoUrl"] = "Upload your demo video, or switch to a link.";
   } else {
     const video = d.demo.videoUrl.trim();

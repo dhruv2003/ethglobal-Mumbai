@@ -7,6 +7,7 @@ import goHealthMe from "@fixtures/go-health-me/submission.json";
 import goHealthMeSource from "@fixtures/go-health-me/source.json";
 import { api } from "./api.js";
 import { listSubmissions } from "./storage.js";
+import { uploadUrl } from "./video.js";
 
 /*
  * Project record (what the DB will store per project):
@@ -51,6 +52,8 @@ function fromSubmission(r) {
     videoUrl: r.demoVideoUrl ?? "",
     // Our server's copy of the demo video: { saved, url, seconds, bytes, source } or { saved: false, reason }.
     savedVideo: r.video ?? null,
+    // Screenshots instead of (or as well as) a video: playable URLs, in the team's order.
+    demoImages: (r.demoImages ?? []).map(uploadUrl).filter(Boolean),
     liveUrl: r.liveUrl ?? null,
     savedLocallyOnly: Boolean(r.savedLocallyOnly),
     tracks: r.tracks ?? [],

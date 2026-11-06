@@ -18,6 +18,7 @@
  *   GET    /api/projects/:id/live      live test results (+ /live/files/<device>/<file> for media)
  *   DELETE /api/projects/:id           delete a submitted project and its data   (organizer)
  *   POST   /api/uploads/video          upload a demo video file (raw body; MP4, MOV or WebM, max 300 MB)
+ *   POST   /api/uploads/image          upload a demo screenshot (raw body; PNG, JPEG or WebP, max 10 MB)
  *   GET    /api/uploads/:file          play an uploaded video
  *   GET    /api/projects/:id/video     our saved copy of the demo video (+ /video/file to play it)
  *   POST   /api/projects/:id/reviews/public   anyone: re-judge a sample project on 0G (rate limited, capped per day)
@@ -35,7 +36,7 @@ import { loadProject } from "./projects.mjs";
 import fs from "node:fs";
 import path from "node:path";
 import { deleteProject, dossiers, judges, liveDir, mediaDir, pipelines, reviews, submissions, videos } from "./store.mjs";
-import { cleanUploads, MIME, storeUpload, UPLOAD_DIR, UPLOAD_FILE, UPLOAD_REF, VIDEO_MAX } from "./reviewer/media.mjs";
+import { cleanUploads, IMAGE_MAX, IMAGE_REF, MAX_IMAGES, MIME, storeImageUpload, storeUpload, UPLOAD_DIR, UPLOAD_FILE, UPLOAD_REF, VIDEO_MAX } from "./reviewer/media.mjs";
 import { dequeue, enqueue, isRunning, queueLength, queuePosition, resumeQueue } from "./reviewer/pipeline.mjs";
 import { checkSubmissionSignature, rateLimit, requireOrganizer } from "./security.mjs";
 
@@ -190,6 +191,18 @@ function publicVideo(id) {
   return { saved: true, url: `/api/projects/${encodeURIComponent(id)}/video/file`, seconds: v.seconds, bytes: v.bytes, source: v.source };
 }
 
+/** A demo needs a video or at least one screenshot. Returns an error string or null. */
+function checkDemo(body) {
+  const imgs = body.demoImages ?? [];
+  if (!Array.isArray(imgs) || imgs.length > MAX_IMAGES) return `Add up to ${MAX_IMAGES} screenshots.`;
+  for (const ref of imgs) {
+    const m = IMAGE_REF.exec(String(ref));
+    if (!m || !fs.existsSync(path.join(UPLOAD_DIR, m[1]))) return "One of the screenshots isn't on the server any more. Upload it again.";
+  }
+  if (!body.demoVideoUrl) return imgs.length ? null : "Add a demo video or some screenshots.";
+  return checkDemoVideo(body.demoVideoUrl);
+}
+
 /** Is this an acceptable demo video value? Returns an error string or null. */
 function checkDemoVideo(v) {
   if (!v) return "Add a demo video.";
@@ -209,7 +222,7 @@ router.get("/submissions", (req, res) => res.json(submissions.list().map(publicS
 router.post("/submissions", rateLimit({ max: 5, windowMs: 60 * 60 * 1000 }), async (req, res) => {
   const body = req.body ?? {};
   if (!body.project?.name || !body.repoUrl || !body.ownerWallet) return res.status(400).json({ error: "Missing project name, repo or owner wallet." });
-  const videoError = checkDemoVideo(body.demoVideoUrl);
+  const videoError = checkDemo(body);
   if (videoError) return res.status(400).json({ error: videoError });
   const sigError = await checkSubmissionSignature(body, {
     seen: (sig) => submissions.list().some((s) => String(s.auth?.signature ?? "").toLowerCase() === sig),
@@ -264,6 +277,19 @@ router.post("/uploads/video", rateLimit({ max: 10, windowMs: 60 * 60 * 1000, mes
   }
 });
 
+router.post("/uploads/image", rateLimit({ max: 60, windowMs: 60 * 60 * 1000, message: "Too many uploads from here. Try again later." }), async (req, res) => {
+  const type = String(req.headers["content-type"] ?? "").split(";")[0].trim().toLowerCase();
+  if (!["image/png", "image/jpeg", "image/webp", "application/octet-stream"].includes(type)) return res.status(415).json({ error: "Upload a PNG, JPEG or WebP image." });
+  if (Number(req.headers["content-length"] ?? 0) > IMAGE_MAX) return res.status(413).json({ error: "That image is over 10 MB." });
+  try {
+    const up = await storeImageUpload(req);
+    res.status(201).json({ ref: `upload:${up.file}`, url: `/api/uploads/${up.file}`, bytes: up.bytes });
+  } catch (e) {
+    if (!res.headersSent) res.status(e.status ?? 500).json({ error: e.status ? e.message : "The upload failed. Try again." });
+    req.resume();
+  }
+});
+
 const sendVideo = (res, full, ext) =>
   res.sendFile(full, { headers: { "content-type": MIME[ext], "x-content-type-options": "nosniff", "content-disposition": "inline", "cache-control": "private, max-age=3600" } });
 
@@ -286,7 +312,13 @@ router.get("/projects/:id/video/file", (req, res) => {
 });
 
 // Uploads nobody submitted are removed after a day.
-const referencedUploads = () => new Set(submissions.list().map((s) => UPLOAD_REF.exec(s.demoVideoUrl ?? "")?.[1]).filter(Boolean));
+const referencedUploads = () =>
+  new Set(
+    submissions
+      .list()
+      .flatMap((s) => [UPLOAD_REF.exec(s.demoVideoUrl ?? "")?.[1], ...(s.demoImages ?? []).map((r) => IMAGE_REF.exec(String(r))?.[1])])
+      .filter(Boolean),
+  );
 if (process.env.ARENA_SERVER === "1") {
   const sweep = () => {
     try {

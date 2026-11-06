@@ -52,7 +52,41 @@ function useSavedVideo(project) {
   return { saved, waiting };
 }
 
+/** Screenshots the team added instead of a video: one big, thumbnails to switch. */
+function Gallery({ name, images }) {
+  const [i, setI] = useState(0);
+  const cur = images[Math.min(i, images.length - 1)];
+  return (
+    <section className="card stack rise" style={{ "--i": 2 }} aria-label="Demo screenshots">
+      <div className="demo-src">
+        <span className="t-label">Demo screenshots</span>
+        <span className="t-caption t-num">
+          {i + 1} of {images.length}
+        </span>
+      </div>
+      <a className="gallery__main" href={cur} target="_blank" rel="noopener noreferrer" aria-label={`Open screenshot ${i + 1} full size`}>
+        <img src={cur} alt={`${name} screenshot ${i + 1}`} />
+      </a>
+      {images.length > 1 && (
+        <div className="gallery__thumbs" role="group" aria-label="Pick a screenshot">
+          {images.map((src, n) => (
+            <button key={src} type="button" className="gallery__thumb" aria-pressed={n === i} onClick={() => setI(n)} aria-label={`Show screenshot ${n + 1}`}>
+              <img src={src} alt="" loading="lazy" />
+            </button>
+          ))}
+        </div>
+      )}
+      <span className="t-caption">No demo video: the team added screenshots instead.</span>
+    </section>
+  );
+}
+
 export function DemoVideo({ project: p }) {
+  if (!p.videoUrl && p.demoImages?.length) return <Gallery name={p.name} images={p.demoImages} />;
+  return <VideoPlayer project={p} />;
+}
+
+function VideoPlayer({ project: p }) {
   const { saved, waiting } = useSavedVideo(p);
   const uploaded = isUploadRef(p.videoUrl);
   const embed = uploaded ? null : embedUrl(p.videoUrl);
