@@ -2,26 +2,26 @@
  * /arena: one 8-bit world under the header, painted in the site's own palette. Each
  * tournament is a walled area with its track and prize on a sticker plaque, and every
  * ring in it opens that fight. Original art, drawn in the same pixel style as the
- * fighters. Sample tournaments are labelled; real ones from the chain appear first.
+ * fighters. Everything on the map is read from the chain.
  */
-import { useEffect, useMemo, useState } from "react";
-import { motion, useReducedMotion } from "motion/react";
+import { useMemo } from "react";
+import { motion } from "motion/react";
 import { StatusPill } from "@ds/ui.jsx";
-import { listTournaments, usePoll } from "../lib/chain.js";
-import { MATCH_LABEL, MOCK_TOURNAMENTS, PHASE_LABEL } from "../lib/mockArena.js";
+import { usePoll } from "../lib/chain.js";
+import { loadTournaments } from "../lib/arena.js";
+import { MATCH_LABEL, PHASE_LABEL } from "../lib/labels.js";
+import { POOL_LABEL } from "../lib/pools.js";
 import { Link } from "../lib/router.jsx";
-import { viewOfChain } from "../lib/tournamentView.js";
+import { isMatchOpen, openPools } from "../lib/tournamentView.js";
 import { AerialRing } from "./AerialRing.jsx";
 import { bouncy, stagger } from "./fx.jsx";
 
-const TICK_MS = 4000;
-
-/** Sample live matches seal a round every few seconds, then start over. */
-function withLiveHealth(match, tick) {
-  if (match.status !== "live" || match.healthA === undefined) return match;
-  const sealed = Math.min((match.index * 2 + tick) % 7, 5);
-  const hit = (side) => Array.from({ length: sealed }, (_, r) => 3 + ((match.index * 7 + r * 5 + side * 11) % 9)).reduce((sum, v) => sum + v, 0);
-  return { ...match, healthA: 100 - hit(0), healthB: 100 - hit(1) };
+/** Health bar from the published scores: 20% floor plus 0.008% per score hundredth, as the fight player draws it. */
+function withHealth(match) {
+  if (match.healthA !== undefined) return match; // demo matches carry their own bars
+  if (match.status !== "finalized" && match.status !== "review") return match;
+  const hp = (score) => 20 + score * 0.008;
+  return { ...match, healthA: hp(match.scoreA ?? 0), healthB: hp(match.scoreB ?? 0) };
 }
 
 /** Which rings stand in an area: the round being fought, or the last one played. */
@@ -80,7 +80,7 @@ function Sparkle({ tone, style }) {
 function Plot({ t, match }) {
   const a = t.projects[match.a];
   const b = t.projects[match.b];
-  const label = MATCH_LABEL[match.status];
+  const label = isMatchOpen(t, match) ? POOL_LABEL.OPEN : MATCH_LABEL[match.status];
   const winner = match.winner == null ? null : match.winner === match.a ? "a" : "b";
   const healthA = match.healthA ?? 100;
   const healthB = match.healthB ?? 100;
@@ -112,9 +112,9 @@ function Plot({ t, match }) {
   );
 }
 
-function District({ t, tick, size }) {
-  const label = PHASE_LABEL[t.phase];
-  const rings = useMemo(() => ringsFor(t).map((m) => withLiveHealth(m, tick)), [t, tick]);
+function District({ t, size }) {
+  const label = openPools(t).length ? POOL_LABEL.OPEN : PHASE_LABEL[t.phase];
+  const rings = useMemo(() => ringsFor(t).map(withHealth), [t]);
   const open = t.phase === "live";
   return (
     <motion.section className={`district district--${t.phase} ${size}`} aria-label={`${t.track}: ${label.word}`} variants={{ hidden: { opacity: 0, y: 30 }, show: { opacity: 1, y: 0, transition: bouncy } }}>
@@ -148,19 +148,9 @@ const SPARKLES = [
 ];
 
 export function ArenaPage() {
-  const reduced = useReducedMotion();
-  const [tick, setTick] = useState(0);
-  const { data: chainList } = usePoll(listTournaments, [], 20000);
-
-  // Changing what you look at never restarts a fight: this one clock drives every ring.
-  useEffect(() => {
-    if (reduced) return undefined;
-    const t = setInterval(() => setTick((v) => v + 1), TICK_MS);
-    return () => clearInterval(t);
-  }, [reduced]);
-
-  const real = useMemo(() => (chainList ?? []).map((t) => ({ ...viewOfChain(t), track: `Tournament #${t.id}`, prize: "On chain" })), [chainList]);
-  const live = [...real, ...MOCK_TOURNAMENTS].flatMap((t) => t.matches).filter((m) => m.status === "live").length;
+  const { data } = usePoll(loadTournaments, [], 15000);
+  const real = useMemo(() => (data ?? []).map((t) => ({ ...t, prize: t.demo ? t.prize : "On chain" })), [data]);
+  const open = real.flatMap((t) => openPools(t)).length;
 
   const sizeOf = (t) => (t.count >= 16 ? "district--wide" : t.count >= 8 ? "district--big" : "");
 
@@ -194,20 +184,21 @@ export function ArenaPage() {
           </span>
         </div>
         <div className="village__sign-right">
-          <StatusPill tone="live">
-            {live} {live === 1 ? "fight" : "fights"} live
-          </StatusPill>
-          <StatusPill tone="neutral">Sample fights</StatusPill>
+          {open ? (
+            <Link className="btn btn--secondary btn--sm" to="/tournaments">
+              {open} open for betting
+            </Link>
+          ) : (
+            <StatusPill tone="neutral">Nothing open for betting</StatusPill>
+          )}
         </div>
       </header>
 
       <motion.div className="village__map" variants={stagger(0.1)} initial="hidden" animate="show">
         {real.map((t) => (
-          <District key={t.id} t={t} tick={tick} size={sizeOf(t)} />
+          <District key={t.id} t={t} size={sizeOf(t)} />
         ))}
-        {MOCK_TOURNAMENTS.map((t) => (
-          <District key={t.id} t={t} tick={tick} size={sizeOf(t)} />
-        ))}
+        {data != null && !real.length && <p className="plot__empty m0">No tournaments yet. Create one in the organizer console.</p>}
       </motion.div>
     </section>
   );

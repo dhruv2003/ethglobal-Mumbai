@@ -1,6 +1,6 @@
 /*
- * SAMPLE DATA for /tournaments and /arena, shown until the backend serves real
- * tournaments. Every page that uses it labels it as a sample.
+ * DEMO DATA, used only as a labelled fallback when live data (chain, backend) cannot be reached. Never mixed with real data;
+ * betting and every money action stay off for it.
  */
 import { bracketRounds, feeders, matchRound, roundName } from "./pools.js";
 
@@ -67,6 +67,7 @@ function buildMatches(slug, count, phase) {
 const inHours = (h) => new Date(Date.now() + h * 3600 * 1000).toISOString();
 
 const make = (slug, title, track, prize, count, phase, startHours, poolTotal) => ({
+  demo: true,
   mock: true,
   id: slug,
   title,
@@ -92,17 +93,3 @@ export const MOCK_TOURNAMENTS = [
 
 export const findMockTournament = (id) => MOCK_TOURNAMENTS.find((t) => t.id === id) ?? null;
 
-export const PHASE_LABEL = {
-  live: { tone: "live", word: "Live" },
-  upcoming: { tone: "neutral", word: "Upcoming" },
-  completed: { tone: "success", word: "Completed" },
-  canceled: { tone: "danger", word: "Canceled" },
-};
-
-export const MATCH_LABEL = {
-  scheduled: { tone: "neutral", word: "Scheduled" },
-  live: { tone: "live", word: "Live" },
-  review: { tone: "reward", word: "Awaiting organizer" },
-  finalized: { tone: "success", word: "Finalized" },
-  void: { tone: "danger", word: "Void" },
-};

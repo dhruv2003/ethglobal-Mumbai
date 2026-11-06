@@ -1,7 +1,7 @@
 /*
- * /organizer: run a real tournament on chain. Roles, create, freeze, open matches,
- * publish scores, decide double ties, cancel. Every rule is enforced by the contract;
- * this page only makes the calls. PRD UI-12.
+ * /organizer: run a real tournament on chain. Roles, create, pick real submitted projects and
+ * freeze, open matches, run each fight on 0G, publish its scores, decide double ties, cancel.
+ * Every rule is enforced by the contract; this page only makes the calls. PRD UI-12.
  */
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
@@ -9,7 +9,9 @@ import { isAddress, keccak256, stringToHex } from "viem";
 import { Button, Card, Chip, Input, StatusPill } from "@ds/ui.jsx";
 import { chainNow, formatAmount, listTournaments, manager, read, readTournament, toUnits, usePoll, useToken, useTx } from "../lib/chain.js";
 import { bracketRounds, parseScore } from "../lib/pools.js";
-import { MATCH_LABEL, PHASE_LABEL } from "../lib/mockArena.js";
+import { MATCH_LABEL, PHASE_LABEL } from "../lib/labels.js";
+import { api, organizerKey } from "../lib/api.js";
+import { getBracket, matchmake, registerBracket, runFight } from "../lib/arena.js";
 import { Link } from "../lib/router.jsx";
 import { viewOfChain } from "../lib/tournamentView.js";
 import { AddressLink, TxStatus, WalletGate } from "./ChainBits.jsx";
@@ -18,7 +20,32 @@ import { fadeUp, stagger } from "./fx.jsx";
 const hash = (value) => keccak256(stringToHex(JSON.stringify(value)));
 const MINUTE = 60n;
 const DAY = 86400n;
-const ROUNDS = { 4: 2n, 8: 3n, 16: 4n };
+const ROUNDS = { 2: 1n, 4: 2n, 8: 3n, 16: 4n };
+
+/** The backend (bracket registration, running fights) takes the same organizer key as the judges page. */
+function BackendKey() {
+  const [key, setKey] = useState(organizerKey.get());
+  return (
+    <Card className="stack">
+      <h2 className="t-heading m0">Backend key</h2>
+      <div className="field">
+        <label htmlFor="org-backend-key">Organizer key (ADMIN_TOKEN in backend/.env)</label>
+        <input
+          id="org-backend-key"
+          className="input t-mono"
+          type="password"
+          autoComplete="off"
+          value={key}
+          onChange={(e) => {
+            setKey(e.target.value);
+            organizerKey.set(e.target.value.trim());
+          }}
+        />
+        <span className="field__help">Needed to save the bracket and to run fights. Kept in this tab only.</span>
+      </div>
+    </Card>
+  );
+}
 
 function Roles({ wallet, onChanged }) {
   const address = wallet.address;
@@ -118,7 +145,7 @@ function CreateTournament({ wallet, info, onCreated }) {
         <div className="field">
           <span className="t-label">Projects</span>
           <div className="trade__presets">
-            {[4, 8, 16].map((c) => (
+            {[2, 4, 8, 16].map((c) => (
               <Chip key={c} selected={capacity === c} onClick={() => setCapacity(c)}>
                 {c}
               </Chip>
@@ -136,6 +163,7 @@ function CreateTournament({ wallet, info, onCreated }) {
           <Input id="org-reviewer" label="Reviewer (blank = this wallet)" placeholder={address} value={reviewer} onChange={(e) => setReviewer(e.target.value)} error={reviewer && !isAddress(reviewer.trim()) ? "Not a wallet address." : undefined} />
           <Input id="org-platform" label="Platform 10% goes to (blank = this wallet)" placeholder={address} value={recipient} onChange={(e) => setRecipient(e.target.value)} error={recipient && !isAddress(recipient.trim()) ? "Not a wallet address." : undefined} />
         </div>
+        {capacity === 2 && <p className="t-caption m0">A 2-project tournament (one final) needs the updated TournamentManager contract. On the older deployment, pick 4.</p>}
         <p className="t-caption m0">This wallet becomes the organizer and publisher, and can't bet in this tournament. A leftover tournament refunds by itself after its deadline.</p>
         <Button type="submit" variant="oracle" disabled={!valid || busy}>
           {busy ? "Working…" : "Create tournament"}
@@ -146,41 +174,116 @@ function CreateTournament({ wallet, info, onCreated }) {
   );
 }
 
-function Freeze({ wallet, tournament, onDone }) {
-  const [count, setCount] = useState(tournament.capacity);
-  const [wallets, setWallets] = useState("");
-  const { tx, run, reset, busy } = useTx(wallet, onDone);
-  const list = wallets.split(/[\s,]+/).filter(Boolean);
-  const bad = list.find((a) => !isAddress(a));
-  const allowed = [4, 8, 16].filter((c) => c <= tournament.capacity);
-  const tooFew = list.length > 0 && list.length !== count;
+const short = (a) => (a ? `${a.slice(0, 6)}…${a.slice(-4)}` : "");
 
-  const freeze = () => {
-    const seed = `0x${Array.from(crypto.getRandomValues(new Uint8Array(32)), (b) => b.toString(16).padStart(2, "0")).join("")}`;
-    const projects = Array.from({ length: count }, (_, i) => {
-      const reward = list[i] ?? wallet.address;
-      return { owner: reward, rewardWallet: reward, snapshotHash: hash({ tournament: tournament.id, project: i }) };
-    });
-    run({ ...manager, functionName: "freeze", args: [BigInt(tournament.id), projects, seed, hash(projects.map((p) => p.snapshotHash))], label: "Freeze the tournament" }, "Frozen. The tournament pool is open for bets.");
+/** Pick real submitted projects, register the bracket with the backend, then freeze the same list on chain. */
+function Freeze({ wallet, tournament, onDone }) {
+  const [picked, setPicked] = useState([]);
+  const [title, setTitle] = useState(`Tournament #${tournament.id}`);
+  const [error, setError] = useState("");
+  const [working, setWorking] = useState(false);
+  const [plan, setPlan] = useState(null); // the matchmaking result for exactly the projects picked
+  const [matching, setMatching] = useState(false);
+  const { tx, run, reset, busy } = useTx(wallet, onDone);
+  const { data: subs, error: subsError } = usePoll(() => api("/submissions"), [], 8000);
+  const allowed = [2, 4, 8, 16].filter((c) => c <= tournament.capacity);
+  const byId = new Map((subs ?? []).map((x) => [x.id, x]));
+  const ready = (x) => x.review?.status === "reviewed";
+  const toggle = (id) => {
+    setPlan(null); // any change to the field voids the proposed bracket
+    setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]));
+  };
+  const count = picked.length;
+  const countOk = allowed.includes(count);
+  const mine = picked.map((id) => byId.get(id)).filter(Boolean);
+  const clash = mine.find((x) => [x.ownerWallet, x.rewardWallet ?? x.ownerWallet].some((w) => w?.toLowerCase() === wallet.address?.toLowerCase()));
+
+  const authHint = (e) => (e.status === 403 || e.status === 401 ? "The backend needs the organizer key (Backend key box at the top). " + e.message : e.message);
+
+  const autoMatch = async () => {
+    setError("");
+    setMatching(true);
+    try {
+      const seed = `0x${Array.from(crypto.getRandomValues(new Uint8Array(32)), (b) => b.toString(16).padStart(2, "0")).join("")}`;
+      const result = await matchmake({ submissionIds: picked, seed });
+      setPlan({ ...result, field: [...picked] });
+      setPicked(result.slots); // the bracket order the algorithm chose
+    } catch (e) {
+      setError(authHint(e));
+    } finally {
+      setMatching(false);
+    }
+  };
+
+  const freeze = async () => {
+    setError("");
+    setWorking(true);
+    try {
+      await registerBracket(tournament.id, { title: title.trim() || `Tournament #${tournament.id}`, submissionIds: picked, proposal: plan?.resultHash });
+    } catch (e) {
+      setWorking(false);
+      setError(authHint(e));
+      return;
+    }
+    setWorking(false);
+    const seed = plan?.seed ?? `0x${Array.from(crypto.getRandomValues(new Uint8Array(32)), (b) => b.toString(16).padStart(2, "0")).join("")}`;
+    const projects = mine.map((x) => ({
+      owner: x.ownerWallet,
+      rewardWallet: x.rewardWallet ?? x.ownerWallet,
+      snapshotHash: hash({ submissionId: x.id, repoUrl: x.repoUrl, name: x.project?.name, pitch: x.project?.pitch }),
+    }));
+    run({ ...manager, functionName: "freeze", args: [BigInt(tournament.id), projects, seed, plan ? `0x${plan.resultHash}` : hash({ order: picked, seed })], label: "Freeze the tournament" }, "Frozen. The tournament pool is open for bets.");
   };
 
   return (
     <div className="stack">
-      <p className="t-body m0 muted">Freezing locks the projects and reward wallets, and opens the tournament winner pool. It can't be undone.</p>
-      <div className="trade__presets">
-        {allowed.map((c) => (
-          <Chip key={c} selected={count === c} onClick={() => setCount(c)}>
-            {c} projects
-          </Chip>
-        ))}
+      <p className="t-body m0 muted">
+        Pick the real projects that enter, then let matchmaking draw the bracket: the most similar projects meet in round one, and similar projects are kept in opposite halves so they meet as late as possible. Or tick them yourself in bracket order (1st and 2nd meet in match 1). Freezing locks the bracket and reward wallets and opens the tournament winner pool. It can't be undone.
+      </p>
+      <Input id="freeze-title" label="Tournament name" value={title} onChange={(e) => setTitle(e.target.value)} />
+      <div className="stack stack--tight" role="group" aria-label="Submitted projects">
+        {subsError && !subs ? <p className="field__error">Couldn't reach the backend to list submissions.</p> : null}
+        {subs && !subs.length ? <p className="t-body muted m0">No projects have been submitted yet. Submit one from the Submit page first.</p> : null}
+        {(subs ?? []).map((x) => {
+          const n = picked.indexOf(x.id);
+          const ok = ready(x);
+          return (
+            <button key={x.id} type="button" className="org-pick" aria-pressed={n >= 0} disabled={!ok && n < 0} onClick={() => toggle(x.id)}>
+              <span className="org-pick__n t-num">{n >= 0 ? n + 1 : ""}</span>
+              <span className="stack stack--tight">
+                <span className="t-body-strong">{x.project?.name}</span>
+                <span className="t-caption">
+                  {x.team?.name} · owner {short(x.ownerWallet)} · {ok ? "review done" : x.review?.status === "stopped" ? "review stopped" : "still being reviewed"}
+                </span>
+              </span>
+            </button>
+          );
+        })}
       </div>
-      <div className="field">
-        <label htmlFor="freeze-wallets">Reward wallets, in bracket order (blank = this wallet for all)</label>
-        <textarea id="freeze-wallets" className="input input--area t-mono" value={wallets} onChange={(e) => setWallets(e.target.value)} aria-invalid={!!bad || tooFew} />
-        {bad ? <span className="field__error">{bad.slice(0, 14)}… isn't a wallet address.</span> : tooFew ? <span className="field__error">Enter exactly {count} wallets, or none.</span> : <span className="field__help">These wallets receive the project's 20% and can't bet in this tournament.</span>}
+      <div className="org-actions">
+        <Button variant="secondary" size="sm" disabled={!countOk || matching || !!clash} onClick={autoMatch}>
+          {matching ? "Matching…" : plan ? "Match again" : "Match automatically"}
+        </Button>
+        {plan && <span className="t-caption">Bracket drawn by similarity matching. Hash {plan.resultHash.slice(0, 10)}… goes on chain.</span>}
+        {!plan && countOk && <span className="t-caption">Manual order: recorded as chosen by the organizer.</span>}
       </div>
-      <Button variant="oracle" disabled={busy || !!bad || tooFew} onClick={freeze}>
-        {busy ? "Working…" : `Freeze with ${count} projects`}
+      {plan && (
+        <ol className="stack stack--tight t-caption">
+          {plan.explain.map((m) => (
+            <li key={m.match}>
+              <b>{m.aName}</b> vs <b>{m.bName}</b>
+              {m.similarityPct != null ? ` · ${m.similarityPct}% similar (story ${Math.round(m.parts.cosine / 100)}%, tracks ${Math.round(m.parts.tracks / 100)}%, tech ${Math.round(m.parts.tech / 100)}%)` : " · the only possible fight"}
+            </li>
+          ))}
+        </ol>
+      )}
+      {clash && <p className="field__error">{clash.project?.name} is owned by this wallet. The organizer can't also be a project owner; use another wallet.</p>}
+      <p className="t-caption m0">
+        {count} picked. {countOk ? "Ready to freeze." : `Pick ${allowed.join(", ")} projects (this tournament holds up to ${tournament.capacity}).`} Owners and reward wallets can't bet in this tournament, so bet from a different wallet.
+      </p>
+      {error && <p className="field__error" role="alert">{error}</p>}
+      <Button variant="oracle" disabled={busy || working || !countOk || !!clash} onClick={freeze}>
+        {working ? "Saving the bracket…" : busy ? "Working…" : `Freeze with ${count || "…"} projects`}
       </Button>
       <TxStatus tx={tx} onDismiss={reset} />
     </div>
@@ -195,6 +298,31 @@ function MatchRow({ wallet, view, match, busy, run }) {
   const [why, setWhy] = useState("");
   const name = (p) => (p == null ? "To be decided" : view.projects[p].name);
   const label = MATCH_LABEL[match.status];
+  const [fightError, setFightError] = useState("");
+  const [starting, setStarting] = useState(false);
+  const watching = match.opened && match.status === "live";
+  const { data: fight, refresh: refreshFight } = usePoll(
+    () => (watching ? api(`/arena/fights/${view.id}/${match.index}/result`, { method: "POST" }).catch(() => null) : Promise.resolve(null)),
+    [watching, view.id, match.index],
+    4000,
+  );
+  const fightRunning = fight?.status === "running" || starting;
+  const startFight = async () => {
+    setFightError("");
+    setStarting(true);
+    try {
+      await runFight(view.id, match.index, { a: match.a, b: match.b, revealAt: match.cutoffMs, rerun: fight?.status === "failed" });
+      await refreshFight();
+    } catch (e) {
+      setFightError(e.status === 403 || e.status === 401 ? "The backend needs the organizer key (Backend key box at the top). " + e.message : e.message);
+    } finally {
+      setStarting(false);
+    }
+  };
+  const fill = (f) => setScores({ a: (f.scores.a / 100).toFixed(2), b: (f.scores.b / 100).toFixed(2), tieA: f.tie.a ? (f.tie.a / 100).toFixed(2) : "", tieB: f.tie.b ? (f.tie.b / 100).toFixed(2) : "" });
+  useEffect(() => {
+    if (fight?.status === "done" && !scores.a && !scores.b) fill(fight);
+  }, [fight?.status]);
 
   const parsed = { a: parseScore(scores.a), b: parseScore(scores.b), tieA: parseScore(scores.tieA || "0"), tieB: parseScore(scores.tieB || "0") };
   const scoresValid = Object.values(parsed).every((v) => v != null);
@@ -210,7 +338,7 @@ function MatchRow({ wallet, view, match, busy, run }) {
 
   const publish = () =>
     run(
-      { ...manager, functionName: "publishResult", args: [id, index, parsed.a, parsed.b, parsed.tieA, parsed.tieB, hash({ match: match.index, ...parsed })], label: "Publish the scores" },
+      { ...manager, functionName: "publishResult", args: [id, index, parsed.a, parsed.b, parsed.tieA, parsed.tieB, fight?.status === "done" && fight.resultHash ? fight.resultHash : hash({ match: match.index, ...parsed })], label: "Publish the scores" },
       tied && parsed.tieA === parsed.tieB ? "Tied twice. The match is waiting for the reviewer." : "Result published.",
     );
 
@@ -252,6 +380,27 @@ function MatchRow({ wallet, view, match, busy, run }) {
 
       {match.status === "live" && (
         <div className="stack">
+          <div className="stack stack--tight">
+            <div className="org-actions">
+              <Button variant="secondary" size="sm" disabled={busy || fightRunning || fight?.status === "done" || fight?.status === "sealed"} onClick={startFight}>
+                {fightRunning ? "Fight running…" : fight?.status === "failed" ? "Run the fight again" : "Run the fight on 0G"}
+              </Button>
+              {fight?.status === "done" && (
+                <span className="t-body t-num">
+                  {name(match.a)} {(fight.scores.a / 100).toFixed(2)} · {name(match.b)} {(fight.scores.b / 100).toFixed(2)}
+                  {fight.tie.a || fight.tie.b ? ` · tie-break ${(fight.tie.a / 100).toFixed(2)} to ${(fight.tie.b / 100).toFixed(2)}` : ""}
+                </span>
+              )}
+            </div>
+            {fight?.status === "running" && <p className="t-caption m0">5 rounds on 0G ({fight.note ?? "starting"}). This takes a few minutes.</p>}
+            {fight?.status === "failed" && <p className="field__error">The last run failed: {fight.error}</p>}
+            {fight?.status === "done" && (
+              <p className="t-caption m0">
+                Judged by 3 judges over 5 rounds ({fight.calls} 0G calls). Scores are filled in below{fight.needsReview ? "; both rounds tied, so the contract will send this to human review" : ""}. Publishing sends them to the contract.
+              </p>
+            )}
+            {fightError && <p className="field__error" role="alert">{fightError}</p>}
+          </div>
           <div className="org-scores">
             <Input id={`a-${match.index}`} label={`${name(match.a)} score`} inputMode="decimal" placeholder="82.50" value={scores.a} onChange={(e) => setScores({ ...scores, a: e.target.value })} />
             <Input id={`b-${match.index}`} label={`${name(match.b)} score`} inputMode="decimal" placeholder="78.00" value={scores.b} onChange={(e) => setScores({ ...scores, b: e.target.value })} />
@@ -301,7 +450,8 @@ function MatchRow({ wallet, view, match, busy, run }) {
 }
 
 function TournamentControl({ wallet, tournament, onChanged }) {
-  const view = viewOfChain(tournament);
+  const { data: meta } = usePoll(() => getBracket(tournament.id), [tournament.id], 6000);
+  const view = viewOfChain(tournament, meta);
   const { tx, run, reset, busy } = useTx(wallet, onChanged);
   const label = PHASE_LABEL[view.phase];
   const finished = view.phase === "completed" || view.phase === "canceled";
@@ -374,12 +524,13 @@ export function OrganizerPage({ wallet }) {
           Organizer <span className="hl hl--crush">console</span>
         </h1>
         <p className="t-body m0 muted rise" style={{ "--i": 2 }}>
-          Runs a real tournament on chain. For now, you type in the scores yourself.
+          Runs a real tournament on chain: pick submitted projects, open each match, run the fight on 0G, publish the scores.
         </p>
       </header>
       <WalletGate wallet={wallet} reason="to run a tournament" />
       {wallet.status === "connected" && wallet.onTargetNetwork && info && (
         <>
+          <BackendKey />
           <Roles wallet={wallet} onChanged={changed} />
           <CreateTournament wallet={wallet} info={info} onCreated={changed} />
           {list?.length ? (
