@@ -54,7 +54,7 @@ export function CrowdChat({ tournament, match, a, b, symbol = "", dark = false }
           stick.current = el.scrollHeight - el.scrollTop - el.clientHeight < 40;
         }}
       >
-        {!items.length && <li className="chat__empty t-caption">No bets in the last two hours. New ones show up here the moment they're placed.</li>}
+        {!items.length && <li className="chat__empty t-caption">{tournament?.preview ? "Bets show up here live once betting opens." : "No bets in the last two hours. New ones show up here the moment they're placed."}</li>}
         <AnimatePresence initial={false}>
           {items.map((m) =>
             m.bet ? (

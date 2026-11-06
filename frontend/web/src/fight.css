@@ -40,6 +40,7 @@
 .pcard__clock i { width: 7px; height: 7px; border-radius: 50%; background: var(--crush); animation: jpulse 1.6s ease-in-out infinite; }
 .pcard__clock--off { background: var(--surface-sunken); color: var(--ink-secondary); }
 .pcard__go { width: 100%; justify-content: center; }
+.pcard__soon { font-size: 13px; color: var(--ink-secondary); text-align: center; }
 .pcard__mine { font-size: 13px; padding: 8px 12px; border-radius: 12px; background: var(--success-soft); color: var(--ink); }
 
 /* donut */

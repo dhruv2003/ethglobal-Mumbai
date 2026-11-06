@@ -195,6 +195,35 @@ function PredictionCard({ wallet, tournament, match, a, b, onBet }) {
   );
 }
 
+/** The prediction card for an 'Up next' pairing: same look, an even empty pool, betting not open yet. */
+function PreviewPrediction({ a, b }) {
+  return (
+    <aside className="pcard" aria-labelledby="pcard-h">
+      <header className="pcard__head">
+        <h2 id="pcard-h" className="m0">Crowd prediction</h2>
+        <span className="pcard__clock pcard__clock--off">Opens soon</span>
+      </header>
+      <PoolDonut pctA={50} a={a} b={b} total="0" symbol="FILTER" />
+      <ul className="pside m0">
+        {[["a", a], ["b", b]].map(([key, p]) => (
+          <li key={key} className={`pside__row pside__row--${key}`}>
+            <span className="pside__key" aria-hidden="true" />
+            <span className="pside__name">
+              <b>{p.name}</b>
+              <small>No bets yet</small>
+            </span>
+            <span className="pside__pct t-num">50%</span>
+          </li>
+        ))}
+      </ul>
+      <p className="pcard__soon m0">Betting opens when the organizer starts the tournament.</p>
+      <Link className="btn btn--secondary btn--sm pcard__go" to="/arena?view=bracket">
+        See the bracket
+      </Link>
+    </aside>
+  );
+}
+
 /** The crowd's latest bets, as they land: this is what moves the odds. */
 function BetTicker({ tournament, match, a, b, symbol }) {
   const [, tick] = useState(0);
@@ -268,12 +297,10 @@ function Layout({ tournament, match, fight, theater, wallet, onBet }) {
           </div>
           <div className="fight-side">
             {tournament.preview ? (
-              <Card variant="surface" className="empty">
-                <span className="t-body muted">This pairing isn't on chain yet. Betting and the fight open once the organizer starts the tournament.</span>
-                <Link className="btn btn--secondary btn--sm" to="/arena?view=bracket">
-                  See the bracket
-                </Link>
-              </Card>
+              <>
+                <PreviewPrediction a={a} b={b} />
+                <CrowdChat tournament={tournament} match={match} a={a} b={b} symbol="FILTER" />
+              </>
             ) : (
               <>
                 <PredictionCard wallet={wallet} tournament={tournament} match={match} a={a} b={b} onBet={onBet} />
