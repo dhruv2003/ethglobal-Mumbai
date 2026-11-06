@@ -27,6 +27,8 @@ export function initialFightState() {
     penalties: [],
     log: [],
     tieBreak: null,
+    points: { a: 0, b: 0, even: 0 }, // Laya's call on each round's point (commentary, not damage)
+    lastPoint: null,
     review: null,
     result: null,
     last: null,
@@ -71,6 +73,11 @@ export function reduceFight(state, event) {
     }
     case "penalty":
       s.penalties = [...state.penalties, event];
+      break;
+    case "point":
+      // Laya's decision never touches health: only sealed judge scores do (BAT-08).
+      if (event.winner && state.points[event.winner] != null) s.points = { ...state.points, [event.winner]: state.points[event.winner] + 1 };
+      s.lastPoint = event;
       break;
     case "closing":
       s.phase = "closing";

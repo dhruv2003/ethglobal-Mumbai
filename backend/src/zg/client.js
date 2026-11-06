@@ -248,14 +248,26 @@ async function embed({ input, model }) {
 }
 
 /** POST /audio/speech. Returns { audio: Buffer (mp3), trace }. For judge/announcer narration. */
-async function speech({ input, model, voice = "alloy", timeoutMs = 60_000 }) {
-  const res = await request("/audio/speech", { json: { model, input, voice }, timeoutMs, raw: true });
+async function speech({ input, model, voice = "English_expressive_narrator", format = "mp3", emotion, speed, timeoutMs = 60_000 }) {
+  // MiniMax voices take emotion (happy, angry, calm...) and speed (0.5-2); omitted, the model picks.
+  const json = { model, input, voice, response_format: format, ...(emotion ? { emotion } : {}), ...(speed ? { speed } : {}) };
+  const res = await request("/audio/speech", { json, timeoutMs, raw: true });
   const audio = Buffer.from(await res.arrayBuffer());
   return {
     audio,
     mime: res.headers.get("content-type") || "audio/mpeg",
     trace: { ...traceOf(null, res.headers, model), chatId: null },
   };
+}
+
+/**
+ * POST /decisions (Laya, Jev, Vela): typed answers with calibrated probabilities instead of text.
+ * questions: { name: { type: "choice" | "score" | "noul", instructions, criteria } }.
+ * Returns { answers: { name: { choice?, score?, probabilities, confidence, ... } }, trace }.
+ */
+async function decisions({ model, state, questions, timeoutMs = 20_000 }) {
+  const { body, headers } = await request("/decisions", { json: { model, state, questions }, timeoutMs });
+  return { answers: body.answers ?? {}, trace: traceOf(body, headers, model) };
 }
 
 /** POST /images/generations. For fighter portraits or arena art. Returns the raw body. */
@@ -275,5 +287,6 @@ module.exports = {
   transcribe,
   embed,
   speech,
+  decisions,
   generateImage,
 };

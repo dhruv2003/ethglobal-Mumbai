@@ -19,7 +19,8 @@ import path from "node:path";
 import express from "express";
 import { DATA_DIR, dossiers, judges as judgeStore, submissions } from "../store.mjs";
 import { events } from "../events.mjs";
-import { requireOrganizer } from "../security.mjs";
+import { rateLimit, requireOrganizer } from "../security.mjs";
+import { lineAudio, voiceFor } from "./voice.mjs";
 import { hasCredentials } from "../judges/review.mjs";
 import { judgeCast, runFight } from "./fight.mjs";
 import { proposeBracket, verifyProposal } from "./matchmaking.mjs";
@@ -146,6 +147,24 @@ arenaRouter.get("/fights/:t/:m", (req, res) => {
     return res.json({ status: "sealed", revealAt: s.revealAt, judges: judgeCast() });
   }
   res.json({ ...s, judges: s.cast ?? judgeCast() });
+});
+
+/*
+ * One spoken line of a recorded fight as mp3 (MiniMax speech on 0G, cached after the first play).
+ * Same rule as the fight itself: nothing is spoken before the fight is revealed.
+ */
+arenaRouter.get("/fights/:t/:m/voice/:seq", rateLimit({ max: 600, windowMs: 60 * 60 * 1000, message: "Too many voice requests. Try again later." }), async (req, res) => {
+  const s = statusOf(req.params.t, req.params.m);
+  if (s.status !== "done" || (s.revealAt && Date.now() < s.revealAt)) return res.status(404).json({ error: "This fight can't be heard yet." });
+  const event = (s.events ?? []).find((e) => e.seq === Number(req.params.seq));
+  if (!voiceFor(event)) return res.status(404).json({ error: "That moment has no spoken line." });
+  if (!hasCredentials("0g")) return res.status(503).json({ error: "Voices need the 0G key (ZG_API_KEY in backend/.env)." });
+  try {
+    const { file } = await lineAudio(req.params.t, req.params.m, event);
+    res.set("Cache-Control", "public, max-age=86400").type("audio/mpeg").sendFile(file);
+  } catch (e) {
+    res.status(e.status === 402 ? 402 : 502).json({ error: `Speech on 0G failed: ${String(e.message ?? e).slice(0, 200)}` });
+  }
 });
 
 arenaRouter.post("/fights/:t/:m/result", requireOrganizer, (req, res) => { const s = statusOf(req.params.t, req.params.m); res.json({ ...s, judges: s.cast ?? judgeCast() }); });

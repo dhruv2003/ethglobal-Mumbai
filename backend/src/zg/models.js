@@ -22,6 +22,8 @@ const MODELS = {
   embed: process.env.ZG_MODEL_EMBED || "qwen3-embedding-8b",
   speech: process.env.ZG_MODEL_SPEECH || "minimax-speech-2.8-turbo",
   image: process.env.ZG_MODEL_IMAGE || "z-image-turbo",
+  decisions: process.env.ZG_MODEL_DECISIONS || "laya", // decides who wins each point of a 1v1 round
+
 };
 
 /** Ask for TEE verification on every chat call (adds latency; worth it for judges). */

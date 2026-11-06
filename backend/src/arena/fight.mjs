@@ -13,6 +13,7 @@ import crypto from "node:crypto";
 import agents from "../agents/index.js";
 import dossierLib from "../agents/dossier.js";
 import rubric from "../agents/rubric.js";
+import { decidePoint, tallyPoints } from "./laya.mjs";
 import { MATCH_STEP, TIEBREAK_RUBRIC, computeFinalScore, decideMatch } from "../../scoring/src/index.js";
 
 const { matchContext } = dossierLib;
@@ -139,8 +140,15 @@ export async function runFight({ corners, onProgress = () => {}, judges = DEFAUL
     }
 
     // Three judges score independently and in parallel, never seeing each other (JDG-03).
-    const round = await Promise.all(judges.map((j) => agents.judgeScorecard({ judge: j, criterionId: c.id, ctx, events: model, challenges: chList })));
+    // Meanwhile Laya on 0G decides who won the round's point (commentary; scores still decide).
+    const best = (side) => ({ name: corners[side].project?.name ?? side, answer: answers.find((t) => t.side === side)?.text, rebuttal: rebuttals.find((t) => t.side === side)?.text });
+    const [round, point] = await Promise.all([
+      Promise.all(judges.map((j) => agents.judgeScorecard({ judge: j, criterionId: c.id, ctx, events: model, challenges: chList }))),
+      decidePoint({ round: c.id, criterion: c.name, question: q.question, a: best("A"), b: best("B") }),
+    ]);
     round.forEach((r) => keep(r.traces));
+    if (point.trace) traces.push(point.trace);
+    emit(point.event, point.trace);
     for (const ch of chList) {
       const votes = Object.fromEntries(round.map((r) => [r.judgeId, r.rulings.find((x) => x.challengeId === ch.challengeId)?.label ?? "inconclusive"]));
       const reason = round.map((r) => r.rulings.find((x) => x.challengeId === ch.challengeId)?.reason).find(Boolean) ?? "";
@@ -201,7 +209,7 @@ export async function runFight({ corners, onProgress = () => {}, judges = DEFAUL
   }
 
   const usd = traces.reduce((s, t) => s + (t.costUsdMicro ?? 0), 0) / 1e6;
-  const body = { events: out, scores, tie, needsReview: decision.step === MATCH_STEP.HUMAN_REVIEW, rounds: sealedByRound, ui: uiSummary(ui, counts, corners), fighters: { a: pick(fighters.A), b: pick(fighters.B) }, calls: traces.length, costUsd: usd };
+  const body = { events: out, scores, tie, points: tallyPoints(out), needsReview: decision.step === MATCH_STEP.HUMAN_REVIEW, rounds: sealedByRound, ui: uiSummary(ui, counts, corners), fighters: { a: pick(fighters.A), b: pick(fighters.B) }, calls: traces.length, costUsd: usd };
   const resultHash = "0x" + crypto.createHash("sha256").update(JSON.stringify({ scores, tie, rounds: sealedByRound })).digest("hex");
   return { ...body, resultHash };
 }

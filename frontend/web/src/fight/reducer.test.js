@@ -136,3 +136,16 @@ describe("choreograph", () => {
     expect(choreograph(ruling, 0, state, { reduced: true })).toEqual(choreograph(ruling, 99999, state, { reduced: true }));
   });
 });
+
+describe("Laya points", () => {
+  it("tally each round's point and never change health", () => {
+    const s = foldEvents([
+      { seq: 1, type: "point", round: "product", winner: "a", confidence: 0.6 },
+      { seq: 2, type: "point", round: "engineering", winner: "even" },
+      { seq: 3, type: "point", round: "ui", winner: null, error: "down" },
+    ]);
+    expect(s.points).toEqual({ a: 1, b: 0, even: 1 });
+    expect(s.health).toEqual(initialFightState().health);
+    expect(s.lastPoint.round).toBe("ui");
+  });
+});

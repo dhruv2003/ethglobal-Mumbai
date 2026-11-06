@@ -13,6 +13,7 @@ import { FightStage } from "../fight/FightStage.jsx";
 import { stateAt } from "../fight/reducer.js";
 import { CRITERION_LABEL, fmtHealth } from "../fight/score.js";
 import { useFightSound } from "../fight/useFightSound.js";
+import { useFightVoice } from "../fight/useFightVoice.js";
 import { eventDuration } from "../fight/choreo.js";
 import { useReel } from "../fight/usePlayback.js";
 import { formatAmount, usePoll, useToken } from "../lib/chain.js";
@@ -104,6 +105,7 @@ function Player({ fightMatch, events, fight, theater = false, onResult }) {
     onResult(pb.event.winner);
   }, [pb.event, pb.ms, onResult]);
   const sound = useFightSound(events, pb);
+  const voice = useFightVoice(fight, events);
   const state = useMemo(() => stateAt(events, events[pb.index].seq), [events, pb.index]);
   const [reduced] = useState(() => !!prefersReducedMotion());
   const lines = state.log.filter((e) => SAY[e.type]).slice(-4).reverse();
@@ -126,6 +128,14 @@ function Player({ fightMatch, events, fight, theater = false, onResult }) {
         <button type="button" className="fd__toggle" aria-pressed={!sound.muted} onClick={sound.toggleMute}>
           Sound
         </button>
+        {voice.canSpeak && (
+          <button type="button" className="fd__toggle" aria-pressed={voice.speaking} onClick={voice.speaking ? voice.stop : voice.play}>
+            {voice.speaking ? "Stop voices" : "Hear the battle"}
+          </button>
+        )}
+        <span className="t-caption t-num" title="Laya on 0G calls each round's point. Only the judges' scores decide the fight.">
+          Laya points {state.points.a} · {state.points.b}
+        </span>
       </div>
   );
   if (theater) {
@@ -147,6 +157,12 @@ function Player({ fightMatch, events, fight, theater = false, onResult }) {
           <h2 className="t-heading m0">{state.round ? `${CRITERION_LABEL[state.round]} round` : "Opening pitches"}</h2>
           <StatusPill tone="reward">Judged on 0G</StatusPill>
         </div>
+        {voice.current && (
+          <p className="t-body m0" role="status">
+            <span className="t-label">{who(voice.current)} {SAY[voice.current.type]}:</span> {voice.current.text}
+          </p>
+        )}
+        {voice.error && <p className="t-caption m0">{voice.error}</p>}
         {lines.length ? (
           <ol className="fight-lines">
             <AnimatePresence initial={false} mode="popLayout">

@@ -63,7 +63,7 @@ export function usePlayback(events, { autoPlay = false, start = { index: 0, ms: 
 const REEL_MS = 30000; // a whole fight, start to result, never takes longer than this
 const INTRO_MS = 1200;
 const RESULT_MS = 2200;
-const HIGHLIGHT = new Set(["ruling", "penalty"]);
+const HIGHLIGHT = new Set(["ruling", "penalty", "point"]);
 
 /**
  * The fight as a short highlight reel: the intro, every moment that moves the health bars

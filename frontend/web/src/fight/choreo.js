@@ -29,6 +29,7 @@ export function eventDuration(e) {
     case "round_start": return 1800;
     case "ruling": return 3000;
     case "penalty": return 2800;
+    case "point": return 2600;
     case "round_sealed": return 2800;
     case "result": return 4500;
     case "human_review": return 4000;

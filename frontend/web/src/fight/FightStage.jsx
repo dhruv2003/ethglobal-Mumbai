@@ -179,6 +179,12 @@ export function captionFor(match, state, event) {
       return { who: "Judges", text: `${RULING_TEXT[r?.label] ?? "Ruling"} ${voteCount(event.votes, r?.label)}. ${event.reason ?? ""}` };
     }
     case "penalty": return { who: `${name(match, event.judge)} · penalty on ${name(match, event.target)}`, text: event.reason };
+    case "point": {
+      const who = `Laya · ${CRITERION_LABEL[event.round] ?? "round"} point`;
+      if (!event.winner) return { who, text: "Laya couldn't call this point." };
+      const tally = `${A} ${state.points.a} · ${B} ${state.points.b}`;
+      return { who, text: event.winner === "even" ? `Even point. ${tally}.` : `Point to ${match.fighters[event.winner].name} (${Math.round((event.confidence ?? 0) * 100)}% sure${event.margin ? `, ${event.margin}` : ""}). ${tally}.` };
+    }
     case "round_sealed": {
       const d = state.damage;
       return { who: "Scores sealed", text: `${CRITERION_LABEL[event.round]} sealed. ${A} −${fmtHealth(d?.a ?? 0)}, ${B} −${fmtHealth(d?.b ?? 0)} health.` };
