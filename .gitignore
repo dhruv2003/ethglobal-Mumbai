@@ -50,3 +50,7 @@ pnpm-debug.log*
 *.swp
 .DS_Store
 Thumbs.db
+
+# Old local data and the old deploy seed: records are on Arkiv, files on 0G. Never commit them.
+backend/data/
+deploy/
