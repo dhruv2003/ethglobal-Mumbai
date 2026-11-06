@@ -370,7 +370,8 @@ test("restore rebuilds data/ from the head manifest alone, byte for byte", async
     fs
       .readdirSync(dir, { recursive: true })
       // pipeline/ is review-progress state (like the in-memory progress map): not archived on purpose.
-      .filter((f) => f.endsWith(".json") && !f.startsWith("zg-") && !f.startsWith(".") && !f.startsWith("pipeline/"))
+      // events.json holds tournaments, which aren't archived yet, like brackets and fights.
+      .filter((f) => f.endsWith(".json") && !f.startsWith("zg-") && !f.startsWith(".") && !f.startsWith("pipeline/") && f !== "events.json")
       .sort();
   assert.deepEqual(files(into), files(DATA));
   for (const f of files(DATA)) {
