@@ -73,6 +73,23 @@ export async function probeSeconds(file, demuxer) {
   return Math.round(s);
 }
 
+/** Duration, picture size and whether there's sound. */
+export async function probeInfo(file, demuxer) {
+  const { stdout } = await run("ffprobe", ["-v", "error", ...lockedInput(demuxer, file), "-show_entries", "stream=codec_type,width,height:format=duration", "-of", "json"], { timeout: 30000 });
+  const j = JSON.parse(stdout);
+  const v = j.streams?.find((x) => x.codec_type === "video");
+  return { seconds: Math.round(Number(j.format?.duration) || 0), width: v?.width ?? null, height: v?.height ?? null, audio: Boolean(j.streams?.some((x) => x.codec_type === "audio")) };
+}
+
+const IMAGE_DEMUXER = { png: "png_pipe", jpg: "jpeg_pipe", webp: "webp_pipe" };
+/** Picture size of an uploaded screenshot (file name like <sha>.png). */
+export async function imageInfo(file) {
+  const ext = path.extname(file).slice(1);
+  const { stdout } = await run("ffprobe", ["-v", "error", ...lockedInput(IMAGE_DEMUXER[ext], path.join(UPLOAD_DIR, file)), "-show_entries", "stream=width,height", "-of", "json"], { timeout: 15000 });
+  const st = JSON.parse(stdout).streams?.[0] ?? {};
+  return { width: st.width ?? null, height: st.height ?? null, bytes: fs.statSync(path.join(UPLOAD_DIR, file)).size };
+}
+
 /** A Transform that counts bytes (and hashes them) and fails past max. */
 export function capped(max, hash) {
   let n = 0;
@@ -88,14 +105,26 @@ export function capped(max, hash) {
   return t;
 }
 
-async function streamToFile(res, file, max) {
+async function streamToFile(res, file, max, onProgress) {
   const len = Number(res.headers.get("content-length") ?? 0);
   if (len > max) {
     res.body.destroy?.();
     throw new Error(`The video is too large (${Math.round(len / 1048576)} MB, limit ${Math.round(max / 1048576)} MB).`);
   }
   const c = capped(max);
-  await pump(res.body, c, fs.createWriteStream(file));
+  let last = 0;
+  const tick = setInterval(() => {
+    const mb = c.bytes() / 1048576;
+    if (mb - last >= 1) {
+      last = mb;
+      onProgress?.(`Downloaded ${mb.toFixed(0)} MB${len ? ` of ${Math.round(len / 1048576)} MB` : ""}`);
+    }
+  }, 1000);
+  try {
+    await pump(res.body, c, fs.createWriteStream(file));
+  } finally {
+    clearInterval(tick);
+  }
   return c.bytes();
 }
 
@@ -142,7 +171,7 @@ async function getText(url) {
 }
 
 /** Download every segment of a media playlist, in order, into one file. Returns bytes written. */
-async function downloadMedia(playlistUrl, file, budget) {
+async function downloadMedia(playlistUrl, file, budget, onProgress, what = "video") {
   const p = parsePlaylist(await getText(playlistUrl), playlistUrl);
   if (p.encrypted) throw new Error("That video stream is encrypted, so we can't keep a copy.");
   const parts = [...(p.init ? [p.init] : []), ...p.segments];
@@ -160,6 +189,7 @@ async function downloadMedia(playlistUrl, file, budget) {
           return readCapped(res, 64 * 1024 * 1024);
         }),
       );
+      onProgress?.(`Fetching the ${what} stream: piece ${Math.min(i + 12, parts.length)} of ${parts.length}`);
       for (const b of bufs) {
         total += b.length;
         if (total > budget) throw new Error(`The video is too large (over ${Math.round(VIDEO_MAX / 1048576)} MB).`);
@@ -173,7 +203,7 @@ async function downloadMedia(playlistUrl, file, budget) {
 }
 
 /** HLS (master or media playlist) -> one MP4 at outFile. */
-export async function downloadHls(masterUrl, outFile, work) {
+export async function downloadHls(masterUrl, outFile, work, onProgress) {
   const master = parsePlaylist(await getText(masterUrl), masterUrl);
   let videoUrl = new URL(masterUrl);
   let audioUrl = null;
@@ -187,8 +217,9 @@ export async function downloadHls(masterUrl, outFile, work) {
   fs.mkdirSync(work, { recursive: true });
   const vFile = path.join(work, "video.part");
   const aFile = path.join(work, "audio.part");
-  const v = await downloadMedia(videoUrl, vFile, VIDEO_MAX);
-  const a = audioUrl ? await downloadMedia(audioUrl, aFile, VIDEO_MAX - v.bytes) : null;
+  const v = await downloadMedia(videoUrl, vFile, VIDEO_MAX, onProgress, "video");
+  const a = audioUrl ? await downloadMedia(audioUrl, aFile, VIDEO_MAX - v.bytes, onProgress, "audio") : null;
+  onProgress?.("Joining the video and audio into one MP4");
   const kind = (f) => sniffVideo(head(f))?.demuxer;
   const vd = kind(vFile);
   if (vd !== "mpegts" && vd !== "mov") throw new Error("The video stream isn't in a format we can save.");
@@ -260,20 +291,21 @@ export const reason = (e) => e?.message || (e?.errors?.[0]?.code ?? e?.code ? `N
  * Returns { file, ext, demuxer, bytes, seconds, source } or throws (e.skip = not an error, just not possible).
  * Network hiccups are retried once.
  */
-export async function saveDemoVideo(videoUrl, dir) {
+export async function saveDemoVideo(videoUrl, dir, { onProgress } = {}) {
   try {
-    return await saveOnce(videoUrl, dir);
+    return await saveOnce(videoUrl, dir, onProgress);
   } catch (e) {
     if (!isNetwork(e)) throw e;
+    onProgress?.("Network hiccup; trying the download once more");
     try {
-      return await saveOnce(videoUrl, dir);
+      return await saveOnce(videoUrl, dir, onProgress);
     } catch (e2) {
       throw new Error(`Couldn't download the video: ${reason(e2)}`);
     }
   }
 }
 
-async function saveOnce(videoUrl, dir) {
+async function saveOnce(videoUrl, dir, onProgress) {
   const c = classifyVideo(videoUrl);
   if (c.kind === "invalid") throw new Error("The demo link isn't a valid https URL.");
   if (c.kind === "unsupported") throw Object.assign(new Error(c.why), { skip: true });
@@ -286,6 +318,7 @@ async function saveOnce(videoUrl, dir) {
     if (c.kind === "upload") {
       const src = path.join(UPLOAD_DIR, c.file);
       if (!fs.existsSync(src)) throw new Error("The uploaded video is no longer on the server.");
+      onProgress?.("Using the file the team uploaded");
       file = path.join(dir, `demo.${path.extname(c.file).slice(1)}`);
       fs.rmSync(file, { force: true });
       try {
@@ -297,15 +330,17 @@ async function saveOnce(videoUrl, dir) {
     } else if (c.kind === "loom" || c.kind === "hls") {
       let hls = c.url;
       if (c.kind === "loom") {
+        onProgress?.("Reading the Loom page");
         const page = await loomPage(c.id);
         if (!page.downloadable) throw Object.assign(new Error("The Loom owner turned downloads off, so it plays from Loom only."), { skip: true });
         if (!page.hls) throw new Error("Couldn't find the video stream on that Loom page.");
         hls = page.hls;
       }
       file = path.join(dir, "demo.mp4");
-      await downloadHls(hls, file, work);
+      await downloadHls(hls, file, work, onProgress);
       source = c.kind === "loom" ? "copied from Loom" : "copied from the stream";
     } else {
+      onProgress?.(`Connecting to ${new URL(c.url).hostname}`);
       let res = await safeFetch(c.url);
       if (!res.ok && c.fallback) {
         res.body.resume?.();
@@ -319,7 +354,7 @@ async function saveOnce(videoUrl, dir) {
       }
       fs.mkdirSync(work, { recursive: true });
       const tmp = path.join(work, "download.part");
-      await streamToFile(res, tmp, VIDEO_MAX);
+      await streamToFile(res, tmp, VIDEO_MAX, onProgress);
       const s = sniffVideo(head(tmp));
       if (!s || s.ext === "ts") throw new Error("The demo link didn't return an MP4, MOV or WebM video.");
       file = path.join(dir, `demo.${s.ext}`);

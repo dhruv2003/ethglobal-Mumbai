@@ -25,6 +25,23 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+// Progress lines go to the console and, during a pipeline run, to the review page.
+let listener = null;
+export function onRunnerLog(fn) {
+  listener = fn;
+  return () => {
+    if (listener === fn) listener = null;
+  };
+}
+function say(msg) {
+  console.log(msg);
+  try {
+    listener?.(msg);
+  } catch {
+    /* a progress listener never breaks a run */
+  }
+}
+
 const here = path.dirname(fileURLToPath(import.meta.url));
 const HUB = "wss://cdp-hub.preprod.mozark.ai/playwright";
 const PROJECT_ID = process.env.MOZARK_PROJECT_ID ?? "b0ceec50-63c5-4a57-902b-c21046ee7cf2";
@@ -230,7 +247,7 @@ async function runStep(page, device, dir, rec, step) {
   const file = `smoke-${device}-${step.id}.jpg`;
   await page.screenshot({ path: path.join(dir, file), type: "jpeg", quality: 80 }).catch(() => {});
   out.screenshot = `${device}/${file}`;
-  console.log(`[${device}] ${step.id} ${out.status.padEnd(7)} ${step.title}`);
+  say(`[${device}] ${step.id} ${out.status.padEnd(7)} ${step.title}`);
   return out;
 }
 
@@ -249,9 +266,10 @@ async function runDevice(device) {
   let browser;
   let rec;
   try {
-    console.log(`[${device}] connecting to Mozark…`);
+    say(`[${device}] connecting to Mozark…`);
     browser = await connect(device);
     result.browserVersion = browser.version();
+    say(`[${device}] cloud browser ready (Chrome ${String(result.browserVersion).split(".")[0]}, ${spec.context.viewport.width}×${spec.context.viewport.height}); recording`);
     const ctx = await browser.newContext(spec.context);
     const page = await ctx.newPage();
     page.on("console", (m) => m.type() === "error" && consoleErrors.length < 20 && consoleErrors.push(m.text().slice(0, 240)));
@@ -267,7 +285,7 @@ async function runDevice(device) {
     rec = await startRecording(ctx, page, dir, spec.shotWidth);
 
     // Health: first load of the home page
-    console.log(`[${device}] loading ${target}`);
+    say(`[${device}] loading ${target}`);
     const t0 = Date.now();
     const res = await page.goto(target, { waitUntil: "domcontentloaded", timeout: 60000 });
     await page.waitForLoadState("load", { timeout: 30000 }).catch(() => {});
@@ -300,7 +318,7 @@ async function runDevice(device) {
   result.failedRequests = failedRequests;
   result.cancelledRequests = cancelledRequests;
   result.outcome = outcomeOf(result);
-  console.log(`[${device}] ${result.outcome.status}: ${result.outcome.reasons.join("; ") || "no issues found"}`);
+  say(`[${device}] ${result.outcome.status}: ${result.outcome.reasons.join("; ") || "no issues found"}`);
   return result;
 }
 
@@ -356,7 +374,7 @@ async function runLiveTestNow({ project: id, target: url, flows: f, outDir: dir,
     if (!DEVICES[d]) continue;
     let run = await runDevice(d);
     if (run.infrastructure) {
-      console.log(`[${d}] cloud browser problem; retrying once in a fresh session (PRD TST-08)`);
+      say(`[${d}] cloud browser problem; retrying once in a fresh session (PRD TST-08)`);
       const retry = await runDevice(d);
       retry.retriedAfter = run.error;
       run = retry;
@@ -394,7 +412,9 @@ async function runLiveTestNow({ project: id, target: url, flows: f, outDir: dir,
 export async function discoverSite({ target: url, token: t, maxPages = 6 }) {
   token = t;
   const base = new URL(url);
+  say("[explore] connecting to Mozark…");
   const browser = await connect("laptop");
+  say("[explore] connected; reading the home page");
   try {
     const ctx = await browser.newContext(DEVICES.laptop.context);
     const page = await ctx.newPage();
@@ -430,6 +450,7 @@ export async function discoverSite({ target: url, token: t, maxPages = 6 }) {
       .filter((u) => u && u.origin === base.origin && !seen.has(u.pathname) && !/(logout|sign-?out|api\/|\.(pdf|zip|apk)$)/i.test(u.pathname))
       .filter((u) => !seen.has(u.pathname) && seen.add(u.pathname));
     for (const u of next.slice(0, maxPages - 1)) {
+      say(`[explore] reading ${u.pathname}`);
       try {
         const r = await page.goto(u.origin + u.pathname, { waitUntil: "domcontentloaded", timeout: 45000 });
         await page.waitForLoadState("networkidle", { timeout: 8000 }).catch(() => {});

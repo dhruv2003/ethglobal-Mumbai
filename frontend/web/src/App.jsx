@@ -194,7 +194,7 @@ export default function App() {
                       <span aria-hidden="true">2</span>Replay your demo on a laptop and a phone
                     </li>
                     <li>
-                      <span aria-hidden="true">3</span>Three AI judges score it
+                      <span aria-hidden="true">3</span>AI judges score it
                     </li>
                   </ul>
                   <span className="t-caption save-state rise" style={{ "--i": 4 }} data-saved={savedAt ? "true" : "false"}>
