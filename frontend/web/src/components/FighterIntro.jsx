@@ -52,7 +52,10 @@ function Fighter({ project, side }) {
         </span>
         <span className="fi__who">
           <b>{project.name}</b>
-          <small>{persona?.label ?? "Fighter"} · tap for the story</small>
+          <small>{persona?.label ?? "Fighter"}</small>
+        </span>
+        <span className="fi__info" aria-hidden="true">
+          i
         </span>
       </button>
       <AnimatePresence>
