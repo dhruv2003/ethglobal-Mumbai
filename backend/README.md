@@ -89,7 +89,9 @@ Open a sample project, choose **Agent judge**, and press **Watch the judges scor
 
 ### What we claim about TEEs
 
-- Judge reviews on `0gm-1.0-35b-a3b` run on a TEE provider, but 0G does not return a `tee_verified` field for that chat (the response is end-to-end sealed, `X-0g-E2ee: sealed`). We don't label judge output "TEE verified". We show the request ID and the provider address, and keep the `ZG-Res-Key` chat ID so the signature check from the [verifiable execution docs](https://docs.0g.ai/developer-hub/building-on-0g/compute-network/router/features/verifiable-execution) can be run independently. We have not implemented that check.
+- `0gm-1.0-35b-a3b` runs on a TEE provider, but the Router does not return a `tee_verified` field for it (the response is end-to-end sealed, `X-0g-E2ee: sealed`). For calls made through `src/zg/client.js` with `verifyTee` (the fight agents and the UI face-off), `src/zg/tee.js` runs the check from the [verifiable execution docs](https://docs.0g.ai/developer-hub/building-on-0g/compute-network/router/features/verifiable-execution) itself: it reads the provider's service record from the InferenceServing contract on 0G mainnet, fetches the signature for the `ZG-Res-Key` chat ID from the provider, and checks that it was signed by the TEE signer registered on chain. The trace then carries `teeVerified: true|false`, `teeCheck: "signature"` and the signer; `null` means the check couldn't run and is never shown as verified.
+- What that proves: for a sealed provider the signed text is a hash of the encrypted exchange (`zg-sig-v1/e2ee-ct:…`), so a pass proves the chat ID was answered inside the attested TEE. It can't prove the plaintext we were handed is what was signed.
+- Judge reviews (`src/judges/review.mjs`, `callZeroG`) use their own request path and don't run this check yet.
 - Voice notes on `whisper-large-v3` do come back with `tee_verified: true`, and only then does the UI say "TEE verified by 0G".
 
 ## Still to build

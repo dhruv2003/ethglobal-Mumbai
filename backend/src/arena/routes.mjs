@@ -22,6 +22,7 @@ import { requireOrganizer } from "../security.mjs";
 import { hasCredentials } from "../judges/review.mjs";
 import { judgeCast, runFight } from "./fight.mjs";
 import { proposeBracket, verifyProposal } from "./matchmaking.mjs";
+import { collectUiImages } from "./ui.mjs";
 
 const safe = (v) => String(v).replace(/[^a-zA-Z0-9_-]/g, "");
 const dir = (name) => {
@@ -151,7 +152,14 @@ arenaRouter.post("/fights/:t/:m", requireOrganizer, async (req, res) => {
   running.set(key, live);
   res.status(202).json({ status: "running", startedAt: live.startedAt });
 
-  runFight({ corners, onProgress: (note, events) => Object.assign(live, { note, events }) })
+  (async () => {
+    live.note = "Collecting screenshots and demo frames";
+    for (const side of ["A", "B"]) {
+      const sub = corners[side].submission;
+      corners[side].ui = sub ? await collectUiImages(sub, side).catch(() => ({ images: [], sources: null })) : { images: [], sources: null };
+    }
+    return runFight({ corners, onProgress: (note, events) => Object.assign(live, { note, events }) });
+  })()
     .then((result) => {
       writeJson(fightFile(t, m), { tournamentId: String(t), match: Number(m), a: a.index, b: b.index, revealAt: Number(req.body?.revealAt) || 0, ranAt: new Date().toISOString(), id: crypto.randomUUID(), ...result });
     })

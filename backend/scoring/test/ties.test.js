@@ -5,7 +5,7 @@ import { DECISION_SOURCE, MATCH_STEP, ORGANIZER_DECISION_LABEL, decideMatch } fr
 const main = (v) =>
   ['j1', 'j2', 'j3'].map((judgeId) => ({
     judgeId,
-    scores: { product: v, engineering: v, innovation: v, feasibility: v, defense: v },
+    scores: { product: v, ui: v, engineering: v, innovation: v, feasibility: v, defense: v },
   }));
 const tb = (v) =>
   ['j1', 'j2', 'j3'].map((judgeId) => ({ judgeId, scores: { productReasoning: v, evidenceDefense: v } }));

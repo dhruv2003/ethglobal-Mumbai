@@ -173,7 +173,7 @@ function ArenaHero({ projects }) {
           3 AI judges
         </FloatSticker>
         <FloatSticker className="float-sticker--crush hero__sticker hero__sticker--2" rotate={7} delay={0.85} drift={10}>
-          5 rounds ⚡
+          6 rounds ⚡
         </FloatSticker>
         <FloatSticker className="float-sticker--oracle hero__sticker hero__sticker--3" rotate={-4} delay={1} drift={6}>
           Evidence &gt; hype
@@ -186,7 +186,7 @@ function ArenaHero({ projects }) {
 const STEPS = [
   ["Submit", "A public repo and a short form. Two minutes.", "crush"],
   ["We read the code", "We pin your commit, run the tests and collect evidence.", "oracle"],
-  ["You fight", "Three AI judges score five rounds. Health follows the score.", "sunny"],
+  ["You fight", "Three AI judges score six rounds. Health follows the score.", "sunny"],
 ];
 
 /** Tiny line icons for the three steps. */

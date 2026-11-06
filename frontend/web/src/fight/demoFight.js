@@ -54,7 +54,17 @@ add("ruling", { round: "product", challengeId: "r1b", votes: { ada: "partially_u
 add("penalty", { round: "product", target: "b", judge: "ada", reason: "The pitch says “live on mainnet”, but the snapshot is deployed to testnet only." });
 add("round_sealed", { round: "product", scores: { a: [72, 70, 74], b: [64, 66, 61] } });
 
-// ---- Round 2: Engineering ----
+// ---- Round 2: UI (judged from the side-by-side look at both projects' screens) ----
+add("round_start", { round: "ui" });
+add("question", { round: "ui", actor: "ada", text: "Walk us through your main screen on a phone. What does the user tap first?" });
+add("answer", { round: "ui", actor: "a", text: "The team quest card, front and centre. The live-test phone screenshot shows it fits without scrolling.", evidence: [{ kind: "evidence", label: "A:U1: Quest card and progress ring on the phone" }] });
+add("answer", { round: "ui", actor: "b", text: "Scan receipt. The split screen then lists each line item with a single approve button." });
+add("challenge", { round: "ui", actor: "a", target: "b", challengeId: "rua", move: "Evidence Challenge", text: "SplitPay's phone screenshot cuts off the approve button behind the keyboard.", evidence: [{ kind: "evidence", label: "B:U2: [severity 3/5, B4] Approve button hidden on phone" }] });
+add("rebuttal", { round: "ui", actor: "b", challengeId: "rua", text: "Only while typing a note. Closing the keyboard shows it." });
+add("ruling", { round: "ui", challengeId: "rua", votes: { ada: "upheld", rook: "partially_upheld", nova: "upheld" }, reason: "The face-off saw the hidden button on the phone; it blocks the main action there." });
+add("round_sealed", { round: "ui", scores: { a: [76, 72, 74], b: [62, 66, 64] } });
+
+// ---- Round 3: Engineering ----
 add("round_start", { round: "engineering" });
 add("question", { round: "engineering", actor: "rook", text: "When a payment or reward call fails halfway, what does your system do, and how do you know it works?" });
 add("answer", { round: "engineering", actor: "a", text: "Rewards go to a queue first. A failed mint retries up to three times and every attempt is logged. Tests cover the retry path." });
@@ -67,7 +77,7 @@ add("rebuttal", { round: "engineering", actor: "a", challengeId: "r2b", text: "C
 add("ruling", { round: "engineering", challengeId: "r2b", votes: { ada: "rejected", rook: "rejected", nova: "rejected" }, reason: "The server-side signature check is in the snapshot and tested." });
 add("round_sealed", { round: "engineering", scores: { a: [78, 74, 76], b: [62, 65, 60] } });
 
-// ---- Round 3: Innovation ----
+// ---- Round 4: Innovation ----
 add("round_start", { round: "innovation" });
 add("question", { round: "innovation", actor: "nova", text: "What can you do that the obvious alternative can't?" });
 add("answer", { round: "innovation", actor: "a", text: "Team quests turn steps into a shared game, and daily caps stop the reward farming that sank earlier move-to-earn apps." });
@@ -80,7 +90,7 @@ add("rebuttal", { round: "innovation", actor: "a", challengeId: "r3b", text: "Te
 add("ruling", { round: "innovation", challengeId: "r3b", votes: { ada: "partially_upheld", rook: "upheld", nova: "rejected" }, reason: "Judges split: the caps are real, the team mechanic is lightly tested." });
 add("round_sealed", { round: "innovation", scores: { a: [70, 72, 68], b: [75, 73, 78] } });
 
-// ---- Round 4: Feasibility ----
+// ---- Round 5: Feasibility ----
 add("round_start", { round: "feasibility" });
 add("question", { round: "feasibility", actor: "ada", text: "Who pays to run this, and what does one active user cost you?" });
 add("answer", { round: "feasibility", actor: "a", text: "Employers fund rewards from wellness budgets. Hosting and minting cost about two cents per user per month." });
@@ -93,7 +103,7 @@ add("rebuttal", { round: "feasibility", actor: "a", challengeId: "r4b", text: "E
 add("ruling", { round: "feasibility", challengeId: "r4b", votes: { ada: "upheld", rook: "partially_upheld", nova: "upheld" }, reason: "One letter of intent isn't a funding source yet." });
 add("round_sealed", { round: "feasibility", scores: { a: [66, 70, 68], b: [70, 68, 72] } });
 
-// ---- Round 5: Defense, with closing statements before it seals (BAT-06) ----
+// ---- Round 6: Defense, with closing statements before it seals (BAT-06) ----
 add("round_start", { round: "defense" });
 add("question", { round: "defense", actor: "rook", text: "Which of your earlier claims are you least sure about, and why?" });
 add("answer", { round: "defense", actor: "a", text: "The team mechanic. It works in tests, but we've only run it with one group of twelve people." });

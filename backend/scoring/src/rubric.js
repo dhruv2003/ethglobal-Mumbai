@@ -1,10 +1,15 @@
 // PRD 9.1 and 9.3: the published rubrics. Weights are whole percentages that sum to 100.
 
-/** Main five-criterion rubric (PRD 9.1). Product carries the highest weight; engineering is 20%. */
+/**
+ * Main six-criterion rubric (PRD 9.1, plus the UI round). Product carries the highest weight;
+ * engineering is 20%. UI (10%) is judged from a 0G vision comparison of both projects' screens.
+ * Keep in sync with backend/src/agents/rubric.js and frontend/web/src/fight/score.js.
+ */
 export const MAIN_RUBRIC = Object.freeze({
-  id: 'main-v1',
+  id: 'main-v2',
   criteria: Object.freeze([
-    Object.freeze({ key: 'product', label: 'Product usefulness and user journey', weight: 40 }),
+    Object.freeze({ key: 'product', label: 'Product usefulness and user journey', weight: 30 }),
+    Object.freeze({ key: 'ui', label: 'User interface', weight: 10 }),
     Object.freeze({ key: 'engineering', label: 'Engineering and implementation', weight: 20 }),
     Object.freeze({ key: 'innovation', label: 'Innovation and differentiation', weight: 20 }),
     Object.freeze({ key: 'feasibility', label: 'Feasibility and business model', weight: 10 }),

@@ -14,15 +14,15 @@ describe("score.js (PRD 8.2 / 9.2)", () => {
   it("matches the worked numbers for a sealed product round", () => {
     const a = { product: [72, 70, 74] };
     const b = { product: [64, 66, 61] };
-    expect(pointsKept(a)).toBe(26640);
-    expect(fmtScore(scoreHundredths(pointsKept(a)))).toBe("88.80");
-    expect(healthThousandths(a)).toBe(91040);
-    expect(healthThousandths(b)).toBe(88376);
+    expect(pointsKept(a)).toBe(27480);
+    expect(fmtScore(scoreHundredths(pointsKept(a)))).toBe("91.60");
+    expect(healthThousandths(a)).toBe(93280);
+    expect(healthThousandths(b)).toBe(91280);
     expect(fmtHealth(88376)).toBe("88.38"); // half-up from thousandths
   });
 
   it("floors health at 20 even with all zeros", () => {
-    const zeros = Object.fromEntries(["product", "engineering", "innovation", "feasibility", "defense"].map((c) => [c, [0, 0, 0]]));
+    const zeros = Object.fromEntries(["product", "ui", "engineering", "innovation", "feasibility", "defense"].map((c) => [c, [0, 0, 0]]));
     expect(healthThousandths(zeros)).toBe(20000);
   });
 
@@ -49,8 +49,8 @@ describe("reduceFight", () => {
     expect(s.health).toEqual({ a: 100000, b: 100000 });
     expect(s.rulings[0]).toMatchObject({ label: "upheld", attacker: "a", target: "b" });
     s = reduceFight(s, { ...sealProduct, seq: 4 });
-    expect(s.health).toEqual({ a: 91040, b: 88376 });
-    expect(s.damage).toEqual({ round: "product", a: 8960, b: 11624 });
+    expect(s.health).toEqual({ a: 93280, b: 91280 });
+    expect(s.damage).toEqual({ round: "product", a: 6720, b: 8720 });
   });
 
   it("ignores duplicate and stale events (no double damage)", () => {
@@ -62,7 +62,7 @@ describe("reduceFight", () => {
 
   it("never lets a later event rewrite a sealed round", () => {
     const s = foldEvents([sealProduct, { seq: 2, type: "round_sealed", round: "product", scores: { a: [0, 0, 0], b: [100, 100, 100] } }]);
-    expect(s.health).toEqual({ a: 91040, b: 88376 });
+    expect(s.health).toEqual({ a: 93280, b: 91280 });
   });
 
   it("derives the label from votes when the event omits it", () => {
@@ -90,10 +90,10 @@ describe("the mock match", () => {
 
   it("ends with the higher score winning and health = 20 + 0.8 × score", () => {
     expect(final.result).toEqual({ winner: "a", reason: "score" });
-    expect(fmtScore(scoreSoFar(final, "a"))).toBe("72.67");
-    expect(fmtScore(scoreSoFar(final, "b"))).toBe("67.17");
-    expect(fmtHealth(final.health.a)).toBe("78.14");
-    expect(fmtHealth(final.health.b)).toBe("73.74");
+    expect(fmtScore(scoreSoFar(final, "a"))).toBe("72.87");
+    expect(fmtScore(scoreSoFar(final, "b"))).toBe("67.20");
+    expect(fmtHealth(final.health.a)).toBe("78.30");
+    expect(fmtHealth(final.health.b)).toBe("73.76");
     expect(final.health.a).toBeGreaterThan(final.health.b);
   });
 

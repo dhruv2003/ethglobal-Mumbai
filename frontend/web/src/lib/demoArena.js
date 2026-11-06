@@ -24,7 +24,7 @@ export const mockProject = (slug, i) => ({
   tracks: [TRACKS[i % TRACKS.length]],
 });
 
-export const CRITERIA_NAMES = ["Product", "Engineering", "Innovation", "Feasibility", "Defense"];
+export const CRITERIA_NAMES = ["Product", "UI", "Engineering", "Innovation", "Feasibility", "Defense"];
 
 /** Stable pseudo-random numbers so a sample looks the same on every visit. */
 const noise = (seed) => {

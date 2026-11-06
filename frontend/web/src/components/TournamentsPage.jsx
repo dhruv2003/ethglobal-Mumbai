@@ -263,7 +263,7 @@ function RulesCard() {
     <Card variant="surface" className="stack">
       <h2 className="t-heading m0">Rules</h2>
       <ul className="rules t-body">
-        <li>Three judges score five rounds: product 40%, engineering 20%, innovation 20%, feasibility 10%, defense 10%.</li>
+        <li>Three judges score six rounds: product 30%, UI 10%, engineering 20%, innovation 20%, feasibility 10%, defense 10%. The UI round is judged from a side-by-side look at both projects' screens.</li>
         <li>Ties go to a tie-break round, then to an organizer.</li>
         <li>Pools pay 70% to winning bettors, 20% to the winning project, 10% to the platform.</li>
         <li>One-sided pools are refunded.</li>
