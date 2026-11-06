@@ -16,6 +16,7 @@
  *   POST   /api/projects/:id/pipeline  run the whole review again   (organizer)
  *   GET    /api/projects/:id/dossier   the reviewer's dossier for a submitted project
  *   GET    /api/projects/:id/live      live test results (+ /live/files/<device>/<file> for media)
+ *   GET    /api/projects/:id/live/stream/:device   watch a cloud browser live (MJPEG) while the test runs
  *   DELETE /api/projects/:id           delete a submitted project and its data   (organizer)
  *   POST   /api/uploads/video          upload a demo video file (raw body; MP4, MOV or WebM, max 300 MB)
  *   POST   /api/uploads/image          upload a demo screenshot (raw body; PNG, JPEG or WebP, max 10 MB)
@@ -303,6 +304,70 @@ router.get("/projects/:id/live", (req, res) => {
   } catch {
     res.json({ liveTest: null });
   }
+});
+
+/**
+ * Watch a cloud browser while the live test runs: an MJPEG stream of its newest
+ * screen frame (an <img> plays it). Ends when the run stops writing frames.
+ */
+router.get("/projects/:id/live/stream/:device", (req, res) => {
+  const { device } = req.params;
+  if (!/^(laptop|phone)$/.test(device)) return res.status(404).end();
+  const file = path.join(liveDir(req.params.id), device, "live.jpg");
+  const B = "arenaframe";
+  res.writeHead(200, {
+    "content-type": `multipart/x-mixed-replace; boundary=${B}`,
+    "cache-control": "no-store, no-cache, must-revalidate",
+    pragma: "no-cache",
+    connection: "close",
+    "x-content-type-options": "nosniff",
+  });
+  let last = 0;
+  let idleSince = Date.now();
+  const started = Date.now();
+  const send = () => {
+    let st;
+    try {
+      st = fs.statSync(file);
+    } catch {
+      st = null;
+    }
+    if (st && st.mtimeMs !== last) {
+      last = st.mtimeMs;
+      idleSince = Date.now();
+      let jpg;
+      try {
+        jpg = fs.readFileSync(file);
+      } catch {
+        return;
+      }
+      res.write(`--${B}\r\ncontent-type: image/jpeg\r\ncontent-length: ${jpg.length}\r\n\r\n`);
+      res.write(jpg);
+      res.write("\r\n");
+    }
+    // No new frame for 30 s (run finished or not started), or 20 min overall: stop.
+    if (Date.now() - idleSince > 30000 || Date.now() - started > 20 * 60 * 1000) stop();
+  };
+  const timer = setInterval(send, 200);
+  const stop = () => {
+    clearInterval(timer);
+    res.end();
+  };
+  req.on("close", () => clearInterval(timer));
+  send();
+});
+
+/** Is a device being watched right now? (a fresh live frame exists) */
+router.get("/projects/:id/live/now", (req, res) => {
+  const out = {};
+  for (const d of ["laptop", "phone"]) {
+    try {
+      out[d] = Date.now() - fs.statSync(path.join(liveDir(req.params.id), d, "live.jpg")).mtimeMs < 15000;
+    } catch {
+      out[d] = false;
+    }
+  }
+  res.json(out);
 });
 
 router.get("/projects/:id/live/files/:device/:file", (req, res) => {

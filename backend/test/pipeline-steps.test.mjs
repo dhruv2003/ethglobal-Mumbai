@@ -69,5 +69,6 @@ test("a panel with fewer than three judges still judges", async () => {
   }
   const j = state.steps.find((s) => s.id === "judges");
   assert.equal(j.status, "done");
-  assert.match(seen[0][0], /weighs UI\/UX 60% · Code quality 40%/, "while judging, each judge says what they weigh most");
+  assert.match(seen[0][0], /Reading the/);
+  assert.equal(pipelines.get("p2").steps.find((s) => s.id === "judges").parts[0].focus, "UI/UX 60% · Code quality 40%", "each judge says what they weigh most");
 });

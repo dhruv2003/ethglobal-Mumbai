@@ -107,10 +107,24 @@ async function startRecording(ctx, page, dir, maxWidth) {
   fs.mkdirSync(framesDir, { recursive: true });
   const cdp = await ctx.newCDPSession(page);
   const frames = [];
+  // The newest frame, for watching the run live (GET /api/projects/:id/live/stream/:device).
+  // Written to a temp name and renamed, so a reader never gets half a JPEG.
+  const liveFile = path.join(dir, "live.jpg");
+  let lastLive = 0;
   cdp.on("Page.screencastFrame", async (f) => {
     const file = path.join(framesDir, `f${String(frames.length).padStart(5, "0")}.jpg`);
-    fs.writeFileSync(file, Buffer.from(f.data, "base64"));
+    const jpg = Buffer.from(f.data, "base64");
+    fs.writeFileSync(file, jpg);
     frames.push({ file, ts: f.metadata.timestamp });
+    if (Date.now() - lastLive > 250) {
+      lastLive = Date.now();
+      try {
+        fs.writeFileSync(`${liveFile}.tmp`, jpg);
+        fs.renameSync(`${liveFile}.tmp`, liveFile);
+      } catch {
+        /* watching is best effort */
+      }
+    }
     cdp.send("Page.screencastFrameAck", { sessionId: f.sessionId }).catch(() => {});
   });
   await cdp.send("Page.startScreencast", { format: "jpeg", quality: 70, maxWidth, maxHeight: 2000, everyNthFrame: 1 });
@@ -120,6 +134,7 @@ async function startRecording(ctx, page, dir, maxWidth) {
     now: () => Math.round(((Date.now() - startedAt) / 1000) * 10) / 10,
     async stop(outFile) {
       await cdp.send("Page.stopScreencast").catch(() => {});
+      fs.rmSync(liveFile, { force: true }); // the run is over: viewers switch to the recording
       await sleep(300);
       if (frames.length < 2) return { seconds: 0, frames: frames.length };
       const lines = [];
@@ -369,9 +384,8 @@ async function runLiveTestNow({ project: id, target: url, flows: f, outDir: dir,
   flowsLabel = flowsSource;
   fs.mkdirSync(outDir, { recursive: true });
 
-  const runs = [];
-  for (const d of devices) {
-    if (!DEVICES[d]) continue;
+  // Laptop and phone run at the same time, each in its own cloud browser (about half the wall time).
+  const one = async (d) => {
     let run = await runDevice(d);
     if (run.infrastructure) {
       say(`[${d}] cloud browser problem; retrying once in a fresh session (PRD TST-08)`);
@@ -379,8 +393,9 @@ async function runLiveTestNow({ project: id, target: url, flows: f, outDir: dir,
       retry.retriedAfter = run.error;
       run = retry;
     }
-    runs.push(run);
-  }
+    return run;
+  };
+  const runs = await Promise.all(devices.filter((d) => DEVICES[d]).map(one));
   // Keep other devices' results when only some devices were run.
   const previous = (() => {
     try {

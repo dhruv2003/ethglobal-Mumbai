@@ -26,7 +26,7 @@ export async function describeScreenshots(files) {
     content.push({ type: "input_text", text: `Screenshot ${i + 1}:` }, { type: "input_image", image_url: `data:${MIME[ext]};base64,${b64}` });
   });
   const { default: OpenAI } = await import("openai");
-  const res = await new OpenAI().responses.create({ model: VISION_MODEL, instructions: SYSTEM, input: [{ role: "user", content }] });
+  const res = await new OpenAI({ maxRetries: 5, timeout: 180000 }).responses.create({ model: VISION_MODEL, instructions: SYSTEM, input: [{ role: "user", content }] });
   const text = String(res.output_text ?? "").trim();
   const lines = text.split("\n").map((l) => l.trim()).filter((l) => /^Screenshot \d+:/i.test(l));
   if (!lines.length) throw new Error("The vision model didn't describe the screenshots.");
