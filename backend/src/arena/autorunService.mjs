@@ -4,11 +4,12 @@ import { createPublicClient, createWalletClient, defineChain, getAddress, http }
 import { privateKeyToAccount } from "viem/accounts";
 import crypto from "node:crypto";
 import { keccak256, stringToHex, parseEventLogs } from "viem";
-import { dossiers, submissions } from "../store.mjs";
+import { dossiers, pipelines, submissions } from "../store.mjs";
+import { events, OVERALL } from "../events.mjs";
 import { autorunPass } from "./autorun.mjs";
 import { organizerPass, schedule } from "./autoOrganizer.mjs";
 import { proposeBracket } from "./matchmaking.mjs";
-import { listBrackets, saveBracket, startFight, statusOf } from "./routes.mjs";
+import { listBrackets, runningFights, saveBracket, startFight, statusOf } from "./routes.mjs";
 
 const abi = JSON.parse(fs.readFileSync(new URL("../../contracts/abi/TournamentManager.json", import.meta.url), "utf8"));
 const MANAGER_ABI = abi.abi ?? abi;
@@ -17,35 +18,35 @@ const EVERY_MS = 10000;
 let botSend = null;
 let readManager = null;
 let chainNow = null;
-let runTournament = null;
+let canOrganize = false;
 let serverRoles = { organizer: false, publisher: false, address: null };
 
 const hash = (value) => keccak256(stringToHex(JSON.stringify(value)));
 const randomSeed = () => `0x${crypto.randomBytes(32).toString("hex")}`;
 const WEI = 10n ** 18n;
 
-/** What the organizer page shows. */
-export const autoStatus = () => ({ ...serverRoles, ready: serverRoles.organizer && serverRoles.publisher });
-
-/** Start a tournament now with chosen projects, even ones that already fought (organizer key). */
-export async function startTournamentNow(submissionIds) {
-  if (!runTournament) throw Object.assign(new Error("The server has no wallet with the organizer role yet."), { status: 503 });
-  return String(await runTournament(submissionIds));
-}
-
-/** Match actions only a tournament's publisher may send, for tournaments this server publishes. */
-export async function openMatchAsBot(id, index, minutes) {
+const needBot = () => {
   if (!botSend) throw Object.assign(new Error("The server has no publishing wallet."), { status: 503 });
+};
+
+/** Actions only a bracket's publisher or organizer may send, for brackets this server runs. */
+export async function openMatchAsBot(id, index, minutes) {
+  needBot();
   const [now, t] = await Promise.all([chainNow(), readManager("getTournament", [BigInt(id)])]);
   const cutoff = now + BigInt(Math.max(1, Math.floor(Number(minutes)) || 1)) * 60n;
-  const start = cutoff > t.scheduledStart ? cutoff : t.scheduledStart;
-  return botSend("openMatch", [BigInt(id), BigInt(index), cutoff, start]);
+  return botSend("openMatch", [BigInt(id), BigInt(index), cutoff, cutoff > t.scheduledStart ? cutoff : t.scheduledStart]);
 }
-
 export async function voidMatchAsBot(id, index, reasonHash) {
-  if (!botSend) throw Object.assign(new Error("The server has no publishing wallet."), { status: 503 });
+  needBot();
   return botSend("voidMatch", [BigInt(id), BigInt(index), reasonHash]);
 }
+export async function cancelTournamentAsBot(id, reasonHash) {
+  needBot();
+  return botSend("cancelTournament", [BigInt(id), reasonHash]);
+}
+
+/** What the organizer page shows. */
+export const autoStatus = () => ({ ...serverRoles, ready: serverRoles.organizer && serverRoles.publisher });
 
 export function startAutorun() {
   const address = process.env.TOURNAMENT_MANAGER_ADDRESS;
@@ -75,18 +76,19 @@ export function startAutorun() {
   }
   const publish = (id, index, fight) => botSend("publishResult", [id, index, fight.scores.a, fight.scores.b, fight.tie?.a ?? 0, fight.tie?.b ?? 0, fight.resultHash]);
 
-  const minutes = Number(process.env.AUTO_BETTING_MINUTES || 10);
-  const adminWallet = process.env.PLATFORM_WALLET;
+  const minutesFor = (eventId) => events.get(eventId)?.bettingMinutes ?? Number(process.env.AUTO_BETTING_MINUTES || 10);
 
   // Creates the tournament on chain and saves its bracket. The next pass freezes it and opens matches.
-  const createAndRegister = async (field) => {
+  const createAndRegister = async (event, track, field) => {
+    const adminWallet = event.createdBy ?? process.env.ADMIN_WALLET?.split(",")[0]?.trim();
+    if (!adminWallet) throw new Error("Set ADMIN_WALLET in backend/.env: nobody is set to receive the platform's 10%.");
     const seed = randomSeed();
     const plan = await proposeBracket({ submissionIds: field, seed });
     const now = await chainNow();
-    const times = schedule(now, minutes, field.length);
+    const times = schedule(now, event.bettingMinutes, field.length);
     const txHash = await botSend("createTournament", [
       {
-        configHash: hash({ capacity: field.length, created: String(now), rubric: "40/20/20/10/10", split: "70/20/10" }),
+        configHash: hash({ event: event.id, name: event.name, track: track.id, prize: track.prize, deadline: event.deadline, capacity: field.length, created: String(now), rubric: "40/20/20/10/10", split: "70/20/10" }),
         capacity: field.length,
         scheduledStart: times.scheduledStart,
         bettingCutoff: times.bettingCutoff,
@@ -101,7 +103,7 @@ export function startAutorun() {
     const receipt = await client.getTransactionReceipt({ hash: txHash });
     const [created] = parseEventLogs({ abi: MANAGER_ABI, logs: receipt.logs, eventName: "TournamentCreated" });
     const id = created.args.id;
-    saveBracket(id, { title: `Tournament #${id}`, submissionIds: plan.slots, proposal: plan.resultHash });
+    saveBracket(id, { title: `${event.name} · ${track.name}`, track: track.name, eventId: event.id, trackId: track.id, submissionIds: plan.slots, proposal: plan.resultHash });
     return id;
   };
 
@@ -113,14 +115,15 @@ export function startAutorun() {
     return botSend("freeze", [BigInt(bracket.id), projects, bracket.matching.seed, `0x${bracket.matching.resultHash}`]);
   };
 
-  const openArgs = async (id, i) => {
+  const openArgs = async (bracket, i) => {
+    const id = BigInt(bracket.id);
     const [now, t] = await Promise.all([chainNow(), readManager("getTournament", [id])]);
-    const cutoff = now + BigInt(minutes) * 60n;
+    const cutoff = now + BigInt(minutesFor(bracket.eventId)) * 60n;
     return [id, i, cutoff, cutoff > t.scheduledStart ? cutoff : t.scheduledStart];
   };
-  const canOpen = async (id, i) => {
+  const canOpen = async (bracket, i) => {
     try {
-      await client.simulateContract({ ...manager, account, functionName: "openMatch", args: await openArgs(id, i) });
+      await client.simulateContract({ ...manager, account, functionName: "openMatch", args: await openArgs(bracket, i) });
       return true;
     } catch {
       return false; // its fighters aren't decided yet
@@ -132,20 +135,29 @@ export function startAutorun() {
     const [org, pub] = await Promise.all([readManager("ORGANIZER_ROLE", []), readManager("PUBLISHER_ROLE", [])]);
     const [organizer, publisher] = await Promise.all([readManager("hasRole", [org, account.address]), readManager("hasRole", [pub, account.address])]);
     serverRoles = { organizer, publisher, address: account.address };
-    runTournament = organizer && publisher && adminWallet ? createAndRegister : null;
+    canOrganize = organizer && publisher;
   };
 
+  const REVIEW_GRACE_MS = 30 * 60 * 1000; // a stuck review can't hold a tournament back forever
   const organizerDeps = () => ({
-    submissions: () =>
-      process.env.AUTO_TOURNAMENTS === "0"
-        ? []
-        : submissions.list().map((s) => ({ id: s.id, submittedAt: s.submittedAt, ready: Boolean(dossiers.get(s.id)) })),
+    events: () => (process.env.AUTO_TOURNAMENTS === "0" ? [] : events.list()),
+    overall: OVERALL,
+    entries: (eventId) => {
+      const event = events.get(eventId);
+      return submissions.list().filter((s) => s.eventId === eventId).map((s) => ({
+        id: s.id,
+        tracks: s.tracks ?? [],
+        submittedAt: s.submittedAt,
+        ready: Boolean(dossiers.get(s.id)),
+        reviewing: !pipelines.get(s.id)?.finishedAt && Date.now() < Date.parse(event.deadline) + REVIEW_GRACE_MS,
+      }));
+    },
     brackets: listBrackets,
     createAndRegister,
     readTournament: (id) => readManager("getTournament", [id]),
     readMatch: (id, i) => readManager("getMatch", [id, i]),
     freeze,
-    openMatch: async (id, i) => botSend("openMatch", await openArgs(id, i)),
+    openMatch: async (bracket, i) => botSend("openMatch", await openArgs(bracket, i)),
     canOpen,
     botAddress: account.address,
     log: (line) => console.log(`[organizer] ${line}`),
@@ -157,7 +169,7 @@ export function startAutorun() {
     busy = true;
     try {
       await refreshRoles();
-      if (runTournament) await organizerPass(organizerDeps());
+      if (canOrganize) await organizerPass(organizerDeps());
       await autorunPass({
         brackets: listBrackets,
         readTournament: (id) => client.readContract({ ...manager, functionName: "getTournament", args: [id] }),
@@ -165,6 +177,7 @@ export function startAutorun() {
         nowSec: async () => (await client.getBlock()).timestamp,
         fightOf: statusOf,
         startFight,
+        runningFights,
         publish,
         botAddress: account?.address ?? null,
         log: (line) => console.log(`[autorun] ${line}`),

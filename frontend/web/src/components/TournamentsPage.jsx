@@ -9,9 +9,10 @@ import { Card, Chip, StatusPill } from "@ds/ui.jsx";
 import { usePoll } from "../lib/chain.js";
 import { loadTournament, loadTournaments } from "../lib/arena.js";
 import { MATCH_LABEL, PHASE_LABEL } from "../lib/labels.js";
-import { POOL_LABEL, tournamentMarket } from "../lib/pools.js";
+import { POOL_LABEL, matchMarket, tournamentMarket } from "../lib/pools.js";
 import { Link, navigate } from "../lib/router.jsx";
 import { BetModal } from "./BetModal.jsx";
+import { eventIsOpen, listEvents } from "../lib/events.js";
 import { isMatchOpen, openPools } from "../lib/tournamentView.js";
 import { BetPanel } from "./BetPanel.jsx";
 import { useCountdown } from "./ChainBits.jsx";
@@ -52,6 +53,28 @@ function TournamentCard({ t }) {
               {t.count} projects · {when(t.startsAt)}
             </p>
             <span className="tcard__cta t-label">{cta} →</span>
+          </div>
+        </Link>
+      </Tilt>
+    </motion.div>
+  );
+}
+
+function EventCard({ event }) {
+  const open = eventIsOpen(event);
+  return (
+    <motion.div variants={fadeUp} layout>
+      <Tilt className="tcard-tilt" sheen={false} max={4}>
+        <Link to={`/tournaments/${encodeURIComponent(event.id)}`} className="tcard">
+          <div className="tcard__body">
+            <div className="section-head">
+              <StatusPill tone={open ? "live" : "neutral"}>{open ? "Open for submissions" : "Submissions closed"}</StatusPill>
+            </div>
+            <h2 className="t-heading m0">{event.name}</h2>
+            <p className="t-caption m0 t-num">
+              {event.tracks.length} {event.tracks.length === 1 ? "track" : "tracks"} · {open ? "closes" : "closed"} {when(event.deadline)}
+            </p>
+            <span className="tcard__cta t-label">{open ? "Enter or view" : "View"} →</span>
           </div>
         </Link>
       </Tilt>
@@ -128,11 +151,6 @@ function OpenForBetting({ tournaments, loaded, failed, wallet }) {
       ) : (
         <Card variant="surface" className="empty">
           <span className="t-body muted">{failed ? "Couldn't reach the chain. Retrying…" : loaded ? "Nothing is open for betting right now." : "Checking the chain…"}</span>
-          {loaded && (
-            <Link className="btn btn--secondary btn--sm" to="/organizer">
-              Open a match in the organizer console
-            </Link>
-          )}
         </Card>
       )}
       <BetModal pool={betting} wallet={wallet} onClose={close} onPlaced={() => navigate(`${betting.to}?watch=1`)} />
@@ -143,10 +161,11 @@ function OpenForBetting({ tournaments, loaded, failed, wallet }) {
 export function TournamentsPage({ wallet }) {
   const [filter, setFilter] = useState("all");
   const { data: all, error } = usePoll(loadTournaments, [], 10000);
-  const list = useMemo(() => [...(all ?? [])].sort((a, b) => ORDER[a.phase] - ORDER[b.phase]), [all]);
+  const { data: events } = usePoll(listEvents, [], 30000);
+  // Brackets live inside their tournament. Only ones from before tournaments existed are listed here.
+  const list = useMemo(() => [...(all ?? [])].filter((t) => !t.eventId).sort((a, b) => ORDER[a.phase] - ORDER[b.phase]), [all]);
   const shown = filter === "all" ? list : list.filter((t) => t.phase === filter);
   const count = (id) => (id === "all" ? list.length : list.filter((t) => t.phase === id).length);
-  const real = list;
   const chainList = all;
 
   return (
@@ -164,8 +183,21 @@ export function TournamentsPage({ wallet }) {
           Open the arena map
         </Link>
       </header>
-      <OpenForBetting wallet={wallet} tournaments={real} loaded={chainList != null} failed={!!error && chainList == null} />
-      <h2 className="t-heading m0">All tournaments</h2>
+      <h2 className="t-heading m0">Tournaments</h2>
+      {events?.length ? (
+        <motion.div className="tgrid" variants={stagger(0.06)} initial="hidden" animate="show">
+          {[...events].reverse().map((event) => (
+            <EventCard key={event.id} event={event} />
+          ))}
+        </motion.div>
+      ) : (
+        <Card variant="surface" className="empty">
+          <span className="t-body muted">{events ? "No tournaments yet. They appear here when an organizer creates one." : "Loading tournaments…"}</span>
+        </Card>
+      )}
+      <OpenForBetting wallet={wallet} tournaments={all ?? []} loaded={chainList != null} failed={!!error && chainList == null} />
+      {list.length > 0 && <>
+      <h2 className="t-heading m0">Earlier brackets</h2>
       <div className="trade__presets" role="group" aria-label="Filter by status">
         {FILTERS.map(([id, word]) => (
           <Chip key={id} selected={filter === id} onClick={() => setFilter(id)}>
@@ -181,13 +213,9 @@ export function TournamentsPage({ wallet }) {
       {!shown.length && (
         <Card variant="surface" className="empty">
           <span className="t-body muted">{all == null ? "Checking the chain…" : filter === "all" ? "No tournaments yet. An organizer creates the first one." : `No ${filter} tournaments right now.`}</span>
-          {all != null && filter === "all" && (
-            <Link className="btn btn--secondary btn--sm" to="/organizer">
-              Open the organizer console
-            </Link>
-          )}
         </Card>
       )}
+      </>}
     </div>
   );
 }
@@ -263,7 +291,7 @@ function RulesCard() {
     <Card variant="surface" className="stack">
       <h2 className="t-heading m0">Rules</h2>
       <ul className="rules t-body">
-        <li>Three judges score five rounds: product 40%, engineering 20%, innovation 20%, feasibility 10%, defense 10%.</li>
+        <li>Three judges score six rounds: product 30%, UI 10%, engineering 20%, innovation 20%, feasibility 10%, defense 10%. The UI round is judged from a side-by-side look at both projects' screens.</li>
         <li>Ties go to a tie-break round, then to an organizer.</li>
         <li>Pools pay 70% to winning bettors, 20% to the winning project, 10% to the platform.</li>
         <li>One-sided pools are refunded.</li>
@@ -306,8 +334,8 @@ function Lobby({ t, wallet }) {
 
   return (
     <div className="stack stack--page">
-      <Link to="/tournaments" className="back btn btn--ghost btn--sm">
-        ← Tournaments
+      <Link to={t.eventId ? `/tournaments/${encodeURIComponent(t.eventId)}` : "/tournaments"} className="back btn btn--ghost btn--sm">
+        ← {t.eventId ? t.title.split(" · ")[0] : "Tournaments"}
       </Link>
       <header className="intro intro--row">
         <div className="intro">
@@ -333,9 +361,6 @@ function Lobby({ t, wallet }) {
       {!t.frozen && t.phase !== "canceled" ? (
         <Card variant="surface" className="empty">
           <span className="t-body muted">Betting opens once the organizer locks the bracket.</span>
-          <Link className="btn btn--secondary btn--sm" to="/organizer">
-            Organizer tools
-          </Link>
         </Card>
       ) : (
         <div className="lobby-grid">
@@ -345,7 +370,11 @@ function Lobby({ t, wallet }) {
             <RulesCard />
           </div>
           <div className="lobby-side">
-            <BetPanel wallet={wallet} tournamentId={t.id} market={tournamentMarket(t.id)} selections={selections} title="Who wins it all?" />
+            {t.count === 2 ? (
+              t.matches[0].opened && <BetPanel wallet={wallet} tournamentId={t.id} market={matchMarket(t.id, 0)} selections={selections} title="Who wins this match?" />
+            ) : (
+              <BetPanel wallet={wallet} tournamentId={t.id} market={tournamentMarket(t.id)} selections={selections} title="Who wins it all?" />
+            )}
           </div>
         </div>
       )}

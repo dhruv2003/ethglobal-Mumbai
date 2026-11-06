@@ -133,6 +133,19 @@ test("readLatest reads the newest panel by the publisher, then its scorecards", 
   assert.equal(await arkiv.readLatest("none", { client: fakeReader([[]]).client }), null);
 });
 
+test("readLatest skips a half-written panel (a write that failed after some scorecards) for the newest complete one", async () => {
+  const panel = (k, score) => ({ $key: KEY(k), $owner: process.env.ARKIV_PUBLISHER, $expiresAt: 150n, projectId: val("tripwire"), runAt: val(1_790_000_000n), panelScore: val(score), complete: val(true), judges: val(3), provider: val("0g"), model: val("m") });
+  const card = (k, name) => ({ $key: KEY(k), judgeId: val(name), judgeName: val(name), status: val("scored"), overall: val("60"), headline: val("h") });
+  const { client } = fakeReader([
+    [panel(1, "62.26"), panel(2, "62.26")], // same run, written twice; the first write broke halfway
+    [card(10, "Priya")], // panel 1: only 1 of 3 scorecards
+    [card(20, "Priya"), card(21, "Marcus"), card(22, "Ana")], // panel 2: complete
+  ]);
+  const r = await arkiv.readLatest("tripwire", { client });
+  assert.equal(r.panel.entityKey, KEY(2));
+  assert.equal(r.scorecards.length, 3);
+});
+
 test("private keys work with or without 0x; bad ones get a clear error", () => {
   const hex = "ab".repeat(32);
   assert.equal(arkiv.normalizeKey(hex), `0x${hex}`);

@@ -5,10 +5,12 @@
  * else (animation, rulings, stakes) can move it.
  */
 
-export const CRITERIA = ["product", "engineering", "innovation", "feasibility", "defense"];
-export const WEIGHTS = { product: 40, engineering: 20, innovation: 20, feasibility: 10, defense: 10 };
+/* Keep in sync with backend/scoring/src/rubric.js and backend/src/agents/rubric.js. */
+export const CRITERIA = ["product", "ui", "engineering", "innovation", "feasibility", "defense"];
+export const WEIGHTS = { product: 30, ui: 10, engineering: 20, innovation: 20, feasibility: 10, defense: 10 };
 export const CRITERION_LABEL = {
   product: "Product",
+  ui: "UI",
   engineering: "Engineering",
   innovation: "Innovation",
   feasibility: "Feasibility",

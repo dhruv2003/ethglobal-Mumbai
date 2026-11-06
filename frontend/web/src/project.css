@@ -340,3 +340,6 @@
 .screen__live { position: absolute; top: 8px; left: 8px; padding: 2px 8px; border-radius: var(--radius-pill); background: var(--danger); color: #fff; font: 800 11px/16px var(--font-sans); letter-spacing: 0.06em; }
 .screen__live span { animation: fcard-live 1s ease-in-out infinite; margin-right: 2px; }
 @media (prefers-reduced-motion: reduce) { .screen__live span { animation: none; } }
+
+/* Long verdict text: a normal wrapping block, not a one-line pill. */
+.jcard__deal { padding: var(--space-2) var(--space-3); border-radius: 12px; background: var(--crush-soft); color: var(--danger, #b3261e); font: 700 13px/18px var(--font-sans); overflow-wrap: anywhere; }

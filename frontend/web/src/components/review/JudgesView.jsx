@@ -10,7 +10,7 @@ import { useCountUp } from "../../lib/motion.js";
 import { Spinner } from "../Feedback.jsx";
 import { judgeAsFighter } from "../JudgesPage.jsx";
 import { PixelFighter } from "../PixelFighter.jsx";
-import { JudgeTraces, LiveCalls, PanelProof, usd } from "../ZeroGProof.jsx";
+import { JudgeTraces, LiveCalls, PanelProof, StorageProof, usd } from "../ZeroGProof.jsx";
 import { ArkivRecord } from "../ArkivRecord.jsx";
 import { BAND_WORD, CRITERIA, JUDGE_TONES, band } from "./useReviewData.js";
 
@@ -209,7 +209,7 @@ function Compare({ reviews, sel, onPick }) {
 }
 
 export function JudgesView({ project, data, sel: selIn = 0, onSel }) {
-  const { result, running, progress, health: h, ask, asking, error } = data;
+  const { result, running, progress, health: h, ask, asking, error, zgStorage } = data;
   const reviews = result?.reviews ?? [];
   const [own, setOwn] = useState(selIn);
   const sel = Math.min(onSel ? selIn : own, Math.max(0, reviews.length - 1));
@@ -267,6 +267,7 @@ export function JudgesView({ project, data, sel: selIn = 0, onSel }) {
                 <JudgeTraces traces={r.traces} />
               </div>
             ))}
+            {h && zgStorage && <StorageProof kind="review" id={project.id} initial={zgStorage} />}
             {h && <ArkivRecord projectId={project.id} ranAt={result?.ranAt} />}
           </div>
         </details>

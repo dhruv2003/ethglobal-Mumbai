@@ -14,7 +14,7 @@ import { stateAt } from "../fight/reducer.js";
 import { CRITERION_LABEL, fmtHealth } from "../fight/score.js";
 import { useFightSound } from "../fight/useFightSound.js";
 import { eventDuration } from "../fight/choreo.js";
-import { usePlayback, useReel } from "../fight/usePlayback.js";
+import { useReel } from "../fight/usePlayback.js";
 import { formatAmount, usePoll, useToken } from "../lib/chain.js";
 import { getFight, loadTournament } from "../lib/arena.js";
 import { MATCH_LABEL } from "../lib/labels.js";
@@ -44,7 +44,7 @@ function matchFor(tournament, match, fight, a, b) {
   };
 }
 
-const canPlay = (fight) => (fight?.status === "done" || fight?.status === "running") && fight.events?.length > 0;
+const canPlay = (fight) => fight?.status === "done" && fight.events?.length > 0;
 
 function Stage({ tournament, match, fight, a, b, covered }) {
   const fightMatch = useMemo(() => matchFor(tournament, match, fight, a, b), [tournament, match, fight, a, b]);
@@ -72,7 +72,7 @@ function PreFight({ tournament, match, fight, fightMatch }) {
   let note;
   if (open) note = "Bets are open. Place yours and the fight opens full screen.";
   else if (!match.opened) note = "The organizer hasn't opened this match yet.";
-  else if (fight?.status === "running") (title = "The judges are in session"), (note = `The fighters are arguing live on 0G: ${fight.note ?? "starting"}. The replay appears here when it is sealed.`);
+  else if (fight?.status === "running") (title = open ? "The fight hasn't started" : "The judges are finishing"), (note = open ? "Bets are open. The fight plays when betting closes." : "The fight plays here as soon as the judges finish.");
   else if (fight?.status === "sealed") (title = "Fight recorded"), (note = "The fight has been judged. The replay unlocks when betting closes.");
   else if (fight?.status === "failed") (title = "The fight hit a problem"), (note = `The organizer will run it again. (${fight.error})`);
   else note = "Betting is closed. The organizer runs the fight next.";
@@ -95,17 +95,7 @@ function PreFight({ tournament, match, fight, fightMatch }) {
 }
 
 function Player({ fightMatch, events, fight, theater = false, onResult }) {
-  // While 0G is still producing it: every move as it arrives. Once it's over: the 30-second reel.
-  const live = fight.status === "running";
-  const reel = useReel(events, { autoPlay: theater && !live });
-  const full = usePlayback(events, { autoPlay: live, live });
-  const pb = live ? full : reel;
-  const wasLive = useRef(live);
-  const { playFrom } = reel;
-  useEffect(() => {
-    if (wasLive.current && !live) playFrom(full.index);
-    wasLive.current = live;
-  }, [live, playFrom, full.index]);
+  const pb = useReel(events, { autoPlay: theater });
   // Tell the theater once the winner's banner has had a moment on screen.
   const told = useRef(false);
   useEffect(() => {
@@ -128,7 +118,7 @@ function Player({ fightMatch, events, fight, theater = false, onResult }) {
 
         <span className="fight-round t-label">
           <span className="live-dot" aria-hidden="true" /> {state.result ? "Result" : state.round ? `${CRITERION_LABEL[state.round]} round` : "Opening pitches"}
-          {live ? null : <span className="t-caption t-num">{Math.ceil(pb.leftMs / 1000)}s</span>}
+          <span className="t-caption t-num">{Math.ceil(pb.leftMs / 1000)}s</span>
         </span>
         <span className="t-caption t-num fight-controls__health">
           {fmtHealth(state.health.a)} · {fmtHealth(state.health.b)} HP
@@ -240,7 +230,7 @@ function Theater({ tournament, match, fight, a, b, wallet, onClose }) {
         ) : (
           <div className="theater__stage theater__stage--wait">
             <FightStage match={fightMatch} state={NOT_STARTED} event={INTRO} ms={eventDuration(INTRO)} reduced captions={false} typing={false} fit />
-            <p className="theater__note t-body">{fight?.status === "running" ? "The judges are in session. The first moves appear here in a moment." : "Your bet is in. The fight plays here when it starts."}</p>
+            <p className="theater__note t-body">{fight?.status === "running" ? "The judges are finishing. The fight plays here as soon as they're done." : "Your bet is in. The fight plays here when it starts."}</p>
           </div>
         )}
         {fought && !finalized && <p className="theater__note t-body">The fight is over. The result is being published on chain.</p>}
@@ -318,7 +308,7 @@ function ResultCard({ outcome, bet, onClose, onReplay }) {
 }
 
 /** Minimal side card: who's ahead, pool size, one button. The bet itself happens in the popup. */
-function BetCard({ shares, names, total, symbol, mine, onBet, onWatch, live }) {
+function BetCard({ shares, names, total, symbol, mine, onBet, live }) {
   return (
     <Card className="bet bet--mini">
       <div className="section-head">
@@ -342,9 +332,6 @@ function BetCard({ shares, names, total, symbol, mine, onBet, onWatch, live }) {
       )}
       <button type="button" className="bm__go" onClick={onBet}>
         Place a bet
-      </button>
-      <button type="button" className="btn btn--ghost btn--sm" onClick={onWatch}>
-        Watch full screen
       </button>
     </Card>
   );
@@ -429,15 +416,15 @@ export function MatchFightPage({ id, matchIndex, wallet }) {
   const [watching, setWatching] = useState(wantsWatch);
   const [betting, setBetting] = useState(null);
   const closeBet = useCallback(() => setBetting(null), []);
-  // A running fight opens full screen by itself, once.
+  // When the fight is ready to play, it opens full screen by itself, once.
   const autoOpened = useRef(false);
-  const running = fight?.status === "running";
+  const ready = canPlay(fight);
   useEffect(() => {
-    if (running && !autoOpened.current) {
+    if (ready && !autoOpened.current) {
       autoOpened.current = true;
       setWatching(true);
     }
-  }, [running]);
+  }, [ready]);
   const closeTheater = useCallback(() => {
     setWatching(false);
     if (wantsWatch()) history.replaceState({}, "", location.pathname);
@@ -463,7 +450,7 @@ export function MatchFightPage({ id, matchIndex, wallet }) {
         theater={{ open: watching, wallet, close: closeTheater, watch: () => setWatching(true) }}
         side={(a, b) =>
           a && b && chainOpen ? (
-            <ChainBetCard wallet={wallet} pool={chainBetPool(t, match)} live={match.status === "live"} onBet={() => setBetting(chainBetPool(t, match))} onWatch={() => setWatching(true)} />
+            <ChainBetCard wallet={wallet} pool={chainBetPool(t, match)} live={match.status === "live"} onBet={() => setBetting(chainBetPool(t, match))} />
           ) : match.opened ? (
             <BetPanel
               wallet={wallet}

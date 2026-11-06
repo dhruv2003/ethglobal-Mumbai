@@ -7,7 +7,8 @@
  * next to the live-test step results they already see. Each observation keeps its
  * 0G trace (request ID, provider, cost) so it can be audited like a judge review.
  *
- * Results are cached in backend/data/evidence/<id>.json, because the screenshots
+ * Results are cached through the store (data/evidence/<id>.json, archived to 0G Storage
+ * when ZG_STORAGE=1), because the screenshots
  * of a finished test don't change. Pass { fresh: true } to look again.
  *
  *   enable: npm run judge -- --project <id> --evidence   or JUDGE_EVIDENCE=1 for the API
@@ -17,7 +18,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import zg from "../zg/client.js";
 import zgModels from "../zg/models.js";
-import { DATA_DIR, liveDir } from "../store.mjs";
+import { evidence as evidenceStore, liveDir } from "../store.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 export const EVIDENCE_ENABLED = process.env.JUDGE_EVIDENCE === "1" || process.env.JUDGE_EVIDENCE === "true";
@@ -123,12 +124,8 @@ async function pool(items, n, fn) {
 /** True when every screenshot of this project already has a cached observation (reusing them is free). */
 export function hasCachedEvidence(project, model = zgModels.MODELS.vision) {
   const shots = screenshotsOf(project).filter((s) => fs.existsSync(s.file));
-  try {
-    const cached = JSON.parse(fs.readFileSync(path.join(DATA_DIR, "evidence", `${project.id.replace(/[^a-zA-Z0-9_-]/g, "")}.json`), "utf8"));
-    return shots.length > 0 && cached.model === model && cached.records?.length === shots.length && cached.records.every((r) => r.observation);
-  } catch {
-    return false;
-  }
+  const cached = evidenceStore.get(project.id);
+  return Boolean(shots.length > 0 && cached && cached.model === model && cached.records?.length === shots.length && cached.records.every((r) => r.observation));
 }
 
 /**
@@ -138,15 +135,10 @@ export function hasCachedEvidence(project, model = zgModels.MODELS.vision) {
 export async function collectScreenshotEvidence(project, { fresh = false, client = zg, model = zgModels.MODELS.vision, concurrency = 4, log = () => {} } = {}) {
   const shots = screenshotsOf(project).filter((s) => fs.existsSync(s.file));
   if (!shots.length) return [];
-  const cacheFile = path.join(DATA_DIR, "evidence", `${project.id.replace(/[^a-zA-Z0-9_-]/g, "")}.json`);
   if (!fresh) {
-    try {
-      const cached = JSON.parse(fs.readFileSync(cacheFile, "utf8"));
-      // Marked cached: a later run reuses them without paying again, so its cost total must not count them.
-      if (cached.model === model && cached.records?.length === shots.length && cached.records.every((r) => r.observation)) return cached.records.map((r) => ({ ...r, cached: true }));
-    } catch {
-      /* no cache yet */
-    }
+    const cached = evidenceStore.get(project.id);
+    // Marked cached: a later run reuses them without paying again, so its cost total must not count them.
+    if (cached && cached.model === model && cached.records?.length === shots.length && cached.records.every((r) => r.observation)) return cached.records.map((r) => ({ ...r, cached: true }));
   }
   const records = await pool(shots, concurrency, async (s) => {
     const base = { id: s.id, device: s.device, stepId: s.stepId, stepTitle: s.stepTitle };
@@ -159,8 +151,7 @@ export async function collectScreenshotEvidence(project, { fresh = false, client
       return { ...base, error: String(e.message).slice(0, 200), ...(e.requestId ? { trace: { requestId: e.requestId } } : {}) };
     }
   });
-  fs.mkdirSync(path.dirname(cacheFile), { recursive: true });
-  fs.writeFileSync(cacheFile, JSON.stringify({ model, at: new Date().toISOString(), records }, null, 2));
+  evidenceStore.save(project.id, { model, at: new Date().toISOString(), records });
   return records;
 }
 

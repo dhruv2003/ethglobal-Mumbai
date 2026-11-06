@@ -107,9 +107,27 @@ const serial = (fn) => {
   tail = run.catch(() => {});
   return run;
 };
+/**
+ * Chain writes fail now and then for reasons that clear on their own: another
+ * process using the same wallet took the nonce, a node hiccup ("Execution error
+ * without revert data"), a rate limit. Try again with backoff; a bad entity
+ * (schema/validation) fails at once.
+ */
+const PERMANENT = /schema|validat|invalid|too (large|long)|exceeds|insufficient funds/i;
+async function withRetry(fn, { tries = 4, wait = 1500 } = {}) {
+  for (let i = 1; ; i++) {
+    try {
+      return await fn();
+    } catch (e) {
+      const msg = String(e?.shortMessage ?? e?.message ?? e);
+      if (i >= tries || PERMANENT.test(msg)) throw e;
+      await new Promise((r) => setTimeout(r, wait * 2 ** (i - 1)));
+    }
+  }
+}
 export const walletClient = () => {
   wal ??= createWalletClient({ chain: chain(), transport: http(), account: account() });
-  return { createEntity: (...args) => serial(() => wal.createEntity(...args)) };
+  return { createEntity: (...args) => serial(() => withRetry(() => wal.createEntity(...args))) };
 };
 export const ttlDays = () => TTL_DAYS;
 
@@ -176,16 +194,28 @@ export async function readLatest(projectId, { client = null } = {}) {
     .ownedBy(owner)
     .where(eq("projectId", clip128(projectId)))
     .orderBy(desc("runAt"))
-    .limit(1)
+    .limit(5)
     .fetch();
-  const p = entities[0];
-  if (!p) return null;
-  const cards = await c
-    .select({ $key: true, judgeId: true, judgeName: true, status: true, overall: true, headline: true })
-    .from(Scorecards)
-    .ownedBy(owner)
-    .where(eq("panel", key(p.$key)))
-    .fetch();
+  if (!entities.length) return null;
+  // A write that failed halfway can leave a panel with only some of its scorecards
+  // (entities are read-only, so it can't be removed). Show the newest complete one.
+  const cardsOf = (p) =>
+    c
+      .select({ $key: true, judgeId: true, judgeName: true, status: true, overall: true, headline: true })
+      .from(Scorecards)
+      .ownedBy(owner)
+      .where(eq("panel", key(p.$key)))
+      .fetch();
+  let p = null;
+  let cards = null;
+  for (const cand of entities) {
+    const got = await cardsOf(cand);
+    if (!p) [p, cards] = [cand, got]; // fallback: the newest, even if incomplete
+    if (got.entities.length >= Number(v(cand.judges) ?? 0)) {
+      [p, cards] = [cand, got];
+      break;
+    }
+  }
   const { currentBlock, currentBlockTime, blockDuration } = await c.getBlockTiming();
   const expiresUnix = Number(currentBlockTime) + Number(BigInt(p.$expiresAt) - BigInt(currentBlock)) * Number(blockDuration || BLOCK_SECONDS);
   const swarmRef = v(p.swarmRef);

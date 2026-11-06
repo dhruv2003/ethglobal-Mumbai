@@ -47,13 +47,15 @@ const all = () =>
     build.judgeRecord(validateForm(EXAMPLE_FORMS[0]).persona),
     build.tournamentRecord(tournament),
     build.fightRecord(fight, tournament),
+    build.reviewRecord(sample, { ranAt: "2026-11-06T10:00:00Z", panelHundredths: 6226, model: "gpt-5.4", reviews: [{ status: "scored", overallHundredths: 6226, review: { comment: "c", criteria: [] } }] }),
+    build.fileRecord(sample, { kind: "live-screenshot", name: "live/laptop/smoke-laptop-f1.jpg", buffer: Buffer.from([0xff, 0xd8, 0xff, 0xd9]) }),
   ].filter(Boolean);
 
 test("every record type has a builder, and every built record has project identity where it should", () => {
   const types = new Set(all().map((r) => r.type));
   assert.deepEqual([...types].sort(), [...TYPES].sort());
   for (const r of all()) {
-    if (["project", "pipeline", "dossier", "transcript", "livetest", "vision"].includes(r.type)) {
+    if (["project", "pipeline", "dossier", "transcript", "livetest", "vision", "review", "file"].includes(r.type)) {
       assert.ok(r.attrs.projectId, r.type);
       assert.ok(r.attrs.projectName, r.type);
     }
@@ -117,11 +119,13 @@ function fakeChain() {
         where: (w) => (q.where.push(w), b),
         orderBy: () => b,
         limit: (n) => ((q.limit = n), b),
+        offset: (n) => ((q.offset = n), b),
         fetch: async () => {
           const filters = q.where.flatMap(conds);
           const val = (v) => (v && typeof v === "object" && "value" in v ? v.value : v);
           const hit = rows.filter((r) => r.schema === q.schema && filters.every((f) => String(val(r.values[f.name])) === String(val(f.value))));
-          const out = hit.reverse().slice(0, q.limit ?? 100).map((r) => ({ $key: r.key, $owner: "0x", $expiresAt: 1n, ...Object.fromEntries(Object.entries(r.values).map(([k, v]) => [k, { value: k === "payload" ? `0x${Buffer.from(v).toString("hex")}` : val(v) }])) }));
+          const from = q.offset ?? 0;
+          const out = hit.reverse().slice(from, from + (q.limit ?? 100)).map((r) => ({ $key: r.key, $owner: "0x", $expiresAt: 1n, ...Object.fromEntries(Object.entries(r.values).map(([k, v]) => [k, { value: k === "payload" ? `0x${Buffer.from(v).toString("hex")}` : val(v) }])) }));
           return { entities: out };
         },
       };
@@ -142,4 +146,44 @@ test("writeRecord skips an unchanged record and readRecord reassembles the newes
   const back = await store.readRecord("dossier", { projectId: "go-health-me" }, chain);
   assert.deepEqual(back.payload, sample.dossier);
   assert.equal(back.projectName, sample.submission.name);
+});
+
+test("files go on chain as raw parts, come back byte for byte, and an unchanged file isn't written again", async () => {
+  const { rows, client, reader } = fakeChain();
+  const crypto = await import("node:crypto");
+  const buf = crypto.randomBytes(store.PART_BYTES * 2 + 1234); // 3 parts, incompressible like a video
+  const r = build.fileRecord(sample, { kind: "live-recording", name: "live/laptop/video.mp4", size: buf.length });
+  assert.equal(r.attrs.mime, "video/mp4");
+  const w1 = await store.writeBlob("file", r.attrs, buf, { client, reader });
+  assert.equal(w1.entityKeys.length, 3);
+  assert.ok(rows.every((x) => x.values.enc === "raw"));
+  const back = await store.readBlob("file", { projectId: r.attrs.projectId, name: "live/laptop/video.mp4" }, { reader });
+  assert.ok(back.buffer.equals(buf));
+  assert.equal(back.hash, crypto.createHash("sha256").update(buf).digest("hex"));
+  const w2 = await store.writeBlob("file", r.attrs, buf, { client, reader });
+  assert.equal(w2.skipped, true);
+  assert.equal(rows.length, 3);
+});
+
+test("the full judging review is its own record, with every judge's comment and criteria", () => {
+  const result = { ranAt: "2026-11-06T10:00:00Z", panelHundredths: 5674, model: "gpt-5.4", reviews: [{ status: "scored", overallHundredths: 5655, review: { headline: "h", comment: "why", criteria: [{ id: "ui_ux", score: 60, comment: "because" }] } }, { status: "declined", detail: "no" }] };
+  const r = build.reviewRecord(sample, result);
+  assert.equal(r.attrs.judges, 2);
+  assert.equal(r.attrs.scored, 1);
+  assert.equal(r.attrs.panelScore.value, "56.74");
+  assert.equal(r.payload.reviews[0].review.criteria[0].comment, "because");
+  assert.equal(build.reviewRecord(sample, null), null);
+});
+
+test("the demo video stays off chain unless ARKIV_DEMO_VIDEO=1", async () => {
+  const { projectFiles } = await import("../src/arkiv/records/sync.mjs");
+  const { mediaDir, videos } = await import("../src/store.mjs");
+  fs.mkdirSync(mediaDir("vid-1"), { recursive: true });
+  fs.writeFileSync(path.join(mediaDir("vid-1"), "demo.mp4"), "x");
+  videos.save("vid-1", { ext: "mp4", bytes: 1, seconds: 1 });
+  delete process.env.ARKIV_DEMO_VIDEO;
+  assert.ok(!projectFiles("vid-1").some((f) => f.kind === "demo-video"));
+  process.env.ARKIV_DEMO_VIDEO = "1";
+  assert.ok(projectFiles("vid-1").some((f) => f.kind === "demo-video" && f.name === "demo.mp4"));
+  delete process.env.ARKIV_DEMO_VIDEO;
 });

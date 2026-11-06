@@ -53,6 +53,7 @@ export function viewOfChain(t, meta = null) {
     title: meta?.title ?? `Tournament #${t.id}`,
     track: meta?.track ?? "Open",
     registered: Boolean(meta),
+    eventId: meta?.eventId ?? null,
     matching: meta?.matching ?? null,
     count: t.count,
     frozen,
@@ -74,7 +75,8 @@ export const isMatchOpen = (view, match, now = Date.now()) => match.opened && ma
 /** Every pool of a tournament taking bets right now. */
 export function openPools(view, now = Date.now()) {
   const pools = [];
-  if (view.frozen && view.phase !== "canceled" && now < view.cutoffMs) {
+  // With 2 projects, "who wins it all" is the same question as the only match, so only the match is offered.
+  if (view.count > 2 && view.frozen && view.phase !== "canceled" && now < view.cutoffMs) {
     pools.push({ key: `${view.id}-winner`, title: "Who wins it all?", detail: `${view.title} · ${view.count} projects`, to: `/tournaments/${view.id}`, cutoffMs: view.cutoffMs, fighters: [] });
   }
   for (const match of view.matches) {

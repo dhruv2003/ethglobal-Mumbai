@@ -4,6 +4,8 @@
  *
  *   cd backend && npm run judge -- --project go-health-me [--evidence] [--fresh-evidence] [--out file.json]
  *
+ * With ZG_STORAGE=1 the saved review is archived on 0G Storage before exiting
+ * (prints "pending" if 0G is slow; the server keeps retrying).
  *   --evidence        a vision model on 0G reads the live-test screenshots first
  *   --out <file>      also write the result here
  */
@@ -12,6 +14,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { reviewNow } from "../api.mjs";
+import { zgStatus } from "../store.mjs";
+import * as archive from "../zg/archive.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
@@ -51,7 +55,18 @@ try {
     fs.writeFileSync(path.resolve(out), JSON.stringify(result, null, 2));
     console.log(`wrote ${out}`);
   }
+  if (archive.enabled()) {
+    console.log("Archiving on 0G Storage…");
+    const left = await archive.drain({ timeoutMs: Number(process.env.ZG_STORAGE_DRAIN_MS) || 5 * 60_000 });
+    const st = zgStatus("review", id);
+    if (st.status === "stored") console.log(`0G Storage: review stored · root ${st.rootHash} · tx ${st.txHash ?? "(already on network)"}${st.links?.tx ? ` · ${st.links.tx}` : ""}`);
+    else console.log(`0G Storage: review ${st.status}${st.error ? ` (${st.error})` : ""}; the server will keep retrying.`);
+    const head = archive.loadHead();
+    if (head) console.log(`0G Storage head manifest: ${head.rootHash}`);
+    if (left.pending || left.failed) console.log(`0G outbox: ${left.pending} pending, ${left.failed} failed`);
+  }
 } catch (e) {
   console.error(e.message);
   process.exit(1);
 }
+process.exit(0);

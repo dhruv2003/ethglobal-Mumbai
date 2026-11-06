@@ -109,3 +109,28 @@ test("organizer routes: with ADMIN_TOKEN the right key is required, from anywher
   assert.equal(run(requireOrganizer, { ip: "203.0.113.9", auth: `Bearer ${organizer}` }), "next");
   delete process.env.ADMIN_TOKEN;
 });
+
+test("ADMIN_WALLET alone decides who the organizer is when set", async () => {
+  const { organizerMessage, organizerWallet, isOrganizerWallet } = await import("../src/security.mjs");
+  const { generatePrivateKey, privateKeyToAccount } = await import("viem/accounts");
+  const admin = privateKeyToAccount(generatePrivateKey());
+  const stranger = privateKeyToAccount(generatePrivateKey());
+  const before = process.env.ADMIN_WALLET;
+  process.env.ADMIN_WALLET = `0x000000000000000000000000000000000000dEaD, ${admin.address}`;
+  try {
+    assert.equal(await isOrganizerWallet(admin.address.toLowerCase()), true);
+    assert.equal(await isOrganizerWallet(stranger.address), false);
+    const session = async (account, signer = account) => {
+      const issuedAt = new Date().toISOString();
+      const signature = await signer.signMessage({ message: organizerMessage(account.address, issuedAt) });
+      const raw = Buffer.from(JSON.stringify({ wallet: account.address, issuedAt, signature })).toString("base64");
+      return organizerWallet({ get: (name) => (name === "x-organizer" ? raw : undefined) });
+    };
+    assert.equal(await session(admin), admin.address);
+    assert.equal(await session(stranger), null, "signed, but not the admin");
+    assert.equal(await session(admin, stranger), null, "someone else's signature");
+  } finally {
+    if (before === undefined) delete process.env.ADMIN_WALLET;
+    else process.env.ADMIN_WALLET = before;
+  }
+});

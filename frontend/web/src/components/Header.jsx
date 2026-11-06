@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useOrganizer } from "../lib/organizer.js";
 import { AnimatePresence, motion, useMotionValueEvent, useScroll } from "motion/react";
 import { StatusPill } from "@ds/ui.jsx";
 import { EVENT } from "../config/event.js";
@@ -44,13 +45,15 @@ export function BrandMark() {
 
 const NAV = [
   { to: "/arena", label: "Arena", on: (r) => r.name === "arena" },
-  { to: "/tournaments", label: "Tournaments", on: (r) => r.name === "tournaments" || r.name === "tournament" || r.name === "matchFight" },
+  { to: "/tournaments", label: "Tournaments", on: (r) => r.name === "tournaments" || r.name === "tournament" || r.name === "event" || r.name === "form" || r.name === "matchFight" },
   { to: "/projects", label: "Projects", on: (r) => r.name === "projects" || r.name === "project" },
-  { to: "/judge", label: "Judges", on: (r) => r.name === "judges" },
   { to: "/graph", label: "Graph", on: (r) => r.name === "graph" },
   { to: "/wallet", label: "Wallet", on: (r) => r.name === "wallet" },
-  { to: "/submit", label: "Submit", on: (r) => r.name === "form" },
+];
+const ORGANIZER_NAV = [
+  { to: "/judge", label: "Judges", on: (r) => r.name === "judges" },
   { to: "/organizer", label: "Organizer", on: (r) => r.name === "organizer" },
+  { to: "/storage", label: "0G Storage", on: (r) => r.name === "storage" },
 ];
 
 export function Header({ wallet, route }) {
@@ -59,7 +62,9 @@ export function Header({ wallet, route }) {
   const [scrolled, setScrolled] = useState(false);
   useMotionValueEvent(scrollY, "change", (y) => setScrolled(y > 8));
   const [hover, setHover] = useState(null);
-  const current = NAV.find((n) => n.on(route))?.to ?? null;
+  const { isOrganizer } = useOrganizer(wallet);
+  const links = isOrganizer ? [...NAV, ...ORGANIZER_NAV] : NAV;
+  const current = links.find((n) => n.on(route))?.to ?? null;
   const pill = hover ?? current;
   return (
     <header className={`top ${scrolled ? "top--scrolled" : ""}`}>
@@ -71,7 +76,7 @@ export function Header({ wallet, route }) {
           </span>
         </Link>
         <nav className="top__nav" aria-label="Main" onPointerLeave={() => setHover(null)}>
-          {NAV.map((n) => (
+          {links.map((n) => (
             <Link key={n.to} to={n.to} className={pill === n.to && n.to === current ? "is-lit" : undefined} aria-current={n.to === current ? "page" : undefined} onPointerEnter={() => setHover(n.to)} onFocus={() => setHover(n.to)} onBlur={() => setHover(null)}>
               {pill === n.to && (
                 <motion.span

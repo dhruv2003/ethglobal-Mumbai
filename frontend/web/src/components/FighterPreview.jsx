@@ -42,7 +42,7 @@ function stats(d, errors) {
  * Live fighter card: rebuilds as the team types. Pick a character, watch the
  * stats fill, and earn gear by describing what you built.
  */
-export function FighterPreview() {
+export function FighterPreview({ eventName }) {
   const { data, errors, set } = useForm();
   const project = {
     seed: data.fighter?.seed,
@@ -83,7 +83,7 @@ export function FighterPreview() {
   return (
     <aside className="fcard" aria-label="Your fighter preview">
       <div className="fcard__band">
-        <span className="fcard__event">{EVENT.name}</span>
+        <span className="fcard__event">{eventName}</span>
         <span className="t-mono-caption">No. {String(t.seed % 1000).padStart(3, "0")}</span>
       </div>
 

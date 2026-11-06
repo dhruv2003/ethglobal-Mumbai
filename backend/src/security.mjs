@@ -9,11 +9,77 @@
  *   because each one starts paid judge runs.
  */
 import crypto from "node:crypto";
-import { verifyMessage } from "viem";
+import fs from "node:fs";
+import { createPublicClient, http, verifyMessage } from "viem";
 
 const LOOPBACK = new Set(["127.0.0.1", "::1", "::ffff:127.0.0.1"]);
 
+/** The message an organizer signs once per session (no gas). */
+export const organizerMessage = (wallet, issuedAt) => ["Sign in as a Battle Arena organizer", `Wallet: ${wallet}`, `Issued at: ${issuedAt}`].join("\n");
+const SESSION_MS = 12 * 60 * 60 * 1000;
+const ROLE_CACHE_MS = 30 * 1000;
+const roleCache = new Map(); // wallet -> { until, ok }
+let client = null;
+
+/** ADMIN_WALLET in backend/.env (comma-separated for several). Lowercase. */
+const adminWallets = () => (process.env.ADMIN_WALLET ?? "").split(",").map((w) => w.trim().toLowerCase()).filter(Boolean);
+
+/** When ADMIN_WALLET is set, it alone decides who runs the app. Otherwise the contract's organizer role does. */
+export async function isOrganizerWallet(wallet) {
+  const admins = adminWallets();
+  if (admins.length) return admins.includes(String(wallet).toLowerCase());
+  return hasOrganizerRole(wallet);
+}
+
+async function hasOrganizerRole(wallet) {
+  const key = wallet.toLowerCase();
+  const hit = roleCache.get(key);
+  if (hit && hit.until > Date.now()) return hit.ok;
+  const address = process.env.TOURNAMENT_MANAGER_ADDRESS;
+  if (!address || !process.env.RPC_URL) return false;
+  client ??= createPublicClient({ transport: http(process.env.RPC_URL) });
+  const abi = JSON.parse(fs.readFileSync(new URL("../contracts/abi/TournamentManager.json", import.meta.url), "utf8"));
+  const contract = { address, abi: abi.abi ?? abi };
+  const role = await client.readContract({ ...contract, functionName: "ORGANIZER_ROLE" });
+  const ok = await client.readContract({ ...contract, functionName: "hasRole", args: [role, wallet] });
+  roleCache.set(key, { until: Date.now() + ROLE_CACHE_MS, ok });
+  return ok;
+}
+
+/** The organizer wallet behind this request's signed session, or null. */
+export async function organizerWallet(req) {
+  const raw = req.get?.("x-organizer");
+  if (!raw) return null;
+  try {
+    const { wallet, issuedAt, signature } = JSON.parse(Buffer.from(raw, "base64").toString("utf8"));
+    const issued = Date.parse(issuedAt);
+    if (!Number.isFinite(issued) || issued > Date.now() + 60000 || Date.now() - issued > SESSION_MS) return null;
+    if (!(await verifyMessage({ address: wallet, message: organizerMessage(wallet, issuedAt), signature }))) return null;
+    return (await isOrganizerWallet(wallet)) ? wallet : null;
+  } catch {
+    return null;
+  }
+}
+
+const tokenMatches = (req) => {
+  const token = process.env.ADMIN_TOKEN;
+  if (!token) return false;
+  const a = Buffer.from((req.get?.("authorization") ?? "").replace(/^Bearer\s+/i, ""));
+  const b = Buffer.from(token);
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+};
+
+/** For pages that show more to organizers. */
+export const isOrganizer = async (req) => tokenMatches(req) || Boolean(await organizerWallet(req));
+
 export function requireOrganizer(req, res, next) {
+  if (req.get?.("x-organizer")) {
+    return organizerWallet(req).then((wallet) => {
+      if (!wallet) return res.status(403).json({ error: "Only a wallet with the organizer role can do this. Sign in again." });
+      req.organizerWallet = wallet;
+      next();
+    });
+  }
   const token = process.env.ADMIN_TOKEN;
   if (!token) {
     // Fail closed. Local development must opt in explicitly, and a request that
@@ -57,6 +123,7 @@ export function canonicalSubmission(body) {
     tracks: body.tracks ?? [],
     ownerWallet: String(body.ownerWallet ?? "").toLowerCase(),
     fighterSeed: body.fighterSeed ?? null,
+    eventId: body.eventId ?? null,
   });
 }
 export const submissionDigest = (body) => crypto.createHash("sha256").update(canonicalSubmission(body)).digest("hex");

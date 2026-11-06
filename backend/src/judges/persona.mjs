@@ -8,7 +8,7 @@ import crypto from "node:crypto";
 import { CRITERIA, CRITERION_IDS, TONES } from "./criteria.mjs";
 
 export const PROMPT_VERSION = "judge-v3";
-export const MAX_JUDGES = 3;
+export const MAX_JUDGES = 12; // the pool organizers pick each tournament's 3 judges from
 
 const clean = (v, max) => String(v ?? "").replace(/\s+\n/g, "\n").trim().slice(0, max);
 

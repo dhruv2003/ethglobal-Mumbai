@@ -3,6 +3,9 @@ import { ReviewTab } from "./review/ReviewTab.jsx";
 import { AnimatePresence, LayoutGroup, motion } from "motion/react";
 import { Progress, StatusPill } from "@ds/ui.jsx";
 import { EVENT } from "../config/event.js";
+import { listEvents, trackNameOf } from "../lib/events.js";
+import { useOrganizer } from "../lib/organizer.js";
+import { OrganizerGate } from "./OrganizerGate.jsx";
 import { useCountUp } from "../lib/motion.js";
 import { getProject, listProjects } from "../lib/projects.js";
 import { DemoVideo } from "./DemoVideo.jsx";
@@ -15,8 +18,9 @@ import { navigate } from "../lib/router.jsx";
 import { rerunReview } from "../lib/review.js";
 import { fighterTraitItems, PixelFighter } from "./PixelFighter.jsx";
 import { FloatSticker, Magnetic, Marquee, Reveal, SplitWords, Squiggle, Tilt, bouncy, easeOut, fadeUp, stagger } from "./fx.jsx";
+import { StorageProof } from "./ZeroGProof.jsx";
 
-export const trackName = (id) => EVENT.tracks.find((t) => t.id === id)?.name ?? id;
+export const trackName = (id) => trackNameOf(id);
 const GHOST = { id: "your-fighter", name: "Your fighter", pitch: "", description: "", tracks: [] };
 const ROSTER_MAX = 6;
 
@@ -26,7 +30,7 @@ function KindPill() {
 
 /** Where the project was built. Prominent: it frames everything else on the card. */
 function EventBadge({ project }) {
-  return <span className="event-badge">{project.event ?? EVENT.name}</span>;
+  return project.event ? <span className="event-badge">{project.event}</span> : null;
 }
 
 /** Where a submitted project's review stands, on its card. */
@@ -69,7 +73,7 @@ function Tracks({ ids }) {
 function useFilters() {
   const read = () => {
     const q = new URLSearchParams(location.search);
-    return { track: q.get("track") ?? "", q: q.get("q") ?? "" };
+    return { track: q.get("track") ?? "", q: q.get("q") ?? "", tournament: q.get("tournament") ?? "", mine: q.get("mine") === "1" };
   };
   const [f, setF] = useState(read);
   const update = (next) => {
@@ -78,6 +82,8 @@ function useFilters() {
     const q = new URLSearchParams();
     if (merged.track) q.set("track", merged.track);
     if (merged.q) q.set("q", merged.q);
+    if (merged.tournament) q.set("tournament", merged.tournament);
+    if (merged.mine) q.set("mine", "1");
     history.replaceState({}, "", `${location.pathname}${q.toString() ? `?${q}` : ""}`);
   };
   return [f, update];
@@ -102,7 +108,7 @@ function StatTile({ label, value, note, children, i }) {
 
 /* ---------------------------------------------------------------- hero */
 
-function ArenaHero({ projects }) {
+function ArenaHero({ projects, eventName }) {
   const roster = (projects ?? []).slice(0, ROSTER_MAX);
   // Everyone stands on the mat in one row: shrink as the roster grows.
   const slots = roster.length + 1;
@@ -112,7 +118,7 @@ function ArenaHero({ projects }) {
       <motion.div className="hero__copy" initial="hidden" animate="show" variants={stagger(0.09, 0.05)}>
         <motion.span className="event-badge event-badge--live" variants={fadeUp}>
           <span className="live-dot" aria-hidden="true" />
-          {EVENT.name}
+          {eventName ?? EVENT.name}
         </motion.span>
         <h1 id="hero-h" className="t-display-xl m0 hero__title">
           <SplitWords delay={0.12}>
@@ -128,7 +134,7 @@ function ArenaHero({ projects }) {
         </motion.p>
         <motion.div className="hero__actions" variants={fadeUp}>
           <Magnetic>
-            <Link to="/submit" className="btn btn--crush btn--lg btn--arrow">
+            <Link to="/tournaments" className="btn btn--crush btn--lg btn--arrow">
               Submit your project <span aria-hidden="true">→</span>
             </Link>
           </Magnetic>
@@ -157,7 +163,7 @@ function ArenaHero({ projects }) {
                 </li>
               ))}
               <li className="roster__slot" style={{ "--i": roster.length }}>
-                <Link to="/submit" className="roster__link roster__link--ghost">
+                <Link to="/tournaments" className="roster__link roster__link--ghost">
                   <PixelFighter project={GHOST} scale={scale} ghost label="Empty slot for your fighter" />
                   <span className="roster__name roster__name--always">Your fighter?</span>
                 </Link>
@@ -169,7 +175,7 @@ function ArenaHero({ projects }) {
           3 AI judges
         </FloatSticker>
         <FloatSticker className="float-sticker--crush hero__sticker hero__sticker--2" rotate={7} delay={0.85} drift={10}>
-          5 rounds ⚡
+          6 rounds ⚡
         </FloatSticker>
         <FloatSticker className="float-sticker--oracle hero__sticker hero__sticker--3" rotate={-4} delay={1} drift={6}>
           Evidence &gt; hype
@@ -182,7 +188,7 @@ function ArenaHero({ projects }) {
 const STEPS = [
   ["Submit", "A public repo and a short form. Two minutes.", "crush"],
   ["We read the code", "We pin your commit, run the tests and collect evidence.", "oracle"],
-  ["You fight", "Three AI judges score five rounds. Health follows the score.", "sunny"],
+  ["You fight", "Three AI judges score six rounds. Health follows the score.", "sunny"],
 ];
 
 /** Tiny line icons for the three steps. */
@@ -246,11 +252,16 @@ export function LandingPage() {
   useEffect(() => {
     listProjects().then(setProjects, () => setProjects([]));
   }, []);
+  const [events, setEvents] = useState([]);
+  useEffect(() => {
+    listEvents().then(setEvents, () => setEvents([]));
+  }, []);
+  const latest = events.at(-1);
   const parade = (projects ?? []).slice(0, 4);
   return (
     <>
-      <ArenaHero projects={projects} />
-      <Marquee className="band" items={EVENT.tracks.map((t) => t.name)} label="Sponsor tracks" />
+      <ArenaHero projects={projects} eventName={latest?.name} />
+      {latest && <Marquee className="band" items={latest.tracks.map((t) => t.name)} label="Tracks" />}
       <HowItWorks />
       <Reveal as="section" className="landing-cta" aria-label="See the roster">
         <div className="landing-cta__copy">
@@ -289,8 +300,12 @@ export function LandingPage() {
 
 /* ----------------------------------------------------------- dashboard */
 
-export function ProjectsPage() {
+export function ProjectsPage({ wallet }) {
   const [projects, setProjects] = useState(null);
+  const [events, setEvents] = useState([]);
+  useEffect(() => {
+    listEvents().then(setEvents, () => setEvents([]));
+  }, []);
   const [filters, setFilters] = useFilters();
   useEffect(() => {
     listProjects().then(setProjects, () => {
@@ -309,9 +324,12 @@ export function ProjectsPage() {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  const all = projects ?? [];
-  const counts = Object.fromEntries(EVENT.tracks.map((t) => [t.id, all.filter((p) => p.tracks.includes(t.id)).length]));
-  const inPlay = EVENT.tracks.filter((t) => counts[t.id] > 0);
+  // Projects belong to a tournament: one is always selected, and the track filters are its own.
+  const selected = events.find((e) => e.id === filters.tournament) ?? events.at(-1) ?? null;
+  const tracks = selected?.tracks ?? [];
+  const all = (projects ?? []).filter((p) => p.eventId === selected?.id);
+  const counts = Object.fromEntries(tracks.map((t) => [t.id, all.filter((p) => p.tracks.includes(t.id)).length]));
+  const inPlay = tracks.filter((t) => counts[t.id] > 0);
   const most = Math.max(0, ...inPlay.map((t) => counts[t.id]));
   const leaders = inPlay.filter((t) => counts[t.id] === most);
   const plural = (n) => `${n} ${n === 1 ? "project" : "projects"}`;
@@ -321,9 +339,10 @@ export function ProjectsPage() {
   const shown = all.filter(
     (p) =>
       (!filters.track || p.tracks.includes(filters.track)) &&
+      (!filters.mine || p.ownerWallet?.toLowerCase() === wallet.address?.toLowerCase()) &&
       (!needle || [p.name, p.teamName, p.pitch].some((x) => x.toLowerCase().includes(needle))),
   );
-  const filtered = Boolean(filters.track || needle);
+  const filtered = Boolean(filters.track || needle || filters.mine);
 
   return (
     <>
@@ -333,18 +352,32 @@ export function ProjectsPage() {
             <SplitWords>Projects</SplitWords>
           </h1>
           <p className="t-body m0 muted rise" style={{ "--i": 2 }}>
-            Every project competes for finalist. Sponsor tracks are optional.
+            {selected ? `Every project in ${selected.name}. They all compete for finalist, and tracks are optional.` : "No tournaments yet."}
           </p>
+          {events.length > 0 && (
+            <div className="trade__presets" role="group" aria-label="Choose a tournament">
+              {events.map((e) => (
+                <button key={e.id} type="button" className="chip chip--anim" aria-pressed={selected?.id === e.id} onClick={() => setFilters({ tournament: e.id, track: "" })}>
+                  {e.name}
+                </button>
+              ))}
+              {wallet.address && (
+                <button type="button" className="chip chip--anim" aria-pressed={filters.mine} onClick={() => setFilters({ mine: !filters.mine })}>
+                  My project
+                </button>
+              )}
+            </div>
+          )}
         </div>
-        <Link to="/submit" className="btn btn--primary btn--arrow rise" style={{ "--i": 3 }}>
+        <Link to="/tournaments" className="btn btn--primary btn--arrow rise" style={{ "--i": 3 }}>
           Submit a project <span aria-hidden="true">→</span>
         </Link>
       </div>
 
       <motion.section className="stats" aria-label="Summary" initial="hidden" animate="show" variants={stagger(0.08, 0.15)}>
         <StatTile i={3} label="Projects" value={all.length} note={`${submitted} submitted by teams`} />
-        <StatTile i={5} label="Tracks entered" value={inPlay.length} note={`of ${EVENT.tracks.length} sponsor tracks`}>
-          <Progress value={inPlay.length} max={EVENT.tracks.length} label="Tracks with at least one entry" />
+        <StatTile i={5} label="Tracks entered" value={inPlay.length} note={`of ${tracks.length} tracks`}>
+          <Progress value={inPlay.length} max={Math.max(1, tracks.length)} label="Tracks with at least one entry" />
         </StatTile>
         <StatTile
           i={6}
@@ -386,7 +419,7 @@ export function ProjectsPage() {
           </div>
           <LayoutGroup id="track-filter">
             <div className="chips" role="group" aria-label="Filter by track">
-              {[{ id: "", name: "All tracks" }, ...EVENT.tracks].map((t) => {
+              {[{ id: "", name: "All tracks" }, ...tracks].map((t) => {
                 const on = t.id ? filters.track === t.id : !filters.track;
                 return (
                   <button
@@ -416,7 +449,7 @@ export function ProjectsPage() {
                 Clear filters
               </button>
             ) : (
-              <Link to="/submit" className="btn btn--secondary btn--sm">
+              <Link to="/tournaments" className="btn btn--secondary btn--sm">
                 Submit a project
               </Link>
             )}
@@ -587,8 +620,11 @@ function ViewToggle({ view, onChange, hasDossier, review }) {
   );
 }
 
-export function ProjectPage({ id }) {
-  const [view, setView] = useView();
+export function ProjectPage({ id, wallet }) {
+  const [wantedView, setView] = useView();
+  // Reviews are only for organizers. Everyone else sees what the team submitted.
+  const { isOrganizer } = useOrganizer(wallet);
+  const view = isOrganizer ? wantedView : "team";
   const [state, setState] = useState({ loading: true, project: null });
   useEffect(() => {
     getProject(id).then(
@@ -650,7 +686,7 @@ export function ProjectPage({ id }) {
           </h1>
           <p className="t-prompt m0">{p.pitch}</p>
           <p className="t-caption m0">by {p.teamName}</p>
-          {p.kind === "submitted" && (
+          {isOrganizer && (
             <div className="project-actions">
               <RerunReview project={p} onStarted={() => setView("judge")} />
               <DeleteProject project={p} />
@@ -666,7 +702,7 @@ export function ProjectPage({ id }) {
         </div>
       </header>
 
-      <ViewToggle view={view} onChange={setView} hasDossier={Boolean(p.dossier) || p.review?.status === "reviewed"} review={p.review} />
+      {isOrganizer && <ViewToggle view={view} onChange={setView} hasDossier={Boolean(p.dossier) || p.review?.status === "reviewed"} review={p.review} />}
 
       <AnimatePresence mode="wait" initial={false}>
       {view === "team" ? (
@@ -710,7 +746,7 @@ export function ProjectPage({ id }) {
           exit={{ opacity: 0, x: 24, transition: { duration: 0.15 } }}
           transition={{ duration: 0.4, ease: easeOut }}
         >
-          <ReviewTab project={p} />
+          <OrganizerGate wallet={wallet}><ReviewTab project={p} /></OrganizerGate>
         </motion.section>
       )}
       </AnimatePresence>
@@ -793,6 +829,7 @@ function EntryCard({ project: p }) {
           </div>
         )}
       </dl>
+      {p.kind === "submitted" && <StorageProof kind="submission" id={p.id} />}
     </aside>
   );
 }

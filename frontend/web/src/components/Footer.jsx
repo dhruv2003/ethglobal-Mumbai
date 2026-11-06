@@ -17,8 +17,6 @@ export function Footer() {
           <Link to="/arena">Arena</Link>
           <Link to="/tournaments">Tournaments</Link>
           <Link to="/projects">Projects</Link>
-          <Link to="/judge">Judges</Link>
-          <Link to="/organizer">Organizers</Link>
         </nav>
       </div>
     </footer>

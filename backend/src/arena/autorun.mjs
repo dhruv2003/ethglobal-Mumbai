@@ -6,17 +6,22 @@
 const OPEN = 1; // MatchStatus.Open
 const CANCELED = 4; // TournamentStatus.Canceled
 
-/** What to do for one match right now: "start", "publish" or null. */
+/**
+ * What to do for one match right now: "start", "publish" or null.
+ * A fight starts as soon as its match opens, sealed until betting closes, so it's ready to play
+ * the moment betting ends. Publishing waits for the time the contract allows.
+ */
 export function nextStep({ tournament, match, fight, nowSec, canPublish }) {
   if (Number(tournament.status) === CANCELED || Number(match.status) !== OPEN) return null;
-  if (nowSec < Number(match.scheduledStart) || nowSec >= Number(match.deadline)) return null;
+  if (nowSec >= Number(match.deadline)) return null;
   if (fight.status === "none") return "start";
+  if (nowSec < Number(match.scheduledStart)) return null;
   if (fight.status === "done" && canPublish && /^0x[0-9a-f]{64}$/i.test(fight.resultHash ?? "")) return "publish";
   return null; // running, or failed: the organizer page can run a failed fight again
 }
 
 /** One pass over every registered tournament. Each match is handled on its own. */
-export async function autorunPass({ brackets, readTournament, readMatch, nowSec, fightOf, startFight, publish, botAddress, log = () => {} }) {
+export async function autorunPass({ brackets, readTournament, readMatch, nowSec, fightOf, startFight, publish, botAddress, runningFights = () => 0, maxFights = 2, log = () => {} }) {
   const now = await nowSec();
   for (const bracket of brackets()) {
     const id = BigInt(bracket.id);
@@ -27,6 +32,7 @@ export async function autorunPass({ brackets, readTournament, readMatch, nowSec,
         const match = await readMatch(id, i);
         const fight = fightOf(bracket.id, Number(i));
         const step = nextStep({ tournament, match, fight, nowSec: Number(now), canPublish });
+        if (step === "start" && runningFights() >= maxFights) continue; // it starts when another finishes
         if (step === "start") {
           log(`starting the fight for tournament ${bracket.id} match ${i}`);
           startFight(bracket.id, Number(i), { a: Number(match.projectA), b: Number(match.projectB), revealAt: Number(match.cutoff > tournament.bettingCutoff ? match.cutoff : tournament.bettingCutoff) * 1000 });

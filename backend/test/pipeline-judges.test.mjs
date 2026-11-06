@@ -35,7 +35,7 @@ test("review polling stays active for both running and queued pipelines, retaini
   const route = router.stack.find((layer) => layer.route?.path === "/projects/:id/reviews" && layer.route.methods.get).route;
   const status = (id) => {
     let result;
-    route.stack[0].handle({ params: { id } }, { json: (body) => { result = body; } });
+    route.stack.at(-1).handle({ params: { id } }, { json: (body) => { result = body; } });
     return result;
   };
   try {

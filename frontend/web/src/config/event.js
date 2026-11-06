@@ -14,8 +14,7 @@ export const CONTRACTS = {
 };
 
 export const EVENT = {
-  name: "ETHGlobal Mumbai",
-  startDate: "2026-11-06",
+  name: "Battle Arena",
   // Set these in frontend/web/.env (see .env.example) to change chain.
   network: {
     name: env.VITE_CHAIN_NAME || "Base Sepolia",
@@ -25,14 +24,4 @@ export const EVENT = {
     symbol: env.VITE_NATIVE_SYMBOL || "ETH",
   },
   maxTracks: 3,
-  tracks: [
-    { id: "base", name: "Base" },
-    { id: "the-graph", name: "The Graph" },
-    { id: "chainlink", name: "Chainlink" },
-    { id: "world", name: "World" },
-    { id: "polygon", name: "Polygon" },
-    { id: "filecoin", name: "Filecoin" },
-    { id: "uniswap", name: "Uniswap" },
-    { id: "ens", name: "ENS" },
-  ],
 };

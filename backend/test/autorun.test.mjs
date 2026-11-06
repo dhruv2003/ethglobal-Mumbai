@@ -9,9 +9,13 @@ const live = { tournament: { status: 2 }, match, nowSec: 100, canPublish: true }
 test("a live match with no fight starts one", () => {
   assert.equal(nextStep({ ...live, fight: { status: "none" } }), "start");
 });
-test("nothing starts before the match goes live, or after its deadline", () => {
-  assert.equal(nextStep({ ...live, nowSec: 99, fight: { status: "none" } }), null);
+test("a fight starts as soon as its match opens, but not after its deadline", () => {
+  assert.equal(nextStep({ ...live, nowSec: 50, fight: { status: "none" } }), "start");
   assert.equal(nextStep({ ...live, nowSec: 1000, fight: { status: "none" } }), null);
+});
+test("a finished fight stays unpublished until the contract allows it", () => {
+  assert.equal(nextStep({ ...live, nowSec: 99, fight: { status: "done", resultHash: HASH } }), null);
+  assert.equal(nextStep({ ...live, nowSec: 100, fight: { status: "done", resultHash: HASH } }), "publish");
 });
 test("a running or failed fight is left alone", () => {
   assert.equal(nextStep({ ...live, fight: { status: "running" } }), null);
@@ -53,4 +57,11 @@ test("a pass publishes a finished fight when the bot is the publisher", async ()
     botAddress: "0xBB",
   });
   assert.deepEqual(published, [[2n, 0n]]);
+});
+
+test("the server actions the routes call all exist", async () => {
+  const service = await import("../src/arena/autorunService.mjs");
+  for (const name of ["openMatchAsBot", "voidMatchAsBot", "cancelTournamentAsBot", "autoStatus", "startAutorun"]) assert.equal(typeof service[name], "function", name);
+  await assert.rejects(service.openMatchAsBot(1, 0, 5), /no publishing wallet/);
+  await assert.rejects(service.cancelTournamentAsBot(1, "0x00"), /no publishing wallet/);
 });

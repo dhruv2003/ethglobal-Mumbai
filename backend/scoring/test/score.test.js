@@ -11,7 +11,7 @@ import {
 
 const uniform = (judgeId, v) => ({
   judgeId,
-  scores: { product: v, engineering: v, innovation: v, feasibility: v, defense: v },
+  scores: { product: v, ui: v, engineering: v, innovation: v, feasibility: v, defense: v },
 });
 const panel = (v) => [uniform('j1', v), uniform('j2', v), uniform('j3', v)];
 
@@ -19,7 +19,7 @@ test('published rubrics are valid and product has the highest weight', () => {
   assertValidRubric(MAIN_RUBRIC);
   assertValidRubric(TIEBREAK_RUBRIC);
   const weights = Object.fromEntries(MAIN_RUBRIC.criteria.map((c) => [c.key, c.weight]));
-  assert.deepEqual(weights, { product: 40, engineering: 20, innovation: 20, feasibility: 10, defense: 10 });
+  assert.deepEqual(weights, { product: 30, ui: 10, engineering: 20, innovation: 20, feasibility: 10, defense: 10 });
 });
 
 test('rubric with bonus weight above 100 is rejected', () => {
@@ -40,11 +40,11 @@ test('extremes: all 0 and all 100', () => {
 });
 
 test('rounds the mean once, to the nearest hundredth', () => {
-  // One judge +1 on product (+40): mean 7513.33 -> 7513
+  // One judge +1 on ui (+10): mean 7503.33 -> 7503
   const down = panel(75);
-  down[0] = { judgeId: 'j1', scores: { ...down[0].scores, product: 76 } };
-  assert.equal(computeFinalScore(down).weightedTotal, 22540);
-  assert.equal(computeFinalScore(down).finalHundredths, 7513);
+  down[0] = { judgeId: 'j1', scores: { ...down[0].scores, ui: 76 } };
+  assert.equal(computeFinalScore(down).weightedTotal, 22510);
+  assert.equal(computeFinalScore(down).finalHundredths, 7503);
 
   // One judge +1 on engineering (+20): mean 7506.67 -> 7507
   const up = panel(75);
@@ -86,8 +86,8 @@ test('ties compare the displayed integer with no hidden precision', () => {
   // Different scorecards, same final integer: a tie.
   const a = panel(75);
   const b = panel(75);
-  a[0] = { judgeId: 'j1', scores: { ...a[0].scores, product: 76 } }; // +40
-  b[1] = { judgeId: 'j2', scores: { ...b[1].scores, engineering: 77 } }; // +40
+  a[0] = { judgeId: 'j1', scores: { ...a[0].scores, product: 76 } }; // +30
+  b[1] = { judgeId: 'j2', scores: { ...b[1].scores, engineering: 76, ui: 76 } }; // +20 +10
   assert.equal(compareScores(computeFinalScore(a), computeFinalScore(b)), 'TIE');
 
   // Smallest possible difference (+10 on a 10% criterion) is still visible: 75.03 vs 75.00.

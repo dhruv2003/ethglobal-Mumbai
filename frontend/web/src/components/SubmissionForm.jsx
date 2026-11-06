@@ -7,7 +7,7 @@ import { Msg, TextField, useForm } from "./fields.jsx";
 import { DemoVideoField } from "./DemoVideoField.jsx";
 
 /** The whole form: seven fields, one card. */
-export function SubmissionForm({ wallet, onSubmit, submitState, problemCount }) {
+export function SubmissionForm({ tracks, wallet, onSubmit, submitState, problemCount }) {
   const { data, set, errors, showAll } = useForm();
   const selected = data.tracks.selected;
   const full = selected.length >= EVENT.maxTracks;
@@ -80,7 +80,7 @@ export function SubmissionForm({ wallet, onSubmit, submitState, problemCount }) 
           </StatusPill>
         </legend>
         <div className="chips">
-          {EVENT.tracks.map((t) => {
+          {tracks.map((t) => {
             const on = selected.includes(t.id);
             return (
               <motion.button

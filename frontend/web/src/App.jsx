@@ -4,17 +4,20 @@ import { Header } from "./components/Header.jsx";
 import { SubmissionForm } from "./components/SubmissionForm.jsx";
 import { FighterPreview } from "./components/FighterPreview.jsx";
 import { Toaster, toast } from "./components/Feedback.jsx";
-import { EVENT } from "./config/event.js";
+import { eventIsOpen, getEvent } from "./lib/events.js";
 import { emptyForm, getIn, mergeDraft, setIn } from "./lib/form.js";
 import { clearDraft, loadDraft, saveDraft, saveSubmission, submissionDigest, toPayload } from "./lib/storage.js";
 import { validate } from "./lib/validate.js";
 import { useWallet } from "./lib/wallet.js";
 import { matchRoute, navigate, useCanonical, usePath } from "./lib/router.jsx";
 import { LandingPage, ProjectPage, ProjectsPage } from "./components/Projects.jsx";
+import { StoragePage } from "./components/StoragePage.jsx";
 import { JudgesPage } from "./components/JudgesPage.jsx";
 import { WalletPage } from "./components/WalletPage.jsx";
 import { OrganizerPage } from "./components/OrganizerPage.jsx";
 import { TournamentPage, TournamentsPage } from "./components/TournamentsPage.jsx";
+import { EventPage } from "./components/EventPage.jsx";
+import { OrganizerGate } from "./components/OrganizerGate.jsx";
 import { ArenaPage } from "./components/ArenaPage.jsx";
 import { MatchFightPage } from "./components/MatchFightPage.jsx";
 import { GraphPage } from "./components/GraphPage.jsx";
@@ -34,9 +37,11 @@ const TITLES = {
   organizer: "Organizer",
   tournaments: "Tournaments",
   tournament: "Tournament",
+  event: "Tournament",
   arena: "Arena",
   matchFight: "Fight",
   graph: "Knowledge graph",
+  storage: "0G Storage",
 };
 
 export default function App() {
@@ -51,8 +56,27 @@ export default function App() {
   const [showAll, setShowAll] = useState(false);
   const [savedAt, setSavedAt] = useState("");
   const [submitState, setSubmitState] = useState({ phase: "idle", error: "" });
+  // The tournament being entered: its tracks are the only ones on the form.
+  const [entering, setEntering] = useState({ loading: false, event: null });
+  useEffect(() => {
+    if (route.name !== "form") return undefined;
+    let live = true;
+    setEntering({ loading: true, event: null });
+    getEvent(route.eventId).then(
+      (event) => {
+        if (!live) return;
+        setEntering({ loading: false, event });
+        setData((d) => setIn(d, "tracks.selected", d.tracks.selected.filter((id) => event.tracks.some((t) => t.id === id))));
+      },
+      () => live && setEntering({ loading: false, event: null }),
+    );
+    return () => {
+      live = false;
+    };
+  }, [route.name, route.eventId]);
+  const event = entering.event;
 
-  const { errors } = useMemo(() => validate(data, { walletAddress: wallet.address }), [data, wallet.address]);
+  const { errors } = useMemo(() => validate(data, { walletAddress: wallet.address, tracks: event?.tracks }), [data, wallet.address, event]);
   // The wallet isn't a form field; the submit row handles it.
   const fieldErrors = Object.keys(errors).filter((k) => k !== "wallet");
 
@@ -77,11 +101,11 @@ export default function App() {
       el?.scrollIntoView({ block: "center" });
       return;
     }
-    if (!wallet.address) return;
-    const payload = toPayload(data, { ownerWallet: wallet.address, chainId: wallet.chainId });
+    if (!wallet.address || !event) return;
+    const payload = { ...toPayload(data, { ownerWallet: wallet.address, chainId: wallet.chainId }), eventId: event.id };
     const issuedAt = new Date().toISOString();
     const message = [
-      `Submit "${payload.project.name}" to ${EVENT.name} Battle Arena`,
+      `Submit "${payload.project.name}" to ${event.name} Battle Arena`,
       `Repository: ${payload.repoUrl}`,
       `Owner: ${wallet.address}`,
       `Submission: ${await submissionDigest(payload)}`,
@@ -102,7 +126,7 @@ export default function App() {
             : `${payload.project.name} submitted. The reviewer is on it.`,
         { tone: "success", ms: 6000 },
       );
-      navigate("/projects");
+      navigate(`/projects?tournament=${encodeURIComponent(event.id)}`);
     } catch (e) {
       setSubmitState({ phase: "idle", error: e.fromServer ? e.message : wallet.friendlyError(e) });
     }
@@ -159,15 +183,17 @@ export default function App() {
             {route.name === "home" ? (
               <LandingPage />
             ) : route.name === "judges" ? (
-              <JudgesPage />
+              <OrganizerGate wallet={wallet}><JudgesPage /></OrganizerGate>
             ) : route.name === "wallet" ? (
               <WalletPage wallet={wallet} />
             ) : route.name === "organizer" ? (
-              <OrganizerPage wallet={wallet} />
+              <OrganizerGate wallet={wallet}><OrganizerPage wallet={wallet} /></OrganizerGate>
             ) : route.name === "tournaments" ? (
               <TournamentsPage wallet={wallet} />
             ) : route.name === "tournament" ? (
               <TournamentPage id={route.id} wallet={wallet} />
+            ) : route.name === "event" ? (
+              <EventPage id={route.id} wallet={wallet} />
             ) : route.name === "arena" ? (
               <ArenaPage />
             ) : route.name === "matchFight" ? (
@@ -175,14 +201,25 @@ export default function App() {
             ) : route.name === "graph" ? (
               <GraphPage />
             ) : route.name === "projects" ? (
-              <ProjectsPage />
+              <ProjectsPage wallet={wallet} />
+            ) : route.name === "storage" ? (
+              <StoragePage />
             ) : route.name === "project" ? (
-              <ProjectPage id={route.id} />
+              <ProjectPage id={route.id} wallet={wallet} />
+            ) : entering.loading ? (
+              <div className="skeleton skeleton--seat" aria-label="Loading tournament" />
+            ) : !event || !eventIsOpen(event) ? (
+              <div className="card card--surface stack">
+                <h1 className="t-display-md m0">{event ? `Submissions for ${event.name} are closed` : "We couldn't find that tournament"}</h1>
+                <button type="button" className="btn btn--secondary btn--sm" onClick={() => navigate("/tournaments")}>
+                  See tournaments
+                </button>
+              </div>
             ) : (
               <>
                 <div className="intro intro--form">
                   <h1 className="t-display-lg m0 rise" style={{ "--i": 1 }}>
-                    Submit a project
+                    Submit to {event.name}
                   </h1>
                   <p className="t-body m0 muted rise" style={{ "--i": 2 }}>
                     Three short rounds. Your fighter levels up as you go.
@@ -204,8 +241,8 @@ export default function App() {
                   </span>
                 </div>
                 <div className="submit-layout">
-                  <SubmissionForm wallet={wallet} onSubmit={submit} submitState={submitState} problemCount={fieldErrors.length} />
-                  <FighterPreview />
+                  <SubmissionForm tracks={event.tracks} wallet={wallet} onSubmit={submit} submitState={submitState} problemCount={fieldErrors.length} />
+                  <FighterPreview eventName={event.name} />
                 </div>
               </>
             )}
