@@ -11,6 +11,7 @@ import { validate } from "./lib/validate.js";
 import { useWallet } from "./lib/wallet.js";
 import { matchRoute, useCanonical, usePath } from "./lib/router.jsx";
 import { LandingPage, ProjectPage, ProjectsPage } from "./components/Projects.jsx";
+import { StoragePage } from "./components/StoragePage.jsx";
 import { JudgesPage } from "./components/JudgesPage.jsx";
 import { FightDemo } from "./components/FightDemo.jsx";
 import { Footer } from "./components/Footer.jsx";
@@ -19,7 +20,7 @@ import { AnimatePresence, MotionConfig, motion } from "motion/react";
 
 const hhmm = () => new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
-const TITLES = { home: "The arena", form: "Submit a project", projects: "Projects", project: "Project", judges: "Judges", fight: "Fight demo" };
+const TITLES = { home: "The arena", form: "Submit a project", projects: "Projects", project: "Project", judges: "Judges", fight: "Fight demo", storage: "0G Storage" };
 
 export default function App() {
   const wallet = useWallet();
@@ -140,6 +141,8 @@ export default function App() {
               <FightDemo />
             ) : route.name === "projects" ? (
               <ProjectsPage />
+            ) : route.name === "storage" ? (
+              <StoragePage />
             ) : route.name === "project" ? (
               <ProjectPage id={route.id} />
             ) : record ? (

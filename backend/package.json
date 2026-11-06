@@ -12,7 +12,8 @@
     "zg:seed-fixtures": "node scripts/zg.mjs seed-fixtures",
     "zg:restore": "node scripts/zg.mjs restore",
     "zg:verify": "node scripts/zg.mjs verify",
-    "test:0g-storage": "ZG_STORAGE_LIVE=1 node --test test/storage-0g.test.mjs"
+    "test:0g-storage": "ZG_STORAGE_LIVE=1 node --test test/storage-0g.test.mjs",
+    "zg:check": "node scripts/zg.mjs check"
   },
   "keywords": [],
   "author": "",

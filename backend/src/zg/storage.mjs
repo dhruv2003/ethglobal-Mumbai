@@ -318,6 +318,26 @@ export async function downloadJSON(rootHash, opts) {
   }
 }
 
+/**
+ * The docs' own download path, for manual checks: indexer.download(root, file, true)
+ * writes the stored bytes to `filePath` (Node only). Note the SDK's `proof` flag
+ * is currently a no-op, so callers should still compare merkleRoot(bytes) with the root.
+ */
+export async function sdkDownloadToFile(rootHash, filePath, { timeoutMs = storageConfig().timeoutMs } = {}) {
+  const { zg } = await sdk();
+  const indexer = new zg.Indexer(storageConfig().indexer);
+  const err = await withTimeout(indexer.download(rootHash, filePath, true), timeoutMs, "0G Storage download");
+  if (err) throw classify(err, "not_found");
+  return filePath;
+}
+
+/** The storage nodes the indexer says hold this file (replicas). */
+export async function fileLocations(rootHash) {
+  const { zg } = await sdk();
+  const locs = await new zg.Indexer(storageConfig().indexer).getFileLocations(rootHash);
+  return (locs ?? []).map((l) => l.url);
+}
+
 /** Does this stored file start with a 0G encryption header? (null = plaintext) */
 export async function peekEncryption(rootHash) {
   const { zg } = await sdk();

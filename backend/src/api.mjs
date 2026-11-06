@@ -18,7 +18,8 @@
  *   GET    /api/storage                       wallet, balance, head root hash, outbox counts
  *   GET    /api/storage/status/:kind/:id      off | pending | stored | failed for one record
  *   GET    /api/storage/records               the manifest: kind, id, root hash, tx hash, explorer links
- *   GET    /api/storage/blob/:rootHash        one stored item, downloaded from 0G and checked (our root hashes only)
+ *   GET    /api/storage/blob/:rootHash        one stored item, downloaded from 0G and checked (our root hashes only;
+ *                                             ?fresh=1 skips the local cache, ?download=1 saves it as a file)
  *   POST   /api/storage/verify/:kind/:id      re-download from 0G and compare with the local record
  *   POST   /api/storage/flush                 retry failed uploads now   (organizer)
  */
@@ -309,7 +310,8 @@ router.get("/storage/blob/:rootHash", rateLimit({ max: 60, windowMs: 60 * 1000, 
   const cached = path.join(CACHE_DIR, root);
   try {
     let bytes;
-    if (fs.existsSync(cached)) bytes = fs.readFileSync(cached);
+    // ?fresh=1 skips our cache so the bytes really come from 0G storage nodes this time.
+    if (fs.existsSync(cached) && req.query.fresh !== "1") bytes = fs.readFileSync(cached);
     else {
       // The Merkle root of what we downloaded must equal the requested one (checked inside downloadBytes).
       bytes = Buffer.from(await downloadBytes(root));
@@ -319,6 +321,11 @@ router.get("/storage/blob/:rootHash", rateLimit({ max: 60, windowMs: 60 * 1000, 
     }
     res.set("content-type", contentTypeOf(rec));
     res.set("x-0g-root-hash", root);
+    if (req.query.download === "1") {
+      const base = rec.kind === "manifest" ? "manifest-head" : `${rec.kind}-${String(rec.id).split("/").pop()}`;
+      const name = `${base.replace(/[^a-zA-Z0-9._-]/g, "_")}${rec.file ? (rec.encrypted ? ".enc" : "") : ".json"}`;
+      res.set("content-disposition", `attachment; filename="${name}"`);
+    }
     res.set("cache-control", "public, max-age=31536000, immutable");
     res.send(bytes);
   } catch (e) {

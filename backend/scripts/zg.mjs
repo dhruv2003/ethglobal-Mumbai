@@ -7,6 +7,9 @@
  *   npm run zg:restore -- --head <rootHash> [--into <dir>] [--force]
  *                                                       rebuild data/ from 0G alone (default: a fresh temp dir)
  *   npm run zg:verify                                   re-download every record and check its hash
+ *   npm run zg:check [-- --into <dir>] [--kind <kind>]  for every upload: indexer.download(root, file, true) to disk,
+ *                                                       Merkle root + sha256 check, replica count, Storage Scan link;
+ *                                                       keeps the downloaded files in <dir> so you can open them
  */
 import "dotenv/config";
 import fs from "node:fs";
@@ -14,7 +17,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { DATA_DIR } from "../src/datafiles.mjs";
 import * as archive from "../src/zg/archive.mjs";
-import { explorerLinks, sha256, storageConfig, walletInfo } from "../src/zg/storage.mjs";
+import { contentSha256, explorerLinks, fileLocations, merkleRoot, sdkDownloadToFile, sha256, storageConfig, walletInfo } from "../src/zg/storage.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const FIXTURES = path.resolve(here, "../fixtures");
@@ -174,7 +177,46 @@ async function verify() {
   if (bad) process.exitCode = 1;
 }
 
-const commands = { status, "seed-fixtures": seedFixtures, restore, verify };
+async function check() {
+  const into = path.resolve(value("--into") ?? path.join(DATA_DIR, "..", "zg-downloads"));
+  const only = value("--kind");
+  fs.mkdirSync(into, { recursive: true });
+  const m = archive.loadManifest();
+  const head = archive.loadHead();
+  const rows = Object.values(m.records).filter((r) => !only || r.kind === only);
+  if (head && !only) rows.push({ kind: "manifest", id: "head", rootHash: head.rootHash, txHash: head.txHash, txSeq: head.txSeq, history: [head.rootHash] });
+  console.log(`Checking ${rows.length} uploads on 0G ${storageConfig().network}; files go to ${into}\n`);
+  let bad = 0;
+  for (const r of rows) {
+    const name = `${r.kind}/${r.file ? r.id : `${r.id}.json`}${r.encrypted ? ".enc" : ""}`;
+    const out = path.join(into, name);
+    fs.mkdirSync(path.dirname(out), { recursive: true });
+    fs.rmSync(out, { force: true }); // the SDK refuses to overwrite
+    let line;
+    try {
+      const nodes = await fileLocations(r.rootHash);
+      const t0 = Date.now();
+      await sdkDownloadToFile(r.rootHash, out); // exactly the docs' step: indexer.download(rootHash, path, true)
+      const bytes = fs.readFileSync(out);
+      const rootOk = (await merkleRoot(bytes)).toLowerCase() === r.rootHash.toLowerCase();
+      let contentOk = true;
+      if (r.kind === "manifest") contentOk = JSON.parse(bytes).kind === "manifest";
+      else if (!r.file) contentOk = contentSha256(JSON.parse(bytes).data) === r.sha256;
+      else if (!r.encrypted) contentOk = sha256(bytes) === r.sha256;
+      const ok = rootOk && contentOk && nodes.length > 0;
+      if (!ok) bad++;
+      line = `${ok ? "OK  " : "BAD "} ${name.padEnd(58)} ${String(bytes.length).padStart(9)} B  nodes ${nodes.length}  merkle ${rootOk ? "✓" : "✕"}  sha ${r.encrypted ? "(encrypted)" : contentOk ? "✓" : "✕"}  ${Date.now() - t0} ms  ${explorerLinks(r).file ?? ""}`;
+    } catch (e) {
+      bad++;
+      line = `ERR  ${name.padEnd(58)} ${e.code ?? ""} ${String(e.message).slice(0, 90)}`;
+    }
+    console.log(line);
+  }
+  console.log(`\n${rows.length - bad} ok, ${bad} not ok. Downloaded files: ${into}`);
+  if (bad) process.exitCode = 1;
+}
+
+const commands = { check, status, "seed-fixtures": seedFixtures, restore, verify };
 if (!commands[cmd]) {
   console.error(`usage: node scripts/zg.mjs <${Object.keys(commands).join("|")}>`);
   process.exit(2);
