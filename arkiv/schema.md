@@ -2,7 +2,7 @@
 
 Network: Arkiv **Rabdi** testnet (chain ID 7794095).
 
-Everything the arena records goes to Arkiv. Files (recordings, screenshots, the demo video) go to Swarm instead ([swarm.md](swarm.md)).
+Everything the arena records goes to Arkiv. Files (recordings, screenshots, the demo video) go to 0G Storage, and Arkiv keeps their index (see [backend/README.md](../backend/README.md#where-the-data-lives-arkiv-records-and-0g-storage-files)). A Swarm upload is built but not enabled ([swarm.md](swarm.md)).
 
 Code:
 - [backend/src/arkiv/arkiv.mjs](../backend/src/arkiv/arkiv.mjs): panel and scorecards
@@ -14,7 +14,7 @@ Code:
 | `battle-arena.pipeline` | project | the review pipeline finishes |
 | `battle-arena.dossier` | project | the pipeline finishes (the reviewer's evidence report / bug report) |
 | `battle-arena.transcript` | project | the pipeline finishes (demo video transcript) |
-| `battle-arena.livetest` | project | the pipeline finishes (live-test report; media on Swarm) |
+| `battle-arena.livetest` | project | the pipeline finishes (live-test report; media on 0G Storage) |
 | `battle-arena.vision` | project | after judging, if screenshot notes exist (judge context) |
 | `battle-arena.panel` | judging run | the judges finish |
 | `battle-arena.scorecard` | judge per run | the judges finish |
