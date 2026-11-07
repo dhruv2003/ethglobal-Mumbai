@@ -81,6 +81,38 @@ function rpcEnv() {
 }
 
 /** The whole environment a sandboxed command gets. Nothing from the server's own environment but PATH. */
+/** An empty config file for npm to read instead of any real one. */
+function emptyFile(home) {
+  const f = path.join(home, "empty-npmrc");
+  if (!fs.existsSync(f)) {
+    fs.mkdirSync(home, { recursive: true });
+    fs.writeFileSync(f, "");
+  }
+  return f;
+}
+
+/** Delete every symlink under root (dependency installs can create them; forge must not follow one out). */
+export function removeSymlinks(root) {
+  let removed = 0;
+  const walk = (dir) => {
+    let entries;
+    try {
+      entries = fs.readdirSync(dir, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const e of entries) {
+      const p = path.join(dir, e.name);
+      if (e.isSymbolicLink()) {
+        fs.rmSync(p, { force: true });
+        removed++;
+      } else if (e.isDirectory()) walk(p);
+    }
+  };
+  walk(root);
+  return removed;
+}
+
 function cleanEnv(proxy) {
   const home = forgeHome();
   const env = {
@@ -91,6 +123,13 @@ function cleanEnv(proxy) {
     XDG_CACHE_HOME: path.join(home, ".cache"),
     npm_config_cache: path.join(home, ".npm"),
     npm_config_update_notifier: "false",
+    // Env outranks every .npmrc: no user/global config, scripts off, the real git, and file:/link:
+    // dependencies copied rather than symlinked (a symlink could reach outside the project).
+    npm_config_userconfig: emptyFile(home),
+    npm_config_globalconfig: emptyFile(home),
+    npm_config_ignore_scripts: "true",
+    npm_config_git: "git",
+    npm_config_install_links: "true",
     NO_COLOR: "1",
     CI: "1",
     FOUNDRY_DISABLE_NIGHTLY_WARNING: "1",
@@ -197,14 +236,25 @@ const isInside = (root, p) => {
   return r === "" || (!r.startsWith("..") && !path.isAbsolute(r));
 };
 
-/** Copy the clone for running: no .git, node_modules, symlinks or .env files. */
+/** isInside, and still inside once symlinks are resolved (for paths that exist). */
+const reallyInside = (root, p) => {
+  if (!isInside(root, p)) return false;
+  try {
+    return isInside(fs.realpathSync(root), fs.realpathSync(p));
+  } catch {
+    return true; // doesn't exist (yet): nothing to follow
+  }
+};
+
+/** Copy the clone for running: no .git, node_modules, symlinks, .env or package-manager config files. */
 function workingCopy(src, dest) {
   fs.rmSync(dest, { recursive: true, force: true });
   fs.cpSync(src, dest, {
     recursive: true,
     filter: (p) => {
       const b = path.basename(p);
-      if (b === ".git" || b === "node_modules" || /^\.env/i.test(b)) return false;
+      // Package-manager config from the repo could point npm at a program to run (e.g. git=./x): never copy it.
+      if (b === ".git" || b === "node_modules" || /^\.env/i.test(b) || /^\.(npmrc|yarnrc(\.yml)?|pnpmrc)$/i.test(b)) return false;
       try {
         return !fs.lstatSync(p).isSymbolicLink();
       } catch {
@@ -291,14 +341,14 @@ export function safeRemapping(line, root) {
   const m = /^([^=]+)=(.+)$/.exec(String(line).trim());
   if (!m) return null;
   const target = path.resolve(root, m[2]);
-  if (!isInside(root, target) || /[\0\n"]/.test(line)) return null;
+  if (!reallyInside(root, target) || /[\0\n"]/.test(line)) return null;
   let rel = path.relative(root, target).split(path.sep).join("/");
   if (/[\\/]$/.test(m[2]) && !rel.endsWith("/")) rel += "/";
   return `${m[1]}=${rel || "./"}`;
 }
 
 const VERSION = /^\d+\.\d+\.\d+$/;
-const relOk = (root, p) => typeof p === "string" && p.length > 0 && p.length < 200 && !/[\0\n"]/.test(p) && isInside(root, path.resolve(root, p));
+const relOk = (root, p) => typeof p === "string" && p.length > 0 && p.length < 200 && !/[\0\n"]/.test(p) && reallyInside(root, path.resolve(root, p));
 const relOf = (root, p) => path.relative(root, path.resolve(root, p)).split(path.sep).join("/") || ".";
 const intIn = (v, lo, hi, dflt) => (Number.isFinite(Number(v)) ? Math.max(lo, Math.min(hi, Math.trunc(Number(v)))) : dflt);
 
@@ -466,6 +516,7 @@ export async function runContractTests({ projectId, repoDir, files, commit, onPa
           const lock = fs.existsSync(path.join(pkgDir, "package-lock.json"));
           const r = await sandboxed("npm", [lock ? "ci" : "install", "--ignore-scripts", "--no-audit", "--no-fund", "--loglevel=error", "--registry=https://registry.npmjs.org/"], { cwd: pkgDir, timeout: LIMITS.deps, proxy: proxy.url });
           p.dependencies.push({ kind: "npm", name: path.relative(workRoot, pkgDir) || "package.json", ok: !r.code, detail: r.code ? tail(r.stderr, 200) : "installed, scripts off" });
+          removeSymlinks(workRoot);
         }
       }
 

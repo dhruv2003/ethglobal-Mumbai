@@ -5,6 +5,10 @@
 import { useEffect, useState } from "react";
 import { ensConfig, resolveTexts, useEnsName, ensAppUrl } from "../lib/ens.js";
 import { Link } from "../lib/router.jsx";
+import { listProjects } from "../lib/projects.js";
+import { trackNameOf } from "../lib/events.js";
+import { Ring } from "./Arena.jsx";
+import { fighterTraitItems, PixelFighter } from "./PixelFighter.jsx";
 
 const ARKIV_EXPLORER = "https://rabdi.explorer.arkiv.network/entity-explorer";
 const arkivLink = (key) => `${ARKIV_EXPLORER}?q=${encodeURIComponent(`$key = key(${key})`)}`;
@@ -85,20 +89,45 @@ export function FighterEnsLine({ projectId }) {
   );
 }
 
-const scoreOf = (f) => Number(f.records["arena.score"]) || -1;
 
 /** /fighters: the leaderboard, ranked from records read straight from ENS. Our server only lists the names. */
+const winsOf = (rec) => Number(String(rec ?? "").split("-")[0]) || 0;
+const lossesOf = (rec) => Number(String(rec ?? "").split("-")[1]) || 0;
+/** Score first (the judges' panel), then fights won, then titles. */
+const rankKey = (f) => {
+  const r = f.ens?.records ?? {};
+  return [Number(r["arena.score"]) || -1, winsOf(r["arena.record"]), Number(r["arena.titles"]) || 0];
+};
+const byRank = (a, b) => {
+  const [x, y] = [rankKey(a), rankKey(b)];
+  return y[0] - x[0] || y[1] - x[1] || y[2] - x[2];
+};
+const ranked = (f) => f.ens?.records?.["arena.score"] != null || winsOf(f.ens?.records?.["arena.record"]) + lossesOf(f.ens?.records?.["arena.record"]) > 0;
+
+/**
+ * Live rankings: every fighter, ranked by the judges' score, then fights won, then titles.
+ * Reputation is read straight from each fighter's ENS name (Sepolia); refreshes every 30 s.
+ * Once a fighter holds a title, this is the final standings.
+ */
 export function FightersPage() {
-  const [state, setState] = useState({ loading: true, fighters: [], judges: [], cfg: null, error: null });
+  const [state, setState] = useState({ loading: true, fighters: [], judges: [], cfg: null, error: null, at: null });
+  const [tick, setTick] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => setTick((n) => n + 1), 30000);
+    return () => clearInterval(t);
+  }, []);
   useEffect(() => {
     let live = true;
     (async () => {
       try {
-        const cfg = await ensConfig();
-        if (!cfg) throw new Error("The list of names isn't available right now.");
-        const read = (map, keys) => Promise.all(Object.entries(map ?? {}).map(async ([id, name]) => ({ id, name, records: await resolveTexts(name, keys, cfg) })));
-        const [fighters, judges] = await Promise.all([read(cfg.projects, cfg.fighterKeys), read(cfg.judges, cfg.judgeKeys)]);
-        if (live) setState({ loading: false, fighters: fighters.sort((a, b) => scoreOf(b) - scoreOf(a)), judges, cfg, error: null });
+        const [cfg, projects] = await Promise.all([ensConfig().catch(() => null), listProjects().catch(() => [])]);
+        const read = (map, keys) =>
+          Promise.all(Object.entries(map ?? {}).map(async ([id, name]) => ({ id, name, records: await resolveTexts(name, keys, cfg).catch(() => ({})) })));
+        const [ensFighters, judges] = cfg ? await Promise.all([read(cfg.projects, cfg.fighterKeys), read(cfg.judges, cfg.judgeKeys)]) : [[], []];
+        const ensById = new Map(ensFighters.map((f) => [f.id, f]));
+        const fighters = projects.map((p) => ({ id: p.id, project: p, ens: ensById.get(p.id) ?? null }));
+        for (const f of ensFighters) if (!projects.some((p) => p.id === f.id)) fighters.push({ id: f.id, project: null, ens: f });
+        if (live) setState({ loading: false, fighters: fighters.sort(byRank), judges, cfg, error: !cfg && !projects.length ? "Nothing to show right now." : null, at: new Date() });
       } catch (e) {
         if (live) setState((s) => ({ ...s, loading: false, error: e.shortMessage ?? e.message }));
       }
@@ -106,48 +135,190 @@ export function FightersPage() {
     return () => {
       live = false;
     };
-  }, []);
-  const { loading, fighters, judges, cfg, error } = state;
+  }, [tick]);
+  const { loading, fighters, judges, cfg, error, at } = state;
+  const anyRanked = fighters.some(ranked);
+  const final = fighters.some((f) => Number(f.ens?.records?.["arena.titles"]) > 0);
+  const podium = anyRanked ? fighters.filter(ranked).slice(0, 3) : [];
   return (
-    <div className="ens-board">
-      <h1 className="t-display m0">Fighters</h1>
-      <p className="t-body muted">Every fighter's reputation lives on its ENS name, so it goes with the team and anyone can check it. This page reads it from ENS on Sepolia, not from our server.</p>
-      {loading && <p className="t-caption" aria-busy="true">Reading from ENS…</p>}
-      {error && <p className="t-caption" role="alert">ENS didn't answer: {error}</p>}
-      {!loading && !error && fighters.length === 0 && <p className="t-caption">No fighters on ENS yet. A project gets its name when it's submitted.</p>}
+    <div className={`ranks ${anyRanked ? "" : "ranks--unranked"}`}>
+      <header className="ranks__head">
+        <span className={`rank-status ${final ? "rank-status--final" : ""}`}>
+          {final ? (
+            "Final standings"
+          ) : (
+            <>
+              <span className="rank-status__dot" aria-hidden="true" /> Live
+            </>
+          )}
+        </span>
+        <h1 className="t-display-lg m0">
+          {final ? (
+            <>
+              Final <span className="hl hl--crush">rankings</span>
+            </>
+          ) : (
+            <>
+              Live <span className="hl hl--crush">rankings</span>
+            </>
+          )}
+        </h1>
+        <p className="t-body muted m0 ranks__sub">
+          Ranked by the judges' score, then fights won, then titles. Every result lives on the fighter's ENS name, so anyone can check it.
+          {at && !final && <span className="t-caption"> Updated {at.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}.</span>}
+        </p>
+      </header>
+
+      {loading && <p className="ranks__note" aria-busy="true">Reading the standings…</p>}
+      {error && <p className="ranks__note" role="alert">{error}</p>}
+
+      {!loading && fighters.length > 0 && <Podium top={podium} final={final} />}
+
       {fighters.length > 0 && (
-        <ol className="ens-board__list">
-          {fighters.map((f) => (
-            <li key={f.id} className="ens-board__row">
-              <div className="ens-board__who">
-                <Link to={`/projects/${encodeURIComponent(f.id)}`} className="t-body-strong">{f.records.name || f.name}</Link>
-                <a className="t-mono-caption" href={ensAppUrl(cfg, f.name)} target="_blank" rel="noopener noreferrer">{f.name} ↗</a>
-              </div>
-              <dl className="ens-board__stats t-num">
-                <div><dt className="t-caption">Score</dt><dd>{f.records["arena.score"] ?? "—"}</dd></div>
-                <div><dt className="t-caption">Record</dt><dd>{f.records["arena.record"] ?? "—"}</dd></div>
-                <div><dt className="t-caption">Titles</dt><dd>{f.records["arena.titles"] ?? "0"}</dd></div>
-              </dl>
-            </li>
-          ))}
-        </ol>
-      )}
-      {judges.length > 0 && (
-        <>
-          <h2 className="t-heading m0">AI judges</h2>
-          <ul className="ens-board__list">
-            {judges.map((j) => (
-              <li key={j.id} className="ens-board__row">
-                <div className="ens-board__who">
-                  <span className="t-body-strong">{j.records.name || j.name}</span>
-                  <a className="t-mono-caption" href={ensAppUrl(cfg, j.name)} target="_blank" rel="noopener noreferrer">{j.name} ↗</a>
-                </div>
-                <span className="t-caption">{j.records["agent-context"] ? "Persona published on ENS (ENSIP-26)" : j.records.description}</span>
-              </li>
+        <section className="stack-xs" aria-labelledby="standings-h">
+          <h2 id="standings-h" className="t-heading m0">
+            Standings
+          </h2>
+          <ol className="ranks__list">
+            {fighters.map((f, i) => (
+              <FighterRow key={f.id} f={f} cfg={cfg} rank={i + 1} isRanked={ranked(f)} />
             ))}
+          </ol>
+        </section>
+      )}
+      {!loading && !error && fighters.length === 0 && <p className="ranks__note">No fighters yet. A project joins the rankings when it's submitted.</p>}
+
+      {judges.length > 0 && (
+        <section className="ranks__judges" aria-labelledby="ringside-h">
+          <h2 id="ringside-h" className="t-heading m0">
+            Ringside judges
+          </h2>
+          <ul className="ringside">
+            {judges.map((j) => {
+              const label = j.records.name || j.name.replace(/^judge-/, "").replace(/\.[^.]+\.eth$/, "").replace(/-/g, " ");
+              return (
+                <li key={j.id} className="ringside__judge">
+                  <span className="ringside__face">
+                    <PixelFighter project={{ seed: j.id, name: label, pitch: j.records.description ?? "", description: "", tracks: [] }} scale={3} label={`${label}, judge`} />
+                  </span>
+                  <span className="ringside__text">
+                    <span className="ringside__name">{label}</span>
+                    <a className="ringside__ens" href={ensAppUrl(cfg, j.name)} target="_blank" rel="noopener noreferrer">
+                      {j.name} ↗
+                    </a>
+                  </span>
+                </li>
+              );
+            })}
           </ul>
-        </>
+        </section>
       )}
     </div>
+  );
+}
+
+const personaOf = (f) => {
+  const p = f.project;
+  const name = p?.name || f.ens?.records?.name || f.ens?.name;
+  const items = p ? fighterTraitItems(p, trackNameOf) : [];
+  return { p, name, archetype: items.find((x) => x.id === "archetype"), gear: items.filter((x) => x.id !== "archetype") };
+};
+
+/** Top three on a podium (2 · 1 · 3). Empty places until fighters are scored. */
+function Podium({ top, final }) {
+  const places = [1, 0, 2]; // 2nd left, 1st middle, 3rd right
+  return (
+    <section className={`podium ${top.length ? "" : "podium--empty"}`} aria-label={final ? "Final podium" : "Current top three"}>
+      {places.map((idx) => {
+        const f = top[idx];
+        const place = idx + 1;
+        if (!f)
+          return (
+            <div key={place} className={`podium__spot podium__spot--${place}`}>
+              <div className="podium__fighter podium__fighter--empty" aria-hidden="true">
+                ?
+              </div>
+              <div className="podium__block">
+                <span className="podium__place">{place}</span>
+              </div>
+            </div>
+          );
+        const { p, name, archetype } = personaOf(f);
+        const r = f.ens?.records ?? {};
+        const champ = final && place === 1;
+        return (
+          <Link key={place} to={`/projects/${encodeURIComponent(f.id)}`} className={`podium__spot podium__spot--${place}`}>
+            {champ && <span className="podium__crown">Champion</span>}
+            <div className="podium__fighter">
+              <PixelFighter project={p ?? { seed: f.id, name, pitch: "", description: "", tracks: [] }} scale={place === 1 ? 6 : 5} />
+            </div>
+            <div className="podium__block">
+              <span className="podium__place">{place}</span>
+              <span className="podium__persona">{archetype?.label ?? name}</span>
+              <span className="podium__project">{name}</span>
+              <span className="podium__score t-num">{r["arena.score"] ?? "—"}</span>
+            </div>
+          </Link>
+        );
+      })}
+      {!top.length && <p className="podium__wait">The podium fills in after the first judged fight.</p>}
+    </section>
+  );
+}
+
+/** One fighter in the standings. */
+function FighterRow({ f, cfg, rank, isRanked }) {
+  const { p, name, archetype, gear } = personaOf(f);
+  const r = f.ens?.records ?? {};
+  const tone = ["crush", "oracle", "sunny"][(rank - 1) % 3];
+  return (
+    <li className={`frow frow--${tone}`} style={{ "--i": rank }}>
+      <span className={`frow__rank ${isRanked && rank <= 3 ? `frow__rank--${rank}` : ""}`}>{isRanked ? rank : "–"}</span>
+      <Link to={`/projects/${encodeURIComponent(f.id)}`} className="frow__fighter" aria-label={`${archetype?.label ?? name}, fighting for ${name}`}>
+        <span className="frow__spot" aria-hidden="true">
+          <PixelFighter project={p ?? { seed: f.id, name, pitch: "", description: "", tracks: [] }} scale={4} />
+        </span>
+        <span className="frow__who">
+          <span className="frow__persona">{archetype?.label ?? name}</span>
+          <span className="frow__for">
+            fights for <strong>{name}</strong>
+            {p?.teamName ? ` · ${p.teamName}` : ""}
+          </span>
+          {r["arena.lastFight"] ? <span className="frow__tag">Last fight: {r["arena.lastFight"]}</span> : archetype?.why && <span className="frow__tag">{archetype.why}</span>}
+          {gear.length > 0 && (
+            <span className="frow__gear">
+              {gear.map((g) => (
+                <span key={g.id} className="frow__item" title={g.why}>
+                  {g.label}
+                </span>
+              ))}
+            </span>
+          )}
+        </span>
+      </Link>
+      <div className="frow__side">
+        <dl className="frow__stats">
+          <div>
+            <dt>Score</dt>
+            <dd>{r["arena.score"] ?? "—"}</dd>
+          </div>
+          <div>
+            <dt>W–L</dt>
+            <dd>{r["arena.record"] ? r["arena.record"].replace("-", "–") : "0–0"}</dd>
+          </div>
+          <div>
+            <dt>Titles</dt>
+            <dd>{r["arena.titles"] ?? "0"}</dd>
+          </div>
+        </dl>
+        {f.ens && cfg ? (
+          <a className="frow__ens" href={ensAppUrl(cfg, f.ens.name)} target="_blank" rel="noopener noreferrer" title={f.ens.name}>
+            {f.ens.name} ↗
+          </a>
+        ) : (
+          <span className="frow__ens frow__ens--none">ENS name on its way</span>
+        )}
+      </div>
+    </li>
   );
 }

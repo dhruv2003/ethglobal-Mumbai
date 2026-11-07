@@ -879,6 +879,83 @@
 }
 @media (prefers-reduced-motion: reduce) { .tpill__dot { animation: none; } }
 
+/* Two cloud browsers: a laptop and a phone. */
+.tstage__devices { grid-template-columns: minmax(0, 2.1fr) minmax(0, 1fr); gap: var(--space-6); }
+.tstage__devices--all { grid-template-columns: minmax(0, 2.1fr) minmax(0, 1fr); }
+.tstage__devices--android, .tstage__devices--ios { grid-template-columns: minmax(0, 1fr); justify-items: center; }
+.tstage__devices--android .tvdev, .tstage__devices--ios .tvdev { width: min(100%, 340px); }
+.tvdev__name { flex-wrap: wrap; row-gap: 0; }
+.tvdev__model { flex-basis: 100%; font-size: 11px; font-weight: 600; color: var(--ink-secondary); padding-left: 23px; }
+.tview button { display: inline-flex; align-items: center; gap: 5px; }
+.dev--android .dev__body { border-radius: 30px; }
+.dev--android .dev__screen { border-radius: 22px; }
+.dev__punch { position: absolute; z-index: 3; top: 18px; left: 50%; width: 9px; height: 9px; border-radius: 50%; background: #0d0c14; box-shadow: 0 0 0 2px #2e2938; transform: translateX(-50%); }
+/* Laptop recordings with browser chrome: the address bar text sits on the recorded bar. */
+.dev__url {
+  position: absolute; z-index: 2; top: 1.7%; left: 22%; right: 22%; height: 4.2%; display: flex; align-items: center; justify-content: center; gap: 5px;
+  border-radius: 99px; background: #35363a; color: #e8eaed; font: 500 clamp(7px, 0.75vw, 11px)/1 var(--font-sans); pointer-events: none;
+}
+.dev__lock { color: #81c995; font-size: 0.8em; }
+
+/* MetaMask test wallet popup (mock): extension window on the laptop, bottom sheet on phones. */
+.mm {
+  position: absolute; z-index: 4; top: 9%; right: 3%; width: min(46%, 300px); padding: 10px; border-radius: 12px;
+  background: #fff; color: #24272a; box-shadow: 0 18px 40px -12px rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; gap: 8px;
+  font: 500 11px/1.35 var(--font-sans); text-align: left;
+}
+.mm--sheet { top: auto; right: 0; left: 0; bottom: 0; width: auto; border-radius: 18px 18px 0 0; padding: 12px 12px 16px; }
+.mm__bar { display: flex; align-items: center; gap: 6px; padding-bottom: 6px; border-bottom: 1px solid #eee; }
+.mm__bar b { font-size: 12px; }
+.mm__logo { width: 16px; height: 16px; border-radius: 4px; background: linear-gradient(135deg, #f6851b, #e2761b 55%, #cd6116); clip-path: polygon(0 0, 50% 28%, 100% 0, 88% 62%, 50% 100%, 12% 62%); }
+.mm__net { margin-left: auto; padding: 2px 7px; border-radius: 99px; background: #f2f4f6; font-size: 10px; font-weight: 600; white-space: nowrap; }
+.mm__acct { display: flex; align-items: center; gap: 7px; }
+.mm__acct span { display: flex; flex-direction: column; min-width: 0; }
+.mm__acct small { color: #6a737d; font-size: 10px; }
+.mm__avatar { width: 22px; height: 22px; flex: none; border-radius: 50%; background: conic-gradient(#f6851b, #ffd33d, #3ddc84, #2f6bff, #f6851b); }
+.mm__body { display: flex; flex-direction: column; gap: 4px; padding: 8px; border-radius: 8px; background: #f7f8fa; }
+.mm__site { align-self: flex-start; padding: 1px 7px; border-radius: 99px; background: #fff; border: 1px solid #e4e7eb; font-size: 10px; color: #535a61; }
+.mm__title { font-size: 13px; }
+.mm__body small { color: #6a737d; }
+.mm__rows { margin: 0; display: flex; flex-direction: column; gap: 3px; }
+.mm__rows div { display: flex; justify-content: space-between; gap: 8px; }
+.mm__rows dt { color: #6a737d; }
+.mm__rows dd { margin: 0; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mm__actions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.mm__btn { display: grid; place-items: center; height: 26px; border-radius: 99px; background: #0376c9; color: #fff; font-weight: 700; font-size: 11px; white-space: nowrap; overflow: hidden; transition: background 0.2s; }
+.mm__btn--ghost { background: #fff; color: #0376c9; border: 1px solid #0376c9; }
+.mm__btn--done { background: #1c8234; }
+.mm__note { color: #8a9199; font-size: 9.5px; text-align: center; }
+
+@media (max-width: 1100px) {
+  .tstage__devices, .tstage__devices--all { grid-template-columns: minmax(0, 1fr); justify-items: center; }
+  .tstage__devices--all .tvdev--laptop { width: 100%; }
+  .tstage__devices--all .tvdev--phone { width: min(100%, 340px); }
+}
+
+/* ---------- pipeline polish: one ring, one chip, quiet edges ---------- */
+.fedge__dot { r: 4; fill: var(--oracle); stroke: var(--canvas); stroke-width: 2; filter: none; }
+.fedge__end { fill: var(--line-strong); }
+.fedge--done .fedge__end { fill: var(--ink); }
+.fedge--active .fedge__end { fill: var(--oracle); }
+.fedge--active .fedge__line { stroke-width: 2.5; }
+.fedge__track { opacity: 0.55; }
+.fnode--running .fnode__prog { stroke: var(--oracle); }
+.fnode__halo { opacity: 0.22; animation-duration: 2.2s; }
+.fnode--running .fnode__face { animation: none; box-shadow: 0 0 0 5px var(--glow-oracle), var(--shadow-pop-sm); }
+.fnode--running .fnode__glyph { animation-duration: 1.6s; }
+.fnow {
+  position: absolute; top: calc(100% + 6px); left: 50%; transform: translateX(-50%);
+  max-width: none; margin: 0; gap: 7px; padding: 5px 11px 5px 9px; border-radius: 99px;
+  background: var(--canvas); color: var(--ink); border: 1.5px solid var(--ink); box-shadow: 0 2px 0 var(--ink);
+  font-size: 11.5px; font-weight: 700; white-space: nowrap; z-index: 3;
+}
+.fnow__bar { width: 26px; height: 5px; border-radius: 99px; background: var(--surface-sunken); overflow: hidden; flex: none; }
+.fnow__bar span { display: block; height: 100%; border-radius: inherit; background: var(--oracle); }
+.fnow__text { overflow: visible; }
+.fstage--running::after { border: 1.5px solid color-mix(in srgb, var(--oracle) 45%, transparent); background: color-mix(in srgb, var(--oracle-soft) 45%, transparent); animation: none; background-image: none; }
+.fstage--running .fstage__n { animation: none; }
+.fstage::after { border-color: color-mix(in srgb, var(--line) 80%, transparent); }
+
 /* ---------- testing: left column, wallet log, contract tests ---------- */
 .tv__main { display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; }
 

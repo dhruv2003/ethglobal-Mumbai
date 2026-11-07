@@ -11,6 +11,8 @@ import { navigate } from "../lib/router.jsx";
 import { myBet, usePoolData } from "./BetPanel.jsx";
 import { Player, WaitingRing, canPlay, matchFor } from "./FightPlayer.jsx";
 import { easeOut } from "./fx.jsx";
+import { StartCountdown } from "./StartCountdown.jsx";
+import { CrowdChat } from "./CrowdChat.jsx";
 
 /** The game view after a bet: the ring at 90% of the screen. What the wallet won comes from the chain, never from the replay. */
 export function Theater({ tournament, match, fight, a, b, wallet, onClose }) {
@@ -32,12 +34,17 @@ export function Theater({ tournament, match, fight, a, b, wallet, onClose }) {
   const { data } = usePoolData(wallet, tournament.id, matchMarket(tournament.id, match.index), selections);
   const [fought, setFought] = useState(false);
   const [run, setRun] = useState(0);
-  const onResult = useCallback(() => setFought(true), []);
+  const onResult = useCallback(() => {
+    setFought(true); // the backend publishes the real result; the page picks it up on its next read
+  }, []);
   const fmt = (v) => formatAmount(v, info.decimals);
   const bet = myBet(data, info, selections);
   const finalized = match.status === "finalized";
   const settled = fought && finalized && data && info ? settledResult({ stakes: data.stakes, mine: data.mine, winnerIndex: match.winner === match.a ? 0 : 1 }) : null;
-  const outcome = settled && { kind: settled.kind, amount: fmt(settled.amount), winner: match.winner === match.a ? a.name : b.name, paid: data.paid, auto: payouts.enabled };
+  const total = data ? data.stakes[0] + data.stakes[1] : 0n;
+  const loserIndex = match.winner === match.a ? 1 : 0;
+  const crowd = total > 0n ? { pct: Number((data.stakes[loserIndex] * 100n) / total), name: loserIndex ? b.name : a.name } : null;
+  const outcome = settled && { kind: settled.kind, amount: fmt(settled.amount), winner: match.winner === match.a ? a.name : b.name, paid: data.paid, auto: payouts.enabled, crowd };
   return createPortal(
     <motion.div className="theater" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
       <motion.div
@@ -50,6 +57,9 @@ export function Theater({ tournament, match, fight, a, b, wallet, onClose }) {
         transition={{ duration: 0.35, ease: easeOut }}
       >
         <header className="theater__bar">
+          <button type="button" className="theater__back" onClick={onClose}>
+            <span aria-hidden="true">←</span> Back
+          </button>
           <span className="theater__live">
             {happening ? <span className="live-dot" aria-hidden="true" /> : null} {happening ? "Live" : "Waiting"}
           </span>
@@ -61,19 +71,24 @@ export function Theater({ tournament, match, fight, a, b, wallet, onClose }) {
               Your bet · {bet.amount} {bet.symbol} on <b>{bet.name}</b>
             </span>
           )}
-          <button type="button" className="bm__close" aria-label="Close the fight view" onClick={onClose}>
-            ×
-          </button>
         </header>
+        <div className="theater__body">
+          <div className="theater__main">
         {ready ? (
           <Player key={run} fightMatch={fightMatch} events={fight.events} fight={fight} theater onResult={onResult} />
         ) : (
           <div className="theater__stage theater__stage--wait">
-            <WaitingRing match={fightMatch} fit />
+            <div className="theater__ringwrap">
+              <WaitingRing match={fightMatch} fit />
+              <StartCountdown at={fight?.revealAt} />
+            </div>
             <p className="theater__note t-body">{fight?.status === "running" ? "The judges are finishing. The fight plays here as soon as they're done." : "Your bet is in. The fight plays here when it starts."}</p>
           </div>
         )}
         {fought && !finalized && <p className="theater__note t-body">The fight is over. The result is being published on chain.</p>}
+          </div>
+          <CrowdChat tournament={tournament} match={match} a={a} b={b} symbol={info?.symbol ?? ""} />
+        </div>
         {outcome && <ResultCard outcome={outcome} bet={bet} onClose={onClose} onReplay={() => { setFought(false); setRun((n) => n + 1); }} />}
       </motion.div>
     </motion.div>,
@@ -122,6 +137,11 @@ function ResultCard({ outcome, bet, onClose, onReplay }) {
             Your {bet.amount} {bet.symbol} on {bet.name} didn't land.
           </p>
         )}
+        {outcome.crowd && outcome.crowd.pct >= 50 && (
+          <p className="result__crowd t-num">
+            {outcome.crowd.pct}% of the pool backed {outcome.crowd.name}.
+          </p>
+        )}
         <p className="result__fine t-num">
           {outcome.paid
             ? "Paid to your wallet."
@@ -129,7 +149,7 @@ function ResultCard({ outcome, bet, onClose, onReplay }) {
               ? outcome.auto
                 ? "It's being sent to your wallet automatically."
                 : "Collect it on the fight page."
-              : "Winners are paid from this pool."}
+              : "The evidence decided it, not the demo."}
         </p>
         <div className="result__actions">
           <button type="button" className="bm__go" onClick={() => navigate("/tournaments")}>

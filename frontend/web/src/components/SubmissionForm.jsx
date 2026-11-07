@@ -277,7 +277,7 @@ function ProofStep() {
         type="url"
         inputMode="url"
         placeholder="https://your-app.xyz"
-        help="We open it on a laptop and a phone. Leave empty to use the repo's homepage."
+        help="We open it in a cloud browser at laptop and phone size. Leave empty to use the repo's homepage."
         autoCapitalize="off"
         spellCheck={false}
       />

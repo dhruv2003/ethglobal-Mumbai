@@ -248,7 +248,7 @@ function BracketMatch({ t, match }) {
   );
 }
 
-function Bracket({ t }) {
+export function Bracket({ t }) {
   return (
     <div className="bracket" role="group" aria-label="Bracket">
       {t.rounds.map((round) => (

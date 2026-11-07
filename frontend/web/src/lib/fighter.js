@@ -71,12 +71,49 @@ export const GEAR_RULES = [
   { slot: "hand", id: "coin", label: "Gold coin", why: "payments, staking or DeFi", re: /\b(usdc|stakes?|staking|defi|payments?|pays?|swaps?|yield|lending)\b/i },
 ];
 
-export function fighterTraits(project) {
-  const h = hash(project.seed || project.id || project.name);
+/** The three places gear goes, in the order the picker shows them. One item per slot. */
+export const GEAR_SLOTS = [
+  { slot: "head", label: "Head" },
+  { slot: "eye", label: "Eyes" },
+  { slot: "hand", label: "Hand" },
+];
+
+/**
+ * A fighter seed may carry the team's gear picks after a "~": "a1b2c3~head:goggles;eye:none".
+ * A slot left out is picked from the description; "none" keeps it empty. Plain seeds work as before.
+ */
+export function splitSeed(seed) {
+  const [base, picks = ""] = String(seed ?? "").split("~");
+  const gear = {};
+  for (const part of picks.split(";")) {
+    const [slot, id] = part.split(":");
+    if (GEAR_SLOTS.some((x) => x.slot === slot) && (id === "none" || GEAR_RULES.some((r) => r.slot === slot && r.id === id))) gear[slot] = id;
+  }
+  return { base, gear };
+}
+
+export function joinSeed(base, gear = {}) {
+  const picks = GEAR_SLOTS.filter((x) => gear[x.slot]).map((x) => `${x.slot}:${gear[x.slot]}`);
+  return picks.length ? `${base}~${picks.join(";")}` : base;
+}
+
+/** What the description alone would equip, per slot (the "Auto" choice). */
+export function autoGear(project) {
   const text = [project.name, project.pitch, project.description].join(" ");
   const gear = {};
-  for (const r of GEAR_RULES) {
-    if (!gear[r.slot] && r.re.test(text)) gear[r.slot] = { id: r.id, label: r.label, why: r.why };
+  for (const r of GEAR_RULES) if (!gear[r.slot] && r.re.test(text)) gear[r.slot] = r.id;
+  return gear;
+}
+
+export function fighterTraits(project) {
+  const { base, gear: picked } = splitSeed(project.seed);
+  const h = hash(base || project.id || project.name);
+  const auto = autoGear(project);
+  const gear = {};
+  for (const { slot } of GEAR_SLOTS) {
+    const id = picked[slot] ?? auto[slot];
+    const r = id && id !== "none" ? GEAR_RULES.find((x) => x.slot === slot && x.id === id) : null;
+    if (r) gear[slot] = { id: r.id, label: r.label, why: picked[slot] ? "picked by the team" : r.why };
   }
   const track = project.tracks?.[0];
   const style = fighterStyle(project.archetype ?? project.fighter?.archetype) ?? FIGHTER_ROSTER[h % FIGHTER_ROSTER.length];

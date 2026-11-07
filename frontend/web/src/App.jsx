@@ -35,7 +35,7 @@ const TITLES = {
   home: "The arena",
   form: "Submit a project",
   projects: "Projects",
-  fighters: "Fighters",
+  fighters: "Rankings",
   project: "Project",
   judges: "Judges",
   wallet: "Wallet",
@@ -193,7 +193,7 @@ export default function App() {
             {route.name === "home" ? (
               <LandingPage />
             ) : route.name === "judges" ? (
-              <OrganizerGate wallet={wallet}><JudgesPage /></OrganizerGate>
+              <JudgesPage />
             ) : route.name === "wallet" ? (
               <WalletPage wallet={wallet} />
             ) : route.name === "transactions" ? (

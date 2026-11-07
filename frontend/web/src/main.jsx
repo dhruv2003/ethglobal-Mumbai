@@ -9,6 +9,7 @@ import "./submit.css";
 import "./project.css";
 import "./graph.css";
 import "./review.css";
+import "./fight.css";
 import App from "./App.jsx";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
