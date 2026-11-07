@@ -43,6 +43,8 @@ export const transcripts = perProject("transcripts");
 export const evidence = perProject("evidence");
 /** The live-test report (what tester/runner.mjs writes as smoke.json). Its media are files of the project on 0G. */
 export const liveTests = perProject("livetests");
+/** The smart contract test report (reviewer/contracts.mjs): forge's results per test, or why nothing ran. */
+export const contractTests = perProject("contracttests");
 /** Facts about our copy of the demo video ({ ext, bytes, seconds, source } or { error }). The video is a file of the project on 0G. */
 export const videos = perProject("videos");
 /** The last Swarm + Arkiv publish of a judged run (arkiv/publish.mjs). */
@@ -70,7 +72,7 @@ export const workDir = (projectId) => scratch("work", projectId);
 /** Remove everything stored for a submitted project. */
 export function deleteProject(projectId) {
   db.remove("submissions", String(projectId));
-  for (const s of [reviews, pipelines, dossiers, transcripts, evidence, liveTests, videos, publishes]) s.remove(projectId);
+  for (const s of [reviews, pipelines, dossiers, transcripts, evidence, liveTests, contractTests, videos, publishes]) s.remove(projectId);
   removeScope(safeId(projectId));
 }
 

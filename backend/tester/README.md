@@ -6,7 +6,25 @@ Opens a project's live app on Mozark cloud Chrome as a **laptop** (1440×900) an
 2. **Major flows:** the app's main features, exercised without an account.
 3. **Health:** status, load time, console errors, failed requests, layout.
 
+4. **Wallet (MetaMask)**, for dapps only (the site shows a connect-wallet button): connect, then use the app's on-chain features.
+
 The steps come from `backend/fixtures/<project>/flows.json`, written by the reviewer from the demo video and the code. Steps marked `requires` (sign-in, wallet) are reported as blocked, never faked.
+
+## Wallet phase
+
+Real MetaMask is a browser extension, and Mozark's remote Chrome can't load extensions (Synpress and similar tools need a locally launched browser). So every page gets a **MetaMask-compatible test wallet** (`wallet.mjs`): an injected EIP-1193 provider with `isMetaMask` and an EIP-6963 announcement, so wallet pickers (RainbowKit, ConnectKit, Reown/AppKit, wagmi) list it as "MetaMask".
+
+- A fresh throwaway key per run, kept in Node; the page only gets a forwarding function.
+- Connects, switches between the chains in `chains.mjs`, and really signs messages and typed data (Sign-In with Ethereum works).
+- `eth_sendTransaction` is **simulated** (`eth_call` + `eth_estimateGas` on a public RPC), recorded, then rejected with 4001. Nothing is ever broadcast.
+- In the wallet phase, money words (mint, stake, approve…) may be clicked; submit, delete, sign-up and card payment stay refused.
+- Actions: `connectWallet` (press the site's connect button, pick MetaMask) and `expectWallet: "connected" | "signature" | "transaction"`.
+
+Each run records `wallet` (address, chains, every request with its second in the recording) and each step its `walletEvents`.
+
+## Local browser (development)
+
+`TESTER_LOCAL_BROWSER=1` runs on a local headless Chromium instead of Mozark (no token needed); add `TESTER_LOCAL_CHANNEL=chrome` to use an installed Chrome instead of `npx playwright install chromium`.
 
 ## Run
 

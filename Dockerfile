@@ -27,9 +27,17 @@ RUN cd backend/tester && PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm ci --omit=dev --
 
 FROM node:22-bookworm-slim
 # git: the reviewer clones repos. ffmpeg/ffprobe: demo video audio for transcripts.
+# setpriv (util-linux, always in Debian) drops the contract test runner to `nobody`.
 RUN apt-get update \
  && apt-get install -y --no-install-recommends git ffmpeg ca-certificates tini \
  && rm -rf /var/lib/apt/lists/*
+# Foundry (forge) runs the submissions' smart contract tests, sandboxed (backend/src/reviewer/contracts.mjs).
+# Pinned release; bump FOUNDRY_VERSION to upgrade. A wrong tag fails the build here, loudly.
+ARG FOUNDRY_VERSION=v1.3.5
+ADD https://github.com/foundry-rs/foundry/releases/download/${FOUNDRY_VERSION}/foundry_${FOUNDRY_VERSION}_linux_amd64.tar.gz /tmp/foundry.tar.gz
+RUN tar -xzf /tmp/foundry.tar.gz -C /usr/local/bin forge \
+ && rm /tmp/foundry.tar.gz \
+ && forge --version
 WORKDIR /app
 COPY backend backend
 COPY --from=deps /app/backend/node_modules backend/node_modules

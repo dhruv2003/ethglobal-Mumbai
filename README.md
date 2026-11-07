@@ -17,11 +17,11 @@ Details: [arkiv/](arkiv/):
 - [friction](arkiv/friction.md)
 - [Swarm](arkiv/swarm.md)
 
-**Wallet that writes our entities:** `TODO: publisher address (the address of ARKIV_PRIVATE_KEY, also shown at GET /api/health → arkiv.publisher)`
+**Wallet that writes our entities:** `0x429C0C8C8cDBf6b24D02075D808088983988B515`
 
-**One query you can run.** Paste it into https://rabdi.explorer.arkiv.network/entity-explorer, replacing the address:
+**One query you can run.** Paste it into https://rabdi.explorer.arkiv.network/entity-explorer:
 ```
-arkiv.schema = str('battle-arena.panel') AND $owner = addr(<publisher address>) ORDER BY runAt:u64 DESC
+arkiv.schema = str('battle-arena.panel') AND $owner = addr(0x429C0C8C8cDBf6b24D02075D808088983988B515) ORDER BY runAt:u64 DESC
 ```
 It lists every published panel, newest first. From the repo, `cd backend && npm run arkiv -- read --project go-health-me` runs the same query for one project.
 

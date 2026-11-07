@@ -3,7 +3,7 @@
  * reviewer's dossier and the live test, all from the store (Arkiv). The live
  * test's screenshots are read separately (judges/evidence.mjs loadScreenshots).
  */
-import { dossiers, liveTests, submissions } from "./store.mjs";
+import { contractTests, dossiers, liveTests, submissions } from "./store.mjs";
 
 function fromSubmission(r) {
   return {
@@ -20,6 +20,7 @@ function fromSubmission(r) {
     },
     dossier: dossiers.get(r.id),
     liveTest: liveTests.get(r.id),
+    contractTests: contractTests.get(r.id),
   };
 }
 
