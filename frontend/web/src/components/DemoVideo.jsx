@@ -23,6 +23,16 @@ const providerOf = (url) => {
   }
 };
 
+/** A plain video file link (…/demo.mp4): the browser plays it directly, no embed needed. */
+const directFile = (raw) => {
+  try {
+    const u = new URL(String(raw));
+    return u.protocol === "https:" && /\.(mp4|webm|mov|m4v)$/i.test(u.pathname) ? u.href : null;
+  } catch {
+    return null;
+  }
+};
+
 const httpsHref = (raw) => {
   try {
     const u = new URL(String(raw));
@@ -37,7 +47,8 @@ function useSavedVideo(project) {
   const [saved, setSaved] = useState(project.savedVideo ?? null);
   // Only wait while the review (which saves the copy) is actually in flight, and never forever:
   // participants don't see the review status, and a not-started review would otherwise spin for good.
-  const inFlight = project.review?.status === "queued" || project.review?.status === "reviewing";
+  // The project list doesn't carry review status, so "unknown" counts as possibly in flight (still capped at 10 min).
+  const inFlight = project.review?.status === "queued" || project.review?.status === "reviewing" || project.review?.status == null;
   const [gaveUp, setGaveUp] = useState(false);
   const waiting = project.kind === "submitted" && !saved && inFlight && !gaveUp;
   useEffect(() => setSaved(project.savedVideo ?? null), [project.id, project.savedVideo]);
@@ -101,7 +112,8 @@ function VideoPlayer({ project: p }) {
   const { saved, waiting } = useSavedVideo(p);
   const uploaded = isUploadRef(p.videoUrl);
   const embed = uploaded ? null : embedUrl(p.videoUrl);
-  const ours = saved?.saved ? apiUrl(saved.url) : uploaded ? uploadUrl(p.videoUrl) : null;
+  // Our copy once it's saved; until then (or if saving failed) a direct file plays from the original link.
+  const ours = saved?.saved ? apiUrl(saved.url) : uploaded ? uploadUrl(p.videoUrl) : directFile(p.videoUrl);
   const [mode, setMode] = useState(embed ? "embed" : "ours");
   const showEmbed = embed && (mode === "embed" || !ours);
   const provider = uploaded ? null : providerOf(p.videoUrl);
@@ -150,7 +162,7 @@ function VideoPlayer({ project: p }) {
             : saved?.saved
               ? `Our copy saved · ${fmtSeconds(saved.seconds)} · ${fmtBytes(saved.bytes)}`
               : provider
-                ? `Plays from ${provider}`
+                ? `Plays from ${provider}${waiting ? " · saving our copy…" : ""}`
                 : ""}
         </span>
         {!uploaded && originalHref && (
