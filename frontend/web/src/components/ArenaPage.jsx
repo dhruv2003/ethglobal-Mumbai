@@ -2,12 +2,15 @@
  * /arena: the fights, four to a screen. Live ones first, then the newest finished.
  * One badge per ring, the two project names, and their health. Read from the chain.
  */
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { motion } from "motion/react";
 import { StatusPill } from "@ds/ui.jsx";
 import { usePoll } from "../lib/chain.js";
 import { loadTournaments } from "../lib/arena.js";
 import { Link } from "../lib/router.jsx";
+import { listProjects } from "../lib/projects.js";
+import { bracketRounds } from "../lib/pools.js";
+import { Bracket } from "./TournamentsPage.jsx";
 import { AerialRing } from "./AerialRing.jsx";
 import { bouncy, stagger } from "./fx.jsx";
 
@@ -18,10 +21,51 @@ function withHealth(match) {
   return { ...match, healthA: hp(match.scoreA ?? 0), healthB: hp(match.scoreB ?? 0) };
 }
 
+/** A tournament whose bracket is registered with real projects (contract tournaments left from testing only have numbered slots). */
+const isReal = (t) => t.projects.length > 0 && t.projects.every((p) => p.registered);
+
+/** Before any real tournament: the submitted projects paired up as upcoming bouts (no results are invented). */
+export function previewTournament(projects) {
+  const list = projects ?? [];
+  const t = { id: "next", preview: true, title: "Next tournament", projects: list, matches: [] };
+  for (let i = 0; i + 1 < list.length; i += 2) t.matches.push({ index: t.matches.length, a: i, b: i + 1, status: "scheduled", opened: false, winner: null, cutoffMs: 0 });
+  return t;
+}
+function upNext(projects) {
+  const t = previewTournament(projects);
+  return t.matches.map((match) => ({ t, match }));
+}
+
+/**
+ * The bracket to show: the real tournament being fought (live first, else the newest).
+ * Before there is one, a preview from the submitted projects with the same pairings as the
+ * 'Up next' cards; later rounds are TBD and nothing is decided.
+ */
+function bracketOf(tournaments, projects) {
+  const real = (tournaments ?? []).filter(isReal);
+  const current = real.find((t) => t.phase === "live") ?? real.sort((a, b) => Number(b.id) - Number(a.id))[0];
+  if (current) return current;
+  const list = projects ?? [];
+  if (list.length < 2) return null;
+  let count = 2;
+  while (count < list.length) count *= 2;
+  const rounds = bracketRounds(count);
+  const matches = [];
+  for (const r of rounds)
+    for (const i of r.matches) {
+      const first = r.round === 1;
+      const a = first && i * 2 < list.length ? i * 2 : null;
+      const b = first && i * 2 + 1 < list.length ? i * 2 + 1 : null;
+      matches.push({ index: i, a, b, status: "scheduled", opened: false, winner: null, cutoffMs: 0 });
+    }
+  return { id: "next", preview: true, title: "Next tournament", count, projects: list, matches, rounds };
+}
+
 /** Every fight worth showing, across tournaments: live first, then the newest finished. */
 function fightsOf(tournaments) {
   const rank = { live: 0, review: 1, finalized: 2, scheduled: 3 };
   return tournaments
+    .filter(isReal)
     .flatMap((t) => t.matches.filter((m) => m.a != null && m.b != null && m.status !== "void").map((m) => ({ t, match: withHealth(m) })))
     .sort((x, y) => (rank[x.match.status] ?? 9) - (rank[y.match.status] ?? 9) || Number(y.t.id) - Number(x.t.id));
 }
@@ -68,7 +112,15 @@ const PER_SCREEN = 4;
 
 export function ArenaPage() {
   const { data, error } = usePoll(loadTournaments, [], 15000, { key: "tournaments" });
-  const fights = useMemo(() => fightsOf(data ?? []), [data]);
+  const { data: projects } = usePoll(() => listProjects().catch(() => []), [], 30000, { key: "projects" });
+  const real = useMemo(() => fightsOf(data ?? []), [data]);
+  const fights = real.length ? real : upNext(projects);
+  const [view, setViewState] = useState(() => (new URLSearchParams(location.search).get("view") === "bracket" ? "bracket" : "fights"));
+  const setView = (v) => {
+    setViewState(v);
+    history.replaceState({}, "", v === "bracket" ? `${location.pathname}?view=bracket` : location.pathname);
+  };
+  const bracket = useMemo(() => bracketOf(data, projects), [data, projects]);
   const shown = fights.slice(0, PER_SCREEN);
   const earlier = fights.slice(PER_SCREEN);
   const live = fights.filter((f) => f.match.status === "live").length;
@@ -98,6 +150,31 @@ export function ArenaPage() {
         </p>
       </header>
 
+      <div className="chips arena-view" role="group" aria-label="How to show the arena">
+        <button type="button" className="chip" aria-pressed={view === "fights"} onClick={() => setView("fights")}>
+          Fights
+        </button>
+        <button type="button" className="chip" aria-pressed={view === "bracket"} onClick={() => setView("bracket")}>
+          Bracket
+        </button>
+      </div>
+
+      {view === "bracket" ? (
+        <section className="arena-bracket" aria-labelledby="arena-bracket-h">
+          <div className="arena-bracket__head">
+            <h2 id="arena-bracket-h" className="t-heading m0">
+              {bracket?.title ?? "Bracket"}
+            </h2>
+            {bracket?.preview && <span className="t-caption muted">How the rounds will run. Pairings are final once the organizer opens the tournament.</span>}
+            {bracket && !bracket.preview && (
+              <Link to={`/tournaments/${bracket.id}`} className="t-caption">
+                Open the tournament →
+              </Link>
+            )}
+          </div>
+          {bracket ? <Bracket t={bracket} /> : <p className="plot__empty m0">The bracket appears once there are at least two projects.</p>}
+        </section>
+      ) : (
       <motion.div className="bouts" variants={stagger(0.08)} initial="hidden" animate="show">
         {shown.map(({ t, match }) => (
           <FightCard key={`${t.id}-${match.index}`} t={t} match={match} big />
@@ -105,8 +182,9 @@ export function ArenaPage() {
         {data == null && error && <p className="plot__empty m0">Couldn't reach the chain. Retrying…</p>}
         {data != null && !fights.length && <p className="plot__empty m0">No fights yet.</p>}
       </motion.div>
+      )}
 
-      {earlier.length > 0 && (
+      {view === "fights" && earlier.length > 0 && (
         <section className="bouts-earlier" aria-labelledby="earlier-h">
           <h2 id="earlier-h" className="t-heading m0">
             Earlier fights

@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { StatusPill } from "@ds/ui.jsx";
 import { api, apiUrl, peekApi } from "../lib/api.js";
 import { CopyId } from "./ZeroGProof.jsx";
+import { API } from "../lib/apiBase.js";
 
 const KIND_LABEL = {
   "demo-video": "Demo videos (our copy)",

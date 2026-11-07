@@ -134,3 +134,54 @@
   /* Details drop below the canvas on phones instead of covering it. */
   .kg-panel { position: relative; inset: auto; width: auto; margin-top: var(--space-3); }
 }
+
+/* ---------- Graph page v2: canvas + insights rail ---------- */
+.kg-page { display: flex; flex-direction: column; gap: var(--space-5); }
+.kg-head { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--space-5); flex-wrap: wrap; }
+.kg-head__text { display: flex; flex-direction: column; gap: var(--space-2); max-width: 600px; }
+.kg-kpis { margin: 0; display: flex; gap: 6px; }
+.kg-kpis > div { min-width: 84px; padding: 10px 14px; border-radius: 14px; background: var(--canvas); border: 1.5px solid var(--line); }
+.kg-kpis dt { display: flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 700; color: var(--ink-secondary); }
+.kg-kpis dd { margin: 4px 0 0; font: 800 26px/1 var(--font-display); }
+.kg-layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: var(--space-4); align-items: start; }
+.kg-main { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
+.kg-toolbar { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
+.kg-toolbar .kg-toggle { box-shadow: none; border-width: 1.5px; padding: 6px 12px; }
+.kg-toolbar .kg-toggle:hover { box-shadow: none; border-color: var(--ink); }
+.kg-toolbar .kg-toggle:not(.is-off) { background: var(--canvas); }
+.kg-main .kg-canvas { height: min(74vh, 700px); }
+.kg-rail { position: sticky; top: 88px; max-height: calc(100vh - 110px); overflow: auto; padding: var(--space-4); border-radius: var(--radius-xl); background: var(--canvas); border: 2.5px solid var(--ink); box-shadow: var(--shadow-pop-lg); }
+.kg-rail .kg-panel { position: static; width: auto; box-shadow: none; border: 0; padding: 0; background: none; max-height: none; }
+.kg-back { border: 0; background: none; padding: 0 0 10px; font: 700 13px var(--font-sans); color: var(--ink-secondary); cursor: pointer; }
+.kg-back:hover { color: var(--ink); }
+.kg-ins { display: flex; flex-direction: column; gap: var(--space-4); }
+.kg-ins section { display: flex; flex-direction: column; gap: 8px; }
+.kg-ins section + section { padding-top: var(--space-4); border-top: 1px dashed var(--line); }
+.kg-ins h3 { margin: 0; font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-secondary); }
+.kg-ins ul { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.kg-ins__note { font-size: 11.5px; color: var(--ink-secondary); }
+.kg-row { width: 100%; display: flex; align-items: center; gap: 6px; padding: 7px 8px; border: 0; border-radius: 10px; background: transparent; font: 500 13.5px var(--font-sans); color: var(--ink); text-align: left; cursor: pointer; }
+.kg-row:hover { background: var(--surface); }
+.kg-row__beat { padding: 1px 7px; border-radius: 99px; background: var(--crush-soft); color: var(--crush-ink); font-size: 11px; font-weight: 800; }
+.kg-lean { display: grid; grid-template-columns: 56px minmax(0, 1fr) 44px; }
+.kg-lean__name { font-weight: 700; }
+.kg-lean__bar { position: relative; height: 8px; border-radius: 99px; background: var(--surface-sunken); }
+.kg-lean__bar::after { content: ""; position: absolute; left: 50%; top: -3px; bottom: -3px; width: 1.5px; background: var(--ink); }
+.kg-lean__bar span { position: absolute; top: 0; bottom: 0; border-radius: 99px; }
+.kg-lean__bar .pos { left: 50%; background: var(--success); }
+.kg-lean__bar .neg { right: 50%; background: var(--danger); }
+.kg-lean__n { font-weight: 800; text-align: right; font-size: 13px; }
+.kg-lean__n.pos { color: var(--success); } .kg-lean__n.neg { color: var(--danger); }
+.kg-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.kg-tag { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 99px; border: 1.5px solid var(--line); background: var(--sunny-soft); font-size: 12px; cursor: pointer; color: var(--ink); }
+.kg-tag:hover { border-color: var(--ink); }
+.kg-reach { display: grid; grid-template-columns: 64px minmax(0, 1fr) 24px; }
+.kg-reach__name { font-weight: 700; }
+.kg-reach__bar { height: 8px; border-radius: 99px; background: var(--surface-sunken); overflow: hidden; }
+.kg-reach__bar span { display: block; height: 100%; background: var(--success); border-radius: inherit; }
+.kg-reach__n { font-weight: 800; text-align: right; }
+@media (max-width: 1060px) {
+  .kg-layout { grid-template-columns: minmax(0, 1fr); }
+  .kg-rail { position: static; max-height: none; }
+  .kg-kpis { flex-wrap: wrap; }
+}

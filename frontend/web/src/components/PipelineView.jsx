@@ -16,19 +16,20 @@ import { RERUN_EVENT, rerunReview } from "../lib/review.js";
 import { useNow } from "../lib/useNow.js";
 import { Spinner } from "./Feedback.jsx";
 import { JUDGE_TONES, band, fmt, secs } from "./review/useReviewData.js";
-import { Icon } from "./Icon.jsx";
+import { Icon, OsLogo } from "./Icon.jsx";
 import { LiveScreen } from "./review/LiveScreen.jsx";
 
 const PLACEHOLDER = [
   ["code", "Code review", "Fetch the repo, pin the commit, count the tests"],
+  ["contracts", "Run the smart contract tests", "Compile and test the contracts with Foundry, sandboxed"],
   ["demo", "Process the demo", "Save the video, transcribe it, read the screenshots"],
-  ["live", "Test the live app", "Replay the demo, then the main flows, on a laptop and a phone"],
+  ["live", "Test the live app", "Replay the demo, the main flows and a MetaMask wallet, on a laptop and a phone"],
   ["dossier", "Fact-check the claims", "Check what the team says against the code"],
   ["judges", "Judges score it", "Every judge scores it with all of the above"],
 ].map(([id, title, about]) => ({ id, title, about, status: "queued", parts: [], facts: [] }));
 
 /* Layout: x as a share of the width, y in px. */
-const H = 410;
+const H = 490;
 const COLS = [0.12, 0.38, 0.63, 0.88];
 const STAGES = [
   { n: 1, label: "Gather" },
@@ -37,16 +38,19 @@ const STAGES = [
   { n: 4, label: "Verdict" },
 ];
 const NODES = [
-  { id: "code", col: 0, y: 124, icon: "code", short: "Code", tone: "oracle" },
-  { id: "demo", col: 0, y: 300, icon: "play", short: "Demo", tone: "crush" },
-  { id: "live", col: 1, y: 124, icon: "browser", short: "Live app", tone: "sunny" },
-  { id: "dossier", col: 1, y: 300, icon: "search", short: "Fact-check", tone: "mint" },
-  { id: "judges", col: 2, y: 212, icon: "gavel", short: "Judges", tone: "oracle" },
-  { id: "verdict", col: 3, y: 212, icon: "trophy", short: "Verdict", tone: "sunny" },
+  { id: "code", col: 0, y: 160, icon: "code", short: "Code", tone: "oracle" },
+  { id: "demo", col: 0, y: 356, icon: "play", short: "Demo", tone: "crush" },
+  { id: "live", col: 1, y: 118, icon: "browser", short: "Live app", tone: "sunny" },
+  { id: "contracts", col: 1, y: 258, icon: "contract", short: "Contracts", tone: "oracle" },
+  { id: "dossier", col: 1, y: 398, icon: "search", short: "Fact-check", tone: "mint" },
+  { id: "judges", col: 2, y: 258, icon: "gavel", short: "Judges", tone: "oracle" },
+  { id: "verdict", col: 3, y: 258, icon: "trophy", short: "Verdict", tone: "sunny" },
 ];
 const EDGES = [
   ["code", "live"],
   ["code", "dossier"],
+  ["code", "contracts"],
+  ["contracts", "judges"],
   ["demo", "live"],
   ["demo", "dossier"],
   ["live", "judges"],
@@ -61,7 +65,8 @@ const GLYPH = { done: "✓", failed: "✕", skipped: "–" };
 /*
  * Older runs split "Code review" into fetch / pin / tests steps. Fold those
  * into one "code" step (they become its parts) so the canvas always has its
- * five known nodes; anything else unknown is dropped from the map.
+ * known nodes; anything else unknown is dropped from the map. Runs from before the
+ * contracts step existed show it as waiting.
  */
 const LEGACY_CODE = ["fetch", "pin", "tests"];
 function normalize(raw) {
@@ -87,7 +92,9 @@ function normalize(raw) {
     steps = [code, ...raw.filter((s) => !LEGACY_CODE.includes(s.id))];
   }
   const known = new Set(NODES.map((n) => n.id));
-  const out = PLACEHOLDER.map((p) => steps.find((s) => s.id === p.id) ?? p);
+  // A finished run from before a step existed: that step was never part of it, not still waiting.
+  const finished = raw.every((s) => FINISHED.includes(s.status));
+  const out = PLACEHOLDER.map((p) => steps.find((s) => s.id === p.id) ?? (finished ? { ...p, status: "skipped", detail: "Not part of this review: it ran before this step existed." } : p));
   return out.filter((s) => known.has(s.id));
 }
 
@@ -198,11 +205,6 @@ function Node({ n, s, x, selected, onPick, score, i }) {
             transition={{ type: "spring", stiffness: 90, damping: 20 }}
           />
         </svg>
-        {s.status === "running" && (
-          <svg className="fnode__orbit" viewBox="0 0 116 116" aria-hidden="true">
-            <circle cx="58" cy="58" r="55" />
-          </svg>
-        )}
         <span className="fnode__face">{score != null ? <span className="fnode__score t-num">{score}</span> : <span className="fnode__glyph"><Icon name={n.icon} size={26} /></span>}</span>
         {glyph && (
           <span className={`fnode__badge fnode__badge--${s.status}`} aria-hidden="true">
@@ -222,48 +224,50 @@ function Node({ n, s, x, selected, onPick, score, i }) {
   );
 }
 
-/** Under a running node: one dot per sub-step and what it's doing right now. */
+/** What a running step is doing, in two or three words. */
+const DOING = {
+  clone: "Cloning", pin: "Pinning", history: "Reading history", tests: "Counting tests",
+  download: "Saving video", transcribe: "Transcribing", images: "Reading shots",
+  connect: "Booking devices", explore: "Exploring site", write: "Writing steps", laptop: "Testing", android: "Testing", ios: "Testing", phone: "Testing", save: "Saving runs",
+  pack: "Packing code", ask: "Reading code", verify: "Checking lines",
+};
+
+/** Under a running node: how far along it is, and what it's doing right now. */
 function NowBubble({ s }) {
   const parts = s.parts ?? [];
+  const done = parts.filter((p) => FINISHED.includes(p.status)).length;
   const live = parts.filter((p) => p.status === "running");
-  const text = live.length > 1 ? `${live.length} at once` : live[0] ? live[0].label.replace(/ browser$/, "") : (s.detail ?? "Starting").replace(/…$/, "");
+  const devices = live.filter((p) => DEVICE_OS[p.id]).length;
+  const text = s.id === "judges" ? `${live.length || 3} judges scoring` : devices > 1 ? `Testing on ${devices} devices` : live[0] ? DOING[live[0].id] ?? live[0].label.split(" ").slice(0, 2).join(" ") : "Starting";
   return (
     <motion.span className="fnow" initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} aria-hidden="true">
-      {parts.length > 0 && (
-        <span className="fnow__dots">
-          {parts.map((p) => (
-            <span key={p.id} className={`fnow__dot fnow__dot--${p.status}`} />
-          ))}
+      {parts.length > 1 && (
+        <span className="fnow__bar">
+          <motion.span initial={false} animate={{ width: `${((done + 0.5) / parts.length) * 100}%` }} transition={{ type: "spring", stiffness: 120, damping: 20 }} />
         </span>
       )}
       <AnimatePresence mode="wait" initial={false}>
-        <motion.span key={text} className="fnow__text" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.2 }}>
+        <motion.span key={text} className="fnow__text" initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }} transition={{ duration: 0.18 }}>
           {text}
         </motion.span>
       </AnimatePresence>
-      <span className="fnow__ell">
-        <span />
-        <span />
-        <span />
-      </span>
     </motion.span>
   );
 }
 
-function Edge({ d, state, i }) {
+function Edge({ d, state, i, end }) {
   return (
     <g className={`fedge fedge--${state}`}>
       <path className="fedge__track" d={d} />
       {(state === "done" || state === "active") && (
         <motion.path className="fedge__line" d={d} initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 0.7, delay: 0.25 + i * 0.06, ease: [0.16, 1, 0.3, 1] }} />
       )}
-      {state === "active" && <path className="fedge__flow" d={d} />}
-      {state === "active" &&
-        [0, 0.5].map((b) => (
-          <circle key={b} className="fedge__dot" r="4.5">
-            <animateMotion dur="1.8s" begin={`${b * 1.8}s`} repeatCount="indefinite" path={d} />
-          </circle>
-        ))}
+      {state === "active" && (
+        <circle className="fedge__dot" r="4">
+          <animateMotion dur="1.6s" repeatCount="indefinite" path={d} keyPoints="0;1" keyTimes="0;1" calcMode="spline" keySplines="0.45 0 0.55 1" />
+        </circle>
+      )}
+      {end && <circle className="fedge__end" cx={end[0]} cy={end[1]} r="3.5" />}
       {state === "waiting" && <path className="fedge__wait" d={d} />}
     </g>
   );
@@ -281,8 +285,8 @@ function FlowCanvas({ steps, sel, onPick, verdict }) {
   const path = (a, b) => {
     const [x1, y1] = pos(a);
     const [x2, y2] = pos(b);
-    const sx = x1 + R + 10;
-    const ex = x2 - R - 10;
+    const sx = x1 + R + 6;
+    const ex = x2 - R - 8;
     const mx = (sx + ex) / 2;
     return `M ${sx} ${y1} C ${mx} ${y1}, ${mx} ${y2}, ${ex} ${y2}`;
   };
@@ -308,7 +312,7 @@ function FlowCanvas({ steps, sel, onPick, verdict }) {
         ))}
         <svg className="fcanvas__edges" width={w} height={H} viewBox={`0 0 ${w} ${H}`} aria-hidden="true">
           {EDGES.map(([a, b], i) => (
-            <Edge key={`${a}-${b}`} d={path(a, b)} state={edgeState(by[a], by[b])} i={i} />
+            <Edge key={`${a}-${b}`} d={path(a, b)} state={edgeState(by[a], by[b])} i={i} end={[pos(b)[0] - R - 8, pos(b)[1]]} />
           ))}
         </svg>
         {NODES.map((n, i) => (
@@ -338,9 +342,11 @@ function Mark({ status }) {
   );
 }
 
-/** Parts that run side by side (judges, laptop + phone) as cards; the rest as a stepper. */
+const DEVICE_OS = { laptop: "desktop", android: "android", ios: "ios", phone: "mobile" };
+
+/** Parts that run side by side (judges, the three test devices) as cards; the rest as a stepper. */
 function Parts({ s, projectId }) {
-  const lanes = (s.parts ?? []).filter((p) => s.id === "judges" || p.id === "laptop" || p.id === "phone");
+  const lanes = (s.parts ?? []).filter((p) => s.id === "judges" || DEVICE_OS[p.id]);
   const seq = (s.parts ?? []).filter((p) => !lanes.includes(p));
   return (
     <>
@@ -361,11 +367,11 @@ function Parts({ s, projectId }) {
           {lanes.map((p, i) => {
             const score = /Scored ([\d.]+)/.exec(p.detail ?? "")?.[1];
             const name = s.id === "judges" ? p.label.split(",")[0] : p.label.replace(/ browser$/, "");
-            const device = p.id === "phone" || p.id === "laptop" ? p.id : null;
+            const device = DEVICE_OS[p.id] ? p.id : null;
             return (
               <motion.li key={p.id} className={`dlane dlane--${p.status} dlane--${JUDGE_TONES[i % 3]}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}>
                 <span className="dlane__badge" aria-hidden="true">
-                  {device ? <Icon name={device} size={18} /> : initials(name)}
+                  {device ? <OsLogo os={p.os ?? DEVICE_OS[device]} size={18} /> : initials(name)}
                 </span>
                 <span className="dlane__name">{name}</span>
                 {score ? (
@@ -573,7 +579,7 @@ export function FlowStrip({ live, onOpen }) {
     if (st.every((x) => FINISHED.includes(x))) return "done";
     return "queued";
   };
-  const cols = [col(["code", "demo"]), col(["live", "dossier"]), col(["judges"]), by.judges?.status === "done" ? "done" : "queued"];
+  const cols = [col(["code", "demo"]), col(["live", "contracts", "dossier"]), col(["judges"]), by.judges?.status === "done" ? "done" : "queued"];
   return (
     <button type="button" className="fstrip" onClick={onOpen} aria-label="Open the review pipeline">
       {STAGES.map((g, i) => (

@@ -252,11 +252,11 @@ export function JudgesView({ project, data, sel: selIn = 0, onSel, canAct = fals
       )}
 
       {result && (
-        <details className="rv-proof">
+        <details className="rv-proof" open>
           <summary>
             <span className="rv-proof__chip">⬢ Proof</span>
             <span>
-              {result.provider === "0g" && result.zg ? `${result.zg.calls} calls on 0G Compute · ${usd(result.zg.costUsdMicro)}` : result.model}
+              {result.provider === "0g" && result.zg ? `${result.zg.calls} calls on 0G Compute · scores on Arkiv` : result.model}
               {" · "}
               {new Date(result.ranAt).toLocaleString([], { dateStyle: "medium", timeStyle: "short" })}
             </span>
@@ -269,7 +269,7 @@ export function JudgesView({ project, data, sel: selIn = 0, onSel, canAct = fals
                 <JudgeTraces traces={r.traces} />
               </div>
             ))}
-            {h && canAct && <ArkivRecord projectId={project.id} ranAt={result?.ranAt} />}
+            {h && <ArkivRecord projectId={project.id} ranAt={result?.ranAt} />}
           </div>
         </details>
       )}

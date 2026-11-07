@@ -10,7 +10,8 @@ import { formatAmount, manager, pools, read, toUnits, token, usePoll, useToken, 
 import { usePayouts } from "../lib/payouts.js";
 import { OUTCOME, POOL_LABEL, POOL_STATE, estimatePayout, percent } from "../lib/pools.js";
 import { Link } from "../lib/router.jsx";
-import { TESTNET_NOTE, TxStatus, WalletGate, useCountdown } from "./ChainBits.jsx";
+import { TxStatus, WalletGate, useCountdown } from "./ChainBits.jsx";
+import { FighterEnsLine } from "./EnsName.jsx";
 import { PixelFighter } from "./PixelFighter.jsx";
 import { celebrate } from "./WalletPage.jsx";
 import { bouncy, stagger, popIn } from "./fx.jsx";
@@ -31,6 +32,7 @@ function Selection({ selection, selected, share, stakeText, mine, onSelect, disa
       <PixelFighter project={selection.project} scale={2.5} label="" />
       <span className="bet-pick__text">
         <span className="t-body-strong">{selection.project.name}</span>
+        <FighterEnsLine projectId={selection.project.id} />
         <span className="t-caption t-num">
           {share}% of pool · {stakeText}
         </span>
@@ -319,7 +321,6 @@ export function BetPanel({ wallet, tournamentId, market, selections, title }) {
       )}
 
       <TxStatus tx={tx} onDismiss={reset} />
-      <p className="t-caption m0">{TESTNET_NOTE}</p>
     </Card>
   );
 }

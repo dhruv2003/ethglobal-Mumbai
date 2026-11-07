@@ -1,4 +1,6 @@
-# Swarm in Battle Arena
+# Swarm in FightClub
+
+> **Status: built, not deployed.** The upload and read code is complete, but the live deployment has no Bee node or postage stamp. No published panel has a Swarm reference yet, and we are not entering the Arkiv + Swarm bonus. This file describes how the integration works and how to turn it on.
 
 ## What lives where
 
@@ -12,19 +14,7 @@ The bundle is public evidence, so we upload it unencrypted. An encrypted referen
 
 Readers open files through the gateway as `https://api.gateway.ethswarm.org/bzz/<swarmRef>/<path>`.
 
-## One entity and the reference it points to
-
-**TODO (fill after the first real publish):** the output of `npm run arkiv -- publish --project go-health-me` prints these values.
-
-- Arkiv panel entity key: `0x…`. To open it, go to `https://rabdi.explorer.arkiv.network/entity-explorer?q=` followed by the URL-encoded query `$key = key(0x…)`.
-- Swarm reference: `…`. To open it: `https://api.gateway.ethswarm.org/bzz/<reference>/review.json`
-
-## Stamp, wallet, node
-
-**TODO (team):**
-- Postage stamp batch ID: `…`
-- Wallet that bought it (or who gave you the batch): `0x…`
-- Bee node or service we uploaded through: `…`
+When Swarm isn't set up (`BEE_URL` and `SWARM_BATCH_ID` unset), the panel is still published to Arkiv, just without `swarmRef`.
 
 ## Files that upload and read
 
@@ -33,9 +23,9 @@ Readers open files through the gateway as `https://api.gateway.ethswarm.org/bzz/
 | [backend/src/arkiv/swarm.mjs](../backend/src/arkiv/swarm.mjs) | Builds the bundle (`stageBundle`), uploads it (`uploadBundle` → `bee.collection.uploadFromDirectory`), reads a file back (`readFile` → `bee.file.download`), builds gateway links (`gatewayUrl`) |
 | [backend/src/arkiv/publish.mjs](../backend/src/arkiv/publish.mjs) | After each saved review: Swarm upload first, then the reference goes into the Arkiv panel |
 | [backend/src/arkiv/run.mjs](../backend/src/arkiv/run.mjs) | CLI for one upload and one read |
-| [frontend/web/src/components/ArkivRecord.jsx](../frontend/web/src/components/ArkivRecord.jsx) | Shows the "Evidence on Swarm" links |
+| [frontend/web/src/components/ArkivRecord.jsx](../frontend/web/src/components/ArkivRecord.jsx) | Shows the "Evidence on Swarm" links when a panel has a `swarmRef` |
 
-## Run one upload and one read yourself
+## Turning it on
 
 You need:
 - Node 22.10+
@@ -71,14 +61,9 @@ You should see:
 - `Swarm <reference>`
 - a line read from the downloaded `review.json` that matches the panel score
 
-In the app, the sample project's judges' panel shows the "Published on Arkiv" block with "Evidence on Swarm" links.
-
-## In the demo video
-
-**TODO (team):** add the timestamp where the "Evidence on Swarm" links are opened.
+In the app, the sample project's judges' panel then shows "Evidence on Swarm" links under the "Published on Arkiv" block.
 
 ## What got in our way
 
 - **The docs and the npm package describe different APIs.** The Swarm docs' Upload & Download guide shows `bee.uploadFile` and `bee.uploadFilesFromDirectory`. In `@ethersphere/bee-js` 13.2.0 (latest on npm) those methods don't exist. The API is namespaced instead: `bee.file.upload`, `bee.file.download`, `bee.collection.uploadFromDirectory`. We had to read the package's type definitions to find them.
-- **Uploading needs a Bee node with a postage stamp.** You can't upload through the public gateway, and an ultra-light node can only download. Getting a node and stamp is the main setup cost.
-- **TODO (team):** add anything else you hit while buying the stamp or running the node.
+- **Uploading needs a Bee node with a postage stamp.** You can't upload through the public gateway, and an ultra-light node can only download. A stamp costs real xBZZ, and getting a node and stamp running is why we didn't deploy Swarm during the event.

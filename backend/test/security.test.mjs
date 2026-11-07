@@ -20,7 +20,7 @@ async function signed(overrides = {}) {
   };
   const issuedAt = overrides.issuedAt ?? new Date().toISOString();
   const message = [
-    `Submit "${body.project.name}" to ETHGlobal Mumbai Battle Arena`,
+    `Submit "${body.project.name}" to ETHGlobal Mumbai FightClub`,
     `Repository: ${body.repoUrl}`,
     `Owner: ${account.address}`,
     `Submission: ${submissionDigest(body)}`,

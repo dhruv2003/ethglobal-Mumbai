@@ -16,7 +16,7 @@ import fs from "node:fs";
 import { createPublicClient, defineChain, getAddress, http } from "viem";
 import { listBrackets } from "../arena/routes.mjs";
 import { loadProject } from "../projects.mjs";
-import { judges, reviews, submissions } from "../store.mjs";
+import { db, judges, reviews, submissions } from "../store.mjs";
 import { lastPublish } from "../arkiv/publish.mjs";
 import { FIGHTER_KEYS, JUDGE_KEYS, appLink, deployment, issueJudge, issueProject, names, ownerAddress, scoreWriterAddress, setup, readTexts, syncFightRecords, writeScore } from "./ens.mjs";
 
@@ -42,6 +42,7 @@ async function issueOne(id) {
   }
 }
 
+let failed = false;
 try {
   if (cmd === "status") {
     const d = await deployment();
@@ -82,5 +83,8 @@ try {
   } else usage();
 } catch (e) {
   console.error(e.shortMessage ?? e.message);
-  process.exit(1);
+  failed = true;
 }
+// Names and setup progress are saved to the database in the background: wait, so they aren't lost on exit.
+await db.flush();
+process.exit(failed ? 1 : 0);

@@ -10,7 +10,7 @@ import { usePoll } from "./chain.js";
 const SLOT = "arena.organizerSession";
 const SESSION_MS = 12 * 60 * 60 * 1000 - 60000;
 
-const message = (wallet, issuedAt) => ["Sign in as a Battle Arena organizer", `Wallet: ${wallet}`, `Issued at: ${issuedAt}`].join("\n");
+const message = (wallet, issuedAt) => ["Sign in as a FightClub organizer", `Wallet: ${wallet}`, `Issued at: ${issuedAt}`].join("\n");
 
 function loadSession(address) {
   try {

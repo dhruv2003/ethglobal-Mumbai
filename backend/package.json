@@ -1,7 +1,7 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "description": "Battle Arena backend: judge personas, submissions and reviews (PRD 13.2).",
+  "description": "FightClub backend: judge personas, submissions and reviews (PRD 13.2).",
   "main": "index.js",
   "scripts": {
     "start": "node src/server.js",
@@ -17,7 +17,7 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "type": "commonjs",
   "dependencies": {
     "@0gfoundation/0g-storage-ts-sdk": "1.2.13",

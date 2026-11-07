@@ -12,14 +12,21 @@
  *   2. Major flows  - the app's main features (phase "features")
  *   3. Health       - status, load time, console errors, failed requests, layout
  *
- * SAFETY: never pays, stakes, signs in, connects a wallet or submits. Every
- * click is checked against a deny-list of money/auth words and refused if it
- * matches. Typing is allowed; pressing Enter is not. Steps marked `requires`
- * are reported as blocked, never faked.
+ * SAFETY: never pays, stakes, signs in or submits. Every click is checked
+ * against a deny-list of money/auth words and refused if it matches. Typing is
+ * allowed; pressing Enter is not. Steps marked `requires` are reported as
+ * blocked, never faked.
+ *
+ * Wallet (phase "wallet", only when flows has one): every page gets a MetaMask-compatible
+ * test wallet (tester/wallet.mjs) with a throwaway key. It connects and signs; transactions
+ * are simulated and rejected, never sent. In that phase only, money words (mint, stake,
+ * approve...) may be clicked, since nothing they ask the wallet for can leave it; form
+ * submits, deletes and sign-ups stay refused.
  *
  * Writes <outDir>/: smoke.json, <device>/video.mp4, <device>/smoke-<device>-<step>.jpg
  */
 import { chromium } from "playwright";
+import { createTestWallet } from "./wallet.mjs";
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
@@ -72,6 +79,13 @@ const DEVICES = {
 export const UNSAFE_CLICK =
   /\b(pay|pays|stake|put \d|deposit|withdraw|claim|confirm|approve|sign ?in|sign ?up|log ?in|connect|wallet|submit|join|send|email me|verify|buy|mint|start a run|start$|delete|cancel)\b/i;
 
+/**
+ * The wallet phase's deny-list: on-chain actions are allowed (the test wallet never sends a
+ * transaction), but anything with effects off the chain is still refused.
+ */
+export const WALLET_UNSAFE_CLICK = /\b(submit|delete|remove|email me|send email|sign ?up|log ?out|disconnect|cancel|unsubscribe|report|pay with card|checkout)\b/i;
+const ruleFor = (phaseId) => (phaseId === "wallet" ? WALLET_UNSAFE_CLICK : UNSAFE_CLICK);
+
 // ---------- run context (one live test at a time; see runLiveTest) ----------
 let project;
 let target;
@@ -85,7 +99,11 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 // ---------- Mozark ----------
+/** TESTER_LOCAL_BROWSER=1: a local headless Chromium instead of Mozark (development; `npx playwright install chromium`, or TESTER_LOCAL_CHANNEL=chrome to use an installed Chrome). */
+const LOCAL = process.env.TESTER_LOCAL_BROWSER === "1";
+
 async function connect(device, bearer = token) {
+  if (LOCAL) return chromium.launch({ headless: true, ...(process.env.TESTER_LOCAL_CHANNEL ? { channel: process.env.TESTER_LOCAL_CHANNEL } : {}) });
   const cfg = { projectId: PROJECT_ID, ...DEVICES[device].hub, video: true, consoleLogs: true, networkLogs: true };
   const url = `${HUB}?config=${encodeURIComponent(JSON.stringify(cfg))}`;
   try {
@@ -133,6 +151,7 @@ async function startRecording(ctx, page, dir, maxWidth) {
   await cdp.send("Page.startScreencast", { format: "jpeg", quality: 70, maxWidth, maxHeight: 2000, everyNthFrame: 1 });
   const startedAt = Date.now();
   return {
+    startedAt,
     /** Seconds since recording began: used to link each step to its moment in the video. */
     now: () => Math.round(((Date.now() - startedAt) / 1000) * 10) / 10,
     async stop(outFile) {
@@ -185,9 +204,9 @@ function clickable(page, re) {
   return page.locator("button, a, [role=tab], [role=radio], [role=button], [role=link], summary").filter({ hasText: re }).filter({ visible: true }).first();
 }
 
-async function guardedClick(loc, label) {
+async function guardedClick(loc, label, rule = UNSAFE_CLICK) {
   const text = ((await loc.innerText().catch(() => "")) || label || "").trim();
-  if (UNSAFE_CLICK.test(text) || UNSAFE_CLICK.test(label ?? "")) {
+  if (rule.test(text) || rule.test(label ?? "")) {
     const e = new Error(`Refused to click "${text.slice(0, 60)}": looks like a money or sign-in action`);
     e.refused = true;
     throw e;
@@ -196,7 +215,77 @@ async function guardedClick(loc, label) {
   await loc.click({ timeout: STEP_TIMEOUT });
 }
 
-async function act(page, a) {
+const short = (a) => (a ? `${a.slice(0, 6)}…${a.slice(-4)}` : "");
+
+/** Poll until fn() is true or ms pass. */
+async function waitFor(fn, ms) {
+  const end = Date.now() + ms;
+  while (Date.now() < end) {
+    if (fn()) return true;
+    await sleep(250);
+  }
+  return fn();
+}
+
+// What a dapp's "connect" button says, most specific first; then how wallet pickers name an injected wallet.
+const CONNECT_OPENERS = [/connect\s+(a\s+|your\s+)?wallet/i, /^\s*connect\s*$/i, /sign\s*in\s+with\s+(ethereum|wallet|metamask)/i, /^\s*(log\s*in|sign\s*in)\s*$/i, /^\s*(launch|open)\s+app\s*$/i];
+const PICK_INJECTED = /^\s*(metamask|browser wallet|injected(\s+wallet)?)\s*$/i;
+
+/** Press the site's connect button, pick MetaMask if a wallet picker opens, wait for the dapp to ask for an account. */
+async function connectWallet(page) {
+  const w = page.__wallet;
+  if (!w) throw new Error("this run has no test wallet");
+  const did = [];
+  if (!w.connected) {
+    let opened = false;
+    for (const re of CONNECT_OPENERS) {
+      const loc = clickable(page, re);
+      if (!(await loc.count()) || !(await loc.isVisible().catch(() => false))) continue;
+      const t = (await loc.innerText().catch(() => "")).trim().replace(/\s+/g, " ").slice(0, 40);
+      await loc.scrollIntoViewIfNeeded({ timeout: STEP_TIMEOUT });
+      await loc.click({ timeout: STEP_TIMEOUT });
+      did.push(`click "${t}"`);
+      opened = true;
+      break;
+    }
+    if (!opened) throw new Error("no Connect wallet button on the page");
+    // Either the dapp asks the wallet at once, or it opens a wallet picker first.
+    if (!(await waitFor(() => w.connected, 3500))) {
+      const pick = page.getByText(PICK_INJECTED).filter({ visible: true }).first();
+      if (await pick.count()) {
+        const t = (await pick.innerText().catch(() => "MetaMask")).trim().slice(0, 30);
+        await pick.click({ timeout: STEP_TIMEOUT });
+        did.push(`pick "${t}"`);
+      }
+      if (!(await waitFor(() => w.connected, 12000))) throw new Error(`${did.join(", then ")}: the site never asked the wallet for an account`);
+    }
+    did.push(`wallet ${short(w.address)} connected`);
+  } else did.push(`wallet ${short(w.address)} already connected`);
+  await page.waitForLoadState("networkidle", { timeout: 5000 }).catch(() => {});
+  await sleep(1500);
+  const body = (await page.evaluate(() => document.body.innerText).catch(() => "")).toLowerCase();
+  const a = w.address.toLowerCase();
+  did.push(body.includes(a.slice(0, 6)) && body.includes(a.slice(-4)) ? "address shown on the page" : "address not shown on the page");
+  return did.join(" · ");
+}
+
+/** The dapp asked the wallet for something since the step began: connected, signature or transaction. */
+async function expectWallet(page, kind) {
+  const w = page.__wallet;
+  if (!w) throw new Error("this run has no test wallet");
+  const t0 = page.__stepStart ?? 0;
+  const hit = () => (kind === "connected" ? w.connected : w.since(t0).some((e) => e.type === kind));
+  if (!(await waitFor(hit, STEP_TIMEOUT))) throw new Error(kind === "connected" ? "the wallet isn't connected" : `the site never asked the wallet for a ${kind}`);
+  if (kind === "connected") return "wallet connected";
+  const e = w.since(t0).filter((x) => x.type === kind).at(-1);
+  if (kind === "signature") return `wallet signed a ${e.what}`;
+  const sim = e.simulation ?? {};
+  const outcome = sim.ok === true ? `simulation: would succeed${sim.gas ? ` (${sim.gas.toLocaleString("en")} gas)` : ""}` : sim.ok === false ? `simulation: would revert (${sim.reason})` : "not simulated";
+  return `wallet asked to send a transaction${e.to ? ` to ${short(e.to)}` : e.deploy ? " deploying a contract" : ""}${e.value && e.value !== "0" ? ` (${e.value})` : ""} · ${outcome} · rejected, never sent`;
+}
+
+async function act(page, a, phaseId) {
+  const rule = ruleFor(phaseId);
   if (a.goto) {
     const res = await page.goto(abs(a.goto), { waitUntil: "domcontentloaded", timeout: 60000 });
     await page.waitForLoadState("networkidle", { timeout: 8000 }).catch(() => {});
@@ -204,14 +293,16 @@ async function act(page, a) {
     if (res && res.status() >= 400) throw new Error(`${a.goto} returned ${res.status()}`);
     return;
   }
-  if (a.click) return guardedClick(clickable(page, new RegExp(`^\\s*${esc(a.click)}\\s*$`, "i")), a.click);
-  if (a.clickMatch) return guardedClick(clickable(page, new RegExp(esc(a.clickMatch), "i")), a.clickMatch);
-  if (a.clickSelector) return guardedClick(page.locator(a.clickSelector).filter({ visible: true }).first(), a.clickSelector);
+  if (a.click) return guardedClick(clickable(page, new RegExp(`^\\s*${esc(a.click)}\\s*$`, "i")), a.click, rule);
+  if (a.clickMatch) return guardedClick(clickable(page, new RegExp(esc(a.clickMatch), "i")), a.clickMatch, rule);
+  if (a.clickSelector) return guardedClick(page.locator(a.clickSelector).filter({ visible: true }).first(), a.clickSelector, rule);
+  if (a.connectWallet) return connectWallet(page);
+  if (a.expectWallet) return expectWallet(page, a.expectWallet);
   if (a.openLink) {
     // Follow a link the page really renders (even inside a collapsed section) by its own href.
     const href = await page.locator(a.openLink).first().getAttribute("href", { timeout: STEP_TIMEOUT });
     if (!href) throw new Error(`no link matches ${a.openLink}`);
-    return act(page, { goto: href });
+    return act(page, { goto: href }, phaseId);
   }
   if (a.fill) {
     const loc = page.locator(a.fill.selector).filter({ visible: true }).first();
@@ -244,17 +335,20 @@ async function act(page, a) {
 const describe = (a) =>
   a.goto ? `open ${a.goto}` : a.click ? `click "${a.click}"` : a.clickMatch ? `click "${a.clickMatch}…"` : a.clickSelector ? `click ${a.clickSelector}` : a.openLink ? `follow ${a.openLink}`
   : a.fill ? `type into ${a.fill.selector}` : a.expectText ? `see "${a.expectText}"` : a.expectUrl ? `land on ${a.expectUrl}`
-  : a.expectSelected ? `"${a.expectSelected}" selected` : a.expectCountAtLeast ? `at least ${a.expectCountAtLeast.n} × ${a.expectCountAtLeast.selector}` : JSON.stringify(a);
+  : a.expectSelected ? `"${a.expectSelected}" selected` : a.expectCountAtLeast ? `at least ${a.expectCountAtLeast.n} × ${a.expectCountAtLeast.selector}`
+  : a.connectWallet ? "connect the wallet" : a.expectWallet ? `wallet asked for a ${a.expectWallet}` : JSON.stringify(a);
 
-async function runStep(page, device, dir, rec, step) {
+async function runStep(page, device, dir, rec, step, phaseId) {
   const out = { id: step.id, title: step.title, demoAt: step.demoAt ?? null, why: step.why ?? null, at: rec.now() };
   if (step.requires) return { ...out, status: "blocked", detail: `Needs ${step.requires}; not run.` };
   const t = Date.now();
+  page.__stepStart = t;
+  const notes = [];
   let i = 0;
   try {
-    for (; i < step.do.length; i++) await act(page, step.do[i]);
+    for (; i < step.do.length; i++) notes[i] = await act(page, step.do[i], phaseId);
     out.status = "passed";
-    out.detail = step.do.filter((a) => !a.goto).map(describe).join(" · ");
+    out.detail = step.do.map((a, k) => (typeof notes[k] === "string" ? notes[k] : a.goto ? null : describe(a))).filter(Boolean).join(" · ");
   } catch (e) {
     if (isInfra(e)) throw e; // the cloud browser went away: not the app's fault, handled by the caller
     // A demo screen the site explorer never saw, and the browser can't find either: missing, not broken.
@@ -262,6 +356,8 @@ async function runStep(page, device, dir, rec, step) {
     out.detail = `${describe(step.do[i] ?? {})}: ${String(e.message).split("\n")[0].slice(0, 200)}`;
   }
   out.ms = Date.now() - t;
+  const asked = page.__wallet?.since(t) ?? [];
+  if (asked.length) out.walletEvents = asked.map(({ t: at, ...e }) => ({ ...e, at: Math.round((at - rec.startedAt) / 100) / 10 }));
   const file = `smoke-${device}-${step.id}.jpg`;
   await page.screenshot({ path: path.join(dir, file), type: "jpeg", quality: 80 }).catch(() => {});
   out.screenshot = `${device}/${file}`;
@@ -283,13 +379,21 @@ async function runDevice(device) {
   const cancelledRequests = []; // net::ERR_ABORTED: cancelled by our own navigation or prefetch; not a site fault
   let browser;
   let rec;
+  let wallet = null;
+  let recStartedAt = null;
   try {
-    say(`[${device}] connecting to Mozark…`);
+    say(`[${device}] ${LOCAL ? "starting a local browser…" : "connecting to Mozark…"}`);
     browser = await connect(device);
     result.browserVersion = browser.version();
-    say(`[${device}] cloud browser ready (Chrome ${String(result.browserVersion).split(".")[0]}, ${spec.context.viewport.width}×${spec.context.viewport.height}); recording`);
+    say(`[${device}] ${LOCAL ? "local" : "cloud"} browser ready (Chrome ${String(result.browserVersion).split(".")[0]}, ${spec.context.viewport.width}×${spec.context.viewport.height}); recording`);
     const ctx = await browser.newContext(spec.context);
+    // A wallet phase: every page of this session gets the test wallet, from the first load.
+    if ((flows.phases ?? []).some((p) => p.id === "wallet")) {
+      wallet = createTestWallet({ log: (m) => say(`[${device}] wallet ${m}`) });
+      await wallet.install(ctx);
+    }
     const page = await ctx.newPage();
+    page.__wallet = wallet;
     page.on("console", (m) => m.type() === "error" && consoleErrors.length < 20 && consoleErrors.push(m.text().slice(0, 240)));
     page.on("pageerror", (e) => consoleErrors.length < 20 && consoleErrors.push(`Uncaught: ${String(e.message).slice(0, 220)}`));
     page.on("requestfailed", (r) => {
@@ -301,6 +405,7 @@ async function runDevice(device) {
       if (r.status() >= 400 && failedRequests.length < 20) failedRequests.push({ url: r.url().slice(0, 200), status: r.status() });
     });
     rec = await startRecording(ctx, page, dir, spec.shotWidth);
+    recStartedAt = rec.startedAt;
 
     // Health: first load of the home page
     say(`[${device}] loading ${target}`);
@@ -313,7 +418,7 @@ async function runDevice(device) {
 
     for (const phase of flows.phases ?? []) {
       const steps = [];
-      for (const step of phase.steps) steps.push(await runStep(page, device, dir, rec, step));
+      for (const step of phase.steps) steps.push(await runStep(page, device, dir, rec, step, phase.id));
       result.phases.push({ id: phase.id, title: phase.title, about: phase.about, steps });
     }
 
@@ -332,6 +437,7 @@ async function runDevice(device) {
     await browser?.close().catch(() => {});
   }
   result.durationMs = Date.now() - started;
+  if (wallet) result.wallet = wallet.summary(recStartedAt);
   result.consoleErrors = consoleErrors;
   result.failedRequests = failedRequests;
   result.cancelledRequests = cancelledRequests;
@@ -376,7 +482,7 @@ export function runLiveTest(opts) {
 }
 
 async function runLiveTestNow({ project: id, target: url, flows: f, outDir: dir, token: t, devices = ["laptop", "phone"], flowsSource = null }) {
-  if (!t) throw new Error("No Mozark token.");
+  if (!t && !LOCAL) throw new Error("No Mozark token.");
   project = id;
   flows = f ?? { phases: [] };
   target = url ?? flows.target;
@@ -414,8 +520,10 @@ async function runLiveTestNow({ project: id, target: url, flows: f, outDir: dir,
     project,
     target,
     ranAt: new Date().toISOString(),
-    runner: { hub: "Mozark preprod (cdp-hub.preprod.mozark.ai)", tool: "Playwright connectOverCDP", script: "backend/tester/runner.mjs", flows: flowsLabel },
-    mode: "Demo replay + major flows + health. Never pays, stakes, signs in, connects a wallet or submits.",
+    runner: { hub: LOCAL ? "local headless Chromium" : "Mozark preprod (cdp-hub.preprod.mozark.ai)", tool: LOCAL ? "Playwright" : "Playwright connectOverCDP", script: "backend/tester/runner.mjs", flows: flowsLabel },
+    mode: (flows.phases ?? []).some((p) => p.id === "wallet")
+      ? "Demo replay + major flows + wallet + health. Wallet steps use a MetaMask-compatible test wallet with a throwaway key: it connects and signs; transactions are simulated and rejected, never sent. Never pays, signs up or submits forms."
+      : "Demo replay + major flows + health. Never pays, stakes, signs in, connects a wallet or submits.",
     runs,
   };
   fs.writeFileSync(path.join(outDir, "smoke.json"), JSON.stringify(summary, null, 2));

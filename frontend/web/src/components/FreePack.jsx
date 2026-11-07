@@ -45,7 +45,7 @@ export function FreePack({ wallet, onClaimed }) {
     serverProblem.current = "";
     try {
       // World's package is large, so it only loads for people who ask for it.
-      const [world, rp] = await Promise.all([import("@worldcoin/idkit"), postJson("/api/world/rp-signature", {})]);
+      const [world, rp] = await Promise.all([import("@worldcoin/idkit"), postJson(`${API}/world/rp-signature`, {})]);
       setWidget({
         ...world,
         open: true,
@@ -104,7 +104,7 @@ export function FreePack({ wallet, onClaimed }) {
           preset={widget.proofOfHuman({ signal: address.toLowerCase() })}
           handleVerify={async (result) => {
             try {
-              await postJson("/api/world/claim", { wallet: address, idkitResponse: result });
+              await postJson(`${API}/world/claim`, { wallet: address, idkitResponse: result });
             } catch (e) {
               serverProblem.current = e.message;
               throw e;

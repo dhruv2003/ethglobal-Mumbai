@@ -83,7 +83,7 @@ test("thinDossier catches a dossier about the platform instead of the project", 
   const bad = { ...good, verdict: good.summary, intendedUsers: "hackathon judges", coreJourney: [], risks: [] };
   const issues = thinDossier(bad);
   assert.ok(issues.some((i) => /different from summary/.test(i)));
-  assert.ok(issues.some((i) => /not Battle Arena/.test(i)));
+  assert.ok(issues.some((i) => /not FightClub/.test(i)));
   assert.ok(issues.some((i) => /coreJourney/.test(i)));
 });
 

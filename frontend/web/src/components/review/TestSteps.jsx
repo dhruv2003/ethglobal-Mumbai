@@ -1,7 +1,7 @@
 /* The Testing tab's step matrix: step × device per phase, each with its actions, screenshots and why it failed. */
 import { useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { Icon } from "../Icon.jsx";
+import { OsLogo, osOf } from "../Icon.jsx";
 import { ST, clock } from "./testRun.js";
 
 const NEEDS = { "android-device": "an Android phone", "2x-android-device": "two Android phones", nfc: "NFC", wallet: "a wallet", "sign-in": "an account" };
@@ -70,12 +70,12 @@ export function Steps({ runs, onSeek, now }) {
         </div>
       </header>
       {phase.about && <p className="tsteps__about m0">{phase.about}</p>}
-      <div className="tmx" role="table" aria-label={phase.title}>
+      <div className="tmx" role="table" aria-label={phase.title} style={{ "--devs": runs.length }}>
         <div className="tmx__head" role="row">
           <span role="columnheader">Step</span>
           {runs.map((r) => (
             <span key={r.device} role="columnheader" className="tmx__dev">
-              <Icon name={r.device} size={15} />
+              <OsLogo os={osOf(r)} size={15} />
               <span className="visually-hidden">{r.label}</span>
             </span>
           ))}
@@ -135,7 +135,7 @@ export function Steps({ runs, onSeek, now }) {
                           <button key={r.device} type="button" className={`tshot tshot--${r.device}`} onClick={() => st.at != null && onSeek(r.device, st.at)}>
                             <img src={st.shotUrl} alt={`${r.label} screenshot: ${s.title}`} loading="lazy" />
                             <span className="tshot__cap">
-                              <Icon name={r.device} size={12} /> {st.at != null ? clock(st.at) : r.label} {st.ms ? `· ${(st.ms / 1000).toFixed(1)}s` : ""}
+                              <OsLogo os={osOf(r)} size={12} /> {st.at != null ? clock(st.at) : r.label} {st.ms ? `· ${(st.ms / 1000).toFixed(1)}s` : ""}
                             </span>
                           </button>
                         ))}

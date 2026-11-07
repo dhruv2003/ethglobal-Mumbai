@@ -44,7 +44,7 @@ test("score records come from the saved run, exactly", () => {
 test("a judge's agent-context is their persona, as JSON", () => {
   const judge = { id: "j1", version: 2, name: "Priya Raman", title: "Product lead", background: "b", expectations: "e", dealBreakers: "d", browniePoints: "p", tone: "balanced", weights: { ui_ux: 15 }, systemPrompt: "secret-ish prompt" };
   const ctx = JSON.parse(ens.agentContext(judge));
-  assert.equal(ctx.type, "battle-arena.judge");
+  assert.equal(ctx.type, "fightclub.judge");
   assert.equal(ctx.name, "Priya Raman");
   assert.deepEqual(ctx.weights, { ui_ux: 15 });
   assert.equal(ctx.personaVersion, 2);
@@ -52,12 +52,12 @@ test("a judge's agent-context is their persona, as JSON", () => {
 });
 
 test("names are DNS-encoded for ENSv2 resolver setters; config has no names until issued", () => {
-  assert.equal(ens.dnsName("a.hackarena.eth"), "0x0161096861636b6172656e610365746800");
-  assert.equal(ens.parentName(), "hackarena.eth");
+  assert.equal(ens.dnsName("a.fightclub.eth"), "0x0161096669676874636c75620365746800");
+  assert.equal(ens.parentName(), "fightclub.eth");
   assert.equal(ens.projectName("nope"), null);
   const cfg = ens.publicConfig();
   assert.equal(cfg.enabled, false);
-  assert.equal(cfg.parent, "hackarena.eth");
+  assert.equal(cfg.parent, "fightclub.eth");
   assert.deepEqual(cfg.projects, {});
   assert.ok(cfg.fighterKeys.includes("arena.score"));
 });
@@ -91,11 +91,18 @@ test("open, voided and canceled-tournament matches don't count; brackets add up 
 
 test("record texts: W-L, titles, and the last fight against the opponent's ENS name", () => {
   const t = ens.tallyFights([{ id: "7", projects, tournament: { status: 2 }, matches: [match(0, 1, 0, 8210, 7400)] }]);
-  const texts = ens.recordTexts(t.p0, (id) => (id === "p1" ? "p1.hackarena.eth" : null));
+  const texts = ens.recordTexts(t.p0, (id) => (id === "p1" ? "p1.fightclub.eth" : null));
   assert.deepEqual(Object.keys(texts), ens.RECORD_KEYS);
   assert.equal(texts["arena.record"], "1-0");
   assert.equal(texts["arena.titles"], "0");
-  assert.equal(texts["arena.lastFight"], "W vs p1.hackarena.eth, 82.10-74.00 (tournament #7, match 1)");
+  assert.equal(texts["arena.lastFight"], "W vs p1.fightclub.eth, 82.10-74.00 (tournament #7, match 1)");
   assert.equal(ens.recordTexts(t.p1)["arena.lastFight"], "L vs Project 0, 74.00-82.10 (tournament #7, match 1)");
   assert.ok(ens.WRITER_KEYS.every((k) => ens.FIGHTER_KEYS.includes(k)));
+});
+
+test("pendingWork: only what ENS is missing, so a restart sends nothing twice", async () => {
+  const { pendingWork } = await import("../src/ens/ens.mjs");
+  const issued = { judges: { j1: { profileTx: "0x1" }, j2: { label: "half-done" } }, projects: { a: { profileTx: "0x2", scoreTx: "0x3" }, b: { profileTx: "0x4" } } };
+  assert.deepEqual(pendingWork(issued, { judgeIds: ["j1", "j2"], projectIds: ["a", "b", "c"], judgedIds: ["a", "b"] }), { judges: ["j2"], projects: ["c"], scores: ["b"] });
+  assert.deepEqual(pendingWork({ judges: {}, projects: {} }, { judgeIds: [], projectIds: [], judgedIds: [] }), { judges: [], projects: [], scores: [] });
 });

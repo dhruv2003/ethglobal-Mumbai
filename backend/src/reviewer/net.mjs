@@ -89,7 +89,7 @@ const agent = new https.Agent({ keepAlive: true, maxSockets: 16, lookup: guarded
 
 function get(u, headers, timeoutMs) {
   return new Promise((resolve, reject) => {
-    const req = https.request(u, { method: "GET", headers: { "user-agent": "BattleArenaReviewer/1.0", ...headers }, agent, lookup: guardedLookup, ...CONNECT, timeout: timeoutMs }, (res) => resolve(res));
+    const req = https.request(u, { method: "GET", headers: { "user-agent": "FightClubReviewer/1.0", ...headers }, agent, lookup: guardedLookup, ...CONNECT, timeout: timeoutMs }, (res) => resolve(res));
     req.on("timeout", () => req.destroy(new Error("The link took too long to answer.")));
     req.on("error", reject);
     req.end();

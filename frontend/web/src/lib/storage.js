@@ -1,3 +1,4 @@
+import { API } from "./apiBase.js";
 /*
  * The draft of the submission form lives in memory for this tab only: nothing is
  * kept in the browser (no localStorage). It survives moving between pages, not a

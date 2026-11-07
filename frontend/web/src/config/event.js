@@ -14,7 +14,7 @@ export const CONTRACTS = {
 };
 
 export const EVENT = {
-  name: "Battle Arena",
+  name: "FightClub",
   // Set these in frontend/web/.env (see .env.example) to change chain.
   network: {
     name: env.VITE_CHAIN_NAME || "Base Sepolia",

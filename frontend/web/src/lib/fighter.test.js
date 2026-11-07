@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fighterLayers, fighterTraits, poseRects, POSES } from "./fighter.js";
+import { fighterLayers, fighterTraits, joinSeed, poseRects, POSES, splitSeed } from "./fighter.js";
 import { FIGHTER_ROSTER } from "./fighterRoster.js";
 
 const base = { id: "x", name: "Plain", pitch: "A to-do list", description: "React app", tracks: [] };
@@ -121,5 +121,26 @@ describe("Mumbai roster", () => {
       return pixels.flatMap((r) => Array.from({ length: r.w }, (_, i) => `${r.x + i},${r.y}`)).sort().join(";");
     });
     expect(new Set(silhouettes).size).toBeGreaterThanOrEqual(10);
+  });
+});
+
+describe("gear picks in the seed", () => {
+  const project = { seed: "abc123", name: "X", pitch: "", description: "an AI agent for fitness" };
+  it("keeps plain seeds working and picks gear from the description", () => {
+    const t = fighterTraits(project);
+    expect(t.gear.head.id).toBe("sweatband");
+    expect(t.gear.eye.id).toBe("cyber");
+    expect(t.seed).toBe(fighterTraits({ ...project, seed: joinSeed("abc123", { head: "goggles" }) }).seed);
+  });
+  it("lets the team override or clear a slot", () => {
+    const t = fighterTraits({ ...project, seed: joinSeed("abc123", { head: "goggles", eye: "none" }) });
+    expect(t.gear.head.id).toBe("goggles");
+    expect(t.gear.eye).toBeUndefined();
+    expect(t.gear.hand).toBeUndefined();
+  });
+  it("round-trips and ignores junk", () => {
+    expect(splitSeed(joinSeed("s1", { hand: "coin" }))).toEqual({ base: "s1", gear: { hand: "coin" } });
+    expect(splitSeed("s1~head:laser;eye:coin")).toEqual({ base: "s1", gear: {} });
+    expect(joinSeed("s1", {})).toBe("s1");
   });
 });

@@ -1,3 +1,4 @@
+import { API } from "./apiBase.js";
 /*
  * Demo videos: how a link plays, and what the server does with it.
  * Mirrors backend/src/reviewer/media.mjs classifyVideo.

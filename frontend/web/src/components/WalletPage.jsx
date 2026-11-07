@@ -142,8 +142,9 @@ function BackingCard({ info, data }) {
 async function readPositions(address) {
   const tournaments = await listTournaments();
   const markets = tournaments.flatMap((t) => [
-    { tournament: t, label: "Tournament winner", market: tournamentMarket(t.id), href: `/tournaments/${t.id}` },
-    ...t.matches.flatMap((m, i) => (m.status === 0 ? [] : [{ tournament: t, label: `Match ${i + 1}`, market: matchMarket(t.id, i), href: `/fights/${t.id}/${i}` }])),
+    // decided: the result is on chain, so anyone can settle the pool (Finalized/Void match; Completed/Canceled tournament).
+    { tournament: t, label: "Tournament winner", market: tournamentMarket(t.id), href: `/tournaments/${t.id}`, decided: t.status === 3 || t.status === 4 },
+    ...t.matches.flatMap((m, i) => (m.status === 0 ? [] : [{ tournament: t, label: `Match ${i + 1}`, market: matchMarket(t.id, i), href: `/fights/${t.id}/${i}`, decided: m.status === 3 || m.status === 4 }])),
   ]);
   const rows = await Promise.all(
     markets.map(async (entry) => {
@@ -217,8 +218,13 @@ function Positions({ wallet, info, onChanged }) {
                   <Button variant="secondary" size="sm" disabled={busy} onClick={() => collect(row, "refund", "Refund")}>
                     Refund {formatAmount(row.refundable, info.decimals)}
                   </Button>
+                ) : row.state === "LOCKED" && row.decided ? (
+                  // The fight is decided but nobody has settled the pool yet (the payout bot does it when it's on).
+                  <Button variant="secondary" size="sm" disabled={busy} onClick={() => collect(row, "settle", "Settle")} title="Locks in the result so winnings can be claimed">
+                    Settle to collect
+                  </Button>
                 ) : (
-                  <span className="t-caption">{row.paid ? "Paid out" : row.state === "RESOLVED" ? "Didn't win" : "Nothing to collect yet"}</span>
+                  <span className="t-caption">{row.paid ? "Paid out" : row.state === "RESOLVED" ? "Didn't win" : "Waiting for the result"}</span>
                 )}
               </motion.li>
             );

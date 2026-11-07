@@ -18,6 +18,7 @@
  *   GET    /api/projects/:id/dossier   the reviewer's dossier for a submitted project
  *   GET    /api/projects/:id/live      live test results (+ /live/files/<device>/<file> for media)
  *   GET    /api/projects/:id/live/stream/:device   watch a cloud browser live (MJPEG) while the test runs
+ *   GET    /api/projects/:id/contracts smart contract test results (forge, sandboxed)
  *   DELETE /api/projects/:id           delete a submitted project and its data   (organizer)
  *   POST   /api/uploads/video          upload a demo video file (raw body; MP4, MOV or WebM, max 300 MB)
  *   POST   /api/uploads/image          upload a demo screenshot (raw body; PNG, JPEG or WebP, max 10 MB)
@@ -47,7 +48,7 @@ import zg from "./zg/client.js";
 import zgModels from "./zg/models.js";
 import { EXAMPLE_FORMS } from "./judges/seed.mjs";
 import { loadProject } from "./projects.mjs";
-import { db, deleteProject, dossiers, judges, liveDir, liveFile, liveTests, pipelines, reviews, submissions, videos, voiceNotes } from "./store.mjs";
+import { contractTests, db, deleteProject, dossiers, judges, liveDir, liveFile, liveTests, pipelines, reviews, submissions, videos, voiceNotes } from "./store.mjs";
 import { fileInfo, fileLinks, filesStatus, sendFile } from "./zg/files.mjs";
 import { storageConfig, walletInfo } from "./zg/storage.mjs";
 import { cleanUploads, IMAGE_MAX, IMAGE_REF, MAX_IMAGES, MIME, storeImageUpload, storeUpload, UPLOAD_FILE, UPLOAD_REF, UPLOADS, uploadExists, VIDEO_MAX } from "./reviewer/media.mjs";
@@ -342,7 +343,7 @@ router.post("/submissions", rateLimit({ max: 5, windowMs: 60 * 60 * 1000 }), asy
   const record = { ...body, id: crypto.randomUUID(), submittedAt: new Date().toISOString() };
   submissions.add(record);
   syncProjectInBackground(record.id);
-  if (ens.canWrite()) ens.issueProjectInBackground(loadProject(record.id)); // <project>.hackarena.eth, owned by the team's wallet
+  if (ens.canWrite()) ens.issueProjectInBackground(loadProject(record.id)); // <project>.fightclub.eth, owned by the team's wallet
   // Into the review queue: fetch, pin, count tests, build the dossier, then the judges score.
   enqueue(record.id, { judge: reviewNow });
   res.status(201).json(publicSubmission(record));
@@ -441,6 +442,9 @@ router.post("/projects/:id/arkiv", requireOrganizer, async (req, res) => {
 
 /** Live test results for a submitted project (public, like the rest of the review data); media under /live/files/... */
 router.get("/projects/:id/live", (req, res) => res.json({ liveTest: liveTests.get(req.params.id) }));
+
+/** Smart contract test results for a submitted project (public, like the live test). */
+router.get("/projects/:id/contracts", (req, res) => res.json({ contractTests: contractTests.get(req.params.id) ?? null }));
 
 /**
  * Watch a cloud browser while the live test runs: an MJPEG stream of its newest
@@ -667,5 +671,6 @@ if (process.env.ARENA_SERVER === "1") {
   if (n) console.log(`[pipeline] resumed ${n} unfinished review(s)`);
   startPayouts();
   startAutorun();
+  ens.bootstrapInBackground({ panelKeyOf: (id) => lastPublish(id)?.arkiv?.panelKey ?? null, model: MODEL });
   db.startRefresh(); // pick up records other processes write to Arkiv (another server, a CLI run, a migration)
 }

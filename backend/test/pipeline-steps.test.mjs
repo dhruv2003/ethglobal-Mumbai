@@ -15,8 +15,8 @@ const { runPipeline, STEPS } = await import("../src/reviewer/pipeline.mjs");
 const { submissions, pipelines, judges } = await import("../src/store.mjs");
 after(() => fs.rmSync(process.env.ARENA_SCRATCH_DIR, { recursive: true, force: true }));
 
-test("five steps in order; a failed step is marked and every later step still runs", async () => {
-  assert.deepEqual(STEPS.map((s) => s.id), ["code", "demo", "live", "dossier", "judges"]);
+test("six steps in order; a failed step is marked and every later step still runs", async () => {
+  assert.deepEqual(STEPS.map((s) => s.id), ["code", "contracts", "demo", "live", "dossier", "judges"]);
   judges.save([{ id: "j1", name: "Priya" }, { id: "j2", name: "Marcus" }, { id: "j3", name: "Ana" }]);
   submissions.add({ id: "p1", project: { name: "Broken" }, repoUrl: "https://gitlab.com/team/broken", demoVideoUrl: "", demoImages: [] });
   let judged = false;
@@ -39,6 +39,8 @@ test("five steps in order; a failed step is marked and every later step still ru
   assert.deepEqual(by.code.parts.map((p) => p.id), ["check", "clone", "pin", "history", "files", "tests"]);
   assert.deepEqual(by.code.parts.map((p) => p.status), ["failed", "skipped", "skipped", "skipped", "skipped", "skipped"]);
   assert.match(by.code.parts[0].detail, /github/i);
+  assert.equal(by.contracts.status, "skipped");
+  assert.match(by.contracts.detail, /code review/);
   assert.equal(by.demo.status, "skipped");
   assert.equal(by.live.status, "skipped");
   assert.equal(by.dossier.status, "skipped");

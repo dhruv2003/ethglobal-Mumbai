@@ -93,7 +93,7 @@
 .fightercard__trim::before { content: ""; width: 12px; height: 12px; border-radius: 3px; border: 1.5px solid var(--ink); background: var(--trim, var(--ink-secondary)); }
 
 .fstats { display: flex; flex-direction: column; gap: 6px; margin: 0; }
-.fstat { display: grid; grid-template-columns: 52px 1fr; align-items: center; gap: var(--space-2); }
+.fstat { display: grid; grid-template-columns: 52px 1fr 28px; align-items: center; gap: var(--space-2); }
 .fstat dt { margin: 0; }
 .fstat dd { margin: 0; }
 .fstat__bar { position: relative; height: 12px; border: 1.5px solid var(--ink); border-radius: var(--radius-pill); background: var(--surface-sunken); overflow: hidden; }
@@ -425,3 +425,19 @@ button.trackcard:hover { transform: translateY(-2px); box-shadow: var(--shadow-p
 @media (prefers-reduced-motion: reduce) {
   .wticket__live { animation: none; }
 }
+
+/* ---------- fighter card: stats hint + gear picker ---------- */
+.fstat__pct { margin: 0; font-size: 12px; font-weight: 700; color: var(--ink-secondary); text-align: right; }
+.fstat__next { font-size: 12.5px; color: var(--ink-secondary); padding: 6px 10px; border-radius: 10px; background: var(--surface-sunken); }
+.gear__hint { font-size: 12.5px; color: var(--ink-secondary); }
+.gear { display: flex; flex-direction: column; gap: 8px; }
+.gear__row { display: grid; grid-template-columns: 44px 1fr; align-items: start; gap: 8px; }
+.gear__slot { font: 700 12px/28px var(--font-sans); color: var(--ink-secondary); }
+.gear__chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.gear__chip { font: 600 12.5px/1 var(--font-sans); color: var(--ink); height: 28px; padding: 0 11px; border-radius: var(--radius-pill); border: 1.5px solid var(--line); background: var(--canvas); cursor: pointer; transition: border-color .15s, background .15s, transform .15s; }
+.gear__chip:hover { border-color: var(--ink); transform: translateY(-1px); }
+.gear__chip:focus-visible { outline: 3px solid var(--focus, #2f4bf0); outline-offset: 2px; }
+.gear__star { margin-right: 4px; color: var(--crush, #e0457b); }
+.gear__reset { font: 600 12px/28px var(--font-sans); color: var(--ink-secondary); background: none; border: 0; padding: 0 4px; cursor: pointer; text-decoration: underline; }
+.gear__chip--on { background: var(--sunny-soft); border: 2px solid var(--ink); box-shadow: var(--shadow-pop-sm); font-weight: 700; }
+@media (prefers-reduced-motion: reduce) { .gear__chip { transition: none; } }

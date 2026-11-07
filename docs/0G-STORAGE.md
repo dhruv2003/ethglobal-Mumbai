@@ -1,4 +1,4 @@
-# 0G Storage in Battle Arena
+# 0G Storage in FightClub
 
 > **Outdated (Nov 2026):** this describes the earlier 0G archive of every record, with a local `data/` folder. Now records live in the Arkiv database and only files (uploads, demo videos, live-test recordings and screenshots) go to 0G Storage, with nothing kept on disk. The `zg:*` scripts are gone. See "Where the data lives" in `backend/README.md`.
 

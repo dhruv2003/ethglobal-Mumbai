@@ -5,8 +5,17 @@
  * call fails soft: callers decide what to show when the judge service is offline.
  */
 import { dropPrivate, peek, put } from "./cache.js";
+import { API } from "./apiBase.js";
 
 /** The backend's origin, e.g. https://eth-mum.onrender.com; "" means this site's own origin. */
+/** A plain message for a failed call that carried no error of its own. */
+const failWord = (status) =>
+  status >= 500 || status === 0
+    ? `The server didn't answer (HTTP ${status}). It may be waking up; try again in a moment.`
+    : status === 401 || status === 403
+      ? "Only a signed-in organizer can do this."
+      : `The server refused this request (HTTP ${status}).`;
+
 export const API_ORIGIN = String(import.meta.env?.VITE_API_URL ?? "").trim().replace(/\/+$/, "");
 /**
  * Where a backend URL really points. Takes "/api/..." paths (ours, and the ones the
@@ -58,7 +67,7 @@ async function request(path, method, body) {
     /* not JSON: the backend isn't there (the static server answered) */
   }
   if (!res.ok || (data === null && res.status !== 204)) {
-    throw Object.assign(new Error(data?.error ?? `The judge service didn't answer (HTTP ${res.status}).`), { status: res.status, data });
+    throw Object.assign(new Error(data?.error ?? failWord(res.status)), { status: res.status, data });
   }
   return data;
 }
@@ -77,7 +86,7 @@ export async function upload(path, blob) {
     /* not JSON: the backend isn't there */
   }
   if (!res.ok || data === null) {
-    throw Object.assign(new Error(data?.error ?? `The judge service didn't answer (HTTP ${res.status}).`), { status: res.status, data });
+    throw Object.assign(new Error(data?.error ?? failWord(res.status)), { status: res.status, data });
   }
   return data;
 }

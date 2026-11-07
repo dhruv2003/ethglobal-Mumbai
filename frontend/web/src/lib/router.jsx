@@ -27,6 +27,7 @@ export function matchRoute(path) {
   if (p === "/organizer") return { name: "organizer" };
   if (p === "/arena") return { name: "arena" };
   if (p === "/graph") return { name: "graph" };
+  if (p === "/rankings" || p === "/fighters") return { name: "fighters" }; // live / final rankings (old /fighters links still work)
   if (p === "/tournaments") return { name: "tournaments" };
   const entering = p.match(/^\/tournaments\/([^/]+)\/submit$/);
   if (entering) return { name: "form", eventId: decodeURIComponent(entering[1]) };

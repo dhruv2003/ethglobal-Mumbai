@@ -1,3 +1,4 @@
+import { API } from "./apiBase.js";
 import { describe, expect, it } from "vitest";
 import { setIn } from "./form.js";
 import { toPayload } from "./storage.js";
@@ -25,7 +26,7 @@ describe("demo video links", () => {
   });
   it("recognises only well-formed upload refs", () => {
     expect(isUploadRef(REF)).toBe(true);
-    expect(uploadUrl(REF)).toBe(`/api/uploads/${"ab".repeat(32)}.mp4`);
+    expect(uploadUrl(REF)).toBe(`${API}/uploads/${"ab".repeat(32)}.mp4`);
     expect(isUploadRef("upload:../../x.mp4")).toBe(false);
     expect(uploadUrl("https://x")).toBeNull();
   });
@@ -63,7 +64,7 @@ describe("screenshots instead of a video", () => {
     expect(toPayload(setIn(d, "demo.source", "link"), { ownerWallet: "0x1", chainId: 1 }).demoImages).toEqual([]);
   });
   it("turns image refs into URLs, and nothing else", () => {
-    expect(uploadUrl(IMG)).toBe(`/api/uploads/${"cd".repeat(32)}.png`);
+    expect(uploadUrl(IMG)).toBe(`${API}/uploads/${"cd".repeat(32)}.png`);
     expect(uploadUrl(`upload:${"cd".repeat(32)}.svg`)).toBeNull();
   });
 });
