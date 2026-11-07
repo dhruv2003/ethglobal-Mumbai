@@ -1,8 +1,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import net from "node:net";
+import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
-import { durationMs, findContractProjects, lockedFoundryToml, parseForgeJson, parseGitmodules, safeRemapping, startEgressProxy, totalsOf } from "../src/reviewer/contracts.mjs";
+import { durationMs, findContractProjects, lockedFoundryToml, parseForgeJson, parseGitmodules, removeSymlinks, safeRemapping, startEgressProxy, totalsOf } from "../src/reviewer/contracts.mjs";
 
 const root = path.resolve("/work/project");
 
@@ -111,3 +113,22 @@ test("the egress proxy refuses private addresses, other ports and plain HTTP", a
   }
 });
 
+
+test("a remapping through a symlink that leaves the project is refused, and installs' symlinks are removed", () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "ct-"));
+  const proj = path.join(tmp, "proj");
+  const outside = path.join(tmp, "secret");
+  fs.mkdirSync(path.join(proj, "node_modules"), { recursive: true });
+  fs.mkdirSync(outside);
+  fs.symlinkSync(outside, path.join(proj, "node_modules", "evil"), "dir");
+  fs.mkdirSync(path.join(proj, "lib", "ok"), { recursive: true });
+  try {
+    assert.equal(safeRemapping("evil/=node_modules/evil/", proj), null);
+    assert.equal(safeRemapping("ok/=lib/ok/", proj), "ok/=lib/ok/");
+    assert.equal(removeSymlinks(proj), 1);
+    assert.equal(fs.existsSync(path.join(proj, "node_modules", "evil")), false);
+    assert.equal(fs.existsSync(outside), true); // only the link goes, never its target
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+});
