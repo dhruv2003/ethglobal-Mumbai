@@ -39,7 +39,7 @@ import os from "node:os";
 import path from "node:path";
 import { countSteps, discoverSite, onRunnerLog, runLiveTest } from "../../tester/runner.mjs";
 import { hasCredentials, MODEL } from "../llm.mjs";
-import { filesOf, putFile, removeFile } from "../zg/files.mjs";
+import { fileInfo, filesOf, putFile, removeFile } from "../zg/files.mjs";
 import { clearScratch, scratch } from "../datafiles.mjs";
 import { contractTests, dossiers, judges as judgesStore, liveDir, liveFile, liveTests, pipelines, repoDir, submissions, transcripts, videos, workDir } from "../store.mjs";
 import { demoTranscript, describeDuration } from "./demo.mjs";
@@ -333,13 +333,32 @@ async function executeSteps(projectId, judge) {
       let video = null;
       let info = null;
       let screens = null;
-      if (sub.demoVideoUrl) {
+      // A replay with the same demo link reuses our saved copy and its transcript: the video
+      // isn't downloaded, analysed or transcribed again. A new link starts from scratch.
+      const priorVideo = videos.get(projectId);
+      const priorText = transcripts.get(projectId);
+      const reusable =
+        sub.demoVideoUrl &&
+        priorVideo?.ext &&
+        !priorVideo.error &&
+        (priorVideo.videoUrl ?? sub.demoVideoUrl) === sub.demoVideoUrl &&
+        priorText?.text &&
+        priorText.videoUrl === sub.demoVideoUrl &&
+        fileInfo(projectId, `demo.${priorVideo.ext}`);
+      if (reusable) {
+        video = { ...priorVideo };
+        info = priorVideo.width ? { seconds: priorVideo.seconds, width: priorVideo.width, height: priorVideo.height, audio: priorVideo.audio } : null;
+        transcript = priorText;
+        part(s, "download", "done", `Reused our saved copy · ${mb(priorVideo.bytes)} (same link, not downloaded again)`);
+        part(s, "analyse", "done", info ? `${describeDuration(info.seconds)} · ${info.width}×${info.height} · ${info.audio ? "has sound" : "no sound"} (from the first run)` : `${describeDuration(priorVideo.seconds)} (from the first run)`);
+        part(s, "transcribe", "done", `Reused the transcript · ${wordCount(priorText.text)} words`);
+      } else if (sub.demoVideoUrl) {
         part(s, "download", "running");
         try {
           video = await saveDemoVideo(sub.demoVideoUrl, scratch("media", projectId), { onProgress: (m) => part(s, "download", "running", m, { quiet: true }) });
           part(s, "download", "running", "Storing our copy on 0G Storage", { quiet: true });
           video = await keepDemoVideo(projectId, video);
-          videos.save(projectId, { ext: video.ext, bytes: video.bytes, seconds: video.seconds, source: video.source, savedAt: new Date().toISOString() });
+          videos.save(projectId, { ext: video.ext, bytes: video.bytes, seconds: video.seconds, source: video.source, videoUrl: sub.demoVideoUrl, savedAt: new Date().toISOString() });
           part(s, "download", "done", `${mb(video.bytes)} · ${video.source}`);
         } catch (e) {
           videos.save(projectId, { error: reason(e).slice(0, 240), skipped: Boolean(e.skip), savedAt: new Date().toISOString() });
@@ -349,6 +368,8 @@ async function executeSteps(projectId, judge) {
           part(s, "analyse", "running", "Reading length, picture size and sound");
           try {
             info = await probeInfo(video.file, video.demuxer);
+            // Kept with the copy, so a replay can show it without the file.
+            videos.save(projectId, { ...videos.get(projectId), width: info.width ?? null, height: info.height ?? null, audio: Boolean(info.audio) });
             part(s, "analyse", "done", `${describeDuration(info.seconds)} · ${info.width && info.height ? `${info.width}×${info.height}` : "unknown size"} · ${info.audio ? "has sound" : "no sound"}`);
           } catch (e) {
             part(s, "analyse", "failed", reason(e));
