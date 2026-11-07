@@ -132,3 +132,16 @@ test("a remapping through a symlink that leaves the project is refused, and inst
     fs.rmSync(tmp, { recursive: true, force: true });
   }
 });
+
+test("removeSymlinks clears links a checkout left behind, at any depth", () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "ct-"));
+  const work = path.join(tmp, "work");
+  fs.mkdirSync(path.join(work, "lib", "a"), { recursive: true });
+  fs.symlinkSync(tmp, path.join(work, "lib", "a", "escape"), "dir");
+  try {
+    assert.equal(removeSymlinks(work), 1);
+    assert.equal(fs.existsSync(path.join(work, "lib", "a", "escape")), false);
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+});

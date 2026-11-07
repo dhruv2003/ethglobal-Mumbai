@@ -63,12 +63,14 @@ function hasCommand(cmd) {
 /** Give a folder tree to `nobody` (only when we drop to it). */
 function giveToNobody(dir) {
   if (!AS_NOBODY) return;
-  fs.chownSync(dir, NOBODY, NOBODY);
+  // Never follow a link: chown as root through one would hand a file outside the sandbox to nobody.
+  if (fs.lstatSync(dir).isSymbolicLink()) return;
+  fs.lchownSync(dir, NOBODY, NOBODY);
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
     const p = path.join(dir, e.name);
     if (e.isSymbolicLink()) continue;
     if (e.isDirectory()) giveToNobody(p);
-    else fs.chownSync(p, NOBODY, NOBODY);
+    else fs.lchownSync(p, NOBODY, NOBODY);
   }
 }
 
@@ -231,6 +233,21 @@ export function findContractProjects(files) {
 
 // ---------- preparing a project ----------
 
+/** True when any existing folder between root and p (root excluded) is a symlink. */
+function linkOnPath(root, p) {
+  const rel = path.relative(root, p).split(path.sep).filter(Boolean);
+  let cur = root;
+  for (const part of rel) {
+    cur = path.join(cur, part);
+    try {
+      if (fs.lstatSync(cur).isSymbolicLink()) return true;
+    } catch {
+      return false; // the rest doesn't exist yet
+    }
+  }
+  return false;
+}
+
 const isInside = (root, p) => {
   const r = path.relative(root, p);
   return r === "" || (!r.startsWith("..") && !path.isAbsolute(r));
@@ -302,7 +319,8 @@ async function fetchSubmodules(gitRepo, work, proxy, say, budget = { left: MAX_S
     }
     const dest = path.resolve(work, sm.path);
     const url = sm.url.trim();
-    if (!isInside(work, dest) || sm.path.includes("..")) {
+    // Inside the work folder by text AND with no symlink on the way (an earlier checkout may have added one).
+    if (!isInside(work, dest) || sm.path.includes("..") || linkOnPath(work, dest)) {
       done.push({ kind: "git", name: sm.path, ok: false, detail: "path outside the project" });
       continue;
     }
@@ -329,6 +347,7 @@ async function fetchSubmodules(gitRepo, work, proxy, say, budget = { left: MAX_S
       continue;
     }
     fs.rmSync(path.join(dest, ".git"), { recursive: true, force: true });
+    removeSymlinks(dest); // a checked-out repo can carry symlinks; none may survive into the sandbox
     for (const f of fs.readdirSync(dest)) if (/^\.env/i.test(f)) fs.rmSync(path.join(dest, f), { force: true });
     done.push({ kind: "git", name: sm.path, ok: true, detail: sha ? `pinned ${sha.slice(0, 7)}` : "default branch" });
     if (depth < 1) done.push(...(await fetchSubmodules(null, dest, proxy, say, budget, depth + 1)).map((d) => ({ ...d, name: `${sm.path}/${d.name}` })));
@@ -493,6 +512,7 @@ export async function runContractTests({ projectId, repoDir, files, commit, onPa
     // Submodules are recorded at the repo root; fetch them once for every project.
     onPart("deps", "running", "Reading .gitmodules");
     const deps = await fetchSubmodules(repoDir, workRoot, proxy.url, (m) => onPart("deps", "running", m));
+    removeSymlinks(workRoot);
     for (const root of found.foundry) {
       const dir = path.resolve(workRoot, root);
       const p = { root, dependencies: [...deps], build: null, suites: [], totals: null };
@@ -505,6 +525,7 @@ export async function runContractTests({ projectId, repoDir, files, commit, onPa
         onPart("deps", "running", `Soldeer packages${at}`);
         const r = await sandboxed(FORGE, ["soldeer", "install"], { cwd: dir, timeout: LIMITS.deps, proxy: proxy.url });
         p.dependencies.push({ kind: "soldeer", name: "soldeer packages", ok: !r.code, detail: r.code ? tail(r.stderr || r.stdout, 200) : "installed" });
+        removeSymlinks(workRoot);
       }
       // npm packages, only when remappings point into node_modules
       const remapText = [toml, fs.existsSync(path.join(dir, "remappings.txt")) ? fs.readFileSync(path.join(dir, "remappings.txt"), "utf8") : ""].join("\n");
