@@ -9,6 +9,7 @@ import { eventDuration } from "../fight/choreo.js";
 import { useReel } from "../fight/usePlayback.js";
 import { prefersReducedMotion } from "../lib/motion.js";
 import { Link } from "../lib/router.jsx";
+import { ensAppUrl, useEnsDirectory } from "../lib/ens.js";
 
 const SAY = { pitch: "pitches", question: "asks", answer: "answers", challenge: "challenges", rebuttal: "replies", closing: "closes" };
 const INTRO = { seq: 1, ts: new Date(0).toISOString(), type: "intro" };
@@ -253,17 +254,24 @@ const short = (h) => (h ? `${h.slice(0, 10)}…${h.slice(-6)}` : "");
 /** Where this result can be checked: the judges' inference and the evidence on 0G, the record on Arkiv. */
 function Proofs({ fight, fightMatch }) {
   const p = fight?.proofs;
+  const ens = useEnsDirectory();
   if (!p) return null;
+  // Each fighter's ENS name, where the arena writes its score and fight record.
+  const ensRows = ["a", "b"]
+    .map((side) => [side, ens?.projects?.[p.evidence[side].project]])
+    .filter(([, name]) => name)
+    .map(([side, name]) => [`${fightMatch.fighters[side].name} on ENS`, "ENSv2 · Sepolia", name, ensAppUrl(ens, name), true]);
   const rows = [
     ["Result record", "Arkiv", p.arkiv.entityKey, p.arkiv.explorer],
     ["Transcript", "0G Storage", p.transcript.rootHash, p.transcript.file],
     [`${fightMatch.fighters.a.name} evidence`, "0G root", p.evidence.a.dossier, `/projects/${p.evidence.a.project}?tab=evidence#evidence`],
     [`${fightMatch.fighters.b.name} evidence`, "0G root", p.evidence.b.dossier, `/projects/${p.evidence.b.project}?tab=evidence#evidence`],
+    ...ensRows,
   ];
   return (
     <div className="proofs">
       <ul className="proofs__list m0">
-        {rows.map(([label, where, hash, href]) => (
+        {rows.map(([label, where, hash, href, whole]) => (
           <li key={label}>
             <span className="proofs__label">{label}</span>
             <span className="proofs__where">{where}</span>
@@ -273,7 +281,7 @@ function Proofs({ fight, fightMatch }) {
               </Link>
             ) : (
               <a href={href} target="_blank" rel="noreferrer" className="t-mono proofs__hash">
-                {short(hash)} ↗
+                {whole ? hash : short(hash)} ↗
               </a>
             )}
           </li>

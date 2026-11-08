@@ -311,3 +311,55 @@ export function simHistory(address) {
 }
 
 export const simTx = (hash) => state.txs.find((t) => t.hash === hash) ?? null;
+
+/* ---------- rankings: what every bettor has won, from the same pools the fights settle ---------- */
+/**
+ * One row per bettor: staked, won (their share of the 70% bettor bucket of each settled pool),
+ * net on settled fights, and stake still riding on live ones. Sorted by net, best first.
+ */
+export function leaderboard() {
+  tick();
+  const names = new Map();
+  for (const list of Object.values(betsData)) for (const b of list) names.set(low(b.address), b.bettor);
+  names.set(low(DEMO_ADDRESS), "you");
+  const rows = new Map();
+  const row = (who) => {
+    if (!rows.has(who)) rows.set(who, { address: who, name: names.get(who) ?? `${who.slice(0, 6)}…${who.slice(-4)}`, you: who === low(DEMO_ADDRESS), bets: 0, staked: 0n, open: 0n, won: 0n, settledStake: 0n, hits: 0, settled: 0, best: 0n, picks: [] });
+    return rows.get(who);
+  };
+  for (const [m, s] of state.matches.entries()) {
+    const market = matchMarket(m);
+    const { bets, pool, sel } = poolView(market);
+    const resolved = s.status === 3;
+    const winStake = resolved ? sel(s.winner) : 0n;
+    // One bettor can stake more than once on a match: tally per (bettor, match).
+    const per = new Map();
+    for (const b of bets) {
+      const k = b.who;
+      const e = per.get(k) ?? { stake: 0n, onWinner: 0n, selection: b.selection };
+      e.stake += b.amount;
+      if (resolved && b.selection === s.winner) e.onWinner += b.amount;
+      per.set(k, e);
+    }
+    for (const [who, e] of per) {
+      const r = row(who);
+      r.bets += 1;
+      r.staked += e.stake;
+      if (!resolved) {
+        r.open += e.stake;
+        r.picks.push({ match: m, selection: e.selection, result: "open" });
+        continue;
+      }
+      const payout = e.onWinner && winStake ? (pool.bettorBucket * e.onWinner) / winStake : 0n;
+      r.settled += 1;
+      r.settledStake += e.stake;
+      r.won += payout;
+      if (payout > 0n) r.hits += 1;
+      if (payout > r.best) r.best = payout;
+      r.picks.push({ match: m, selection: e.selection, result: payout > 0n ? "won" : "lost", payout });
+    }
+  }
+  return [...rows.values()]
+    .map((r) => ({ ...r, net: r.won - r.settledStake }))
+    .sort((a, b) => (b.net > a.net ? 1 : b.net < a.net ? -1 : b.won > a.won ? 1 : b.won < a.won ? -1 : 0));
+}

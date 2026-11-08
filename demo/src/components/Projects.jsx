@@ -6,6 +6,7 @@ import { useCountUp } from "../lib/motion.js";
 import { listProjects } from "../lib/projects.js";
 import { usePoll } from "../lib/chain.js";
 import { Link } from "../lib/router.jsx";
+import { EnsChip } from "./EnsName.jsx";
 import { Ring } from "./Arena.jsx";
 import { Spinner, toast } from "./Feedback.jsx";
 import { PixelFighter } from "./PixelFighter.jsx";
@@ -282,6 +283,7 @@ export function ProjectsPage({ wallet }) {
                   <div>
                     <h3 className="t-display-md m0 fighter-card__name">{p.name}</h3>
                     <p className="t-caption m0">by {p.teamName}</p>
+                    <EnsChip id={p.id} />
                   </div>
                   <p className="t-body m0 fighter-card__pitch">{p.twist || p.pitch}</p>
                   <Tracks ids={p.tracks} />

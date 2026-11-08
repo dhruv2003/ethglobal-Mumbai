@@ -81,7 +81,7 @@ function ArenaHero({ projects, eventName }) {
           3 AI judges
         </FloatSticker>
         <FloatSticker className="float-sticker--crush hero__sticker hero__sticker--2" rotate={7} delay={0.85} drift={10}>
-          Tested on Windows, Android, iPhone
+          Tested on <PlatformIcons />
         </FloatSticker>
         <FloatSticker className="float-sticker--oracle hero__sticker hero__sticker--3" rotate={-4} delay={1} drift={6}>
           Proof on 0G
@@ -231,5 +231,26 @@ export function LandingPage() {
         </div>
       </Reveal>
     </>
+  );
+}
+
+/** Windows, Android and iPhone glyphs for the "Tested on" sticker. Ink on the sticker; the Android eyes are cut out. */
+function PlatformIcons() {
+  return (
+    <span className="platforms" title="Windows, Android, iPhone">
+      <svg viewBox="0 0 24 24" fill="currentColor">
+        <path d="M3 5.6 10.4 4.6v6.9H3zM11.4 4.4 21 3v8.5h-9.6zM3 12.5h7.4v6.9L3 18.4zM11.4 12.5H21V21l-9.6-1.4z" />
+      </svg>
+      <svg viewBox="0 0 24 24" fill="currentColor">
+        <g transform="translate(0 1)">
+          <path fillRule="evenodd" d="M3 19a9 9 0 0 1 18 0zM8.6 13.2a1.2 1.2 0 1 0 0 2.4a1.2 1.2 0 1 0 0-2.4zM15.4 13.2a1.2 1.2 0 1 0 0 2.4a1.2 1.2 0 1 0 0-2.4z" />
+          <path d="M6.6 11.4 4.8 8.2M17.4 11.4l1.8-3.2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+        </g>
+      </svg>
+      <svg viewBox="0 0 24 24" fill="currentColor">
+        <path d="M15.4 2.2c.1 1.3-.4 2.5-1.1 3.3-.8.9-1.9 1.5-3 1.4-.1-1.2.4-2.5 1.1-3.3.8-.8 2-1.4 3-1.4z" />
+        <path d="M12 8.3c1 0 2.2-.9 3.8-.9.6 0 2.8.1 4.2 2.1-3.6 2.1-3 6.7.6 8-.6 1.6-1.3 2.8-2.2 3.9-.8 1-1.7 2-3 2-1.2 0-1.6-.8-3.3-.8s-2.2.8-3.4.8c-1.3 0-2.2-1.1-3.1-2.2C3.8 18.9 2.8 16 2.8 13.3c0-3.3 2.1-5.6 4.8-5.6 1.6 0 2.9 1 4.4.6z" />
+      </svg>
+    </span>
   );
 }

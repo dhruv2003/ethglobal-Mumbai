@@ -4,6 +4,7 @@
  * a review you replay ticks through its steps, and a live fight stays sealed until betting closes.
  */
 import event from "@data/event.json";
+import ensData from "@data/ens.json";
 import judgesData from "@data/judges.json";
 import criteria from "@data/criteria.json";
 import submissions from "@data/submissions.json";
@@ -130,7 +131,7 @@ const ROUTES = [
   ["GET", /^\/arena\/fights\/([^/]+)\/(\d+)$/, ([t, m]) => fightOf(t, m)],
   ["GET", /^\/arena\/auto$/, () => ({ organizer: false, publisher: false, address: null, ready: false })],
   ["GET", /^\/payouts$/, () => ({ enabled: true })],
-  ["GET", /^\/ens$/, () => ({ enabled: false, projects: {}, judges: {} })],
+  ["GET", /^\/ens$/, () => ensData.config], // the real names on Sepolia; records are read live in the browser
   ["GET", /^\/graph$/, () => graph.graph],
   ["GET", /^\/graph\/judges$/, () => graph.judges],
   ["GET", /^\/graph\/projects\/([^/]+)\/similar$/, ([key]) => graph.projects[key]?.similar ?? []],

@@ -8,7 +8,7 @@ export function Footer() {
         <div className="foot__brand">
           <BrandMark />
           <div>
-            <span className="foot__name">Battle Arena</span>
+            <span className="foot__name">FightClub</span>
             <span className="t-caption">Built at ETHGlobal Mumbai</span>
           </div>
         </div>

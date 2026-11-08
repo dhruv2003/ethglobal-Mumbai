@@ -32,14 +32,24 @@ function useInstallPrompt() {
     : null;
 }
 
-/** The logo: two overlapping rings (people + protocol) and a sunny token. Orbits on hover. */
+/** The logo: two pixel fighters squaring off over "VS" (from the fightclub logo). They close in on hover. */
 export function BrandMark() {
   return (
     <svg className="brand__mark" viewBox="0 0 512 512" aria-hidden="true">
-      <rect width="512" height="512" rx="112" fill="#17141f" />
-      <circle className="brand__a" cx="200" cy="256" r="118" fill="#ff5c93" />
-      <circle className="brand__b" cx="312" cy="256" r="118" fill="#2f4bf0" stroke="#17141f" strokeWidth="20" />
-      <circle className="brand__token" cx="256" cy="120" r="34" fill="#ffd43b" />
+      <rect width="512" height="512" rx="112" fill="#ffd43b" />
+      <g className="brand__a">
+        <path fill="#17141f" d="M96 158h56v14h-56zM82 172h14v14h-14zM152 172h14v14h-14zM82 186h14v14h-14zM110 186h14v14h-14zM138 186h28v14h-28zM82 200h14v14h-14zM152 200h14v14h-14zM96 214h56v14h-56zM96 284h56v14h-56zM96 298h14v14h-14zM138 298h14v14h-14zM82 312h28v14h-28zM138 312h28v14h-28zM82 326h28v14h-28zM138 326h28v14h-28zM68 340h42v14h-42zM138 340h42v14h-42z" />
+        <path fill="#f2c7a5" d="M96 172h56v14h-56zM96 186h14v14h-14zM124 186h14v14h-14zM96 200h56v14h-56z" />
+        <path fill="#2f4bf0" d="M68 228h112v14h-112zM68 242h112v14h-112zM96 256h56v14h-56zM96 270h56v14h-56z" />
+        <path fill="#ff5c93" d="M54 242h14v14h-14zM180 242h14v14h-14zM54 256h28v14h-28zM166 256h28v14h-28z" />
+      </g>
+      <g className="brand__b">
+        <path fill="#17141f" d="M360 158h56v14h-56zM346 172h14v14h-14zM416 172h14v14h-14zM346 186h28v14h-28zM388 186h14v14h-14zM416 186h14v14h-14zM346 200h14v14h-14zM416 200h14v14h-14zM360 214h56v14h-56zM360 284h56v14h-56zM360 298h14v14h-14zM402 298h14v14h-14zM346 312h28v14h-28zM402 312h28v14h-28zM346 326h28v14h-28zM402 326h28v14h-28zM332 340h42v14h-42zM402 340h42v14h-42z" />
+        <path fill="#f2c7a5" d="M360 172h56v14h-56zM374 186h14v14h-14zM402 186h14v14h-14zM360 200h56v14h-56z" />
+        <path fill="#ff8a2b" d="M332 228h112v14h-112zM332 242h112v14h-112zM360 256h56v14h-56zM360 270h56v14h-56z" />
+        <path fill="#ff5c93" d="M318 242h14v14h-14zM444 242h14v14h-14zM318 256h28v14h-28zM430 256h28v14h-28z" />
+      </g>
+      <text className="brand__token" x="256" y="270" textAnchor="middle" fontFamily="var(--font-display, sans-serif)" fontWeight="800" fontSize="64" fill="#c2185b">VS</text>
     </svg>
   );
 }
@@ -49,6 +59,7 @@ export function BrandMark() {
 export const SUBMIT_PATH = "/tournaments/ethglobal-mumbai/submit";
 const NAV = [
   { to: "/arena", label: "Arena", on: (r) => r.name === "arena" || r.name === "matchFight" || r.name === "tournament" || r.name === "tournaments" },
+  { to: "/rankings", label: "Rankings", on: (r) => r.name === "rankings" },
   { to: "/projects", label: "Projects", on: (r) => r.name === "projects" || r.name === "project" },
   { to: SUBMIT_PATH, label: "Submit", on: (r) => r.name === "form" || r.name === "event" },
   { to: "/judge", label: "Judges", on: (r) => r.name === "judges" },
@@ -134,7 +145,7 @@ export function Header({ wallet, route }) {
         <Link to="/" className="brand">
           <BrandMark />
           <span className="brand__word">
-            Battle&nbsp;<span className="brand__accent">Arena</span>
+            Fight<span className="brand__accent">Club</span>
           </span>
         </Link>
         <nav className="top__nav" aria-label="Main" onPointerLeave={() => setHover(null)}>

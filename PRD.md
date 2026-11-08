@@ -1,4 +1,4 @@
-# AI Hackathon Battle Arena Product Requirements
+# AI Hackathon FightClub Product Requirements
 
 **Version 1.5 · 6 November 2026 · Testnet release specification**
 

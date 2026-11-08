@@ -1,4 +1,4 @@
-# Battle Arena: demo build
+# FightClub: demo build
 
 The real web app (`frontend/web`) with every backend, chain and wallet call answered locally,
 for pitching to judges. Same routes, same nav, same buttons. No backend, no MetaMask, no network

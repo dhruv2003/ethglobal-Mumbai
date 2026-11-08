@@ -11,6 +11,7 @@ import { api, health, peekApi } from "../lib/api.js";
 import { Ring } from "./Arena.jsx";
 import { PixelFighter } from "./PixelFighter.jsx";
 import { toast } from "./Feedback.jsx";
+import { JudgeEns } from "./EnsName.jsx";
 
 export const judgeAsFighter = (j) => ({ seed: j.id ?? j.name, name: j.name, pitch: j.title, description: `${j.background} ${j.expectations}`, tracks: [] });
 
@@ -345,6 +346,7 @@ function Studio({ judge, criteria, i, onSaved, onRemove, onDirty }) {
             <div className="jid__chips">
               <span className="jver t-num">{version ? `v${version}` : "draft"}</span>
               <span className="jver jver--model">0gm-1.0-35b · 0G</span>
+              {judge?.id && <JudgeEns judgeId={judge.id} detailed />}
               {top3.map(([c, w]) => (
                 <span key={c.id} className="jtop">
                   {SHORT[c.id]} <b className="t-num">{w}%</b>

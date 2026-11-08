@@ -9,6 +9,7 @@ import { usePoll } from "../lib/chain.js";
 import { loadTournaments } from "../lib/arena.js";
 import { Link } from "../lib/router.jsx";
 import { AerialRing } from "./AerialRing.jsx";
+import { Bracket } from "./Bracket.jsx";
 import { bouncy, stagger } from "./fx.jsx";
 
 /** Health bar from the published scores: 20% floor plus 0.008% per score hundredth, as the fight player draws it. */
@@ -105,6 +106,10 @@ export function ArenaPage() {
         {data == null && error && <p className="plot__empty m0">Couldn't reach the chain. Retrying…</p>}
         {data != null && !fights.length && <p className="plot__empty m0">No fights yet.</p>}
       </motion.div>
+
+      {(data ?? []).filter((t) => t.count >= 4).map((t) => (
+        <Bracket key={t.id} t={t} />
+      ))}
 
       {earlier.length > 0 && (
         <section className="bouts-earlier" aria-labelledby="earlier-h">

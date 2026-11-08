@@ -16,7 +16,7 @@ import { Ring } from "./Arena.jsx";
 import { toast } from "./Feedback.jsx";
 import { PixelFighter } from "./PixelFighter.jsx";
 import { SplitWords } from "./fx.jsx";
-import { FighterEns } from "./EnsName.jsx";
+import { EnsChip, FighterEns } from "./EnsName.jsx";
 import { EventBadge, Tracks } from "./Projects.jsx";
 import { ClaimBar } from "./review/EvidenceView.jsx";
 import { judgeAsFighter } from "./JudgesPage.jsx";
@@ -223,6 +223,7 @@ export function ProjectPage({ id, wallet }) {
           </h1>
           <p className="t-prompt m0">{p.pitch}</p>
           <p className="t-caption m0">by {p.teamName}</p>
+          <EnsChip id={p.id} />
           <div className="project-actions">
             <FightLink id={p.id} />
             <RerunReview

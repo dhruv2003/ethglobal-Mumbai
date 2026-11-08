@@ -14,6 +14,7 @@ import { cachedTournament, getFight, loadTournament } from "../lib/arena.js";
 import { MATCH_LABEL } from "../lib/labels.js";
 import { POOL_LABEL, matchMarket, percent } from "../lib/pools.js";
 import { Link } from "../lib/router.jsx";
+import { EnsChip } from "./EnsName.jsx";
 import { chainBetPool, isMatchOpen } from "../lib/tournamentView.js";
 import { myBet, usePoolData } from "./BetPanel.jsx";
 import { PixelFighter } from "./PixelFighter.jsx";
@@ -86,6 +87,7 @@ function JudgesRow({ judges }) {
           <span className="fjudge__text">
             <span className="fjudge__name">{j.name}</span>
             <span className="fjudge__focus t-caption">{j.focus}</span>
+            <EnsChip kind="judge" id={id} />
           </span>
         </li>
       ))}

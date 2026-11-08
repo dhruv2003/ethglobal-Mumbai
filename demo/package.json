@@ -8,7 +8,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "data": "node scripts/build-data.mjs"
+    "data": "node scripts/build-data.mjs",
+    "ens-snapshot": "node scripts/ens-snapshot.mjs"
   },
   "dependencies": {
     "@worldcoin/idkit": "^4.6.0",
