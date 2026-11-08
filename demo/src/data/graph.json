@@ -1,0 +1,1086 @@
+{
+ "graph": {
+  "nodes": [
+   {
+    "id": "judge:judge_11631c00",
+    "type": "judge",
+    "name": "Priya Raman"
+   },
+   {
+    "id": "judge:judge_e9c669c4",
+    "type": "judge",
+    "name": "Marcus Lee"
+   },
+   {
+    "id": "judge:judge_c876a259",
+    "type": "judge",
+    "name": "Ana Okafor"
+   },
+   {
+    "id": "track:defi",
+    "type": "track",
+    "name": "DeFi",
+    "sponsor": false
+   },
+   {
+    "id": "track:ai-agents",
+    "type": "track",
+    "name": "AI Agents",
+    "sponsor": false
+   },
+   {
+    "id": "track:infra",
+    "type": "track",
+    "name": "Infra",
+    "sponsor": false
+   },
+   {
+    "id": "track:0g",
+    "type": "track",
+    "name": "0G",
+    "sponsor": true
+   },
+   {
+    "id": "track:arkiv",
+    "type": "track",
+    "name": "Arkiv",
+    "sponsor": true
+   },
+   {
+    "id": "track:ens",
+    "type": "track",
+    "name": "ENS",
+    "sponsor": true
+   },
+   {
+    "id": "track:world",
+    "type": "track",
+    "name": "World",
+    "sponsor": true
+   },
+   {
+    "id": "track:base",
+    "type": "track",
+    "name": "Base",
+    "sponsor": true
+   },
+   {
+    "id": "track:self",
+    "type": "track",
+    "name": "Self",
+    "sponsor": true
+   },
+   {
+    "id": "track:citrea",
+    "type": "track",
+    "name": "Citrea",
+    "sponsor": true
+   },
+   {
+    "id": "project:go-health-me",
+    "type": "project",
+    "name": "Go Health Me",
+    "team": "Meowteam6"
+   },
+   {
+    "id": "tech:next.js",
+    "type": "tech",
+    "name": "next.js"
+   },
+   {
+    "id": "tech:viem",
+    "type": "tech",
+    "name": "viem"
+   },
+   {
+    "id": "tech:@circle-fin/developer-controlled-wallets",
+    "type": "tech",
+    "name": "@circle-fin/developer-controlled-wallets"
+   },
+   {
+    "id": "tech:@worldcoin/idkit",
+    "type": "tech",
+    "name": "@worldcoin/idkit"
+   },
+   {
+    "id": "tech:foundry",
+    "type": "tech",
+    "name": "foundry"
+   },
+   {
+    "id": "project:fittercoin",
+    "type": "project",
+    "name": "FitterCoin",
+    "team": "FitterCoin"
+   },
+   {
+    "id": "tech:react",
+    "type": "tech",
+    "name": "react"
+   },
+   {
+    "id": "tech:mediapipe",
+    "type": "tech",
+    "name": "mediapipe"
+   },
+   {
+    "id": "tech:opencv-python",
+    "type": "tech",
+    "name": "opencv-python"
+   },
+   {
+    "id": "tech:@google/genai",
+    "type": "tech",
+    "name": "@google/genai"
+   },
+   {
+    "id": "tech:@selfxyz/qrcode",
+    "type": "tech",
+    "name": "@selfxyz/qrcode"
+   },
+   {
+    "id": "project:mozark-app-studio",
+    "type": "project",
+    "name": "Mozark App Studio",
+    "team": "Mozark"
+   },
+   {
+    "id": "tech:appium",
+    "type": "tech",
+    "name": "appium"
+   },
+   {
+    "id": "tech:playwright",
+    "type": "tech",
+    "name": "playwright"
+   },
+   {
+    "id": "tech:python",
+    "type": "tech",
+    "name": "python"
+   },
+   {
+    "id": "project:qagent",
+    "type": "project",
+    "name": "QAgent",
+    "team": "Null Pointers"
+   },
+   {
+    "id": "tech:octokit",
+    "type": "tech",
+    "name": "octokit"
+   },
+   {
+    "id": "project:vaultline",
+    "type": "project",
+    "name": "Vaultline",
+    "team": "Merkle Mafia"
+   },
+   {
+    "id": "project:splitsafe",
+    "type": "project",
+    "name": "SplitSafe",
+    "team": "Chai & Chain"
+   },
+   {
+    "id": "project:kirana-credit",
+    "type": "project",
+    "name": "Kirana Credit",
+    "team": "Dabbawala Labs"
+   },
+   {
+    "id": "project:metromint",
+    "type": "project",
+    "name": "MetroMint",
+    "team": "Local Train"
+   }
+  ],
+  "edges": [
+   {
+    "from": "project:go-health-me",
+    "rel": "IN_TRACK",
+    "to": "track:defi"
+   },
+   {
+    "from": "project:go-health-me",
+    "rel": "IN_TRACK",
+    "to": "track:0g"
+   },
+   {
+    "from": "project:go-health-me",
+    "rel": "IN_TRACK",
+    "to": "track:arkiv"
+   },
+   {
+    "from": "project:go-health-me",
+    "rel": "IN_TRACK",
+    "to": "track:ens"
+   },
+   {
+    "from": "project:go-health-me",
+    "rel": "IN_TRACK",
+    "to": "track:world"
+   },
+   {
+    "from": "project:go-health-me",
+    "rel": "IN_TRACK",
+    "to": "track:base"
+   },
+   {
+    "from": "judge:judge_11631c00",
+    "rel": "SCORED",
+    "to": "project:go-health-me",
+    "score": 81.4
+   },
+   {
+    "from": "judge:judge_e9c669c4",
+    "rel": "SCORED",
+    "to": "project:go-health-me",
+    "score": 72.12
+   },
+   {
+    "from": "judge:judge_c876a259",
+    "rel": "SCORED",
+    "to": "project:go-health-me",
+    "score": 76.32
+   },
+   {
+    "from": "project:go-health-me",
+    "rel": "USES",
+    "to": "tech:next.js"
+   },
+   {
+    "from": "project:go-health-me",
+    "rel": "USES",
+    "to": "tech:viem"
+   },
+   {
+    "from": "project:go-health-me",
+    "rel": "USES",
+    "to": "tech:@circle-fin/developer-controlled-wallets"
+   },
+   {
+    "from": "project:go-health-me",
+    "rel": "USES",
+    "to": "tech:@worldcoin/idkit"
+   },
+   {
+    "from": "project:go-health-me",
+    "rel": "USES",
+    "to": "tech:foundry"
+   },
+   {
+    "from": "project:fittercoin",
+    "rel": "IN_TRACK",
+    "to": "track:defi"
+   },
+   {
+    "from": "project:fittercoin",
+    "rel": "IN_TRACK",
+    "to": "track:0g"
+   },
+   {
+    "from": "project:fittercoin",
+    "rel": "IN_TRACK",
+    "to": "track:arkiv"
+   },
+   {
+    "from": "project:fittercoin",
+    "rel": "IN_TRACK",
+    "to": "track:ens"
+   },
+   {
+    "from": "project:fittercoin",
+    "rel": "IN_TRACK",
+    "to": "track:self"
+   },
+   {
+    "from": "project:fittercoin",
+    "rel": "IN_TRACK",
+    "to": "track:citrea"
+   },
+   {
+    "from": "judge:judge_11631c00",
+    "rel": "SCORED",
+    "to": "project:fittercoin",
+    "score": 44.2
+   },
+   {
+    "from": "judge:judge_e9c669c4",
+    "rel": "SCORED",
+    "to": "project:fittercoin",
+    "score": 25.09
+   },
+   {
+    "from": "judge:judge_c876a259",
+    "rel": "SCORED",
+    "to": "project:fittercoin",
+    "score": 38.29
+   },
+   {
+    "from": "project:fittercoin",
+    "rel": "USES",
+    "to": "tech:react"
+   },
+   {
+    "from": "project:fittercoin",
+    "rel": "USES",
+    "to": "tech:mediapipe"
+   },
+   {
+    "from": "project:fittercoin",
+    "rel": "USES",
+    "to": "tech:opencv-python"
+   },
+   {
+    "from": "project:fittercoin",
+    "rel": "USES",
+    "to": "tech:@google/genai"
+   },
+   {
+    "from": "project:fittercoin",
+    "rel": "USES",
+    "to": "tech:@selfxyz/qrcode"
+   },
+   {
+    "from": "project:mozark-app-studio",
+    "rel": "IN_TRACK",
+    "to": "track:ai-agents"
+   },
+   {
+    "from": "project:mozark-app-studio",
+    "rel": "IN_TRACK",
+    "to": "track:infra"
+   },
+   {
+    "from": "project:mozark-app-studio",
+    "rel": "IN_TRACK",
+    "to": "track:0g"
+   },
+   {
+    "from": "project:mozark-app-studio",
+    "rel": "IN_TRACK",
+    "to": "track:arkiv"
+   },
+   {
+    "from": "judge:judge_11631c00",
+    "rel": "SCORED",
+    "to": "project:mozark-app-studio",
+    "score": 75.48
+   },
+   {
+    "from": "judge:judge_e9c669c4",
+    "rel": "SCORED",
+    "to": "project:mozark-app-studio",
+    "score": 80.53
+   },
+   {
+    "from": "judge:judge_c876a259",
+    "rel": "SCORED",
+    "to": "project:mozark-app-studio",
+    "score": 79.26
+   },
+   {
+    "from": "project:mozark-app-studio",
+    "rel": "USES",
+    "to": "tech:appium"
+   },
+   {
+    "from": "project:mozark-app-studio",
+    "rel": "USES",
+    "to": "tech:playwright"
+   },
+   {
+    "from": "project:mozark-app-studio",
+    "rel": "USES",
+    "to": "tech:python"
+   },
+   {
+    "from": "project:qagent",
+    "rel": "IN_TRACK",
+    "to": "track:ai-agents"
+   },
+   {
+    "from": "project:qagent",
+    "rel": "IN_TRACK",
+    "to": "track:0g"
+   },
+   {
+    "from": "judge:judge_11631c00",
+    "rel": "SCORED",
+    "to": "project:qagent",
+    "score": 56.12
+   },
+   {
+    "from": "judge:judge_e9c669c4",
+    "rel": "SCORED",
+    "to": "project:qagent",
+    "score": 36.58
+   },
+   {
+    "from": "judge:judge_c876a259",
+    "rel": "SCORED",
+    "to": "project:qagent",
+    "score": 54.45
+   },
+   {
+    "from": "project:qagent",
+    "rel": "USES",
+    "to": "tech:next.js"
+   },
+   {
+    "from": "project:qagent",
+    "rel": "USES",
+    "to": "tech:octokit"
+   },
+   {
+    "from": "project:vaultline",
+    "rel": "IN_TRACK",
+    "to": "track:defi"
+   },
+   {
+    "from": "project:vaultline",
+    "rel": "IN_TRACK",
+    "to": "track:infra"
+   },
+   {
+    "from": "project:vaultline",
+    "rel": "IN_TRACK",
+    "to": "track:base"
+   },
+   {
+    "from": "project:vaultline",
+    "rel": "IN_TRACK",
+    "to": "track:ens"
+   },
+   {
+    "from": "judge:judge_11631c00",
+    "rel": "SCORED",
+    "to": "project:vaultline",
+    "score": 54.64
+   },
+   {
+    "from": "judge:judge_e9c669c4",
+    "rel": "SCORED",
+    "to": "project:vaultline",
+    "score": 78.02
+   },
+   {
+    "from": "judge:judge_c876a259",
+    "rel": "SCORED",
+    "to": "project:vaultline",
+    "score": 61.91
+   },
+   {
+    "from": "project:vaultline",
+    "rel": "USES",
+    "to": "tech:foundry"
+   },
+   {
+    "from": "project:vaultline",
+    "rel": "USES",
+    "to": "tech:viem"
+   },
+   {
+    "from": "project:splitsafe",
+    "rel": "IN_TRACK",
+    "to": "track:defi"
+   },
+   {
+    "from": "project:splitsafe",
+    "rel": "IN_TRACK",
+    "to": "track:base"
+   },
+   {
+    "from": "project:splitsafe",
+    "rel": "IN_TRACK",
+    "to": "track:ens"
+   },
+   {
+    "from": "judge:judge_11631c00",
+    "rel": "SCORED",
+    "to": "project:splitsafe",
+    "score": 75.76
+   },
+   {
+    "from": "judge:judge_e9c669c4",
+    "rel": "SCORED",
+    "to": "project:splitsafe",
+    "score": 60.09
+   },
+   {
+    "from": "judge:judge_c876a259",
+    "rel": "SCORED",
+    "to": "project:splitsafe",
+    "score": 66.27
+   },
+   {
+    "from": "project:splitsafe",
+    "rel": "USES",
+    "to": "tech:next.js"
+   },
+   {
+    "from": "project:splitsafe",
+    "rel": "USES",
+    "to": "tech:viem"
+   },
+   {
+    "from": "project:splitsafe",
+    "rel": "USES",
+    "to": "tech:foundry"
+   },
+   {
+    "from": "project:kirana-credit",
+    "rel": "IN_TRACK",
+    "to": "track:defi"
+   },
+   {
+    "from": "project:kirana-credit",
+    "rel": "IN_TRACK",
+    "to": "track:base"
+   },
+   {
+    "from": "project:kirana-credit",
+    "rel": "IN_TRACK",
+    "to": "track:arkiv"
+   },
+   {
+    "from": "judge:judge_11631c00",
+    "rel": "SCORED",
+    "to": "project:kirana-credit",
+    "score": 75.28
+   },
+   {
+    "from": "judge:judge_e9c669c4",
+    "rel": "SCORED",
+    "to": "project:kirana-credit",
+    "score": 71.11
+   },
+   {
+    "from": "judge:judge_c876a259",
+    "rel": "SCORED",
+    "to": "project:kirana-credit",
+    "score": 82.46
+   },
+   {
+    "from": "project:kirana-credit",
+    "rel": "USES",
+    "to": "tech:next.js"
+   },
+   {
+    "from": "project:kirana-credit",
+    "rel": "USES",
+    "to": "tech:foundry"
+   },
+   {
+    "from": "project:metromint",
+    "rel": "IN_TRACK",
+    "to": "track:infra"
+   },
+   {
+    "from": "project:metromint",
+    "rel": "IN_TRACK",
+    "to": "track:base"
+   },
+   {
+    "from": "judge:judge_11631c00",
+    "rel": "SCORED",
+    "to": "project:metromint",
+    "score": 54.32
+   },
+   {
+    "from": "judge:judge_e9c669c4",
+    "rel": "SCORED",
+    "to": "project:metromint",
+    "score": 50.17
+   },
+   {
+    "from": "judge:judge_c876a259",
+    "rel": "SCORED",
+    "to": "project:metromint",
+    "score": 59.04
+   },
+   {
+    "from": "project:metromint",
+    "rel": "USES",
+    "to": "tech:react"
+   },
+   {
+    "from": "project:metromint",
+    "rel": "USES",
+    "to": "tech:viem"
+   },
+   {
+    "from": "project:mozark-app-studio",
+    "rel": "BEAT",
+    "to": "project:qagent"
+   },
+   {
+    "from": "project:splitsafe",
+    "rel": "BEAT",
+    "to": "project:vaultline"
+   }
+  ]
+ },
+ "judges": [
+  {
+   "judgeId": "judge_11631c00",
+   "name": "Priya Raman",
+   "avg": 64.65,
+   "n": 8,
+   "vsPanel": 1.78
+  },
+  {
+   "judgeId": "judge_e9c669c4",
+   "name": "Marcus Lee",
+   "avg": 59.21,
+   "n": 8,
+   "vsPanel": -3.66
+  },
+  {
+   "judgeId": "judge_c876a259",
+   "name": "Ana Okafor",
+   "avg": 64.75,
+   "n": 8,
+   "vsPanel": 1.88
+  }
+ ],
+ "projects": {
+  "go-health-me": {
+   "explain": {
+    "panelAvg": 76.61,
+    "scores": [
+     {
+      "judgeId": "judge_11631c00",
+      "name": "Priya Raman",
+      "score": 81.4
+     },
+     {
+      "judgeId": "judge_e9c669c4",
+      "name": "Marcus Lee",
+      "score": 72.12
+     },
+     {
+      "judgeId": "judge_c876a259",
+      "name": "Ana Okafor",
+      "score": 76.32
+     }
+    ],
+    "claims": {
+     "supported": 11,
+     "contradicted": 2
+    },
+    "contradicted": [
+     "Unconfigured skeleton loading bug",
+     "Mock proof bypass in development"
+    ],
+    "beat": [],
+    "lostTo": [],
+    "tech": [
+     "next.js",
+     "viem",
+     "@circle-fin/developer-controlled-wallets",
+     "@worldcoin/idkit",
+     "foundry"
+    ]
+   },
+   "similar": [
+    {
+     "projectId": "fittercoin",
+     "name": "FitterCoin",
+     "similarity": 0.91
+    },
+    {
+     "projectId": "mozark-app-studio",
+     "name": "Mozark App Studio",
+     "similarity": 0.6900000000000001
+    },
+    {
+     "projectId": "qagent",
+     "name": "QAgent",
+     "similarity": 0.7000000000000001
+    }
+   ]
+  },
+  "fittercoin": {
+   "explain": {
+    "panelAvg": 35.86,
+    "scores": [
+     {
+      "judgeId": "judge_11631c00",
+      "name": "Priya Raman",
+      "score": 44.2
+     },
+     {
+      "judgeId": "judge_e9c669c4",
+      "name": "Marcus Lee",
+      "score": 25.09
+     },
+     {
+      "judgeId": "judge_c876a259",
+      "name": "Ana Okafor",
+      "score": 38.29
+     }
+    ],
+    "claims": {
+     "supported": 2,
+     "contradicted": 4
+    },
+    "contradicted": [
+     "AI tailors workouts to each user's age, gender and location.",
+     "Stake to enter: contracts escrow every entry.",
+     "Spectators bet on contestants and settle instantly.",
+     "Work out with your phone or laptop camera."
+    ],
+    "beat": [],
+    "lostTo": [],
+    "tech": [
+     "react",
+     "mediapipe",
+     "opencv-python",
+     "@google/genai",
+     "@selfxyz/qrcode"
+    ]
+   },
+   "similar": [
+    {
+     "projectId": "go-health-me",
+     "name": "Go Health Me",
+     "similarity": 0.91
+    },
+    {
+     "projectId": "mozark-app-studio",
+     "name": "Mozark App Studio",
+     "similarity": 0.63
+    },
+    {
+     "projectId": "qagent",
+     "name": "QAgent",
+     "similarity": 0.64
+    }
+   ]
+  },
+  "mozark-app-studio": {
+   "explain": {
+    "panelAvg": 78.42,
+    "scores": [
+     {
+      "judgeId": "judge_11631c00",
+      "name": "Priya Raman",
+      "score": 75.48
+     },
+     {
+      "judgeId": "judge_e9c669c4",
+      "name": "Marcus Lee",
+      "score": 80.53
+     },
+     {
+      "judgeId": "judge_c876a259",
+      "name": "Ana Okafor",
+      "score": 79.26
+     }
+    ],
+    "claims": {
+     "supported": 6,
+     "contradicted": 1
+    },
+    "contradicted": [
+     "API keyword tests hit real endpoints."
+    ],
+    "beat": [
+     "qagent"
+    ],
+    "lostTo": [],
+    "tech": [
+     "appium",
+     "playwright",
+     "python"
+    ]
+   },
+   "similar": [
+    {
+     "projectId": "go-health-me",
+     "name": "Go Health Me",
+     "similarity": 0.66
+    },
+    {
+     "projectId": "fittercoin",
+     "name": "FitterCoin",
+     "similarity": 0.6900000000000001
+    },
+    {
+     "projectId": "qagent",
+     "name": "QAgent",
+     "similarity": 0.91
+    }
+   ]
+  },
+  "qagent": {
+   "explain": {
+    "panelAvg": 49.05,
+    "scores": [
+     {
+      "judgeId": "judge_11631c00",
+      "name": "Priya Raman",
+      "score": 56.12
+     },
+     {
+      "judgeId": "judge_e9c669c4",
+      "name": "Marcus Lee",
+      "score": 36.58
+     },
+     {
+      "judgeId": "judge_c876a259",
+      "name": "Ana Okafor",
+      "score": 54.45
+     }
+    ],
+    "claims": {
+     "supported": 2,
+     "contradicted": 2
+    },
+    "contradicted": [
+     "Clicks through a preview like a user.",
+     "Tested on 40 open-source repos."
+    ],
+    "beat": [],
+    "lostTo": [
+     "mozark-app-studio"
+    ],
+    "tech": [
+     "next.js",
+     "octokit"
+    ]
+   },
+   "similar": [
+    {
+     "projectId": "go-health-me",
+     "name": "Go Health Me",
+     "similarity": 0.7200000000000001
+    },
+    {
+     "projectId": "fittercoin",
+     "name": "FitterCoin",
+     "similarity": 0.64
+    },
+    {
+     "projectId": "mozark-app-studio",
+     "name": "Mozark App Studio",
+     "similarity": 0.91
+    }
+   ]
+  },
+  "vaultline": {
+   "explain": {
+    "panelAvg": 64.86,
+    "scores": [
+     {
+      "judgeId": "judge_11631c00",
+      "name": "Priya Raman",
+      "score": 54.64
+     },
+     {
+      "judgeId": "judge_e9c669c4",
+      "name": "Marcus Lee",
+      "score": 78.02
+     },
+     {
+      "judgeId": "judge_c876a259",
+      "name": "Ana Okafor",
+      "score": 61.91
+     }
+    ],
+    "claims": {
+     "supported": 5,
+     "contradicted": 1
+    },
+    "contradicted": [
+     "Deposit from any Safe in one click."
+    ],
+    "beat": [],
+    "lostTo": [
+     "splitsafe"
+    ],
+    "tech": [
+     "foundry",
+     "viem"
+    ]
+   },
+   "similar": [
+    {
+     "projectId": "go-health-me",
+     "name": "Go Health Me",
+     "similarity": 0.65
+    },
+    {
+     "projectId": "fittercoin",
+     "name": "FitterCoin",
+     "similarity": 0.64
+    },
+    {
+     "projectId": "mozark-app-studio",
+     "name": "Mozark App Studio",
+     "similarity": 0.73
+    }
+   ]
+  },
+  "splitsafe": {
+   "explain": {
+    "panelAvg": 67.37,
+    "scores": [
+     {
+      "judgeId": "judge_11631c00",
+      "name": "Priya Raman",
+      "score": 75.76
+     },
+     {
+      "judgeId": "judge_e9c669c4",
+      "name": "Marcus Lee",
+      "score": 60.09
+     },
+     {
+      "judgeId": "judge_c876a259",
+      "name": "Ana Okafor",
+      "score": 66.27
+     }
+    ],
+    "claims": {
+     "supported": 4,
+     "contradicted": 1
+    },
+    "contradicted": [
+     "Only the bill's creator can settle."
+    ],
+    "beat": [
+     "vaultline"
+    ],
+    "lostTo": [],
+    "tech": [
+     "next.js",
+     "viem",
+     "foundry"
+    ]
+   },
+   "similar": [
+    {
+     "projectId": "go-health-me",
+     "name": "Go Health Me",
+     "similarity": 0.74
+    },
+    {
+     "projectId": "fittercoin",
+     "name": "FitterCoin",
+     "similarity": 0.74
+    },
+    {
+     "projectId": "vaultline",
+     "name": "Vaultline",
+     "similarity": 0.91
+    }
+   ]
+  },
+  "kirana-credit": {
+   "explain": {
+    "panelAvg": 76.28,
+    "scores": [
+     {
+      "judgeId": "judge_11631c00",
+      "name": "Priya Raman",
+      "score": 75.28
+     },
+     {
+      "judgeId": "judge_e9c669c4",
+      "name": "Marcus Lee",
+      "score": 71.11
+     },
+     {
+      "judgeId": "judge_c876a259",
+      "name": "Ana Okafor",
+      "score": 82.46
+     }
+    ],
+    "claims": {
+     "supported": 4,
+     "contradicted": 0
+    },
+    "contradicted": [],
+    "beat": [],
+    "lostTo": [],
+    "tech": [
+     "next.js",
+     "foundry"
+    ]
+   },
+   "similar": [
+    {
+     "projectId": "go-health-me",
+     "name": "Go Health Me",
+     "similarity": 0.7100000000000001
+    },
+    {
+     "projectId": "fittercoin",
+     "name": "FitterCoin",
+     "similarity": 0.67
+    },
+    {
+     "projectId": "mozark-app-studio",
+     "name": "Mozark App Studio",
+     "similarity": 0.67
+    }
+   ]
+  },
+  "metromint": {
+   "explain": {
+    "panelAvg": 54.51,
+    "scores": [
+     {
+      "judgeId": "judge_11631c00",
+      "name": "Priya Raman",
+      "score": 54.32
+     },
+     {
+      "judgeId": "judge_e9c669c4",
+      "name": "Marcus Lee",
+      "score": 50.17
+     },
+     {
+      "judgeId": "judge_c876a259",
+      "name": "Ana Okafor",
+      "score": 59.04
+     }
+    ],
+    "claims": {
+     "supported": 2,
+     "contradicted": 2
+    },
+    "contradicted": [
+     "Tickets mint as NFTs on Base.",
+     "Works on every phone."
+    ],
+    "beat": [],
+    "lostTo": [],
+    "tech": [
+     "react",
+     "viem"
+    ]
+   },
+   "similar": [
+    {
+     "projectId": "go-health-me",
+     "name": "Go Health Me",
+     "similarity": 0.65
+    },
+    {
+     "projectId": "mozark-app-studio",
+     "name": "Mozark App Studio",
+     "similarity": 0.7100000000000001
+    },
+    {
+     "projectId": "vaultline",
+     "name": "Vaultline",
+     "similarity": 0.73
+    }
+   ]
+  }
+ }
+}

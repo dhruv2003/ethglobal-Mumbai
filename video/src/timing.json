@@ -1,0 +1,131 @@
+{
+  "fps": 30,
+  "total": 1800,
+  "scenes": {
+    "skit": [
+      0,
+      480
+    ],
+    "reveal": [
+      480,
+      105
+    ],
+    "submit": [
+      585,
+      90
+    ],
+    "agents": [
+      675,
+      180
+    ],
+    "devices": [
+      855,
+      180
+    ],
+    "judges": [
+      1035,
+      195
+    ],
+    "fight": [
+      1230,
+      300
+    ],
+    "bet": [
+      1530,
+      150
+    ],
+    "close": [
+      1680,
+      120
+    ]
+  },
+  "fight": {
+    "vs": 14,
+    "countdown": [
+      36,
+      48,
+      60
+    ],
+    "go": 72,
+    "hits": [
+      {
+        "at": 86,
+        "by": "a",
+        "dmg": 16,
+        "label": "+9 Architecture",
+        "judge": 0,
+        "fx": "POW!",
+        "score": 9
+      },
+      {
+        "at": 102,
+        "by": "a",
+        "dmg": 12,
+        "label": "+8 Clean code",
+        "judge": 2,
+        "fx": "BAM!",
+        "score": 8
+      },
+      {
+        "at": 122,
+        "by": "b",
+        "dmg": 18,
+        "label": "+7 UX polish",
+        "judge": 0,
+        "fx": "WHACK!",
+        "score": 7
+      },
+      {
+        "at": 156,
+        "by": "a",
+        "dmg": 20,
+        "label": "+9 Tests pass",
+        "judge": 2,
+        "fx": "WHAM!",
+        "score": 9
+      },
+      {
+        "at": 176,
+        "by": "b",
+        "dmg": 10,
+        "label": "-6 Claim not proven",
+        "judge": 1,
+        "fx": "OOF!",
+        "score": 4
+      },
+      {
+        "at": 212,
+        "by": "a",
+        "dmg": 52,
+        "label": "+10 Live on-chain",
+        "judge": 1,
+        "fx": "K-BOOM!",
+        "score": 10,
+        "super": true
+      }
+    ],
+    "superCharge": 190,
+    "ko": 234
+  },
+  "agents": {
+    "fan": 40,
+    "raceStart": 62,
+    "finish": [
+      100,
+      107,
+      103,
+      111,
+      97,
+      113
+    ],
+    "zStart": -1100,
+    "zEnd": 500,
+    "gates": [
+      -650,
+      -150,
+      300
+    ],
+    "merge": 126,
+    "dossier": 134
+  }
+}

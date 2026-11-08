@@ -1,0 +1,4965 @@
+{
+ "1-0": {
+  "status": "done",
+  "live": true,
+  "tournamentId": "1",
+  "match": 0,
+  "a": 0,
+  "b": 1,
+  "tagline": "Same pitch on stage. Only one works.",
+  "cast": {
+   "judge_11631c00": {
+    "name": "Priya Raman",
+    "focus": "Product lead"
+   },
+   "judge_e9c669c4": {
+    "name": "Marcus Lee",
+    "focus": "Smart-contract engineer"
+   },
+   "judge_c876a259": {
+    "name": "Ana Okafor",
+    "focus": "Investor"
+   }
+  },
+  "judges": {
+   "judge_11631c00": {
+    "name": "Priya Raman",
+    "focus": "Product lead"
+   },
+   "judge_e9c669c4": {
+    "name": "Marcus Lee",
+    "focus": "Smart-contract engineer"
+   },
+   "judge_c876a259": {
+    "name": "Ana Okafor",
+    "focus": "Investor"
+   }
+  },
+  "revealAt": 0,
+  "ranAt": "2026-11-06T17:52:21.000Z",
+  "id": "37d160e3-adfb-45bf-a654-8240fe52fe6b",
+  "events": [
+   {
+    "seq": 1,
+    "ts": "2026-11-06T17:40:11.000Z",
+    "type": "intro"
+   },
+   {
+    "seq": 2,
+    "ts": "2026-11-06T17:40:22.000Z",
+    "type": "pitch",
+    "actor": "a",
+    "text": "Stake on your own sleep or workouts. Your wearable proves it, and SPOTTER pays whoever hit. Open gohealthme.app; it's live.",
+    "proof": {
+     "requestId": "5ad27761-26b1-4991-a6eb-52fd5cc17ff9",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 3,
+    "ts": "2026-11-06T17:40:33.000Z",
+    "type": "pitch",
+    "actor": "b",
+    "text": "Get paid in crypto for real workouts. AI plans your training, the camera counts your reps, and fans bet on who wins.",
+    "proof": {
+     "requestId": "4f5342e0-721f-4f27-ae52-4b2d8629a19b",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 4,
+    "ts": "2026-11-06T17:40:44.000Z",
+    "type": "round_start",
+    "round": "product"
+   },
+   {
+    "seq": 5,
+    "ts": "2026-11-06T17:40:55.000Z",
+    "type": "question",
+    "round": "product",
+    "actor": "judge_11631c00",
+    "text": "Show me a new user's first five minutes. Where can I try it?",
+    "proof": {
+     "requestId": "b20b089e-db02-460a-a1db-1f20c6551449",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 6,
+    "ts": "2026-11-06T17:41:06.000Z",
+    "type": "answer",
+    "round": "product",
+    "actor": "a",
+    "text": "On gohealthme.app: pick a challenge, stake test USDC, connect a wearable. Our live test ran all 8 demo steps on Windows, Android and iPhone.",
+    "proof": {
+     "requestId": "1fc8df18-1f86-4fb4-a526-edaa3fb6ba7c",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 7,
+    "ts": "2026-11-06T17:41:17.000Z",
+    "type": "answer",
+    "round": "product",
+    "actor": "b",
+    "text": "Sign in with Self, get your AI plan, join a contest, start the camera. It's all in our demo video.",
+    "proof": {
+     "requestId": "b42eccd2-d56c-4e41-a811-dbf563b2bec9",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 8,
+    "ts": "2026-11-06T17:41:28.000Z",
+    "type": "challenge",
+    "round": "product",
+    "actor": "a",
+    "target": "b",
+    "challengeId": "product-1",
+    "move": "Feature Check",
+    "text": "FitterCoin's live test paid a 0.00000001 ETH stake and escrowed nothing.",
+    "evidence": [
+     {
+      "kind": "evidence",
+      "label": "B · live test d6: tx confirmed, 0 ETH escrowed"
+     }
+    ],
+    "proof": {
+     "requestId": "28bb7a77-d0ae-4e48-a931-444f853d503f",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 9,
+    "ts": "2026-11-06T17:41:39.000Z",
+    "type": "rebuttal",
+    "round": "product",
+    "actor": "b",
+    "challengeId": "product-1",
+    "text": "The checks are off while we test. The flow is all there.",
+    "proof": {
+     "requestId": "ee80bbb9-63ad-4e23-ab18-7ec4dacb70c1",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 10,
+    "ts": "2026-11-06T17:41:50.000Z",
+    "type": "ruling",
+    "round": "product",
+    "challengeId": "product-1",
+    "votes": {
+     "judge_11631c00": "upheld",
+     "judge_e9c669c4": "upheld",
+     "judge_c876a259": "upheld"
+    },
+    "reason": "The screens load, but the paid entry the pitch depends on is free.",
+    "proof": {
+     "requestId": "5fe8a64b-505b-47a7-ad53-8e52ba728773",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 11,
+    "ts": "2026-11-06T17:42:01.000Z",
+    "type": "challenge",
+    "round": "product",
+    "actor": "b",
+    "target": "a",
+    "challengeId": "product-2",
+    "move": "User Story Sweep",
+    "text": "Who stakes money on their sleep? That's a niche.",
+    "evidence": [],
+    "proof": {
+     "requestId": "584c6f8d-9823-43e4-a57c-91141f895efa",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 12,
+    "ts": "2026-11-06T17:42:12.000Z",
+    "type": "rebuttal",
+    "round": "product",
+    "actor": "a",
+    "challengeId": "product-2",
+    "text": "Anyone with a wearable who's broken a promise to themselves. 16 of 16 flows work today on every device we tested.",
+    "proof": {
+     "requestId": "ce8af569-eeaf-44c7-ab6a-0d7c7cff6b16",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 13,
+    "ts": "2026-11-06T17:42:23.000Z",
+    "type": "ruling",
+    "round": "product",
+    "challengeId": "product-2",
+    "votes": {
+     "judge_11631c00": "rejected",
+     "judge_e9c669c4": "rejected",
+     "judge_c876a259": "rejected"
+    },
+    "reason": "The journey is clear and runs end to end on both devices.",
+    "proof": {
+     "requestId": "fab080fc-5b52-4742-a3bf-581fb143d00d",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 14,
+    "ts": "2026-11-06T17:42:34.000Z",
+    "type": "round_sealed",
+    "round": "product",
+    "scores": {
+     "a": [
+      86,
+      80,
+      84
+     ],
+     "b": [
+      44,
+      36,
+      42
+     ]
+    }
+   },
+   {
+    "seq": 15,
+    "ts": "2026-11-06T17:42:45.000Z",
+    "type": "round_start",
+    "round": "ui"
+   },
+   {
+    "seq": 16,
+    "ts": "2026-11-06T17:42:56.000Z",
+    "type": "question",
+    "round": "ui",
+    "actor": "judge_11631c00",
+    "text": "Which screen does a user see most, and does it work on a phone?",
+    "proof": {
+     "requestId": "c61a3d46-c2fb-4e74-a2e6-b25883179fec",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 17,
+    "ts": "2026-11-06T17:43:07.000Z",
+    "type": "answer",
+    "round": "ui",
+    "actor": "a",
+    "text": "The challenges list. Our Android and iPhone runs passed all 16 steps, with no sideways scroll.",
+    "proof": {
+     "requestId": "e0aff63f-75e5-45dc-a28f-663b6c102b3c",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 18,
+    "ts": "2026-11-06T17:43:18.000Z",
+    "type": "answer",
+    "round": "ui",
+    "actor": "b",
+    "text": "The contest arena, built around the camera view.",
+    "proof": {
+     "requestId": "826b9d56-edc0-4271-a28f-b0b9c2d0cb6d",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 19,
+    "ts": "2026-11-06T17:43:29.000Z",
+    "type": "challenge",
+    "round": "ui",
+    "actor": "a",
+    "target": "b",
+    "challengeId": "ui-1",
+    "move": "Evidence Challenge",
+    "text": "FitterCoin's rep counter opens a desktop window at localhost:5001. A phone can't reach it.",
+    "evidence": [
+     {
+      "kind": "file",
+      "label": "B:E5 · frontend/src/pages/ContestsPage.tsx:243"
+     }
+    ],
+    "proof": {
+     "requestId": "ed4c80f1-5e36-4fd9-a219-ff03304e4c5c",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 20,
+    "ts": "2026-11-06T17:43:40.000Z",
+    "type": "rebuttal",
+    "round": "ui",
+    "actor": "b",
+    "challengeId": "ui-1",
+    "text": "Mobile is on our roadmap.",
+    "proof": {
+     "requestId": "95eb7adc-d0ad-45fc-afbc-9ef33ef5f541",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 21,
+    "ts": "2026-11-06T17:43:51.000Z",
+    "type": "ruling",
+    "round": "ui",
+    "challengeId": "ui-1",
+    "votes": {
+     "judge_11631c00": "upheld",
+     "judge_e9c669c4": "upheld",
+     "judge_c876a259": "partially_upheld"
+    },
+    "reason": "The only rep counter is a desktop app. There's no phone path in the code.",
+    "proof": {
+     "requestId": "5a6fb3db-33c4-47f3-ae93-8459a5e5f3e7",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 22,
+    "ts": "2026-11-06T17:44:02.000Z",
+    "type": "penalty",
+    "round": "ui",
+    "target": "b",
+    "judge": "judge_11631c00",
+    "reason": "Your UI breaks on mobile. Every demo frame is a desktop capture, and the camera only runs in a localhost window.",
+    "evidence": [
+     {
+      "kind": "file",
+      "label": "B:E5 · ContestsPage.tsx:243"
+     }
+    ],
+    "proof": {
+     "requestId": "4b2176ec-9ca8-415f-aa70-c51b8a18c959",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 23,
+    "ts": "2026-11-06T17:44:13.000Z",
+    "type": "round_sealed",
+    "round": "ui",
+    "scores": {
+     "a": [
+      88,
+      80,
+      84
+     ],
+     "b": [
+      38,
+      34,
+      40
+     ]
+    }
+   },
+   {
+    "seq": 24,
+    "ts": "2026-11-06T17:44:24.000Z",
+    "type": "round_start",
+    "round": "engineering"
+   },
+   {
+    "seq": 25,
+    "ts": "2026-11-06T17:44:35.000Z",
+    "type": "question",
+    "round": "engineering",
+    "actor": "judge_e9c669c4",
+    "text": "Show me the line where the money moves.",
+    "proof": {
+     "requestId": "93688dbd-85e5-4955-ace6-bba3dcbdecc4",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 26,
+    "ts": "2026-11-06T17:44:46.000Z",
+    "type": "answer",
+    "round": "engineering",
+    "actor": "a",
+    "text": "HealthPoolsV3.sol:300 pulls the stake. Payouts land in an owed[] ledger at line 115 and winners withdraw.",
+    "proof": {
+     "requestId": "f4c1fb75-9b26-4d3c-a700-639136bee785",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 27,
+    "ts": "2026-11-06T17:44:57.000Z",
+    "type": "answer",
+    "round": "engineering",
+    "actor": "b",
+    "text": "bet.sol settles spectator bets and contest.sol escrows the stakes.",
+    "proof": {
+     "requestId": "c6d14efd-f1b1-4a07-a7a5-4404f27140e2",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 28,
+    "ts": "2026-11-06T17:45:08.000Z",
+    "type": "challenge",
+    "round": "engineering",
+    "actor": "a",
+    "target": "b",
+    "challengeId": "engineering-1",
+    "move": "Stack Trace Strike",
+    "text": "FitterCoin's settle() is a view function. It can't pay anyone.",
+    "evidence": [
+     {
+      "kind": "file",
+      "label": "B:E4 · contract/solidity/bet.sol:42-59"
+     }
+    ],
+    "proof": {
+     "requestId": "d13e3bd2-4263-4d92-a9ce-e85e7651ecb7",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 29,
+    "ts": "2026-11-06T17:45:19.000Z",
+    "type": "rebuttal",
+    "round": "engineering",
+    "actor": "b",
+    "challengeId": "engineering-1",
+    "text": "The settlement logic is written, just commented out while we tested.",
+    "proof": {
+     "requestId": "a152514a-041a-4a93-a7f8-bf2ffce0243e",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 30,
+    "ts": "2026-11-06T17:45:30.000Z",
+    "type": "ruling",
+    "round": "engineering",
+    "challengeId": "engineering-1",
+    "votes": {
+     "judge_11631c00": "upheld",
+     "judge_e9c669c4": "upheld",
+     "judge_c876a259": "upheld"
+    },
+    "reason": "Commented-out code settles nothing: bet.sol:42-59 changes no state.",
+    "proof": {
+     "requestId": "0dbff96a-c91f-42a8-a1e9-42ebc837b2c9",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 31,
+    "ts": "2026-11-06T17:45:41.000Z",
+    "type": "challenge",
+    "round": "engineering",
+    "actor": "b",
+    "target": "a",
+    "challengeId": "engineering-2",
+    "move": "Trust Exploit",
+    "text": "SPOTTER is one agent holding the payout keys. That's a single point of failure.",
+    "evidence": [
+     {
+      "kind": "file",
+      "label": "A:E3 · app/lib/server/agent/wallet.ts:1"
+     }
+    ],
+    "proof": {
+     "requestId": "542c145e-4f74-4830-acf3-b0e1807f644a",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 32,
+    "ts": "2026-11-06T17:45:52.000Z",
+    "type": "rebuttal",
+    "round": "engineering",
+    "actor": "a",
+    "challengeId": "engineering-2",
+    "text": "Owner, oracle and settler are three distinct keys, enforced at HealthPoolsV3.sol:180.",
+    "proof": {
+     "requestId": "b9c63290-e791-45cb-adf7-f9ce41ef9e6a",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 33,
+    "ts": "2026-11-06T17:46:03.000Z",
+    "type": "ruling",
+    "round": "engineering",
+    "challengeId": "engineering-2",
+    "votes": {
+     "judge_11631c00": "partially_upheld",
+     "judge_e9c669c4": "partially_upheld",
+     "judge_c876a259": "rejected"
+    },
+    "reason": "Roles are split in code, but SPOTTER is still one operator.",
+    "proof": {
+     "requestId": "2e9f0c82-fc6a-4760-a844-dad27aef6f59",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 34,
+    "ts": "2026-11-06T17:46:14.000Z",
+    "type": "penalty",
+    "round": "engineering",
+    "target": "b",
+    "judge": "judge_e9c669c4",
+    "reason": "That feature has no code behind it. Spectator betting is your headline, and settle() is an empty view.",
+    "evidence": [
+     {
+      "kind": "file",
+      "label": "B:E4 · contract/solidity/bet.sol:42-59"
+     }
+    ],
+    "proof": {
+     "requestId": "085cf4e0-a197-451a-a64e-5e05d42c628c",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 35,
+    "ts": "2026-11-06T17:46:25.000Z",
+    "type": "round_sealed",
+    "round": "engineering",
+    "scores": {
+     "a": [
+      78,
+      76,
+      76
+     ],
+     "b": [
+      30,
+      16,
+      28
+     ]
+    }
+   },
+   {
+    "seq": 36,
+    "ts": "2026-11-06T17:46:36.000Z",
+    "type": "round_start",
+    "round": "innovation"
+   },
+   {
+    "seq": 37,
+    "ts": "2026-11-06T17:46:47.000Z",
+    "type": "question",
+    "round": "innovation",
+    "actor": "judge_c876a259",
+    "text": "What can you do that a step-counter app can't?",
+    "proof": {
+     "requestId": "1cb7975b-9570-4054-afdf-59ad6c8cc5b2",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 38,
+    "ts": "2026-11-06T17:46:58.000Z",
+    "type": "answer",
+    "round": "innovation",
+    "actor": "a",
+    "text": "Money on the line, proof from the wearable, and your health data never touches the chain. Only the verdict does.",
+    "proof": {
+     "requestId": "25890d02-ad33-427c-a2da-c796f1b2a620",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 39,
+    "ts": "2026-11-06T17:47:09.000Z",
+    "type": "answer",
+    "round": "innovation",
+    "actor": "b",
+    "text": "AI training plans, live rep counting and a betting arena, all in one app.",
+    "proof": {
+     "requestId": "00192700-7b58-4538-a625-fc8dfb544bae",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 40,
+    "ts": "2026-11-06T17:47:20.000Z",
+    "type": "challenge",
+    "round": "innovation",
+    "actor": "b",
+    "target": "a",
+    "challengeId": "innovation-1",
+    "move": "Copycat Counter",
+    "text": "Stake-on-yourself apps exist. StickK did this in 2008.",
+    "evidence": [],
+    "proof": {
+     "requestId": "51e628ca-8eab-45b5-ab1d-be03e00a01e1",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 41,
+    "ts": "2026-11-06T17:47:31.000Z",
+    "type": "rebuttal",
+    "round": "innovation",
+    "actor": "a",
+    "challengeId": "innovation-1",
+    "text": "StickK trusts your word. We settle on wearable proof, on chain, without your health data.",
+    "proof": {
+     "requestId": "77524601-d3d6-4106-a33a-c4784ec28c08",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 42,
+    "ts": "2026-11-06T17:47:42.000Z",
+    "type": "ruling",
+    "round": "innovation",
+    "challengeId": "innovation-1",
+    "votes": {
+     "judge_11631c00": "rejected",
+     "judge_e9c669c4": "rejected",
+     "judge_c876a259": "rejected"
+    },
+    "reason": "Wearable-verified, private settlement is a real step past honour-system apps.",
+    "proof": {
+     "requestId": "adc2af5a-ce8e-4b5c-a916-a2764d9c1a8b",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 43,
+    "ts": "2026-11-06T17:47:53.000Z",
+    "type": "challenge",
+    "round": "innovation",
+    "actor": "a",
+    "target": "b",
+    "challengeId": "innovation-2",
+    "move": "Feature Check",
+    "text": "FitterCoin's AI coach gets hardcoded strings and an empty API key.",
+    "evidence": [
+     {
+      "kind": "file",
+      "label": "B:E1 · frontend/src/pages/AuthPage.tsx:57"
+     }
+    ],
+    "proof": {
+     "requestId": "5fabe3b9-d578-4189-a797-9ea7b06bf0f7",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 44,
+    "ts": "2026-11-06T17:48:04.000Z",
+    "type": "rebuttal",
+    "round": "innovation",
+    "actor": "b",
+    "challengeId": "innovation-2",
+    "text": "We hit the free-tier limit, so we stubbed it for the demo.",
+    "proof": {
+     "requestId": "708c9cee-6bdc-4e57-aa28-a5172e548543",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 45,
+    "ts": "2026-11-06T17:48:15.000Z",
+    "type": "ruling",
+    "round": "innovation",
+    "challengeId": "innovation-2",
+    "votes": {
+     "judge_11631c00": "upheld",
+     "judge_e9c669c4": "upheld",
+     "judge_c876a259": "partially_upheld"
+    },
+    "reason": "Personalisation is the pitch, and the code passes fixed strings to an empty key.",
+    "proof": {
+     "requestId": "911a3ab9-789e-4e3a-aa3f-0239ac1ef831",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 46,
+    "ts": "2026-11-06T17:48:26.000Z",
+    "type": "round_sealed",
+    "round": "innovation",
+    "scores": {
+     "a": [
+      80,
+      72,
+      82
+     ],
+     "b": [
+      44,
+      36,
+      46
+     ]
+    }
+   },
+   {
+    "seq": 47,
+    "ts": "2026-11-06T17:48:37.000Z",
+    "type": "round_start",
+    "round": "feasibility"
+   },
+   {
+    "seq": 48,
+    "ts": "2026-11-06T17:48:48.000Z",
+    "type": "question",
+    "round": "feasibility",
+    "actor": "judge_c876a259",
+    "text": "If a thousand people sign up tomorrow, what breaks first?",
+    "proof": {
+     "requestId": "261f42ac-e217-43fa-ae4b-0ca941d8938c",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 49,
+    "ts": "2026-11-06T17:48:59.000Z",
+    "type": "answer",
+    "round": "feasibility",
+    "actor": "a",
+    "text": "Wearable API rate limits. The app itself is live on Base Sepolia and runs today.",
+    "proof": {
+     "requestId": "9ed5b7bf-7cd8-4310-a9c5-58803e271628",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 50,
+    "ts": "2026-11-06T17:49:10.000Z",
+    "type": "answer",
+    "round": "feasibility",
+    "actor": "b",
+    "text": "We'd move contests to mainnet and scale the Flask server.",
+    "proof": {
+     "requestId": "faf2b4ce-d17e-479d-aea1-3415b3328f80",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 51,
+    "ts": "2026-11-06T17:49:21.000Z",
+    "type": "challenge",
+    "round": "feasibility",
+    "actor": "a",
+    "target": "b",
+    "challengeId": "feasibility-1",
+    "move": "Runway Check",
+    "text": "FitterCoin doesn't enforce stakes. Every require in joinContest is commented out.",
+    "evidence": [
+     {
+      "kind": "file",
+      "label": "B:E3 · contract/solidity/contest.sol:60-66"
+     }
+    ],
+    "proof": {
+     "requestId": "8a9a3ac4-60a4-47b1-ad34-ca6d0edd70b4",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 52,
+    "ts": "2026-11-06T17:49:32.000Z",
+    "type": "rebuttal",
+    "round": "feasibility",
+    "actor": "b",
+    "challengeId": "feasibility-1",
+    "text": "We'd switch them back on before launch.",
+    "proof": {
+     "requestId": "e3c0d96b-d37f-423d-a80f-29fcd70fa8c6",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 53,
+    "ts": "2026-11-06T17:49:43.000Z",
+    "type": "ruling",
+    "round": "feasibility",
+    "challengeId": "feasibility-1",
+    "votes": {
+     "judge_11631c00": "upheld",
+     "judge_e9c669c4": "upheld",
+     "judge_c876a259": "upheld"
+    },
+    "reason": "Free entry to a paid contest breaks the business on day one.",
+    "proof": {
+     "requestId": "4569edc8-5bd1-4c66-acf3-27921a1db1d0",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 54,
+    "ts": "2026-11-06T17:49:54.000Z",
+    "type": "penalty",
+    "round": "feasibility",
+    "target": "b",
+    "judge": "judge_c876a259",
+    "reason": "Your project doesn't work in production. The live app takes stakes it never holds and pays out bets with nothing.",
+    "evidence": [
+     {
+      "kind": "evidence",
+      "label": "B · live test f4: winning bet paid 0 ETH"
+     },
+     {
+      "kind": "file",
+      "label": "B:E3 · contest.sol:60-66"
+     }
+    ],
+    "proof": {
+     "requestId": "0d39f9b1-6653-4dc3-ae70-b50bcf9cf5b1",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 55,
+    "ts": "2026-11-06T17:50:05.000Z",
+    "type": "round_sealed",
+    "round": "feasibility",
+    "scores": {
+     "a": [
+      76,
+      74,
+      80
+     ],
+     "b": [
+      30,
+      22,
+      28
+     ]
+    }
+   },
+   {
+    "seq": 56,
+    "ts": "2026-11-06T17:50:16.000Z",
+    "type": "round_start",
+    "round": "defense"
+   },
+   {
+    "seq": 57,
+    "ts": "2026-11-06T17:50:27.000Z",
+    "type": "question",
+    "round": "defense",
+    "actor": "judge_e9c669c4",
+    "text": "Which of your claims are you least sure of?",
+    "proof": {
+     "requestId": "5096b80f-21dc-4e9e-aff6-403c42d56893",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 58,
+    "ts": "2026-11-06T17:50:38.000Z",
+    "type": "answer",
+    "round": "defense",
+    "actor": "a",
+    "text": "World ID runs on staging mocks until our portal keys land. The app says so.",
+    "proof": {
+     "requestId": "1e921f39-537f-4965-a615-f4a4a3a6ae7c",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 59,
+    "ts": "2026-11-06T17:50:49.000Z",
+    "type": "answer",
+    "round": "defense",
+    "actor": "b",
+    "text": "The AI coach. It works once there's a key.",
+    "proof": {
+     "requestId": "9e29fec5-37dc-4cd4-a2a0-af7d918a2617",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 60,
+    "ts": "2026-11-06T17:51:00.000Z",
+    "type": "challenge",
+    "round": "defense",
+    "actor": "b",
+    "target": "a",
+    "challengeId": "defense-1",
+    "move": "Citation Check",
+    "text": "Go Health Me says World ID verifies humans, but the code uses a mock proof.",
+    "evidence": [
+     {
+      "kind": "file",
+      "label": "A:E15 · app/lib/world/mock-proof.ts:1"
+     }
+    ],
+    "proof": {
+     "requestId": "52894dd6-f882-4120-a861-399ea95d60dd",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 61,
+    "ts": "2026-11-06T17:51:11.000Z",
+    "type": "rebuttal",
+    "round": "defense",
+    "actor": "a",
+    "challengeId": "defense-1",
+    "text": "It's flagged as staging in the app and in EVALUATE.md. We never claimed it was live.",
+    "proof": {
+     "requestId": "5449ee1d-d3bd-4d7e-a3b7-cea6d0f93e2a",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 62,
+    "ts": "2026-11-06T17:51:22.000Z",
+    "type": "ruling",
+    "round": "defense",
+    "challengeId": "defense-1",
+    "votes": {
+     "judge_11631c00": "partially_upheld",
+     "judge_e9c669c4": "partially_upheld",
+     "judge_c876a259": "rejected"
+    },
+    "reason": "Honest about it, but the claim stays unverified (E5).",
+    "proof": {
+     "requestId": "e085562f-196e-4d3f-a384-aa375a2d30e3",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 63,
+    "ts": "2026-11-06T17:51:33.000Z",
+    "type": "closing",
+    "actor": "a",
+    "text": "Open gohealthme.app on your phone. It works. That's our whole argument.",
+    "proof": {
+     "requestId": "ad457a7c-8843-4fd9-a21c-e235f47102b7",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 64,
+    "ts": "2026-11-06T17:51:44.000Z",
+    "type": "closing",
+    "actor": "b",
+    "text": "We showed the vision. The video speaks for itself.",
+    "proof": {
+     "requestId": "19d463d0-a199-4f44-a879-2af539b08727",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 65,
+    "ts": "2026-11-06T17:51:55.000Z",
+    "type": "round_sealed",
+    "round": "defense",
+    "scores": {
+     "a": [
+      82,
+      80,
+      82
+     ],
+     "b": [
+      34,
+      28,
+      32
+     ]
+    }
+   },
+   {
+    "seq": 66,
+    "ts": "2026-11-06T17:52:06.000Z",
+    "type": "result",
+    "winner": "a",
+    "reason": "score"
+   }
+  ],
+  "scores": {
+   "a": 8013,
+   "b": 3507
+  },
+  "health": {
+   "a": 84104,
+   "b": 48056
+  },
+  "tie": {
+   "a": 0,
+   "b": 0
+  },
+  "needsReview": false,
+  "rounds": {
+   "product": {
+    "a": [
+     86,
+     80,
+     84
+    ],
+    "b": [
+     44,
+     36,
+     42
+    ],
+    "notes": [
+     {
+      "judgeId": "judge_11631c00",
+      "A": {
+       "score": 86
+      },
+      "B": {
+       "score": 44
+      },
+      "trace": "2ca1b9b0-0432-4fe9-aac0-dc0f1828c6b3"
+     },
+     {
+      "judgeId": "judge_e9c669c4",
+      "A": {
+       "score": 80
+      },
+      "B": {
+       "score": 36
+      },
+      "trace": "4dc2f476-8ca6-49b7-a1b1-3c9cd2b55491"
+     },
+     {
+      "judgeId": "judge_c876a259",
+      "A": {
+       "score": 84
+      },
+      "B": {
+       "score": 42
+      },
+      "trace": "6fc778b0-443b-47ad-ad53-0477621ac748"
+     }
+    ]
+   },
+   "ui": {
+    "a": [
+     88,
+     80,
+     84
+    ],
+    "b": [
+     38,
+     34,
+     40
+    ],
+    "notes": [
+     {
+      "judgeId": "judge_11631c00",
+      "A": {
+       "score": 88
+      },
+      "B": {
+       "score": 38
+      },
+      "trace": "6c34a64b-dfd1-46a3-a1a2-cb1d8684e8b5"
+     },
+     {
+      "judgeId": "judge_e9c669c4",
+      "A": {
+       "score": 80
+      },
+      "B": {
+       "score": 34
+      },
+      "trace": "8c91e687-9f34-41a9-ae35-6c8bbbf42aa9"
+     },
+     {
+      "judgeId": "judge_c876a259",
+      "A": {
+       "score": 84
+      },
+      "B": {
+       "score": 40
+      },
+      "trace": "15093452-ae18-4be8-ae44-8af646b3ab4e"
+     }
+    ]
+   },
+   "engineering": {
+    "a": [
+     78,
+     76,
+     76
+    ],
+    "b": [
+     30,
+     16,
+     28
+    ],
+    "notes": [
+     {
+      "judgeId": "judge_11631c00",
+      "A": {
+       "score": 78
+      },
+      "B": {
+       "score": 30
+      },
+      "trace": "8f4b9502-f74b-49ce-a32f-c82a50139d27"
+     },
+     {
+      "judgeId": "judge_e9c669c4",
+      "A": {
+       "score": 76
+      },
+      "B": {
+       "score": 16
+      },
+      "trace": "0162b27a-0a44-4b23-aa05-5f7bae57a300"
+     },
+     {
+      "judgeId": "judge_c876a259",
+      "A": {
+       "score": 76
+      },
+      "B": {
+       "score": 28
+      },
+      "trace": "bcc3dda5-97e7-4d58-ae43-5bc407af1e10"
+     }
+    ]
+   },
+   "innovation": {
+    "a": [
+     80,
+     72,
+     82
+    ],
+    "b": [
+     44,
+     36,
+     46
+    ],
+    "notes": [
+     {
+      "judgeId": "judge_11631c00",
+      "A": {
+       "score": 80
+      },
+      "B": {
+       "score": 44
+      },
+      "trace": "d7949d76-0d2e-4ef8-af67-7ff2dcaa9289"
+     },
+     {
+      "judgeId": "judge_e9c669c4",
+      "A": {
+       "score": 72
+      },
+      "B": {
+       "score": 36
+      },
+      "trace": "f6f2a13c-5e04-4473-af90-fd6b4a07fab3"
+     },
+     {
+      "judgeId": "judge_c876a259",
+      "A": {
+       "score": 82
+      },
+      "B": {
+       "score": 46
+      },
+      "trace": "187f2557-b515-464f-a8d6-bda4c89138da"
+     }
+    ]
+   },
+   "feasibility": {
+    "a": [
+     76,
+     74,
+     80
+    ],
+    "b": [
+     30,
+     22,
+     28
+    ],
+    "notes": [
+     {
+      "judgeId": "judge_11631c00",
+      "A": {
+       "score": 76
+      },
+      "B": {
+       "score": 30
+      },
+      "trace": "c8957a05-884d-45b0-adcb-72ca6a62a1f7"
+     },
+     {
+      "judgeId": "judge_e9c669c4",
+      "A": {
+       "score": 74
+      },
+      "B": {
+       "score": 22
+      },
+      "trace": "6ad441eb-8ed5-4b55-ad48-af503da1e4a0"
+     },
+     {
+      "judgeId": "judge_c876a259",
+      "A": {
+       "score": 80
+      },
+      "B": {
+       "score": 28
+      },
+      "trace": "c7210a9b-2c7f-42f4-a167-4e4316a030fd"
+     }
+    ]
+   },
+   "defense": {
+    "a": [
+     82,
+     80,
+     82
+    ],
+    "b": [
+     34,
+     28,
+     32
+    ],
+    "notes": [
+     {
+      "judgeId": "judge_11631c00",
+      "A": {
+       "score": 82
+      },
+      "B": {
+       "score": 34
+      },
+      "trace": "58f42a54-d655-4de9-acd1-db62b28c6756"
+     },
+     {
+      "judgeId": "judge_e9c669c4",
+      "A": {
+       "score": 80
+      },
+      "B": {
+       "score": 28
+      },
+      "trace": "9df6f52c-03b6-41a0-a7a4-2c7234e9dbba"
+     },
+     {
+      "judgeId": "judge_c876a259",
+      "A": {
+       "score": 82
+      },
+      "B": {
+       "score": 32
+      },
+      "trace": "a53c9486-8833-4ea8-a84a-417ebf6ecf9e"
+     }
+    ]
+   }
+  },
+  "fighters": {
+   "a": {
+    "fighterName": "Go Health Me",
+    "archetype": "Meowteam6"
+   },
+   "b": {
+    "fighterName": "FitterCoin",
+    "archetype": "FitterCoin"
+   }
+  },
+  "calls": 70,
+  "costUsd": 0.147,
+  "resultHash": "0xa32855a12d2366170e64d076985ad921f6d86af9898e85cbb8f11be748f7a993",
+  "proofs": {
+   "resultHash": "0xa32855a12d2366170e64d076985ad921f6d86af9898e85cbb8f11be748f7a993",
+   "transcript": {
+    "rootHash": "0x7ba075f34871ee420afe3bee5b05055bb10a0ec2cb54335e8f02aec3dff93126",
+    "txSeq": 171357,
+    "file": "https://storagescan-galileo.0g.ai/submission/171357",
+    "tx": "https://chainscan-galileo.0g.ai/tx/0xda19946e9e16b94c36935addad61d852541fdd6b0ba87d5c655879c83ed3ea5f"
+   },
+   "arkiv": {
+    "entityKey": "0xdbd7a8ce95b2f98d12531ef041e1da0d81dfc65b742014f7a0b80bb06a070f70",
+    "txHash": "0xf8fb56e0f6a6771ae1a854eb3fbc091abb1ec97a87630aa148ef76aba5964b5a",
+    "explorer": "https://rabdi.explorer.arkiv.network/entity-explorer?q=%24key%20%3D%20key(0xdbd7a8ce95b2f98d12531ef041e1da0d81dfc65b742014f7a0b80bb06a070f70)"
+   },
+   "inference": {
+    "model": "0gm-1.0-35b-a3b",
+    "provider": "0xf4FB8d2bD856e672b5f9848b0eD235A20079B250",
+    "requestIds": [
+     "5ad27761-26b1-4991-a6eb-52fd5cc17ff9",
+     "4f5342e0-721f-4f27-ae52-4b2d8629a19b",
+     "b20b089e-db02-460a-a1db-1f20c6551449",
+     "1fc8df18-1f86-4fb4-a526-edaa3fb6ba7c",
+     "b42eccd2-d56c-4e41-a811-dbf563b2bec9",
+     "28bb7a77-d0ae-4e48-a931-444f853d503f",
+     "ee80bbb9-63ad-4e23-ab18-7ec4dacb70c1",
+     "5fe8a64b-505b-47a7-ad53-8e52ba728773",
+     "584c6f8d-9823-43e4-a57c-91141f895efa",
+     "ce8af569-eeaf-44c7-ab6a-0d7c7cff6b16",
+     "fab080fc-5b52-4742-a3bf-581fb143d00d",
+     "c61a3d46-c2fb-4e74-a2e6-b25883179fec",
+     "e0aff63f-75e5-45dc-a28f-663b6c102b3c",
+     "826b9d56-edc0-4271-a28f-b0b9c2d0cb6d",
+     "ed4c80f1-5e36-4fd9-a219-ff03304e4c5c",
+     "95eb7adc-d0ad-45fc-afbc-9ef33ef5f541",
+     "5a6fb3db-33c4-47f3-ae93-8459a5e5f3e7",
+     "4b2176ec-9ca8-415f-aa70-c51b8a18c959",
+     "93688dbd-85e5-4955-ace6-bba3dcbdecc4",
+     "f4c1fb75-9b26-4d3c-a700-639136bee785",
+     "c6d14efd-f1b1-4a07-a7a5-4404f27140e2",
+     "d13e3bd2-4263-4d92-a9ce-e85e7651ecb7",
+     "a152514a-041a-4a93-a7f8-bf2ffce0243e",
+     "0dbff96a-c91f-42a8-a1e9-42ebc837b2c9",
+     "542c145e-4f74-4830-acf3-b0e1807f644a",
+     "b9c63290-e791-45cb-adf7-f9ce41ef9e6a",
+     "2e9f0c82-fc6a-4760-a844-dad27aef6f59",
+     "085cf4e0-a197-451a-a64e-5e05d42c628c",
+     "1cb7975b-9570-4054-afdf-59ad6c8cc5b2",
+     "25890d02-ad33-427c-a2da-c796f1b2a620",
+     "00192700-7b58-4538-a625-fc8dfb544bae",
+     "51e628ca-8eab-45b5-ab1d-be03e00a01e1",
+     "77524601-d3d6-4106-a33a-c4784ec28c08",
+     "adc2af5a-ce8e-4b5c-a916-a2764d9c1a8b",
+     "5fabe3b9-d578-4189-a797-9ea7b06bf0f7",
+     "708c9cee-6bdc-4e57-aa28-a5172e548543",
+     "911a3ab9-789e-4e3a-aa3f-0239ac1ef831",
+     "261f42ac-e217-43fa-ae4b-0ca941d8938c",
+     "9ed5b7bf-7cd8-4310-a9c5-58803e271628",
+     "faf2b4ce-d17e-479d-aea1-3415b3328f80",
+     "8a9a3ac4-60a4-47b1-ad34-ca6d0edd70b4",
+     "e3c0d96b-d37f-423d-a80f-29fcd70fa8c6",
+     "4569edc8-5bd1-4c66-acf3-27921a1db1d0",
+     "0d39f9b1-6653-4dc3-ae70-b50bcf9cf5b1",
+     "5096b80f-21dc-4e9e-aff6-403c42d56893",
+     "1e921f39-537f-4965-a615-f4a4a3a6ae7c",
+     "9e29fec5-37dc-4cd4-a2a0-af7d918a2617",
+     "52894dd6-f882-4120-a861-399ea95d60dd",
+     "5449ee1d-d3bd-4d7e-a3b7-cea6d0f93e2a",
+     "e085562f-196e-4d3f-a384-aa375a2d30e3",
+     "ad457a7c-8843-4fd9-a21c-e235f47102b7",
+     "19d463d0-a199-4f44-a879-2af539b08727"
+    ],
+    "scorecards": [
+     "2ca1b9b0-0432-4fe9-aac0-dc0f1828c6b3",
+     "4dc2f476-8ca6-49b7-a1b1-3c9cd2b55491",
+     "6fc778b0-443b-47ad-ad53-0477621ac748",
+     "6c34a64b-dfd1-46a3-a1a2-cb1d8684e8b5",
+     "8c91e687-9f34-41a9-ae35-6c8bbbf42aa9",
+     "15093452-ae18-4be8-ae44-8af646b3ab4e",
+     "8f4b9502-f74b-49ce-a32f-c82a50139d27",
+     "0162b27a-0a44-4b23-aa05-5f7bae57a300",
+     "bcc3dda5-97e7-4d58-ae43-5bc407af1e10",
+     "d7949d76-0d2e-4ef8-af67-7ff2dcaa9289",
+     "f6f2a13c-5e04-4473-af90-fd6b4a07fab3",
+     "187f2557-b515-464f-a8d6-bda4c89138da",
+     "c8957a05-884d-45b0-adcb-72ca6a62a1f7",
+     "6ad441eb-8ed5-4b55-ad48-af503da1e4a0",
+     "c7210a9b-2c7f-42f4-a167-4e4316a030fd",
+     "58f42a54-d655-4de9-acd1-db62b28c6756",
+     "9df6f52c-03b6-41a0-a7a4-2c7234e9dbba",
+     "a53c9486-8833-4ea8-a84a-417ebf6ecf9e"
+    ]
+   },
+   "evidence": {
+    "a": {
+     "project": "go-health-me",
+     "dossier": "0x9d9bf8f23159eed10401f9894e93576f44d0b05e512b5c9dc6c17a7da262e567",
+     "review": "0x78768ca1ee82c2e974ea5db40abc34626e1df43e33ae51b798b21a8e94c69e79",
+     "liveTest": "0xee0c8fa72df6347cee85e33d1c49fc99ad54334c6d0dea46337fca2b169a0ddb",
+     "arkivPanel": "0xb96344cd752cac0e56fea81488a8f3a3c12e21a7c2e5eb625d853e9490d36028"
+    },
+    "b": {
+     "project": "fittercoin",
+     "dossier": "0x9a2a484b25a71b8316eb216665a2c9a28d6ca30e982e3a2bc6f260020e423203",
+     "review": "0xd7ad60f8def7e6e59b3f2dae6f49f0396d3a32a704fb54c72e2c493bdaee5c5f",
+     "liveTest": "0x9d1b9847db1815156f951da5aa5ea4220bb0ec41210de15ca0d433a0cee90940",
+     "arkivPanel": "0x2a6698f485ff3b49a378bcb54d3ebbdc38b8b979ec5b091947e4ce1d93552fa6"
+    }
+   }
+  }
+ },
+ "1-1": {
+  "status": "done",
+  "live": false,
+  "tournamentId": "1",
+  "match": 1,
+  "a": 2,
+  "b": 3,
+  "tagline": "Two testing pitches. One has tests.",
+  "cast": {
+   "judge_11631c00": {
+    "name": "Priya Raman",
+    "focus": "Product lead"
+   },
+   "judge_e9c669c4": {
+    "name": "Marcus Lee",
+    "focus": "Smart-contract engineer"
+   },
+   "judge_c876a259": {
+    "name": "Ana Okafor",
+    "focus": "Investor"
+   }
+  },
+  "judges": {
+   "judge_11631c00": {
+    "name": "Priya Raman",
+    "focus": "Product lead"
+   },
+   "judge_e9c669c4": {
+    "name": "Marcus Lee",
+    "focus": "Smart-contract engineer"
+   },
+   "judge_c876a259": {
+    "name": "Ana Okafor",
+    "focus": "Investor"
+   }
+  },
+  "revealAt": 0,
+  "ranAt": "2026-11-06T14:13:20.000Z",
+  "id": "41fb21ef-e06d-44f3-ad12-7eb8e8926733",
+  "events": [
+   {
+    "seq": 1,
+    "ts": "2026-11-06T14:03:11.000Z",
+    "type": "intro"
+   },
+   {
+    "seq": 2,
+    "ts": "2026-11-06T14:03:22.000Z",
+    "type": "pitch",
+    "actor": "a",
+    "text": "Describe what your user does in plain English. Our agents turn it into a test that runs on real phones, and fixes itself.",
+    "proof": {
+     "requestId": "c500e088-bf1c-4a7f-a1b6-6f76ac48e897",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 3,
+    "ts": "2026-11-06T14:03:33.000Z",
+    "type": "pitch",
+    "actor": "b",
+    "text": "QAgent is the QA engineer you never hired. It reads every PR, clicks through it, and files the bugs.",
+    "proof": {
+     "requestId": "c6cd568d-2180-4bfa-a3ee-6bcfe4e54fbf",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 4,
+    "ts": "2026-11-06T14:03:44.000Z",
+    "type": "round_start",
+    "round": "product"
+   },
+   {
+    "seq": 5,
+    "ts": "2026-11-06T14:03:55.000Z",
+    "type": "question",
+    "round": "product",
+    "actor": "judge_11631c00",
+    "text": "What happens in the first minute after I sign up?",
+    "proof": {
+     "requestId": "634758af-e101-4066-a4ad-451a7f3b36e1",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 6,
+    "ts": "2026-11-06T14:04:06.000Z",
+    "type": "answer",
+    "round": "product",
+    "actor": "a",
+    "text": "You type a flow, like 'log in and add to cart', and it runs on a real device.",
+    "proof": {
+     "requestId": "1df1d026-6d0c-4006-acf8-13f1cb774731",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 7,
+    "ts": "2026-11-06T14:04:17.000Z",
+    "type": "answer",
+    "round": "product",
+    "actor": "b",
+    "text": "Connect GitHub and QAgent starts reviewing your next PR.",
+    "proof": {
+     "requestId": "67c029d2-0405-4ba5-ac86-3f523c902b60",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 8,
+    "ts": "2026-11-06T14:04:28.000Z",
+    "type": "challenge",
+    "round": "product",
+    "actor": "a",
+    "target": "b",
+    "challengeId": "product-1",
+    "move": "Feature Check",
+    "text": "QAgent's 'Connect GitHub' button does nothing on the live site.",
+    "evidence": [
+     {
+      "kind": "evidence",
+      "label": "B · live test d2: failed"
+     }
+    ],
+    "proof": {
+     "requestId": "e1e68dec-4d1f-4c22-a010-338af6c19ab2",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 9,
+    "ts": "2026-11-06T14:04:39.000Z",
+    "type": "rebuttal",
+    "round": "product",
+    "actor": "b",
+    "challengeId": "product-1",
+    "text": "It's a known bug from last night.",
+    "proof": {
+     "requestId": "45650318-08bc-4f3a-a6a0-5064bc2e9572",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 10,
+    "ts": "2026-11-06T14:04:50.000Z",
+    "type": "ruling",
+    "round": "product",
+    "challengeId": "product-1",
+    "votes": {
+     "judge_11631c00": "upheld",
+     "judge_e9c669c4": "upheld",
+     "judge_c876a259": "partially_upheld"
+    },
+    "reason": "The first step of the journey fails live.",
+    "proof": {
+     "requestId": "942cf5c9-b0f2-43f4-af18-e81ad258cbb1",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 11,
+    "ts": "2026-11-06T14:05:01.000Z",
+    "type": "round_sealed",
+    "round": "product",
+    "scores": {
+     "a": [
+      78,
+      74,
+      80
+     ],
+     "b": [
+      52,
+      46,
+      56
+     ]
+    }
+   },
+   {
+    "seq": 12,
+    "ts": "2026-11-06T14:05:12.000Z",
+    "type": "round_start",
+    "round": "ui"
+   },
+   {
+    "seq": 13,
+    "ts": "2026-11-06T14:05:23.000Z",
+    "type": "question",
+    "round": "ui",
+    "actor": "judge_11631c00",
+    "text": "Show me the screen I'd live in.",
+    "proof": {
+     "requestId": "dfc67140-d366-48f3-a278-e4336b46df78",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 14,
+    "ts": "2026-11-06T14:05:34.000Z",
+    "type": "answer",
+    "round": "ui",
+    "actor": "a",
+    "text": "The run view: device, steps, screenshots per step.",
+    "proof": {
+     "requestId": "8383eb57-cb87-4979-a8ee-01a2b33507d5",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 15,
+    "ts": "2026-11-06T14:05:45.000Z",
+    "type": "answer",
+    "round": "ui",
+    "actor": "b",
+    "text": "The findings dashboard.",
+    "proof": {
+     "requestId": "2129ced4-dc6f-429a-a3d5-1d5aa248d726",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 16,
+    "ts": "2026-11-06T14:05:56.000Z",
+    "type": "challenge",
+    "round": "ui",
+    "actor": "a",
+    "target": "b",
+    "challengeId": "ui-1",
+    "move": "Evidence Challenge",
+    "text": "QAgent's findings dashboard is a 404 on the live site.",
+    "evidence": [
+     {
+      "kind": "evidence",
+      "label": "B · live test d3: missing"
+     }
+    ],
+    "proof": {
+     "requestId": "02e110fe-7d9a-49ce-a5e0-68b942d98ae2",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 17,
+    "ts": "2026-11-06T14:06:07.000Z",
+    "type": "rebuttal",
+    "round": "ui",
+    "actor": "b",
+    "challengeId": "ui-1",
+    "text": "It's behind a feature flag.",
+    "proof": {
+     "requestId": "aecdd3bc-6c81-406b-a103-2a5ab5f4c3ac",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 18,
+    "ts": "2026-11-06T14:06:18.000Z",
+    "type": "ruling",
+    "round": "ui",
+    "challengeId": "ui-1",
+    "votes": {
+     "judge_11631c00": "upheld",
+     "judge_e9c669c4": "upheld",
+     "judge_c876a259": "upheld"
+    },
+    "reason": "The screen in the video doesn't exist on the live app.",
+    "proof": {
+     "requestId": "5883eaf3-af5e-43c6-a824-3a5b4a4faac4",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 19,
+    "ts": "2026-11-06T14:06:29.000Z",
+    "type": "round_sealed",
+    "round": "ui",
+    "scores": {
+     "a": [
+      74,
+      70,
+      74
+     ],
+     "b": [
+      50,
+      44,
+      52
+     ]
+    }
+   },
+   {
+    "seq": 20,
+    "ts": "2026-11-06T14:06:40.000Z",
+    "type": "round_start",
+    "round": "engineering"
+   },
+   {
+    "seq": 21,
+    "ts": "2026-11-06T14:06:51.000Z",
+    "type": "question",
+    "round": "engineering",
+    "actor": "judge_e9c669c4",
+    "text": "How do you know your own product works?",
+    "proof": {
+     "requestId": "e41c5b40-d77f-4158-a919-4d508bf2cd61",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 22,
+    "ts": "2026-11-06T14:07:02.000Z",
+    "type": "answer",
+    "round": "engineering",
+    "actor": "a",
+    "text": "1,232 tests in the repo, and 49 commits at the event with CI on every one.",
+    "proof": {
+     "requestId": "63f09636-c585-418e-af29-6e567094cfce",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 23,
+    "ts": "2026-11-06T14:07:13.000Z",
+    "type": "answer",
+    "round": "engineering",
+    "actor": "b",
+    "text": "We dogfood it on our own PRs.",
+    "proof": {
+     "requestId": "2250e185-d904-48c5-a1c6-c507099a9b9e",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 24,
+    "ts": "2026-11-06T14:07:24.000Z",
+    "type": "challenge",
+    "round": "engineering",
+    "actor": "a",
+    "target": "b",
+    "challengeId": "engineering-1",
+    "move": "Test Strike",
+    "text": "QAgent's explorer returns three canned findings, whatever the app.",
+    "evidence": [
+     {
+      "kind": "file",
+      "label": "B:E2 · src/agent/explore.ts:88"
+     }
+    ],
+    "proof": {
+     "requestId": "06e9f494-82e0-4ab8-aade-e227d862d510",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 25,
+    "ts": "2026-11-06T14:07:35.000Z",
+    "type": "rebuttal",
+    "round": "engineering",
+    "actor": "b",
+    "challengeId": "engineering-1",
+    "text": "That's a fallback while the model warms up.",
+    "proof": {
+     "requestId": "47bc028a-2dda-4be6-af2e-48df2ca47b48",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 26,
+    "ts": "2026-11-06T14:07:46.000Z",
+    "type": "ruling",
+    "round": "engineering",
+    "challengeId": "engineering-1",
+    "votes": {
+     "judge_11631c00": "upheld",
+     "judge_e9c669c4": "upheld",
+     "judge_c876a259": "upheld"
+    },
+    "reason": "The agent's output is hardcoded.",
+    "proof": {
+     "requestId": "df0c424c-c058-415a-acab-9469a6efbab6",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 27,
+    "ts": "2026-11-06T14:07:57.000Z",
+    "type": "penalty",
+    "round": "engineering",
+    "target": "b",
+    "judge": "judge_e9c669c4",
+    "reason": "You sell testing and ship zero tests.",
+    "evidence": [
+     {
+      "kind": "evidence",
+      "label": "B · tests found: 0"
+     }
+    ],
+    "proof": {
+     "requestId": "10676c76-19e3-4ce1-a7b0-490308ea6673",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 28,
+    "ts": "2026-11-06T14:08:08.000Z",
+    "type": "round_sealed",
+    "round": "engineering",
+    "scores": {
+     "a": [
+      84,
+      86,
+      82
+     ],
+     "b": [
+      34,
+      22,
+      36
+     ]
+    }
+   },
+   {
+    "seq": 29,
+    "ts": "2026-11-06T14:08:19.000Z",
+    "type": "round_start",
+    "round": "innovation"
+   },
+   {
+    "seq": 30,
+    "ts": "2026-11-06T14:08:30.000Z",
+    "type": "question",
+    "round": "innovation",
+    "actor": "judge_c876a259",
+    "text": "Why can't a big QA vendor copy you next quarter?",
+    "proof": {
+     "requestId": "c75b0d12-3e5b-478d-a2e7-09fea8fe5102",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 31,
+    "ts": "2026-11-06T14:08:41.000Z",
+    "type": "answer",
+    "round": "innovation",
+    "actor": "a",
+    "text": "Self-healing on real devices, with vision fallbacks, is years of edge cases.",
+    "proof": {
+     "requestId": "41dafced-96e1-49d0-a614-30cdc3a5f528",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 32,
+    "ts": "2026-11-06T14:08:52.000Z",
+    "type": "answer",
+    "round": "innovation",
+    "actor": "b",
+    "text": "We're agent-native from day one.",
+    "proof": {
+     "requestId": "fe36f539-3818-4052-a7c9-715d8baa0fa1",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 33,
+    "ts": "2026-11-06T14:09:03.000Z",
+    "type": "challenge",
+    "round": "innovation",
+    "actor": "b",
+    "target": "a",
+    "challengeId": "innovation-1",
+    "move": "Copycat Counter",
+    "text": "Mozark's 'agents' are keyword automation with a new name.",
+    "evidence": [],
+    "proof": {
+     "requestId": "dfa622bf-10b1-44cd-a0ff-9fac605eee97",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 34,
+    "ts": "2026-11-06T14:09:14.000Z",
+    "type": "rebuttal",
+    "round": "innovation",
+    "actor": "a",
+    "challengeId": "innovation-1",
+    "text": "The fallback chain from XPath to OCR to image match is tested.",
+    "proof": {
+     "requestId": "9c4c1b8b-b77c-4802-af71-b2d24889f851",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 35,
+    "ts": "2026-11-06T14:09:25.000Z",
+    "type": "ruling",
+    "round": "innovation",
+    "challengeId": "innovation-1",
+    "votes": {
+     "judge_11631c00": "rejected",
+     "judge_e9c669c4": "partially_upheld",
+     "judge_c876a259": "rejected"
+    },
+    "reason": "The self-healing chain is real and tested (E3, E4).",
+    "proof": {
+     "requestId": "4370b7d8-b151-4cb7-aa27-08d9c4bca7a9",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 36,
+    "ts": "2026-11-06T14:09:36.000Z",
+    "type": "round_sealed",
+    "round": "innovation",
+    "scores": {
+     "a": [
+      76,
+      78,
+      80
+     ],
+     "b": [
+      58,
+      50,
+      62
+     ]
+    }
+   },
+   {
+    "seq": 37,
+    "ts": "2026-11-06T14:09:47.000Z",
+    "type": "round_start",
+    "round": "feasibility"
+   },
+   {
+    "seq": 38,
+    "ts": "2026-11-06T14:09:58.000Z",
+    "type": "question",
+    "round": "feasibility",
+    "actor": "judge_c876a259",
+    "text": "Who pays, and why now?",
+    "proof": {
+     "requestId": "2e646d96-8374-430f-af19-62d1b0fe0442",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 39,
+    "ts": "2026-11-06T14:10:09.000Z",
+    "type": "answer",
+    "round": "feasibility",
+    "actor": "a",
+    "text": "QA teams, per seat. They already pay for device farms.",
+    "proof": {
+     "requestId": "8efe822d-35d6-4600-a56b-2021852603d6",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 40,
+    "ts": "2026-11-06T14:10:20.000Z",
+    "type": "answer",
+    "round": "feasibility",
+    "actor": "b",
+    "text": "Startups, per repo.",
+    "proof": {
+     "requestId": "6a5e9e59-4daf-47c2-a098-d94ac88a4354",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 41,
+    "ts": "2026-11-06T14:10:31.000Z",
+    "type": "challenge",
+    "round": "feasibility",
+    "actor": "a",
+    "target": "b",
+    "challengeId": "feasibility-1",
+    "move": "Runway Check",
+    "text": "QAgent claims 40 repos tested. There's no log, fixture or report for any of them.",
+    "evidence": [
+     {
+      "kind": "file",
+      "label": "B:E5 · README.md:9"
+     }
+    ],
+    "proof": {
+     "requestId": "2d73d57c-347a-4edf-a719-2fb9b5560072",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 42,
+    "ts": "2026-11-06T14:10:42.000Z",
+    "type": "rebuttal",
+    "round": "feasibility",
+    "actor": "b",
+    "challengeId": "feasibility-1",
+    "text": "We ran them by hand.",
+    "proof": {
+     "requestId": "6b5f0090-084c-4b22-af35-c7a5a532b1b9",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 43,
+    "ts": "2026-11-06T14:10:53.000Z",
+    "type": "ruling",
+    "round": "feasibility",
+    "challengeId": "feasibility-1",
+    "votes": {
+     "judge_11631c00": "upheld",
+     "judge_e9c669c4": "upheld",
+     "judge_c876a259": "upheld"
+    },
+    "reason": "No evidence for the traction claim.",
+    "proof": {
+     "requestId": "52883787-9fa8-4ce4-a95a-159b8b7bbcae",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 44,
+    "ts": "2026-11-06T14:11:04.000Z",
+    "type": "round_sealed",
+    "round": "feasibility",
+    "scores": {
+     "a": [
+      78,
+      76,
+      82
+     ],
+     "b": [
+      44,
+      40,
+      48
+     ]
+    }
+   },
+   {
+    "seq": 45,
+    "ts": "2026-11-06T14:11:15.000Z",
+    "type": "round_start",
+    "round": "defense"
+   },
+   {
+    "seq": 46,
+    "ts": "2026-11-06T14:11:26.000Z",
+    "type": "question",
+    "round": "defense",
+    "actor": "judge_e9c669c4",
+    "text": "Which claim are you least sure of?",
+    "proof": {
+     "requestId": "108e6e51-8e02-463f-ae99-5db105ae7564",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 47,
+    "ts": "2026-11-06T14:11:37.000Z",
+    "type": "answer",
+    "round": "defense",
+    "actor": "a",
+    "text": "Our API tests use mock tokens. We say so.",
+    "proof": {
+     "requestId": "9fcfd9e7-9e67-40ce-abb0-d8de01650720",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 48,
+    "ts": "2026-11-06T14:11:48.000Z",
+    "type": "answer",
+    "round": "defense",
+    "actor": "b",
+    "text": "None.",
+    "proof": {
+     "requestId": "d3cd0a52-c55c-4ad3-aa8f-d515d7f5f6f5",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 49,
+    "ts": "2026-11-06T14:11:59.000Z",
+    "type": "challenge",
+    "round": "defense",
+    "actor": "b",
+    "target": "a",
+    "challengeId": "defense-1",
+    "move": "Citation Check",
+    "text": "Mozark's API tests run on mock tokens.",
+    "evidence": [
+     {
+      "kind": "file",
+      "label": "A:E7 · tests/units/api/test_api_invocation.py:53-58"
+     }
+    ],
+    "proof": {
+     "requestId": "f58dfdc1-ffbf-4f8d-a5d3-95b705bba6ef",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 50,
+    "ts": "2026-11-06T14:12:10.000Z",
+    "type": "rebuttal",
+    "round": "defense",
+    "actor": "a",
+    "challengeId": "defense-1",
+    "text": "Correct, and labelled as unit tests.",
+    "proof": {
+     "requestId": "613877f8-410e-406f-a05d-a6abe6d65847",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 51,
+    "ts": "2026-11-06T14:12:21.000Z",
+    "type": "ruling",
+    "round": "defense",
+    "challengeId": "defense-1",
+    "votes": {
+     "judge_11631c00": "partially_upheld",
+     "judge_e9c669c4": "partially_upheld",
+     "judge_c876a259": "rejected"
+    },
+    "reason": "Fair point, honestly owned.",
+    "proof": {
+     "requestId": "443330ca-2c21-4c0e-a101-095deadfb82a",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 52,
+    "ts": "2026-11-06T14:12:32.000Z",
+    "type": "closing",
+    "actor": "a",
+    "text": "We tested every project in this arena. Including the one we're fighting.",
+    "proof": {
+     "requestId": "86bee7ae-d75e-4857-a028-2bdeb6ff3439",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 53,
+    "ts": "2026-11-06T14:12:43.000Z",
+    "type": "closing",
+    "actor": "b",
+    "text": "Imagine what QAgent becomes in a month.",
+    "proof": {
+     "requestId": "be9cd593-dddc-4768-ab3c-be9a08d82102",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 54,
+    "ts": "2026-11-06T14:12:54.000Z",
+    "type": "round_sealed",
+    "round": "defense",
+    "scores": {
+     "a": [
+      80,
+      78,
+      80
+     ],
+     "b": [
+      40,
+      34,
+      42
+     ]
+    }
+   },
+   {
+    "seq": 55,
+    "ts": "2026-11-06T14:13:05.000Z",
+    "type": "result",
+    "winner": "a",
+    "reason": "score"
+   }
+  ],
+  "scores": {
+   "a": 7867,
+   "b": 4600
+  },
+  "health": {
+   "a": 82936,
+   "b": 56800
+  },
+  "tie": {
+   "a": 0,
+   "b": 0
+  },
+  "needsReview": false,
+  "rounds": {
+   "product": {
+    "a": [
+     78,
+     74,
+     80
+    ],
+    "b": [
+     52,
+     46,
+     56
+    ],
+    "notes": [
+     {
+      "judgeId": "judge_11631c00",
+      "A": {
+       "score": 78
+      },
+      "B": {
+       "score": 52
+      },
+      "trace": "8ad18622-b777-415f-a169-89a9cef66111"
+     },
+     {
+      "judgeId": "judge_e9c669c4",
+      "A": {
+       "score": 74
+      },
+      "B": {
+       "score": 46
+      },
+      "trace": "00876d94-0c75-41f5-a5b4-637e66c70a8f"
+     },
+     {
+      "judgeId": "judge_c876a259",
+      "A": {
+       "score": 80
+      },
+      "B": {
+       "score": 56
+      },
+      "trace": "d79c988b-5996-4c70-a327-f6ce88164446"
+     }
+    ]
+   },
+   "ui": {
+    "a": [
+     74,
+     70,
+     74
+    ],
+    "b": [
+     50,
+     44,
+     52
+    ],
+    "notes": [
+     {
+      "judgeId": "judge_11631c00",
+      "A": {
+       "score": 74
+      },
+      "B": {
+       "score": 50
+      },
+      "trace": "36e817fb-af39-46d0-a584-6eaa713f2dee"
+     },
+     {
+      "judgeId": "judge_e9c669c4",
+      "A": {
+       "score": 70
+      },
+      "B": {
+       "score": 44
+      },
+      "trace": "06be8fd6-b1df-477d-a903-4808d01c93ee"
+     },
+     {
+      "judgeId": "judge_c876a259",
+      "A": {
+       "score": 74
+      },
+      "B": {
+       "score": 52
+      },
+      "trace": "78312165-6c3d-4331-acd2-524699ef481f"
+     }
+    ]
+   },
+   "engineering": {
+    "a": [
+     84,
+     86,
+     82
+    ],
+    "b": [
+     34,
+     22,
+     36
+    ],
+    "notes": [
+     {
+      "judgeId": "judge_11631c00",
+      "A": {
+       "score": 84
+      },
+      "B": {
+       "score": 34
+      },
+      "trace": "67f78da0-05f4-489c-a728-01b208849333"
+     },
+     {
+      "judgeId": "judge_e9c669c4",
+      "A": {
+       "score": 86
+      },
+      "B": {
+       "score": 22
+      },
+      "trace": "ff980648-cb31-4188-a23d-ad5ece0c7c16"
+     },
+     {
+      "judgeId": "judge_c876a259",
+      "A": {
+       "score": 82
+      },
+      "B": {
+       "score": 36
+      },
+      "trace": "3aac0dd8-4005-45eb-a2f1-0135844e2d8c"
+     }
+    ]
+   },
+   "innovation": {
+    "a": [
+     76,
+     78,
+     80
+    ],
+    "b": [
+     58,
+     50,
+     62
+    ],
+    "notes": [
+     {
+      "judgeId": "judge_11631c00",
+      "A": {
+       "score": 76
+      },
+      "B": {
+       "score": 58
+      },
+      "trace": "2c3bfc70-bb4b-4af4-a1d3-e979441fc7af"
+     },
+     {
+      "judgeId": "judge_e9c669c4",
+      "A": {
+       "score": 78
+      },
+      "B": {
+       "score": 50
+      },
+      "trace": "4495a7da-0ab8-41f0-a000-4a5f117a9810"
+     },
+     {
+      "judgeId": "judge_c876a259",
+      "A": {
+       "score": 80
+      },
+      "B": {
+       "score": 62
+      },
+      "trace": "bb3adc8d-d5f5-4bcc-afe1-35c647143272"
+     }
+    ]
+   },
+   "feasibility": {
+    "a": [
+     78,
+     76,
+     82
+    ],
+    "b": [
+     44,
+     40,
+     48
+    ],
+    "notes": [
+     {
+      "judgeId": "judge_11631c00",
+      "A": {
+       "score": 78
+      },
+      "B": {
+       "score": 44
+      },
+      "trace": "9ad49899-c8b3-4713-a38f-5e58b3bf4ae8"
+     },
+     {
+      "judgeId": "judge_e9c669c4",
+      "A": {
+       "score": 76
+      },
+      "B": {
+       "score": 40
+      },
+      "trace": "4d5f1a73-3e25-4a67-ac6e-614a3bf3b24d"
+     },
+     {
+      "judgeId": "judge_c876a259",
+      "A": {
+       "score": 82
+      },
+      "B": {
+       "score": 48
+      },
+      "trace": "e10ab888-1100-4bac-a31a-4e76650aec36"
+     }
+    ]
+   },
+   "defense": {
+    "a": [
+     80,
+     78,
+     80
+    ],
+    "b": [
+     40,
+     34,
+     42
+    ],
+    "notes": [
+     {
+      "judgeId": "judge_11631c00",
+      "A": {
+       "score": 80
+      },
+      "B": {
+       "score": 40
+      },
+      "trace": "8e493917-f491-45dd-aec1-fef2cd57b710"
+     },
+     {
+      "judgeId": "judge_e9c669c4",
+      "A": {
+       "score": 78
+      },
+      "B": {
+       "score": 34
+      },
+      "trace": "0175fd13-4681-4ca8-a5ec-7c3d2234b3b5"
+     },
+     {
+      "judgeId": "judge_c876a259",
+      "A": {
+       "score": 80
+      },
+      "B": {
+       "score": 42
+      },
+      "trace": "32932a21-d035-4501-a507-876b960d14a9"
+     }
+    ]
+   }
+  },
+  "fighters": {
+   "a": {
+    "fighterName": "Mozark App Studio",
+    "archetype": "Mozark"
+   },
+   "b": {
+    "fighterName": "QAgent",
+    "archetype": "Null Pointers"
+   }
+  },
+  "calls": 59,
+  "costUsd": 0.1239,
+  "resultHash": "0xd852c977c018d74caddd05e2830916347324337e7ce54bd4079209debe48deb4",
+  "proofs": {
+   "resultHash": "0xd852c977c018d74caddd05e2830916347324337e7ce54bd4079209debe48deb4",
+   "transcript": {
+    "rootHash": "0x3a846860b1144180ae4c788eb478e4c1bbeec47c3d237f35c8e0dda8d4d925cb",
+    "txSeq": 171358,
+    "file": "https://storagescan-galileo.0g.ai/submission/171358",
+    "tx": "https://chainscan-galileo.0g.ai/tx/0x4a591ee4696d69e577d2e2bd9fae46e947f4f0ea84352c7ea92897f4d32b2c26"
+   },
+   "arkiv": {
+    "entityKey": "0x9bb6d74f02f102d41c3541a7a667fa72cb983a4664d5dab2e388246ef0861f44",
+    "txHash": "0x1b6eea1874d623ae8590325de32787179c11db5e4d3a4d85a6976d97a1842209",
+    "explorer": "https://rabdi.explorer.arkiv.network/entity-explorer?q=%24key%20%3D%20key(0x9bb6d74f02f102d41c3541a7a667fa72cb983a4664d5dab2e388246ef0861f44)"
+   },
+   "inference": {
+    "model": "0gm-1.0-35b-a3b",
+    "provider": "0xf4FB8d2bD856e672b5f9848b0eD235A20079B250",
+    "requestIds": [
+     "c500e088-bf1c-4a7f-a1b6-6f76ac48e897",
+     "c6cd568d-2180-4bfa-a3ee-6bcfe4e54fbf",
+     "634758af-e101-4066-a4ad-451a7f3b36e1",
+     "1df1d026-6d0c-4006-acf8-13f1cb774731",
+     "67c029d2-0405-4ba5-ac86-3f523c902b60",
+     "e1e68dec-4d1f-4c22-a010-338af6c19ab2",
+     "45650318-08bc-4f3a-a6a0-5064bc2e9572",
+     "942cf5c9-b0f2-43f4-af18-e81ad258cbb1",
+     "dfc67140-d366-48f3-a278-e4336b46df78",
+     "8383eb57-cb87-4979-a8ee-01a2b33507d5",
+     "2129ced4-dc6f-429a-a3d5-1d5aa248d726",
+     "02e110fe-7d9a-49ce-a5e0-68b942d98ae2",
+     "aecdd3bc-6c81-406b-a103-2a5ab5f4c3ac",
+     "5883eaf3-af5e-43c6-a824-3a5b4a4faac4",
+     "e41c5b40-d77f-4158-a919-4d508bf2cd61",
+     "63f09636-c585-418e-af29-6e567094cfce",
+     "2250e185-d904-48c5-a1c6-c507099a9b9e",
+     "06e9f494-82e0-4ab8-aade-e227d862d510",
+     "47bc028a-2dda-4be6-af2e-48df2ca47b48",
+     "df0c424c-c058-415a-acab-9469a6efbab6",
+     "10676c76-19e3-4ce1-a7b0-490308ea6673",
+     "c75b0d12-3e5b-478d-a2e7-09fea8fe5102",
+     "41dafced-96e1-49d0-a614-30cdc3a5f528",
+     "fe36f539-3818-4052-a7c9-715d8baa0fa1",
+     "dfa622bf-10b1-44cd-a0ff-9fac605eee97",
+     "9c4c1b8b-b77c-4802-af71-b2d24889f851",
+     "4370b7d8-b151-4cb7-aa27-08d9c4bca7a9",
+     "2e646d96-8374-430f-af19-62d1b0fe0442",
+     "8efe822d-35d6-4600-a56b-2021852603d6",
+     "6a5e9e59-4daf-47c2-a098-d94ac88a4354",
+     "2d73d57c-347a-4edf-a719-2fb9b5560072",
+     "6b5f0090-084c-4b22-af35-c7a5a532b1b9",
+     "52883787-9fa8-4ce4-a95a-159b8b7bbcae",
+     "108e6e51-8e02-463f-ae99-5db105ae7564",
+     "9fcfd9e7-9e67-40ce-abb0-d8de01650720",
+     "d3cd0a52-c55c-4ad3-aa8f-d515d7f5f6f5",
+     "f58dfdc1-ffbf-4f8d-a5d3-95b705bba6ef",
+     "613877f8-410e-406f-a05d-a6abe6d65847",
+     "443330ca-2c21-4c0e-a101-095deadfb82a",
+     "86bee7ae-d75e-4857-a028-2bdeb6ff3439",
+     "be9cd593-dddc-4768-ab3c-be9a08d82102"
+    ],
+    "scorecards": [
+     "8ad18622-b777-415f-a169-89a9cef66111",
+     "00876d94-0c75-41f5-a5b4-637e66c70a8f",
+     "d79c988b-5996-4c70-a327-f6ce88164446",
+     "36e817fb-af39-46d0-a584-6eaa713f2dee",
+     "06be8fd6-b1df-477d-a903-4808d01c93ee",
+     "78312165-6c3d-4331-acd2-524699ef481f",
+     "67f78da0-05f4-489c-a728-01b208849333",
+     "ff980648-cb31-4188-a23d-ad5ece0c7c16",
+     "3aac0dd8-4005-45eb-a2f1-0135844e2d8c",
+     "2c3bfc70-bb4b-4af4-a1d3-e979441fc7af",
+     "4495a7da-0ab8-41f0-a000-4a5f117a9810",
+     "bb3adc8d-d5f5-4bcc-afe1-35c647143272",
+     "9ad49899-c8b3-4713-a38f-5e58b3bf4ae8",
+     "4d5f1a73-3e25-4a67-ac6e-614a3bf3b24d",
+     "e10ab888-1100-4bac-a31a-4e76650aec36",
+     "8e493917-f491-45dd-aec1-fef2cd57b710",
+     "0175fd13-4681-4ca8-a5ec-7c3d2234b3b5",
+     "32932a21-d035-4501-a507-876b960d14a9"
+    ]
+   },
+   "evidence": {
+    "a": {
+     "project": "mozark-app-studio",
+     "dossier": "0x620fe3c9ac7460c562ce05545965b9d4dd38f20aa307b46447eca4e320435302",
+     "review": "0xd12bd366779f6772e5ea851b7f094eb3c78de74d046dcc404a5ad8098f565ca9",
+     "liveTest": "0x0df0668e21ababbf9e8c8813a9ae0383edb1557a7e70871db4f89d81ccbe682d",
+     "arkivPanel": "0x83701cc6f520e68d4a223474fd89d1c941fb4d32fdd5df3fe9b3b0773b163fff"
+    },
+    "b": {
+     "project": "qagent",
+     "dossier": "0x8c6cebf9640317f753bb5952d3005d27f9d2e626497451bf0285c9dda6c69b21",
+     "review": "0x7ea58d5e2b8780cdcfc8df5524871c6be1cc851ea1ecf70a4b1d2007c774204e",
+     "liveTest": "0x44116a62ef49ff3182702d1cb707ef8a8f2291f4ef48218e550c10cee6c73073",
+     "arkivPanel": "0xebf139a81429caa0578e14ede66f4fe72e451b1ccf546d6e91f2cdb9fe9bb17b"
+    }
+   }
+  }
+ },
+ "1-2": {
+  "status": "done",
+  "live": false,
+  "tournamentId": "1",
+  "match": 2,
+  "a": 4,
+  "b": 5,
+  "tagline": "Best code in the room vs. the demo that works.",
+  "cast": {
+   "judge_11631c00": {
+    "name": "Priya Raman",
+    "focus": "Product lead"
+   },
+   "judge_e9c669c4": {
+    "name": "Marcus Lee",
+    "focus": "Smart-contract engineer"
+   },
+   "judge_c876a259": {
+    "name": "Ana Okafor",
+    "focus": "Investor"
+   }
+  },
+  "judges": {
+   "judge_11631c00": {
+    "name": "Priya Raman",
+    "focus": "Product lead"
+   },
+   "judge_e9c669c4": {
+    "name": "Marcus Lee",
+    "focus": "Smart-contract engineer"
+   },
+   "judge_c876a259": {
+    "name": "Ana Okafor",
+    "focus": "Investor"
+   }
+  },
+  "revealAt": 0,
+  "ranAt": "2026-11-06T14:47:31.000Z",
+  "id": "625ee83a-1eb4-4620-a705-fda06ceaace6",
+  "events": [
+   {
+    "seq": 1,
+    "ts": "2026-11-06T14:37:11.000Z",
+    "type": "intro"
+   },
+   {
+    "seq": 2,
+    "ts": "2026-11-06T14:37:22.000Z",
+    "type": "pitch",
+    "actor": "a",
+    "text": "Streaming payroll for DAOs, invariant-tested, with clawback that can never touch earned pay.",
+    "proof": {
+     "requestId": "e416224f-b358-4d5e-a01e-fdb37a3876b6",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 3,
+    "ts": "2026-11-06T14:37:33.000Z",
+    "type": "pitch",
+    "actor": "b",
+    "text": "Split any bill in USDC. Snap the receipt, everyone approves their share in one tap.",
+    "proof": {
+     "requestId": "d7e7d93f-cb16-422c-ac2c-cad42c6a203f",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 4,
+    "ts": "2026-11-06T14:37:44.000Z",
+    "type": "round_start",
+    "round": "product"
+   },
+   {
+    "seq": 5,
+    "ts": "2026-11-06T14:37:55.000Z",
+    "type": "question",
+    "round": "product",
+    "actor": "judge_11631c00",
+    "text": "Walk me through the core flow on the live app.",
+    "proof": {
+     "requestId": "f3fd4826-9fd9-4eb0-a16f-b27d9c0736ab",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 6,
+    "ts": "2026-11-06T14:38:06.000Z",
+    "type": "answer",
+    "round": "product",
+    "actor": "a",
+    "text": "Create a vault, deposit, and pay streams every block.",
+    "proof": {
+     "requestId": "1e423db8-1718-457e-ad8e-e92b375296ed",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 7,
+    "ts": "2026-11-06T14:38:17.000Z",
+    "type": "answer",
+    "round": "product",
+    "actor": "b",
+    "text": "Scan, split, approve. Try it on your phone right now.",
+    "proof": {
+     "requestId": "3ab0d3b3-bd49-41e5-a551-178552bcf0c4",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 8,
+    "ts": "2026-11-06T14:38:28.000Z",
+    "type": "challenge",
+    "round": "product",
+    "actor": "b",
+    "target": "a",
+    "challengeId": "product-1",
+    "move": "Feature Check",
+    "text": "Vaultline's deposit returns a 502 on the live app.",
+    "evidence": [
+     {
+      "kind": "evidence",
+      "label": "A · live test d2: failed, 502 /api/deposit"
+     }
+    ],
+    "proof": {
+     "requestId": "be9e631a-f408-47e2-a630-7fd4c3145d64",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 9,
+    "ts": "2026-11-06T14:38:39.000Z",
+    "type": "rebuttal",
+    "round": "product",
+    "actor": "a",
+    "challengeId": "product-1",
+    "text": "The front end points at last week's contract.",
+    "proof": {
+     "requestId": "577c938b-a298-4a3e-a5ad-e701f848732b",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 10,
+    "ts": "2026-11-06T14:38:50.000Z",
+    "type": "ruling",
+    "round": "product",
+    "challengeId": "product-1",
+    "votes": {
+     "judge_11631c00": "upheld",
+     "judge_e9c669c4": "partially_upheld",
+     "judge_c876a259": "upheld"
+    },
+    "reason": "The first money step fails live.",
+    "proof": {
+     "requestId": "836bc141-01af-4722-aa23-31ac99b0355c",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 11,
+    "ts": "2026-11-06T14:39:01.000Z",
+    "type": "penalty",
+    "round": "product",
+    "target": "a",
+    "judge": "judge_11631c00",
+    "reason": "The demo breaks at deposit. I never saw a stream run.",
+    "evidence": [
+     {
+      "kind": "file",
+      "label": "A:E5 · app/src/deposit.tsx:44"
+     }
+    ],
+    "proof": {
+     "requestId": "4609cc06-4456-44ff-aaa3-a745de14c08e",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 12,
+    "ts": "2026-11-06T14:39:12.000Z",
+    "type": "round_sealed",
+    "round": "product",
+    "scores": {
+     "a": [
+      50,
+      58,
+      54
+     ],
+     "b": [
+      84,
+      74,
+      80
+     ]
+    }
+   },
+   {
+    "seq": 13,
+    "ts": "2026-11-06T14:39:23.000Z",
+    "type": "round_start",
+    "round": "ui"
+   },
+   {
+    "seq": 14,
+    "ts": "2026-11-06T14:39:34.000Z",
+    "type": "question",
+    "round": "ui",
+    "actor": "judge_11631c00",
+    "text": "Does it work on a phone?",
+    "proof": {
+     "requestId": "c6175746-365f-4a1d-a0c6-e3151cb71076",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 15,
+    "ts": "2026-11-06T14:39:45.000Z",
+    "type": "answer",
+    "round": "ui",
+    "actor": "a",
+    "text": "The contributor view does.",
+    "proof": {
+     "requestId": "69b9aeb4-f2e5-4e9e-a731-9fabd5b7c293",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 16,
+    "ts": "2026-11-06T14:39:56.000Z",
+    "type": "answer",
+    "round": "ui",
+    "actor": "b",
+    "text": "Every flow passed on a phone.",
+    "proof": {
+     "requestId": "7d29cef0-19fb-4634-aa0a-defc8cfacfba",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 17,
+    "ts": "2026-11-06T14:40:07.000Z",
+    "type": "challenge",
+    "round": "ui",
+    "actor": "b",
+    "target": "a",
+    "challengeId": "ui-1",
+    "move": "Evidence Challenge",
+    "text": "After the deposit error, Vaultline's dashboard goes blank.",
+    "evidence": [
+     {
+      "kind": "evidence",
+      "label": "A · live test d3: failed"
+     }
+    ],
+    "proof": {
+     "requestId": "05ea749e-ac62-4352-af2d-87712cf35e2b",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 18,
+    "ts": "2026-11-06T14:40:18.000Z",
+    "type": "rebuttal",
+    "round": "ui",
+    "actor": "a",
+    "challengeId": "ui-1",
+    "text": "It recovers on reload.",
+    "proof": {
+     "requestId": "2197ea90-c647-496d-ad03-bc78a76b1cba",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 19,
+    "ts": "2026-11-06T14:40:29.000Z",
+    "type": "ruling",
+    "round": "ui",
+    "challengeId": "ui-1",
+    "votes": {
+     "judge_11631c00": "upheld",
+     "judge_e9c669c4": "partially_upheld",
+     "judge_c876a259": "partially_upheld"
+    },
+    "reason": "Blank screen after an error is a real UI failure.",
+    "proof": {
+     "requestId": "234de4cb-2f94-46c5-ac2c-aa62fbe3f0af",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 20,
+    "ts": "2026-11-06T14:40:40.000Z",
+    "type": "round_sealed",
+    "round": "ui",
+    "scores": {
+     "a": [
+      52,
+      56,
+      54
+     ],
+     "b": [
+      86,
+      78,
+      82
+     ]
+    }
+   },
+   {
+    "seq": 21,
+    "ts": "2026-11-06T14:40:51.000Z",
+    "type": "round_start",
+    "round": "engineering"
+   },
+   {
+    "seq": 22,
+    "ts": "2026-11-06T14:41:02.000Z",
+    "type": "question",
+    "round": "engineering",
+    "actor": "judge_e9c669c4",
+    "text": "What's the worst thing someone can do to your contract?",
+    "proof": {
+     "requestId": "ca3885f3-c458-4841-a8c3-994c2f50af67",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 23,
+    "ts": "2026-11-06T14:41:13.000Z",
+    "type": "answer",
+    "round": "engineering",
+    "actor": "a",
+    "text": "Nothing that touches earned pay: five invariants prove it.",
+    "proof": {
+     "requestId": "e26e0cbe-849f-46f8-a803-94089ddd6c29",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 24,
+    "ts": "2026-11-06T14:41:24.000Z",
+    "type": "answer",
+    "round": "engineering",
+    "actor": "b",
+    "text": "Approve less than their share, which the app catches.",
+    "proof": {
+     "requestId": "f4bc5793-a6ae-4678-ac82-b7f879e0c1ad",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 25,
+    "ts": "2026-11-06T14:41:35.000Z",
+    "type": "challenge",
+    "round": "engineering",
+    "actor": "a",
+    "target": "b",
+    "challengeId": "engineering-1",
+    "move": "Stack Trace Strike",
+    "text": "Anyone can call SplitSafe's settle().",
+    "evidence": [
+     {
+      "kind": "file",
+      "label": "B:E4 · contracts/SplitVault.sol:88"
+     }
+    ],
+    "proof": {
+     "requestId": "445b7345-eb0e-4632-a011-9c620bc4d11b",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 26,
+    "ts": "2026-11-06T14:41:46.000Z",
+    "type": "rebuttal",
+    "round": "engineering",
+    "actor": "b",
+    "challengeId": "engineering-1",
+    "text": "It only settles when everyone has approved.",
+    "proof": {
+     "requestId": "aa0bbe54-6d52-4af0-ae40-974a17f11d39",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 27,
+    "ts": "2026-11-06T14:41:57.000Z",
+    "type": "ruling",
+    "round": "engineering",
+    "challengeId": "engineering-1",
+    "votes": {
+     "judge_11631c00": "partially_upheld",
+     "judge_e9c669c4": "upheld",
+     "judge_c876a259": "partially_upheld"
+    },
+    "reason": "Open settle() is a real gap, partly mitigated.",
+    "proof": {
+     "requestId": "53d36509-c2fd-424a-a5c2-068604ca3b8e",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 28,
+    "ts": "2026-11-06T14:42:08.000Z",
+    "type": "penalty",
+    "round": "engineering",
+    "target": "b",
+    "judge": "judge_e9c669c4",
+    "reason": "Anyone can call settle(). Lock it before mainnet.",
+    "evidence": [
+     {
+      "kind": "file",
+      "label": "B:E4 · contracts/SplitVault.sol:88"
+     }
+    ],
+    "proof": {
+     "requestId": "d118641d-f55e-47a1-ad43-3cd199104876",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 29,
+    "ts": "2026-11-06T14:42:19.000Z",
+    "type": "round_sealed",
+    "round": "engineering",
+    "scores": {
+     "a": [
+      90,
+      94,
+      88
+     ],
+     "b": [
+      56,
+      44,
+      54
+     ]
+    }
+   },
+   {
+    "seq": 30,
+    "ts": "2026-11-06T14:42:30.000Z",
+    "type": "round_start",
+    "round": "innovation"
+   },
+   {
+    "seq": 31,
+    "ts": "2026-11-06T14:42:41.000Z",
+    "type": "question",
+    "round": "innovation",
+    "actor": "judge_c876a259",
+    "text": "What's new here?",
+    "proof": {
+     "requestId": "d4129a52-89c6-409e-a8fc-90d7f6f5b4cf",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 32,
+    "ts": "2026-11-06T14:42:52.000Z",
+    "type": "answer",
+    "round": "innovation",
+    "actor": "a",
+    "text": "Clawback that's mathematically safe for contributors.",
+    "proof": {
+     "requestId": "77a8cae6-4cdc-4234-ae66-524218caafb7",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 33,
+    "ts": "2026-11-06T14:43:03.000Z",
+    "type": "answer",
+    "round": "innovation",
+    "actor": "b",
+    "text": "One-tap approval from a photo of a receipt.",
+    "proof": {
+     "requestId": "820852f2-4dbc-4540-a98b-6f0252c837a2",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 34,
+    "ts": "2026-11-06T14:43:14.000Z",
+    "type": "challenge",
+    "round": "innovation",
+    "actor": "b",
+    "target": "a",
+    "challengeId": "innovation-1",
+    "move": "Copycat Counter",
+    "text": "Streaming payments are Sablier with a new skin.",
+    "evidence": [],
+    "proof": {
+     "requestId": "d4b25fb8-4dbd-4de7-a373-7f10799bc2cb",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 35,
+    "ts": "2026-11-06T14:43:25.000Z",
+    "type": "rebuttal",
+    "round": "innovation",
+    "actor": "a",
+    "challengeId": "innovation-1",
+    "text": "Sablier has no clawback cap. Ours is proven.",
+    "proof": {
+     "requestId": "f7c8cf30-c060-41d3-ac50-6d91365d1580",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 36,
+    "ts": "2026-11-06T14:43:36.000Z",
+    "type": "ruling",
+    "round": "innovation",
+    "challengeId": "innovation-1",
+    "votes": {
+     "judge_11631c00": "rejected",
+     "judge_e9c669c4": "rejected",
+     "judge_c876a259": "partially_upheld"
+    },
+    "reason": "The capped clawback is a real difference.",
+    "proof": {
+     "requestId": "abfaf701-03c5-463c-aafb-b0c019750c5a",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 37,
+    "ts": "2026-11-06T14:43:47.000Z",
+    "type": "round_sealed",
+    "round": "innovation",
+    "scores": {
+     "a": [
+      76,
+      84,
+      72
+     ],
+     "b": [
+      70,
+      64,
+      74
+     ]
+    }
+   },
+   {
+    "seq": 38,
+    "ts": "2026-11-06T14:43:58.000Z",
+    "type": "round_start",
+    "round": "feasibility"
+   },
+   {
+    "seq": 39,
+    "ts": "2026-11-06T14:44:09.000Z",
+    "type": "question",
+    "round": "feasibility",
+    "actor": "judge_c876a259",
+    "text": "What stops this shipping next month?",
+    "proof": {
+     "requestId": "f20b039e-1ca0-4cae-a773-f23712a20a7a",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 40,
+    "ts": "2026-11-06T14:44:20.000Z",
+    "type": "answer",
+    "round": "feasibility",
+    "actor": "a",
+    "text": "One contract address.",
+    "proof": {
+     "requestId": "7f6f0447-5988-415b-a3f4-06c0ee2947f0",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 41,
+    "ts": "2026-11-06T14:44:31.000Z",
+    "type": "answer",
+    "round": "feasibility",
+    "actor": "b",
+    "text": "Nothing. It's live.",
+    "proof": {
+     "requestId": "366021b8-89fb-42fd-a1d3-5c82f7973836",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 42,
+    "ts": "2026-11-06T14:44:42.000Z",
+    "type": "challenge",
+    "round": "feasibility",
+    "actor": "b",
+    "target": "a",
+    "challengeId": "feasibility-1",
+    "move": "Runway Check",
+    "text": "Vaultline can't take a deposit today.",
+    "evidence": [
+     {
+      "kind": "file",
+      "label": "A:E5 · app/src/deposit.tsx:44"
+     }
+    ],
+    "proof": {
+     "requestId": "4e4dd30b-695f-4d35-a008-324debda6331",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 43,
+    "ts": "2026-11-06T14:44:53.000Z",
+    "type": "rebuttal",
+    "round": "feasibility",
+    "actor": "a",
+    "challengeId": "feasibility-1",
+    "text": "It's a one-line fix.",
+    "proof": {
+     "requestId": "7af69364-6554-49e0-af6a-8dd107cfe693",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 44,
+    "ts": "2026-11-06T14:45:04.000Z",
+    "type": "ruling",
+    "round": "feasibility",
+    "challengeId": "feasibility-1",
+    "votes": {
+     "judge_11631c00": "partially_upheld",
+     "judge_e9c669c4": "partially_upheld",
+     "judge_c876a259": "partially_upheld"
+    },
+    "reason": "Small fix, but the demo still failed.",
+    "proof": {
+     "requestId": "05eb1bad-63cf-4ce2-a36a-717576ef6281",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 45,
+    "ts": "2026-11-06T14:45:15.000Z",
+    "type": "round_sealed",
+    "round": "feasibility",
+    "scores": {
+     "a": [
+      60,
+      70,
+      62
+     ],
+     "b": [
+      76,
+      68,
+      78
+     ]
+    }
+   },
+   {
+    "seq": 46,
+    "ts": "2026-11-06T14:45:26.000Z",
+    "type": "round_start",
+    "round": "defense"
+   },
+   {
+    "seq": 47,
+    "ts": "2026-11-06T14:45:37.000Z",
+    "type": "question",
+    "round": "defense",
+    "actor": "judge_e9c669c4",
+    "text": "Which claim are you least sure of?",
+    "proof": {
+     "requestId": "e29119d9-619d-4612-a8a1-865b6b875018",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 48,
+    "ts": "2026-11-06T14:45:48.000Z",
+    "type": "answer",
+    "round": "defense",
+    "actor": "a",
+    "text": "One-click deposit. It's broken right now.",
+    "proof": {
+     "requestId": "02e6b91b-1c28-4bf1-aa10-317db9ed1f86",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 49,
+    "ts": "2026-11-06T14:45:59.000Z",
+    "type": "answer",
+    "round": "defense",
+    "actor": "b",
+    "text": "Who can settle. We'll lock it.",
+    "proof": {
+     "requestId": "1c1899b7-d40e-45f1-aae1-fa484dff88b4",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 50,
+    "ts": "2026-11-06T14:46:10.000Z",
+    "type": "challenge",
+    "round": "defense",
+    "actor": "a",
+    "target": "b",
+    "challengeId": "defense-1",
+    "move": "Citation Check",
+    "text": "SplitSafe says only the creator can settle; the code disagrees.",
+    "evidence": [
+     {
+      "kind": "file",
+      "label": "B:E4 · contracts/SplitVault.sol:88"
+     }
+    ],
+    "proof": {
+     "requestId": "ab9cee9d-b707-4538-a70c-5d0be4f2b3a7",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 51,
+    "ts": "2026-11-06T14:46:21.000Z",
+    "type": "rebuttal",
+    "round": "defense",
+    "actor": "b",
+    "challengeId": "defense-1",
+    "text": "We said we'd lock it.",
+    "proof": {
+     "requestId": "2f8fd7ae-699a-4862-adef-0a57575be5b9",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 52,
+    "ts": "2026-11-06T14:46:32.000Z",
+    "type": "ruling",
+    "round": "defense",
+    "challengeId": "defense-1",
+    "votes": {
+     "judge_11631c00": "partially_upheld",
+     "judge_e9c669c4": "upheld",
+     "judge_c876a259": "partially_upheld"
+    },
+    "reason": "Owned, not fixed.",
+    "proof": {
+     "requestId": "6b95410c-08d0-4ed0-adee-7912920b346b",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 53,
+    "ts": "2026-11-06T14:46:43.000Z",
+    "type": "closing",
+    "actor": "a",
+    "text": "The best contracts here. Judge the engine, not the address bug.",
+    "proof": {
+     "requestId": "acb33132-dbd6-4610-a584-2150f99bdffa",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 54,
+    "ts": "2026-11-06T14:46:54.000Z",
+    "type": "closing",
+    "actor": "b",
+    "text": "It works on your phone today. That's the product.",
+    "proof": {
+     "requestId": "2fcb7f70-3aa8-4f6f-a8b9-9c8f054647b4",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 55,
+    "ts": "2026-11-06T14:47:05.000Z",
+    "type": "round_sealed",
+    "round": "defense",
+    "scores": {
+     "a": [
+      72,
+      76,
+      70
+     ],
+     "b": [
+      66,
+      58,
+      66
+     ]
+    }
+   },
+   {
+    "seq": 56,
+    "ts": "2026-11-06T14:47:16.000Z",
+    "type": "result",
+    "winner": "b",
+    "reason": "score"
+   }
+  ],
+  "scores": {
+   "a": 6887,
+   "b": 6987
+  },
+  "health": {
+   "a": 75096,
+   "b": 75896
+  },
+  "tie": {
+   "a": 0,
+   "b": 0
+  },
+  "needsReview": false,
+  "rounds": {
+   "product": {
+    "a": [
+     50,
+     58,
+     54
+    ],
+    "b": [
+     84,
+     74,
+     80
+    ],
+    "notes": [
+     {
+      "judgeId": "judge_11631c00",
+      "A": {
+       "score": 50
+      },
+      "B": {
+       "score": 84
+      },
+      "trace": "e2b6670c-4dfa-4e45-a61d-410751cd8be6"
+     },
+     {
+      "judgeId": "judge_e9c669c4",
+      "A": {
+       "score": 58
+      },
+      "B": {
+       "score": 74
+      },
+      "trace": "0e98c8b9-5cae-4e21-a26a-336882d38b47"
+     },
+     {
+      "judgeId": "judge_c876a259",
+      "A": {
+       "score": 54
+      },
+      "B": {
+       "score": 80
+      },
+      "trace": "27c20dc4-49c9-4311-a39f-b6450c29cecc"
+     }
+    ]
+   },
+   "ui": {
+    "a": [
+     52,
+     56,
+     54
+    ],
+    "b": [
+     86,
+     78,
+     82
+    ],
+    "notes": [
+     {
+      "judgeId": "judge_11631c00",
+      "A": {
+       "score": 52
+      },
+      "B": {
+       "score": 86
+      },
+      "trace": "0cfeaf1d-6d9d-463b-aa09-5af05c3e3ac9"
+     },
+     {
+      "judgeId": "judge_e9c669c4",
+      "A": {
+       "score": 56
+      },
+      "B": {
+       "score": 78
+      },
+      "trace": "c9fddf8a-c8d9-40e3-af62-77d8c4dc4f16"
+     },
+     {
+      "judgeId": "judge_c876a259",
+      "A": {
+       "score": 54
+      },
+      "B": {
+       "score": 82
+      },
+      "trace": "cc0292d5-8a4b-47e3-a392-5a5d07c31bb3"
+     }
+    ]
+   },
+   "engineering": {
+    "a": [
+     90,
+     94,
+     88
+    ],
+    "b": [
+     56,
+     44,
+     54
+    ],
+    "notes": [
+     {
+      "judgeId": "judge_11631c00",
+      "A": {
+       "score": 90
+      },
+      "B": {
+       "score": 56
+      },
+      "trace": "b3bd05ac-6d16-4f45-a8cb-e9ea20c2a519"
+     },
+     {
+      "judgeId": "judge_e9c669c4",
+      "A": {
+       "score": 94
+      },
+      "B": {
+       "score": 44
+      },
+      "trace": "316d36c5-b7cb-4573-acca-bfd45d59a622"
+     },
+     {
+      "judgeId": "judge_c876a259",
+      "A": {
+       "score": 88
+      },
+      "B": {
+       "score": 54
+      },
+      "trace": "7433cee9-38f8-470d-a202-6e0e268870a0"
+     }
+    ]
+   },
+   "innovation": {
+    "a": [
+     76,
+     84,
+     72
+    ],
+    "b": [
+     70,
+     64,
+     74
+    ],
+    "notes": [
+     {
+      "judgeId": "judge_11631c00",
+      "A": {
+       "score": 76
+      },
+      "B": {
+       "score": 70
+      },
+      "trace": "940729bb-0b45-4f3b-ac94-b67f4ae09781"
+     },
+     {
+      "judgeId": "judge_e9c669c4",
+      "A": {
+       "score": 84
+      },
+      "B": {
+       "score": 64
+      },
+      "trace": "da430840-9785-4194-a1bf-a02220bbbe41"
+     },
+     {
+      "judgeId": "judge_c876a259",
+      "A": {
+       "score": 72
+      },
+      "B": {
+       "score": 74
+      },
+      "trace": "d0ca0413-ca96-40e4-ab9d-856b7a43f0af"
+     }
+    ]
+   },
+   "feasibility": {
+    "a": [
+     60,
+     70,
+     62
+    ],
+    "b": [
+     76,
+     68,
+     78
+    ],
+    "notes": [
+     {
+      "judgeId": "judge_11631c00",
+      "A": {
+       "score": 60
+      },
+      "B": {
+       "score": 76
+      },
+      "trace": "2790196e-a934-453c-a2c0-92024b4cfe66"
+     },
+     {
+      "judgeId": "judge_e9c669c4",
+      "A": {
+       "score": 70
+      },
+      "B": {
+       "score": 68
+      },
+      "trace": "72281aed-5393-494a-af8f-9ab99d1cf253"
+     },
+     {
+      "judgeId": "judge_c876a259",
+      "A": {
+       "score": 62
+      },
+      "B": {
+       "score": 78
+      },
+      "trace": "0c790019-0eb0-4697-aba0-ef7609954a5b"
+     }
+    ]
+   },
+   "defense": {
+    "a": [
+     72,
+     76,
+     70
+    ],
+    "b": [
+     66,
+     58,
+     66
+    ],
+    "notes": [
+     {
+      "judgeId": "judge_11631c00",
+      "A": {
+       "score": 72
+      },
+      "B": {
+       "score": 66
+      },
+      "trace": "dc81799f-962a-48b6-a82e-70654d2e1a92"
+     },
+     {
+      "judgeId": "judge_e9c669c4",
+      "A": {
+       "score": 76
+      },
+      "B": {
+       "score": 58
+      },
+      "trace": "a41b96cb-560a-48fc-aa1b-4837215f5a5c"
+     },
+     {
+      "judgeId": "judge_c876a259",
+      "A": {
+       "score": 70
+      },
+      "B": {
+       "score": 66
+      },
+      "trace": "1fa2fbed-55a0-4df7-a012-6a3b48f907bf"
+     }
+    ]
+   }
+  },
+  "fighters": {
+   "a": {
+    "fighterName": "Vaultline",
+    "archetype": "Merkle Mafia"
+   },
+   "b": {
+    "fighterName": "SplitSafe",
+    "archetype": "Chai & Chain"
+   }
+  },
+  "calls": 60,
+  "costUsd": 0.126,
+  "resultHash": "0xc04ffd64039f3a461d7a5b57452b96572d2f96c572881e2f272b668b4b94a9f4",
+  "proofs": {
+   "resultHash": "0xc04ffd64039f3a461d7a5b57452b96572d2f96c572881e2f272b668b4b94a9f4",
+   "transcript": {
+    "rootHash": "0xb3b3dbe82130add5d92bcccd49d7e593095a9c9279fd0070573f4c1ff8d16f17",
+    "txSeq": 171359,
+    "file": "https://storagescan-galileo.0g.ai/submission/171359",
+    "tx": "https://chainscan-galileo.0g.ai/tx/0xcfc8ece4848e098976d9eae756b15c7237b85da3eef089c36fe1e2f4d202298e"
+   },
+   "arkiv": {
+    "entityKey": "0x6438ea562ae822e9dbe45b02187f6c6feb735ea26afb6079ecbdcb2dbdb0e023",
+    "txHash": "0x62af7e556ab910f76a5a3b1a9d278a8d5721cf23ef46d2b9074dd8b52f7aae9e",
+    "explorer": "https://rabdi.explorer.arkiv.network/entity-explorer?q=%24key%20%3D%20key(0x6438ea562ae822e9dbe45b02187f6c6feb735ea26afb6079ecbdcb2dbdb0e023)"
+   },
+   "inference": {
+    "model": "0gm-1.0-35b-a3b",
+    "provider": "0xf4FB8d2bD856e672b5f9848b0eD235A20079B250",
+    "requestIds": [
+     "e416224f-b358-4d5e-a01e-fdb37a3876b6",
+     "d7e7d93f-cb16-422c-ac2c-cad42c6a203f",
+     "f3fd4826-9fd9-4eb0-a16f-b27d9c0736ab",
+     "1e423db8-1718-457e-ad8e-e92b375296ed",
+     "3ab0d3b3-bd49-41e5-a551-178552bcf0c4",
+     "be9e631a-f408-47e2-a630-7fd4c3145d64",
+     "577c938b-a298-4a3e-a5ad-e701f848732b",
+     "836bc141-01af-4722-aa23-31ac99b0355c",
+     "4609cc06-4456-44ff-aaa3-a745de14c08e",
+     "c6175746-365f-4a1d-a0c6-e3151cb71076",
+     "69b9aeb4-f2e5-4e9e-a731-9fabd5b7c293",
+     "7d29cef0-19fb-4634-aa0a-defc8cfacfba",
+     "05ea749e-ac62-4352-af2d-87712cf35e2b",
+     "2197ea90-c647-496d-ad03-bc78a76b1cba",
+     "234de4cb-2f94-46c5-ac2c-aa62fbe3f0af",
+     "ca3885f3-c458-4841-a8c3-994c2f50af67",
+     "e26e0cbe-849f-46f8-a803-94089ddd6c29",
+     "f4bc5793-a6ae-4678-ac82-b7f879e0c1ad",
+     "445b7345-eb0e-4632-a011-9c620bc4d11b",
+     "aa0bbe54-6d52-4af0-ae40-974a17f11d39",
+     "53d36509-c2fd-424a-a5c2-068604ca3b8e",
+     "d118641d-f55e-47a1-ad43-3cd199104876",
+     "d4129a52-89c6-409e-a8fc-90d7f6f5b4cf",
+     "77a8cae6-4cdc-4234-ae66-524218caafb7",
+     "820852f2-4dbc-4540-a98b-6f0252c837a2",
+     "d4b25fb8-4dbd-4de7-a373-7f10799bc2cb",
+     "f7c8cf30-c060-41d3-ac50-6d91365d1580",
+     "abfaf701-03c5-463c-aafb-b0c019750c5a",
+     "f20b039e-1ca0-4cae-a773-f23712a20a7a",
+     "7f6f0447-5988-415b-a3f4-06c0ee2947f0",
+     "366021b8-89fb-42fd-a1d3-5c82f7973836",
+     "4e4dd30b-695f-4d35-a008-324debda6331",
+     "7af69364-6554-49e0-af6a-8dd107cfe693",
+     "05eb1bad-63cf-4ce2-a36a-717576ef6281",
+     "e29119d9-619d-4612-a8a1-865b6b875018",
+     "02e6b91b-1c28-4bf1-aa10-317db9ed1f86",
+     "1c1899b7-d40e-45f1-aae1-fa484dff88b4",
+     "ab9cee9d-b707-4538-a70c-5d0be4f2b3a7",
+     "2f8fd7ae-699a-4862-adef-0a57575be5b9",
+     "6b95410c-08d0-4ed0-adee-7912920b346b",
+     "acb33132-dbd6-4610-a584-2150f99bdffa",
+     "2fcb7f70-3aa8-4f6f-a8b9-9c8f054647b4"
+    ],
+    "scorecards": [
+     "e2b6670c-4dfa-4e45-a61d-410751cd8be6",
+     "0e98c8b9-5cae-4e21-a26a-336882d38b47",
+     "27c20dc4-49c9-4311-a39f-b6450c29cecc",
+     "0cfeaf1d-6d9d-463b-aa09-5af05c3e3ac9",
+     "c9fddf8a-c8d9-40e3-af62-77d8c4dc4f16",
+     "cc0292d5-8a4b-47e3-a392-5a5d07c31bb3",
+     "b3bd05ac-6d16-4f45-a8cb-e9ea20c2a519",
+     "316d36c5-b7cb-4573-acca-bfd45d59a622",
+     "7433cee9-38f8-470d-a202-6e0e268870a0",
+     "940729bb-0b45-4f3b-ac94-b67f4ae09781",
+     "da430840-9785-4194-a1bf-a02220bbbe41",
+     "d0ca0413-ca96-40e4-ab9d-856b7a43f0af",
+     "2790196e-a934-453c-a2c0-92024b4cfe66",
+     "72281aed-5393-494a-af8f-9ab99d1cf253",
+     "0c790019-0eb0-4697-aba0-ef7609954a5b",
+     "dc81799f-962a-48b6-a82e-70654d2e1a92",
+     "a41b96cb-560a-48fc-aa1b-4837215f5a5c",
+     "1fa2fbed-55a0-4df7-a012-6a3b48f907bf"
+    ]
+   },
+   "evidence": {
+    "a": {
+     "project": "vaultline",
+     "dossier": "0x4ab9f7a9a344872e0891367d52a0fb01c1b6fc3069c943cd1dc749898f2aa68d",
+     "review": "0xf47aac7516d13a6e0d2fdd74440b4306fe8e061ae239c8a282fd7a10ebff55dd",
+     "liveTest": "0xa6da6db8b84078b1dc115fc2c9ce2ff974d66bd0b2ff66fe9d635591e3377776",
+     "arkivPanel": "0xfb68985c2cd7acfcbcf8e580387805583a183c4c7d6d63496e6e29b6057b481a"
+    },
+    "b": {
+     "project": "splitsafe",
+     "dossier": "0xd91322afd46478a3dcae4550e7d2179096ef3745b9c5a14e7a4b45adf11e4a78",
+     "review": "0x324a84355bba273f3ea034126d4defc3d3d77cef676baa6ef95032f08dd04b2e",
+     "liveTest": "0x43fab111c0a02fa9cb207fcc23442c4218c9140fc2f01ddcd138aaffc4fa4307",
+     "arkivPanel": "0x0be27d31fd948109183c4915197db25da5a0a2d81dad3ed2de8fdd8d583c271c"
+    }
+   }
+  }
+ },
+ "1-3": {
+  "status": "done",
+  "live": true,
+  "tournamentId": "1",
+  "match": 3,
+  "a": 6,
+  "b": 7,
+  "tagline": "Real shopkeepers vs. a slick laptop demo.",
+  "cast": {
+   "judge_11631c00": {
+    "name": "Priya Raman",
+    "focus": "Product lead"
+   },
+   "judge_e9c669c4": {
+    "name": "Marcus Lee",
+    "focus": "Smart-contract engineer"
+   },
+   "judge_c876a259": {
+    "name": "Ana Okafor",
+    "focus": "Investor"
+   }
+  },
+  "judges": {
+   "judge_11631c00": {
+    "name": "Priya Raman",
+    "focus": "Product lead"
+   },
+   "judge_e9c669c4": {
+    "name": "Marcus Lee",
+    "focus": "Smart-contract engineer"
+   },
+   "judge_c876a259": {
+    "name": "Ana Okafor",
+    "focus": "Investor"
+   }
+  },
+  "revealAt": 0,
+  "ranAt": "2026-11-06T17:51:04.000Z",
+  "id": "80150991-777e-46e8-a063-fa9f8025589e",
+  "events": [
+   {
+    "seq": 1,
+    "ts": "2026-11-06T17:40:11.000Z",
+    "type": "intro"
+   },
+   {
+    "seq": 2,
+    "ts": "2026-11-06T17:40:22.000Z",
+    "type": "pitch",
+    "actor": "a",
+    "text": "Credit for Mumbai's corner shops, scored from UPI sales, paid in USDC. 14 shops in Dadar use it.",
+    "proof": {
+     "requestId": "2f678a48-6316-4f10-a72f-8becd1bec7a4",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 3,
+    "ts": "2026-11-06T17:40:33.000Z",
+    "type": "pitch",
+    "actor": "b",
+    "text": "Mumbai Metro tickets as NFTs. Tap in, earn rides, resell the passes you don't use.",
+    "proof": {
+     "requestId": "e3a7d4c4-d842-42c4-a74d-9a8802387103",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 4,
+    "ts": "2026-11-06T17:40:44.000Z",
+    "type": "round_start",
+    "round": "product"
+   },
+   {
+    "seq": 5,
+    "ts": "2026-11-06T17:40:55.000Z",
+    "type": "question",
+    "round": "product",
+    "actor": "judge_11631c00",
+    "text": "Who used it this week?",
+    "proof": {
+     "requestId": "6df2ee3e-4f76-4168-ad1c-93f3c8c309ba",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 6,
+    "ts": "2026-11-06T17:41:06.000Z",
+    "type": "answer",
+    "round": "product",
+    "actor": "a",
+    "text": "Fourteen kirana owners in Dadar. Consent forms are in the repo.",
+    "proof": {
+     "requestId": "3da5ab1c-b76b-4061-ade7-308b097fb18a",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 7,
+    "ts": "2026-11-06T17:41:17.000Z",
+    "type": "answer",
+    "round": "product",
+    "actor": "b",
+    "text": "Our team, on the demo build.",
+    "proof": {
+     "requestId": "0fc1a14f-0cb3-41c6-a243-92b874a37ca3",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 8,
+    "ts": "2026-11-06T17:41:28.000Z",
+    "type": "challenge",
+    "round": "product",
+    "actor": "a",
+    "target": "b",
+    "challengeId": "product-1",
+    "move": "User Story Sweep",
+    "text": "MetroMint has no rider and no metro partner.",
+    "evidence": [
+     {
+      "kind": "file",
+      "label": "B:E2 · tap-in unverified"
+     }
+    ],
+    "proof": {
+     "requestId": "bc0eb5f9-7de0-43cb-aedf-0a88eafc248c",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 9,
+    "ts": "2026-11-06T17:41:39.000Z",
+    "type": "rebuttal",
+    "round": "product",
+    "actor": "b",
+    "challengeId": "product-1",
+    "text": "We're talking to MMRDA.",
+    "proof": {
+     "requestId": "7d22f36b-eff9-4fc9-af98-4a77b2f4e965",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 10,
+    "ts": "2026-11-06T17:41:50.000Z",
+    "type": "ruling",
+    "round": "product",
+    "challengeId": "product-1",
+    "votes": {
+     "judge_11631c00": "upheld",
+     "judge_e9c669c4": "partially_upheld",
+     "judge_c876a259": "upheld"
+    },
+    "reason": "No users and no gate integration yet.",
+    "proof": {
+     "requestId": "5ff09b05-aab3-4fbd-a803-b8d46d3edbaa",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 11,
+    "ts": "2026-11-06T17:42:01.000Z",
+    "type": "round_sealed",
+    "round": "product",
+    "scores": {
+     "a": [
+      80,
+      74,
+      86
+     ],
+     "b": [
+      62,
+      58,
+      64
+     ]
+    }
+   },
+   {
+    "seq": 12,
+    "ts": "2026-11-06T17:42:12.000Z",
+    "type": "round_start",
+    "round": "ui"
+   },
+   {
+    "seq": 13,
+    "ts": "2026-11-06T17:42:23.000Z",
+    "type": "question",
+    "round": "ui",
+    "actor": "judge_11631c00",
+    "text": "Show me the screen on a commuter's phone.",
+    "proof": {
+     "requestId": "b4869be5-1170-488a-a608-450b77a18594",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 14,
+    "ts": "2026-11-06T17:42:34.000Z",
+    "type": "answer",
+    "round": "ui",
+    "actor": "a",
+    "text": "Our draw button gets cut off on a phone. We know.",
+    "proof": {
+     "requestId": "aff00b3f-ac9c-42c5-a1df-861ad8d042d5",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 15,
+    "ts": "2026-11-06T17:42:45.000Z",
+    "type": "answer",
+    "round": "ui",
+    "actor": "b",
+    "text": "The ticket QR, full screen.",
+    "proof": {
+     "requestId": "984ce385-df00-4c82-a4d6-777ecf2d8f78",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 16,
+    "ts": "2026-11-06T17:42:56.000Z",
+    "type": "challenge",
+    "round": "ui",
+    "actor": "a",
+    "target": "b",
+    "challengeId": "ui-1",
+    "move": "Evidence Challenge",
+    "text": "MetroMint's ticket card is 520px wide and overflows at 390px.",
+    "evidence": [
+     {
+      "kind": "file",
+      "label": "B:E4 · app/styles/ticket.css:4"
+     }
+    ],
+    "proof": {
+     "requestId": "3fcb6788-e505-4047-adc9-62eafea336f9",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 17,
+    "ts": "2026-11-06T17:43:07.000Z",
+    "type": "rebuttal",
+    "round": "ui",
+    "actor": "b",
+    "challengeId": "ui-1",
+    "text": "Most phones are bigger now.",
+    "proof": {
+     "requestId": "a4d37417-47ba-4b5c-a3d7-c4f12dd4f8b9",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 18,
+    "ts": "2026-11-06T17:43:18.000Z",
+    "type": "ruling",
+    "round": "ui",
+    "challengeId": "ui-1",
+    "votes": {
+     "judge_11631c00": "upheld",
+     "judge_e9c669c4": "upheld",
+     "judge_c876a259": "partially_upheld"
+    },
+    "reason": "The commuter's main screen breaks on a phone.",
+    "proof": {
+     "requestId": "65c6ed0d-c976-4a3c-a47d-9d69e7743639",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 19,
+    "ts": "2026-11-06T17:43:29.000Z",
+    "type": "challenge",
+    "round": "ui",
+    "actor": "b",
+    "target": "a",
+    "challengeId": "ui-2",
+    "move": "Evidence Challenge",
+    "text": "Kirana Credit's draw button is cut off on a phone.",
+    "evidence": [
+     {
+      "kind": "evidence",
+      "label": "A · live test f1 (phone): failed"
+     }
+    ],
+    "proof": {
+     "requestId": "2831f119-d71a-4919-a5d4-e419caff67ac",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 20,
+    "ts": "2026-11-06T17:43:40.000Z",
+    "type": "rebuttal",
+    "round": "ui",
+    "actor": "a",
+    "challengeId": "ui-2",
+    "text": "Shopkeepers use it on a tablet at the counter.",
+    "proof": {
+     "requestId": "671da5fc-01a9-4e27-ad2a-680404b20621",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 21,
+    "ts": "2026-11-06T17:43:51.000Z",
+    "type": "ruling",
+    "round": "ui",
+    "challengeId": "ui-2",
+    "votes": {
+     "judge_11631c00": "upheld",
+     "judge_e9c669c4": "partially_upheld",
+     "judge_c876a259": "partially_upheld"
+    },
+    "reason": "A real phone defect, owned.",
+    "proof": {
+     "requestId": "f71748c8-8f1c-4dd6-a877-3c8b45920eb9",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 22,
+    "ts": "2026-11-06T17:44:02.000Z",
+    "type": "penalty",
+    "round": "ui",
+    "target": "b",
+    "judge": "judge_11631c00",
+    "reason": "Commuters ride with phones. Your ticket screen overflows at 390px.",
+    "evidence": [
+     {
+      "kind": "file",
+      "label": "B:E4 · app/styles/ticket.css:4"
+     }
+    ],
+    "proof": {
+     "requestId": "1337d3ca-bba6-406c-a19d-fa63b36898fd",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 23,
+    "ts": "2026-11-06T17:44:13.000Z",
+    "type": "round_sealed",
+    "round": "ui",
+    "scores": {
+     "a": [
+      60,
+      62,
+      64
+     ],
+     "b": [
+      44,
+      46,
+      48
+     ]
+    }
+   },
+   {
+    "seq": 24,
+    "ts": "2026-11-06T17:44:24.000Z",
+    "type": "round_start",
+    "round": "engineering"
+   },
+   {
+    "seq": 25,
+    "ts": "2026-11-06T17:44:35.000Z",
+    "type": "question",
+    "round": "engineering",
+    "actor": "judge_e9c669c4",
+    "text": "Where does the asset get created?",
+    "proof": {
+     "requestId": "1f2b3c20-e84f-42d6-a8d8-b9977eb8cae5",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 26,
+    "ts": "2026-11-06T17:44:46.000Z",
+    "type": "answer",
+    "round": "engineering",
+    "actor": "a",
+    "text": "CreditLine.sol:58, with per-shop limits and 22 Foundry tests.",
+    "proof": {
+     "requestId": "df751eec-aa44-405a-a589-63cba7ad6aa0",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 27,
+    "ts": "2026-11-06T17:44:57.000Z",
+    "type": "answer",
+    "round": "engineering",
+    "actor": "b",
+    "text": "mint.ts calls our contract on Base.",
+    "proof": {
+     "requestId": "ab2dd6f3-e2ad-4664-a8e8-35ecb0b9a166",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 28,
+    "ts": "2026-11-06T17:45:08.000Z",
+    "type": "challenge",
+    "round": "engineering",
+    "actor": "a",
+    "target": "b",
+    "challengeId": "engineering-1",
+    "move": "Stack Trace Strike",
+    "text": "MetroMint's mint calls a local mock that returns a fake token id.",
+    "evidence": [
+     {
+      "kind": "file",
+      "label": "B:E1 · app/lib/mint.ts:12"
+     }
+    ],
+    "proof": {
+     "requestId": "48e3ad31-ac98-4f47-ad4b-e83d521f60b6",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 29,
+    "ts": "2026-11-06T17:45:19.000Z",
+    "type": "rebuttal",
+    "round": "engineering",
+    "actor": "b",
+    "challengeId": "engineering-1",
+    "text": "The real call is ready to swap in.",
+    "proof": {
+     "requestId": "3d03834f-d829-4b3d-afef-11ec4a0816ec",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 30,
+    "ts": "2026-11-06T17:45:30.000Z",
+    "type": "ruling",
+    "round": "engineering",
+    "challengeId": "engineering-1",
+    "votes": {
+     "judge_11631c00": "upheld",
+     "judge_e9c669c4": "upheld",
+     "judge_c876a259": "upheld"
+    },
+    "reason": "No ticket is ever minted.",
+    "proof": {
+     "requestId": "7079b312-5255-47a7-ace1-74858fc9a98d",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 31,
+    "ts": "2026-11-06T17:45:41.000Z",
+    "type": "penalty",
+    "round": "engineering",
+    "target": "b",
+    "judge": "judge_c876a259",
+    "reason": "The mint runs on a mock contract.",
+    "evidence": [
+     {
+      "kind": "file",
+      "label": "B:E1 · app/lib/mint.ts:12"
+     }
+    ],
+    "proof": {
+     "requestId": "a20270f4-4ca5-4e2b-a8e2-ef44f7551518",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 32,
+    "ts": "2026-11-06T17:45:52.000Z",
+    "type": "round_sealed",
+    "round": "engineering",
+    "scores": {
+     "a": [
+      74,
+      76,
+      72
+     ],
+     "b": [
+      46,
+      38,
+      50
+     ]
+    }
+   },
+   {
+    "seq": 33,
+    "ts": "2026-11-06T17:46:03.000Z",
+    "type": "round_start",
+    "round": "innovation"
+   },
+   {
+    "seq": 34,
+    "ts": "2026-11-06T17:46:14.000Z",
+    "type": "question",
+    "round": "innovation",
+    "actor": "judge_c876a259",
+    "text": "What's new here?",
+    "proof": {
+     "requestId": "a76fb957-930d-42d4-a9f0-88b9bfa65fa7",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 35,
+    "ts": "2026-11-06T17:46:25.000Z",
+    "type": "answer",
+    "round": "innovation",
+    "actor": "a",
+    "text": "UPI sales as collateral for on-chain credit.",
+    "proof": {
+     "requestId": "2bbc7f75-d1a4-41e4-a9f9-da2fcdf35635",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 36,
+    "ts": "2026-11-06T17:46:36.000Z",
+    "type": "answer",
+    "round": "innovation",
+    "actor": "b",
+    "text": "Resellable tickets with a price cap.",
+    "proof": {
+     "requestId": "972f6b0b-7886-4f37-a41e-a9a841de43aa",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 37,
+    "ts": "2026-11-06T17:46:47.000Z",
+    "type": "challenge",
+    "round": "innovation",
+    "actor": "b",
+    "target": "a",
+    "challengeId": "innovation-1",
+    "move": "Copycat Counter",
+    "text": "Kirana Credit is a microloan app with a crypto rail.",
+    "evidence": [],
+    "proof": {
+     "requestId": "3232b182-ddc0-4d85-a8d2-af7111e317ca",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 38,
+    "ts": "2026-11-06T17:46:58.000Z",
+    "type": "rebuttal",
+    "round": "innovation",
+    "actor": "a",
+    "challengeId": "innovation-1",
+    "text": "Banks don't lend on UPI history. We do, in minutes.",
+    "proof": {
+     "requestId": "bfa8f756-09bd-4311-a561-17b958adc91f",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 39,
+    "ts": "2026-11-06T17:47:09.000Z",
+    "type": "ruling",
+    "round": "innovation",
+    "challengeId": "innovation-1",
+    "votes": {
+     "judge_11631c00": "rejected",
+     "judge_e9c669c4": "partially_upheld",
+     "judge_c876a259": "rejected"
+    },
+    "reason": "UPI-scored credit is a genuine wedge.",
+    "proof": {
+     "requestId": "8686890f-5cc4-47b3-ad24-eb43f46a844e",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 40,
+    "ts": "2026-11-06T17:47:20.000Z",
+    "type": "round_sealed",
+    "round": "innovation",
+    "scores": {
+     "a": [
+      82,
+      76,
+      88
+     ],
+     "b": [
+      66,
+      60,
+      64
+     ]
+    }
+   },
+   {
+    "seq": 41,
+    "ts": "2026-11-06T17:47:31.000Z",
+    "type": "round_start",
+    "round": "feasibility"
+   },
+   {
+    "seq": 42,
+    "ts": "2026-11-06T17:47:42.000Z",
+    "type": "question",
+    "round": "feasibility",
+    "actor": "judge_c876a259",
+    "text": "What breaks first at a thousand users?",
+    "proof": {
+     "requestId": "1b7b5428-aa0c-44e0-a614-0c8b20a80959",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 43,
+    "ts": "2026-11-06T17:47:53.000Z",
+    "type": "answer",
+    "round": "feasibility",
+    "actor": "a",
+    "text": "Manual consent onboarding. We're automating it.",
+    "proof": {
+     "requestId": "e8e055f3-ceb6-4483-abb2-42587cbb1539",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 44,
+    "ts": "2026-11-06T17:48:04.000Z",
+    "type": "answer",
+    "round": "feasibility",
+    "actor": "b",
+    "text": "Nothing; it's on Base.",
+    "proof": {
+     "requestId": "e3232bc7-9c73-476f-a05b-addbedc7c7ae",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 45,
+    "ts": "2026-11-06T17:48:15.000Z",
+    "type": "challenge",
+    "round": "feasibility",
+    "actor": "a",
+    "target": "b",
+    "challengeId": "feasibility-1",
+    "move": "Runway Check",
+    "text": "MetroMint needs a metro partner it doesn't have.",
+    "evidence": [
+     {
+      "kind": "file",
+      "label": "B:E2"
+     }
+    ],
+    "proof": {
+     "requestId": "3f2c7e0d-e1ce-4415-a995-7609833e9084",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 46,
+    "ts": "2026-11-06T17:48:26.000Z",
+    "type": "rebuttal",
+    "round": "feasibility",
+    "actor": "b",
+    "challengeId": "feasibility-1",
+    "text": "We'll get one.",
+    "proof": {
+     "requestId": "41e99d89-c051-4b7d-a6d0-65e274b3f3af",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 47,
+    "ts": "2026-11-06T17:48:37.000Z",
+    "type": "ruling",
+    "round": "feasibility",
+    "challengeId": "feasibility-1",
+    "votes": {
+     "judge_11631c00": "upheld",
+     "judge_e9c669c4": "partially_upheld",
+     "judge_c876a259": "upheld"
+    },
+    "reason": "The business depends on a deal that doesn't exist.",
+    "proof": {
+     "requestId": "b02e1965-df83-4a6d-a4f2-a9d881e60e00",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 48,
+    "ts": "2026-11-06T17:48:48.000Z",
+    "type": "round_sealed",
+    "round": "feasibility",
+    "scores": {
+     "a": [
+      76,
+      74,
+      84
+     ],
+     "b": [
+      44,
+      46,
+      42
+     ]
+    }
+   },
+   {
+    "seq": 49,
+    "ts": "2026-11-06T17:48:59.000Z",
+    "type": "round_start",
+    "round": "defense"
+   },
+   {
+    "seq": 50,
+    "ts": "2026-11-06T17:49:10.000Z",
+    "type": "question",
+    "round": "defense",
+    "actor": "judge_e9c669c4",
+    "text": "Which claim are you least sure of?",
+    "proof": {
+     "requestId": "8bef58cd-d357-4a60-ae47-96040f581788",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 51,
+    "ts": "2026-11-06T17:49:21.000Z",
+    "type": "answer",
+    "round": "defense",
+    "actor": "a",
+    "text": "UPI auto-repay. It's described, not built.",
+    "proof": {
+     "requestId": "78e3818a-a237-4cf2-aa81-4f65908b682b",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 52,
+    "ts": "2026-11-06T17:49:32.000Z",
+    "type": "answer",
+    "round": "defense",
+    "actor": "b",
+    "text": "Phone support.",
+    "proof": {
+     "requestId": "cd0f6932-0bc9-48b4-adc6-06dedcc62128",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 53,
+    "ts": "2026-11-06T17:49:43.000Z",
+    "type": "challenge",
+    "round": "defense",
+    "actor": "b",
+    "target": "a",
+    "challengeId": "defense-1",
+    "move": "Citation Check",
+    "text": "Kirana Credit says repayments auto-deduct, with no mandate code.",
+    "evidence": [
+     {
+      "kind": "file",
+      "label": "A:E4 · unverified"
+     }
+    ],
+    "proof": {
+     "requestId": "fd3a580e-5887-45c3-a9e0-3dcde568a93e",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 54,
+    "ts": "2026-11-06T17:49:54.000Z",
+    "type": "rebuttal",
+    "round": "defense",
+    "actor": "a",
+    "challengeId": "defense-1",
+    "text": "Correct, and we said so.",
+    "proof": {
+     "requestId": "0800d69b-a33b-473f-a063-bd71567bd66d",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 55,
+    "ts": "2026-11-06T17:50:05.000Z",
+    "type": "ruling",
+    "round": "defense",
+    "challengeId": "defense-1",
+    "votes": {
+     "judge_11631c00": "partially_upheld",
+     "judge_e9c669c4": "partially_upheld",
+     "judge_c876a259": "rejected"
+    },
+    "reason": "Honestly owned.",
+    "proof": {
+     "requestId": "1b2a8be6-dc44-4528-aa3b-fb71cb4bea8a",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 56,
+    "ts": "2026-11-06T17:50:16.000Z",
+    "type": "closing",
+    "actor": "a",
+    "text": "Fourteen shops trust us with their stock. Ask them.",
+    "proof": {
+     "requestId": "ebf65056-8020-4560-a605-b82a355eb2d8",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 57,
+    "ts": "2026-11-06T17:50:27.000Z",
+    "type": "closing",
+    "actor": "b",
+    "text": "Picture every Mumbai commuter with a ticket in their wallet.",
+    "proof": {
+     "requestId": "5158d223-e475-4018-a0de-2596e8d89116",
+     "teeVerified": null
+    }
+   },
+   {
+    "seq": 58,
+    "ts": "2026-11-06T17:50:38.000Z",
+    "type": "round_sealed",
+    "round": "defense",
+    "scores": {
+     "a": [
+      78,
+      76,
+      80
+     ],
+     "b": [
+      52,
+      48,
+      54
+     ]
+    }
+   },
+   {
+    "seq": 59,
+    "ts": "2026-11-06T17:50:49.000Z",
+    "type": "result",
+    "winner": "a",
+    "reason": "score"
+   }
+  ],
+  "scores": {
+   "a": 7700,
+   "b": 5413
+  },
+  "health": {
+   "a": 81600,
+   "b": 63304
+  },
+  "tie": {
+   "a": 0,
+   "b": 0
+  },
+  "needsReview": false,
+  "rounds": {
+   "product": {
+    "a": [
+     80,
+     74,
+     86
+    ],
+    "b": [
+     62,
+     58,
+     64
+    ],
+    "notes": [
+     {
+      "judgeId": "judge_11631c00",
+      "A": {
+       "score": 80
+      },
+      "B": {
+       "score": 62
+      },
+      "trace": "2dc1fd0b-155b-4cb3-a841-33191209f5b3"
+     },
+     {
+      "judgeId": "judge_e9c669c4",
+      "A": {
+       "score": 74
+      },
+      "B": {
+       "score": 58
+      },
+      "trace": "efadaa56-d1b3-475c-afca-e1fa2961c237"
+     },
+     {
+      "judgeId": "judge_c876a259",
+      "A": {
+       "score": 86
+      },
+      "B": {
+       "score": 64
+      },
+      "trace": "dd63a20a-bb42-4e56-a677-28386948bedc"
+     }
+    ]
+   },
+   "ui": {
+    "a": [
+     60,
+     62,
+     64
+    ],
+    "b": [
+     44,
+     46,
+     48
+    ],
+    "notes": [
+     {
+      "judgeId": "judge_11631c00",
+      "A": {
+       "score": 60
+      },
+      "B": {
+       "score": 44
+      },
+      "trace": "678793fc-5eca-4eb9-aca6-0eda378f72af"
+     },
+     {
+      "judgeId": "judge_e9c669c4",
+      "A": {
+       "score": 62
+      },
+      "B": {
+       "score": 46
+      },
+      "trace": "ddcf8efe-50b3-407c-a27c-a162704efc9f"
+     },
+     {
+      "judgeId": "judge_c876a259",
+      "A": {
+       "score": 64
+      },
+      "B": {
+       "score": 48
+      },
+      "trace": "64304e60-0d5c-4f1b-a9f6-5605a63f028f"
+     }
+    ]
+   },
+   "engineering": {
+    "a": [
+     74,
+     76,
+     72
+    ],
+    "b": [
+     46,
+     38,
+     50
+    ],
+    "notes": [
+     {
+      "judgeId": "judge_11631c00",
+      "A": {
+       "score": 74
+      },
+      "B": {
+       "score": 46
+      },
+      "trace": "5e41008e-e8a4-45e7-acc1-76391b64722c"
+     },
+     {
+      "judgeId": "judge_e9c669c4",
+      "A": {
+       "score": 76
+      },
+      "B": {
+       "score": 38
+      },
+      "trace": "367d463f-742a-48df-a205-097956d45789"
+     },
+     {
+      "judgeId": "judge_c876a259",
+      "A": {
+       "score": 72
+      },
+      "B": {
+       "score": 50
+      },
+      "trace": "fad8c5ff-d8b5-449a-a7f8-0fd22a6bb593"
+     }
+    ]
+   },
+   "innovation": {
+    "a": [
+     82,
+     76,
+     88
+    ],
+    "b": [
+     66,
+     60,
+     64
+    ],
+    "notes": [
+     {
+      "judgeId": "judge_11631c00",
+      "A": {
+       "score": 82
+      },
+      "B": {
+       "score": 66
+      },
+      "trace": "56cf550e-ecb9-4cc9-a935-b98f27630cea"
+     },
+     {
+      "judgeId": "judge_e9c669c4",
+      "A": {
+       "score": 76
+      },
+      "B": {
+       "score": 60
+      },
+      "trace": "1ca53924-709d-43f2-afc3-2ceebaedaf60"
+     },
+     {
+      "judgeId": "judge_c876a259",
+      "A": {
+       "score": 88
+      },
+      "B": {
+       "score": 64
+      },
+      "trace": "72f4e0c2-6d2a-4e10-a47a-e9b215678af7"
+     }
+    ]
+   },
+   "feasibility": {
+    "a": [
+     76,
+     74,
+     84
+    ],
+    "b": [
+     44,
+     46,
+     42
+    ],
+    "notes": [
+     {
+      "judgeId": "judge_11631c00",
+      "A": {
+       "score": 76
+      },
+      "B": {
+       "score": 44
+      },
+      "trace": "359c8bdf-9f37-4f80-a9d5-acc0898512f3"
+     },
+     {
+      "judgeId": "judge_e9c669c4",
+      "A": {
+       "score": 74
+      },
+      "B": {
+       "score": 46
+      },
+      "trace": "27684191-6d0f-45c7-a1e8-85fc42c852c4"
+     },
+     {
+      "judgeId": "judge_c876a259",
+      "A": {
+       "score": 84
+      },
+      "B": {
+       "score": 42
+      },
+      "trace": "06dbfb6c-8586-45f7-a00d-e82ebc42c38a"
+     }
+    ]
+   },
+   "defense": {
+    "a": [
+     78,
+     76,
+     80
+    ],
+    "b": [
+     52,
+     48,
+     54
+    ],
+    "notes": [
+     {
+      "judgeId": "judge_11631c00",
+      "A": {
+       "score": 78
+      },
+      "B": {
+       "score": 52
+      },
+      "trace": "55fa1564-c452-425f-aa47-28b63e87c67a"
+     },
+     {
+      "judgeId": "judge_e9c669c4",
+      "A": {
+       "score": 76
+      },
+      "B": {
+       "score": 48
+      },
+      "trace": "1a23bce6-17e5-4cf3-a1b6-87ab1a95dcbc"
+     },
+     {
+      "judgeId": "judge_c876a259",
+      "A": {
+       "score": 80
+      },
+      "B": {
+       "score": 54
+      },
+      "trace": "5e380e14-136b-46b6-ab92-c90cb2ce81f5"
+     }
+    ]
+   }
+  },
+  "fighters": {
+   "a": {
+    "fighterName": "Kirana Credit",
+    "archetype": "Dabbawala Labs"
+   },
+   "b": {
+    "fighterName": "MetroMint",
+    "archetype": "Local Train"
+   }
+  },
+  "calls": 63,
+  "costUsd": 0.1323,
+  "resultHash": "0x5246e9908aeca39901c5ce8e3daabe9f403925d0a712493a3da1f898d1e6c5b2",
+  "proofs": {
+   "resultHash": "0x5246e9908aeca39901c5ce8e3daabe9f403925d0a712493a3da1f898d1e6c5b2",
+   "transcript": {
+    "rootHash": "0x20449af5388c0afbe5b2bf5ae44a8ff558ebd81a50fcda348471c9c3af22304a",
+    "txSeq": 171360,
+    "file": "https://storagescan-galileo.0g.ai/submission/171360",
+    "tx": "https://chainscan-galileo.0g.ai/tx/0xaa401d027f57b08735ab89060b227dfa2147a271e8b9461302fa3f28249e6664"
+   },
+   "arkiv": {
+    "entityKey": "0x7056e8c9532d2e95b0f1c94b0947d1030c681f66d8bb51b978f983bd9ac8696b",
+    "txHash": "0x6167be9c62388c4aec17629c77ee711c5c28b4b888f9fc58b7db953acfbb311e",
+    "explorer": "https://rabdi.explorer.arkiv.network/entity-explorer?q=%24key%20%3D%20key(0x7056e8c9532d2e95b0f1c94b0947d1030c681f66d8bb51b978f983bd9ac8696b)"
+   },
+   "inference": {
+    "model": "0gm-1.0-35b-a3b",
+    "provider": "0xf4FB8d2bD856e672b5f9848b0eD235A20079B250",
+    "requestIds": [
+     "2f678a48-6316-4f10-a72f-8becd1bec7a4",
+     "e3a7d4c4-d842-42c4-a74d-9a8802387103",
+     "6df2ee3e-4f76-4168-ad1c-93f3c8c309ba",
+     "3da5ab1c-b76b-4061-ade7-308b097fb18a",
+     "0fc1a14f-0cb3-41c6-a243-92b874a37ca3",
+     "bc0eb5f9-7de0-43cb-aedf-0a88eafc248c",
+     "7d22f36b-eff9-4fc9-af98-4a77b2f4e965",
+     "5ff09b05-aab3-4fbd-a803-b8d46d3edbaa",
+     "b4869be5-1170-488a-a608-450b77a18594",
+     "aff00b3f-ac9c-42c5-a1df-861ad8d042d5",
+     "984ce385-df00-4c82-a4d6-777ecf2d8f78",
+     "3fcb6788-e505-4047-adc9-62eafea336f9",
+     "a4d37417-47ba-4b5c-a3d7-c4f12dd4f8b9",
+     "65c6ed0d-c976-4a3c-a47d-9d69e7743639",
+     "2831f119-d71a-4919-a5d4-e419caff67ac",
+     "671da5fc-01a9-4e27-ad2a-680404b20621",
+     "f71748c8-8f1c-4dd6-a877-3c8b45920eb9",
+     "1337d3ca-bba6-406c-a19d-fa63b36898fd",
+     "1f2b3c20-e84f-42d6-a8d8-b9977eb8cae5",
+     "df751eec-aa44-405a-a589-63cba7ad6aa0",
+     "ab2dd6f3-e2ad-4664-a8e8-35ecb0b9a166",
+     "48e3ad31-ac98-4f47-ad4b-e83d521f60b6",
+     "3d03834f-d829-4b3d-afef-11ec4a0816ec",
+     "7079b312-5255-47a7-ace1-74858fc9a98d",
+     "a20270f4-4ca5-4e2b-a8e2-ef44f7551518",
+     "a76fb957-930d-42d4-a9f0-88b9bfa65fa7",
+     "2bbc7f75-d1a4-41e4-a9f9-da2fcdf35635",
+     "972f6b0b-7886-4f37-a41e-a9a841de43aa",
+     "3232b182-ddc0-4d85-a8d2-af7111e317ca",
+     "bfa8f756-09bd-4311-a561-17b958adc91f",
+     "8686890f-5cc4-47b3-ad24-eb43f46a844e",
+     "1b7b5428-aa0c-44e0-a614-0c8b20a80959",
+     "e8e055f3-ceb6-4483-abb2-42587cbb1539",
+     "e3232bc7-9c73-476f-a05b-addbedc7c7ae",
+     "3f2c7e0d-e1ce-4415-a995-7609833e9084",
+     "41e99d89-c051-4b7d-a6d0-65e274b3f3af",
+     "b02e1965-df83-4a6d-a4f2-a9d881e60e00",
+     "8bef58cd-d357-4a60-ae47-96040f581788",
+     "78e3818a-a237-4cf2-aa81-4f65908b682b",
+     "cd0f6932-0bc9-48b4-adc6-06dedcc62128",
+     "fd3a580e-5887-45c3-a9e0-3dcde568a93e",
+     "0800d69b-a33b-473f-a063-bd71567bd66d",
+     "1b2a8be6-dc44-4528-aa3b-fb71cb4bea8a",
+     "ebf65056-8020-4560-a605-b82a355eb2d8",
+     "5158d223-e475-4018-a0de-2596e8d89116"
+    ],
+    "scorecards": [
+     "2dc1fd0b-155b-4cb3-a841-33191209f5b3",
+     "efadaa56-d1b3-475c-afca-e1fa2961c237",
+     "dd63a20a-bb42-4e56-a677-28386948bedc",
+     "678793fc-5eca-4eb9-aca6-0eda378f72af",
+     "ddcf8efe-50b3-407c-a27c-a162704efc9f",
+     "64304e60-0d5c-4f1b-a9f6-5605a63f028f",
+     "5e41008e-e8a4-45e7-acc1-76391b64722c",
+     "367d463f-742a-48df-a205-097956d45789",
+     "fad8c5ff-d8b5-449a-a7f8-0fd22a6bb593",
+     "56cf550e-ecb9-4cc9-a935-b98f27630cea",
+     "1ca53924-709d-43f2-afc3-2ceebaedaf60",
+     "72f4e0c2-6d2a-4e10-a47a-e9b215678af7",
+     "359c8bdf-9f37-4f80-a9d5-acc0898512f3",
+     "27684191-6d0f-45c7-a1e8-85fc42c852c4",
+     "06dbfb6c-8586-45f7-a00d-e82ebc42c38a",
+     "55fa1564-c452-425f-aa47-28b63e87c67a",
+     "1a23bce6-17e5-4cf3-a1b6-87ab1a95dcbc",
+     "5e380e14-136b-46b6-ab92-c90cb2ce81f5"
+    ]
+   },
+   "evidence": {
+    "a": {
+     "project": "kirana-credit",
+     "dossier": "0x42e717dff335d1bd45b029ba42b4f6fe75d7b2d5477b2f9c6b6526027dbd6b85",
+     "review": "0x9d5e07c9632cd792df3c31d18b27da79c0e1492cc5127fe203b273b61108344f",
+     "liveTest": "0xdaafbb518a372725da11addc719586888326dae2daf7077a66e341c6386d174b",
+     "arkivPanel": "0xace0aadd7d3112ff67379dd1fdd0f57dd8bd4e21b1c4d774f459b711b8a56ae3"
+    },
+    "b": {
+     "project": "metromint",
+     "dossier": "0xd3ccd787cc8dc450755a8afd2896b1b9ef0311de4e73b2744a2533cc9c1266c5",
+     "review": "0xf950b3535f6984bbc458010a3a7ee2ffed63b1ef5b7e302c480722d9bb5f4738",
+     "liveTest": "0xf2879543f59cd940025c300377b12f5ed6273b98ffdff2246850f4a1e8d3c47a",
+     "arkivPanel": "0x36287782a27a9caf3660def02a2c1fce27a43b432aeed3225baa018d1ac69cb0"
+    }
+   }
+  }
+ }
+}
