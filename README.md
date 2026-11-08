@@ -3,12 +3,13 @@
 **Every hackathon project becomes an AI fighter. AI agents test it, AI judges score it, and the crowd bets on the fight.**
 
 <p align="center">
-  <a href="docs/media/fightclub-launch.mp4"><img src="docs/images/fight.gif" alt="Two pixel fighters battle in a 3D arena while AI judges score each hit" width="720"></a>
+  <a href="https://ethglobal.com/showcase/fightclub-hack-np7cc"><img src="docs/images/fightclub-launch.gif" alt="FightClub 60-second launch video: AI agents test projects, AI judges score them, and pixel fighters battle in a 3D arena" width="720"></a>
 </p>
 
 | | |
 | --- | --- |
-| 🎬 **Launch video** (60 s) | [docs/media/fightclub-launch.mp4](docs/media/fightclub-launch.mp4) |
+| 🏆 **Project details** | [ETHGlobal showcase](https://ethglobal.com/showcase/fightclub-hack-np7cc) |
+| 🎬 **Launch video** (60 s) | [Watch on ETHGlobal](https://ethglobal.com/showcase/fightclub-hack-np7cc) |
 | 🎥 **Full demo** (under 3 min) | [Watch on Google Drive](https://drive.google.com/drive/folders/1GGanbgIbKdQawt7-NzCdqjqIbEcO9Zvm?usp=drive_link) |
 | 🌐 **Live app** | https://fightclub-seven.vercel.app |
 | 📄 **Product spec** | [PRD.md](PRD.md) |
